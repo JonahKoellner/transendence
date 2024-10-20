@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  angular:
+    build:
+      context: ./angular-app
+    ports:
+      - "4200:80"
+    depends_on:
+      - django
+    networks:
+      - webnet
+
+  django:
+    build:
+      context: ./django-app
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_DB=mydb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - DB_HOST=db
+    depends_on:
+      - db
+    networks:
+      - webnet
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=mydb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - webnet
+
+networks:
+  webnet:
