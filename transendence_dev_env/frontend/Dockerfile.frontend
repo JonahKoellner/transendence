@@ -1,0 +1,7 @@
+FROM node:latest
+WORKDIR /app
+COPY transendence_frontend/package.json transendence_frontend/package-lock.json ./
+RUN npm install
+COPY . .
+EXPOSE 4200
+CMD ["npm", "start"]
