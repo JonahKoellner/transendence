@@ -3,9 +3,9 @@ version: '3.8'
 services:
   angular:
     build:
-      context: ./angular-app
+      context: ./fe
     ports:
-      - "4200:80"
+      - "4200:4200"
     depends_on:
       - django
     networks:
@@ -13,7 +13,7 @@ services:
 
   django:
     build:
-      context: ./django-app
+      context: ./be
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
