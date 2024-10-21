@@ -23,22 +23,27 @@ export class AuthService {
   login(username: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/accounts/login/`, { username, password }).pipe(
       tap((response: any) => {
-        if (response.access && response.refresh) {
-          this.storeTokens(response.access, response.refresh);
+        if (response.access) {
+          this.storeTokens(response.access);
   
-          // Check if 2FA is enabled
-          if (response.is_2fa_enabled) {
-            // 2FA is enabled, navigate to OTP verification page
-            this.router.navigate(['/verify-otp']);
-          } else if (response.otp_uri) {
+          // Check if otp_uri is present
+          if (response.otp_uri) {
             // 2FA is not enabled yet, starting setup
             localStorage.setItem('otp_uri', response.otp_uri);  // Save OTP URI for QR code generation
             this.router.navigate(['/verify-otp']);  // Redirect to OTP setup and verification
           } else {
-            // No 2FA, proceed to home
+            // 2FA is enabled, proceed to home
             this.router.navigate(['/home']);
           }
+        } else {
+          console.error('Login failed: Access token not received');
+          // Handle login failure (e.g., show an error message)
         }
+      }),
+      catchError(error => {
+        console.error('Login error:', error);
+        // Handle error (e.g., show an error message)
+        return of(null);
       })
     );
   }
@@ -62,31 +67,16 @@ export class AuthService {
       })
     );
   }
-  
 
-  // Refresh the access token using the refresh token
-  refreshToken(): Observable<any> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, { refresh: refreshToken });
-  }
-
-  // Store the tokens in local storage
-  private storeTokens(accessToken: string, refreshToken: string): void {
+  // Store the access token in local storage
+  private storeTokens(accessToken: string): void {
     localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
   }
-  
 
   // Get the access token
   public getAccessToken(): string | null {
     const token = localStorage.getItem('access_token');
     console.log('Retrieved access token:', token);  // Debug log
-    return token;
-  }
-
-  private getRefreshToken(): string | null {
-    const token = localStorage.getItem('refresh_token');
-    console.log('Retrieved refresh token:', token);  // Debug log
     return token;
   }
 
@@ -96,15 +86,12 @@ export class AuthService {
   }
 
   logout(): void {
-    const refreshToken = localStorage.getItem('refresh_token');
-    const accessToken = localStorage.getItem('access_token'); // Get the access token
-  
-    if (refreshToken && accessToken) {
-      // Include the Authorization header with the access token
+    const accessToken = localStorage.getItem('access_token');
+
+    if (accessToken) {
       const headers = { Authorization: `Bearer ${accessToken}` };
-  
-      // Make the logout request, sending the refresh token and access token
-      this.http.post(`${this.apiUrl}/accounts/logout/`, { refresh_token: refreshToken }, { headers }).subscribe(
+
+      this.http.post(`${this.apiUrl}/accounts/logout/`, {}, { headers }).subscribe(
         () => {
           // On success, clear local storage and navigate to the login page
           this.clearTokens();
@@ -124,9 +111,8 @@ export class AuthService {
 
   private clearTokens(): void {
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     localStorage.removeItem('otp_verified');
-    localStorage.removeItem('otp_uri');  // Clear OTP URI on logout
+    localStorage.removeItem('otp_uri');
   }
 
   // Handle redirection after login based on authentication state
@@ -142,31 +128,37 @@ export class AuthService {
       this.router.navigate(['/login']);
     }
   }
+
   refreshTokenIfNeeded(): Observable<any> {
-    const refreshToken = this.getRefreshToken();
-    
-    if (!refreshToken) {
-      this.logout();  // If no refresh token, force logout
+    const accessToken = this.getAccessToken();
+  
+    if (!accessToken) {
+      this.logout();
       return of(null);
     }
   
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, { refresh: refreshToken }).pipe(
+    if (!this.jwtHelper.isTokenExpired(accessToken)) {
+      return of({ access: accessToken });
+    }
+  
+    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}).pipe(
       tap((response: any) => {
         if (response && response.access) {
-          console.log('Access token refreshed successfully', response.access);  // Debug log
-          localStorage.setItem('access_token', response.access);  // Update access token
+          console.log('Access token refreshed successfully', response.access);
+          localStorage.setItem('access_token', response.access);
         } else {
-          console.log('Refresh token failed, logging out');  // Debug log
-          this.logout();  // Log out if refresh token is invalid
+          console.log('Refresh token failed, logging out');
+          this.logout();
         }
       }),
       catchError(error => {
-        console.error('Error refreshing token, logging out', error);  // Debug log
-        this.logout();  // If refresh token fails, log out the user
+        console.error('Error refreshing token, logging out', error);
+        this.logout();
         return of(null);
       })
     );
   }
+
   // Method to retrieve user profile information
   getProfile(): Observable<any> {
     const accessToken = localStorage.getItem('access_token');

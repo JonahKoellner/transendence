@@ -7,3 +7,4 @@ django-prometheus
 channels
 pyotp
 django-extensions
+argon2-cffi

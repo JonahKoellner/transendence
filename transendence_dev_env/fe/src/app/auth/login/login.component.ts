@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/auth.service';
 
@@ -7,12 +7,20 @@ import { AuthService } from 'src/app/auth.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit{
   username: string = '';
   password: string = '';
   error: string = '';
 
   constructor(private authService: AuthService, private router: Router) {}
+
+  ngOnInit()
+  {
+    // Check if the user is already logged in
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/home']);
+    }
+  }
 
   login() {
     this.authService.login(this.username, this.password).subscribe(

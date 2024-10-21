@@ -13,7 +13,16 @@ export class RegisterComponent {
   password: string = '';
   error: string = '';
 
+  
   constructor(private authService: AuthService, private router: Router) {}
+
+  ngOnInit()
+  {
+    // Check if the user is already logged in
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/home']);
+    }
+  }
 
   register() {
     this.authService.register(this.username, this.email, this.password).subscribe(

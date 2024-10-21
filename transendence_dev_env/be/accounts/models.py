@@ -10,9 +10,11 @@ class Profile(models.Model):
     # Generate a new OTP secret and provisioning URI for QR code
     def generate_otp(self):
         if not self.otp_secret:
-            self.otp_secret = pyotp.random_base32()  # Generate a new secret
+            self.otp_secret = pyotp.random_base32()
             self.save()
-        return pyotp.TOTP(self.otp_secret).provisioning_uri(self.user.email, issuer_name="YourApp")
+        totp = pyotp.TOTP(self.otp_secret)
+        otp_uri = totp.provisioning_uri(name=self.user.username, issuer_name='YourAppName')
+        return otp_uri
 
     # Generate the provisioning URI for QR code
     def get_otp_uri(self):

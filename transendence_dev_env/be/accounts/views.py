@@ -7,7 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import RegisterSerializer, LoginSerializer, OTPVerifySerializer, TokenSerializer, UserProfileSerializer
-
+from django.http import JsonResponse
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 class RegisterView(APIView):
     def post(self, request):
@@ -23,31 +26,46 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
-            response_data = {
-                'refresh': str(refresh),
+            data = {
                 'access': str(refresh.access_token),
                 'is_2fa_enabled': user.profile.is_2fa_enabled
             }
 
-            # Only send otp_uri if 2FA is not enabled
-            if not user.profile.is_2fa_enabled:
-                otp_uri = user.profile.generate_otp()  # Generates and saves the OTP secret
-                response_data['otp_uri'] = otp_uri  # Send OTP URI for generating QR code
+            otp_uri = user.profile.generate_otp()  # Generates and saves the OTP secret
+            data['otp_uri'] = otp_uri  # Include otp_uri in the response data
 
-            return Response(response_data, status=status.HTTP_200_OK)
+            response = JsonResponse(data)
+
+            # Set the refresh token as an HTTP-only secure cookie
+            cookie_max_age = api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()
+            response.set_cookie(
+                'refresh_token',
+                str(refresh),
+                max_age=cookie_max_age,
+                httponly=True,
+                secure=True,  # Ensure this is True in production with HTTPS
+                samesite='Lax'
+            )
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
-    authentication_classes = [JWTAuthentication]  # Ensure JWT Authentication is used
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def post(self, request):
         try:
-            # Get the refresh token from the request data
-            refresh_token = request.data.get("refresh_token")
+            # Get the refresh token from the cookies
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token is None:
+                return Response({"message": "Refresh token not found"}, status=status.HTTP_400_BAD_REQUEST)
             token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the refresh token (if blacklisting is enabled)
-            return Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+            token.blacklist()
+            response = Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+            # Delete the refresh token cookie
+            response.delete_cookie('refresh_token')
+            return response
         except Exception as e:
             return Response({"message": "Invalid refresh token or error in logout"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -91,6 +109,7 @@ class Disable2FAView(APIView):
         else:
             return Response({'message': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class VerifyOTPView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
@@ -100,9 +119,6 @@ class VerifyOTPView(APIView):
         if serializer.is_valid():
             otp_code = serializer.validated_data['otp_code']
 
-            # Ensure the user has an OTP secret before verifying the OTP
-            if not request.user.profile.otp_secret:
-                return Response({"success": False, "message": "2FA is not enabled for this user"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Verify the OTP code using the user's profile
             if request.user.profile.verify_otp(otp_code):
@@ -134,20 +150,41 @@ class UserProfileView(APIView):
         }
         return Response(profile, status=status.HTTP_200_OK)
     
-class TokenRefreshView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
-    
-    def post(self, request):
-        serializer = TokenSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                refresh_token = serializer.validated_data['refresh']
-                refresh = RefreshToken(refresh_token)
-                return Response({
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token)
-                })
-            except Exception:
-                return Response({"message": "Invalid refresh token"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class TokenRefreshView(SimpleJWTTokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # Retrieve the refresh token from the cookies
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token is None:
+                return Response({"message": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Validate the refresh token
+            serializer = self.get_serializer(data={'refresh': refresh_token})
+            serializer.is_valid(raise_exception=True)
+            
+            # Generate new tokens
+            access_token = serializer.validated_data['access']
+            refresh = serializer.validated_data.get('refresh')
+            
+            response_data = {'access': access_token}
+            response = Response(response_data)
+
+            # If rotating refresh tokens, set the new refresh token in the cookie
+            if api_settings.ROTATE_REFRESH_TOKENS and refresh:
+                cookie_max_age = api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()
+                response.set_cookie(
+                    'refresh_token',
+                    str(refresh),
+                    max_age=cookie_max_age,
+                    httponly=True,
+                    secure=True,  # Set to True in production with HTTPS
+                    samesite='Lax'  # Adjust based on your needs ('Strict', 'Lax', or 'None')
+                )
+            return response
+
+        except InvalidToken:
+            return Response({"message": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+        except TokenError as e:
+            return Response({"message": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({"message": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -67,6 +67,7 @@ export class SettingsComponent {
     this.authService.disable2FA().subscribe(
       (response) => {
         if (response) {
+          localStorage.removeItem('otp_uri');
           alert('2FA disabled successfully');
           this.qrCodeImage = '';  // Remove the QR code image
           this.is2FAEnabled = false;  // Update the status in UI

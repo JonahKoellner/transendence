@@ -6,11 +6,11 @@
     <!-- Display 2FA status -->
     <div *ngIf="is2FAEnabled">
         <p>2FA is enabled.</p>
-        <button (click)="disable2FA()">Disable 2FA</button>
+        <button (click)="disable2FA()">Remove 2FA</button>
       </div>
       <div *ngIf="!is2FAEnabled">
         <p>2FA is disabled.</p>
-        <button (click)="enable2FA()">Enable 2FA</button>
+        <button (click)="enable2FA()">Add 2FA</button>
       </div>
       <div *ngIf="qrCodeImage">
         <p>Scan this QR code with your authenticator app:</p>
