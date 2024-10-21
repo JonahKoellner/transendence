@@ -135,6 +135,9 @@ class UserProfileView(APIView):
         return Response(profile, status=status.HTTP_200_OK)
     
 class TokenRefreshView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
