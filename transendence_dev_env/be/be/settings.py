@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'accounts',
     'csp',
     'django_extensions',
+    'django_password_validators',
+    'django_password_validators.password_history',
+    'django_password_validators.password_character_requirements',
     
 ]
 
@@ -78,6 +81,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',  # Adjust as needed
+        'user': '1000/day',  # Adjust as needed
+    }
 }
 
 SIMPLE_JWT = {
@@ -132,28 +143,64 @@ PASSWORD_HASHERS = [
 ]
 
 SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+SECURE_HSTS_SECONDS = 31536000  # One year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+
 SECURE_HSTS_SECONDS = 31536000  # One year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+SECURE_SSL_REDIRECT = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'no-referrer-when-downgrade'
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        'NAME': 'django_password_validators.password_character_requirements.password_validation.PasswordCharacterValidator',
+        'OPTIONS': {
+            'min_length_digits': 1,
+            'min_length_special': 1,
+            'min_length_upper': 1,
+            'min_length_lower': 1,
+        }
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        'NAME': 'django_password_validators.password_history.password_validation.UniquePasswordsValidator',
+        'OPTIONS': {
+            'last_passwords': 5,
+        }
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
 
 
 # Internationalization
@@ -177,3 +224,8 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+if not DEBUG:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
+        'rest_framework.renderers.JSONRenderer',
+    )

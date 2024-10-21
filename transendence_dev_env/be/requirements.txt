@@ -8,3 +8,5 @@ channels
 pyotp
 django-extensions
 argon2-cffi
+django-csp
+django-password-validators
