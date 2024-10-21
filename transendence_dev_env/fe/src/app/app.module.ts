@@ -8,8 +8,10 @@ import { RegisterComponent } from './auth/register/register.component';
 import { VerifyOtpComponent } from './auth/verify-otp/verify-otp.component';
 import { HomeComponent } from './home/home/home.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { SettingsComponent } from './settings/settings.component';
+import { ProfileComponent } from './profile/profile.component';
+import { AuthInterceptor } from './auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -18,7 +20,8 @@ import { SettingsComponent } from './settings/settings.component';
     RegisterComponent,
     VerifyOtpComponent,
     HomeComponent,
-    SettingsComponent
+    SettingsComponent,
+    ProfileComponent
   ],
   imports: [
     BrowserModule,
@@ -27,7 +30,9 @@ import { SettingsComponent } from './settings/settings.component';
     AppRoutingModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

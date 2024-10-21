@@ -1,0 +1,36 @@
+<!-- profile.component.html -->
+<div *ngIf="isLoading">Loading...</div>
+<div *ngIf="!isLoading">
+  <h2>Your Profile</h2>
+
+  <div>
+    <strong>ID:</strong> {{ userProfile.id }}
+  </div>
+  <div>
+    <strong>Username:</strong> {{ userProfile.username }}
+  </div>
+  <div>
+    <strong>Email:</strong> {{ userProfile.email }}
+  </div>
+
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label for="display_name"><strong>Display Name:</strong></label>
+      <input id="display_name" formControlName="display_name" type="text" />
+    </div>
+
+    <div>
+      <label for="avatar"><strong>Avatar:</strong></label><br />
+      <img
+        [src]="avatarPreview"
+        alt="Avatar"
+        width="150"
+        height="150"
+        onerror="this.onerror=null; this.src='assets/default_avatar.png';"
+      /><br />
+      <input id="avatar" type="file" (change)="onFileChange($event)" />
+    </div>
+
+    <button type="submit">Update Profile</button>
+  </form>
+</div>

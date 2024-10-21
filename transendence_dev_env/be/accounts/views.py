@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class RegisterView(APIView):
     def post(self, request):
@@ -139,16 +140,20 @@ class VerifyOTPView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
         user = request.user
-        profile = {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'is_2fa_enabled': user.profile.is_2fa_enabled  # Send 2FA status
-        }
-        return Response(profile, status=status.HTTP_200_OK)
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Profile updated successfully", "user": serializer.data}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class TokenRefreshView(SimpleJWTTokenRefreshView):
     def post(self, request, *args, **kwargs):
