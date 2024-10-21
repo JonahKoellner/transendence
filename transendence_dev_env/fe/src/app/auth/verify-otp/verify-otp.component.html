@@ -1,0 +1,15 @@
+<div>
+  <h3>Verify OTP</h3>
+  <div *ngIf="showQRCode">
+    <p>Scan the QR Code with your authenticator app:</p>
+    <img [src]="qrCodeImage" alt="QR Code" />
+  </div>
+
+  <form (submit)="verifyOTP()">
+    <label for="otp_code">OTP Code:</label>
+    <input id="otp_code" [(ngModel)]="otp_code" name="otp_code" required />
+    <button type="submit">Verify</button>
+  </form>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+</div>

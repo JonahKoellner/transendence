@@ -1,0 +1,22 @@
+<div class="settings-container">
+    <h2>User Settings</h2>
+  
+    <div *ngIf="error" class="error">{{ error }}</div>
+  
+    <!-- Display 2FA status -->
+    <div *ngIf="is2FAEnabled">
+        <p>2FA is enabled.</p>
+        <button (click)="disable2FA()">Disable 2FA</button>
+      </div>
+      <div *ngIf="!is2FAEnabled">
+        <p>2FA is disabled.</p>
+        <button (click)="enable2FA()">Enable 2FA</button>
+      </div>
+      <div *ngIf="qrCodeImage">
+        <p>Scan this QR code with your authenticator app:</p>
+        <img [src]="qrCodeImage" alt="QR Code" />
+      </div>
+      
+      <div *ngIf="error" class="error">{{ error }}</div>
+  </div>
+  

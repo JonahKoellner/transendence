@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-
+from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,9 +37,16 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "corsheaders",
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'accounts',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -48,6 +55,28 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Keep your original access token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Keep your original refresh token lifetime
+    'ROTATE_REFRESH_TOKENS': True,  # Rotate refresh tokens upon use
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens after they are used
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,  # Use your project's secret key
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Use the Bearer scheme for authentication
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),  # Token class for access tokens
+    'TOKEN_BLACKLIST_ENABLED': True,  # Enable token blacklisting
+}
 
 ROOT_URLCONF = "be.urls"
 

@@ -6,6 +6,12 @@ services:
       context: ./fe
     ports:
       - "4200:4200"
+    volumes:
+      - ./fe:/app  # Mount the local Angular app to the container
+      - /app/node_modules  # Ensure node_modules is not overwritten
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # Use polling for file changes
+    command: ng serve --host 0.0.0.0 --poll 1000  # Serve with polling enabled
     depends_on:
       - django
     networks:

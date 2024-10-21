@@ -5,3 +5,5 @@ django-cors-headers
 djangorestframework-simplejwt
 django-prometheus
 channels
+pyotp
+django-extensions
