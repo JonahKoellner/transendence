@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 import pyotp
@@ -11,6 +12,9 @@ class Profile(models.Model):
     display_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default_avatar.png', blank=True, null=True)
     
+    friends = models.ManyToManyField('self', symmetrical=False, related_name='friends_with', blank=True)
+    blocked_users = models.ManyToManyField('self', symmetrical=False, related_name='blocked_by', blank=True)
+    is_online = models.BooleanField(default=False)
     # Generate a new OTP secret and provisioning URI for QR code
     def generate_otp(self):
         if not self.otp_secret:
@@ -28,3 +32,49 @@ class Profile(models.Model):
     def verify_otp(self, otp_code):
         totp = pyotp.TOTP(self.otp_secret)
         return totp.verify(otp_code)
+    
+    def add_friend(self, user):
+        self.friends.add(user)
+    
+    def remove_friend(self, user):
+        self.friends.remove(user)
+    
+    def get_friends(self):
+        return self.friends.all()
+    
+class Notification(models.Model):
+    NOTIFICATION_TYPES = (
+        ('friend_request', 'Friend Request'),
+        ('game_invite', 'Game Invite'),
+        ('arena_invite', 'Arena Invite'),
+        ('tournament', 'Tournament Notification'),
+        ('new_message', 'New Message'),
+        ('system_alert', 'System Alert'),
+    )
+    PRIORITY_LEVELS = (
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    )
+    
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_notifications', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='notifications', on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPES)
+    priority = models.CharField(max_length=10, choices=PRIORITY_LEVELS, default='medium')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    data = models.JSONField(null=True, blank=True)  # Additional contextual data
+    
+    class Meta:
+        ordering = ['-timestamp']
+
+        
+class ChatMessage(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp']

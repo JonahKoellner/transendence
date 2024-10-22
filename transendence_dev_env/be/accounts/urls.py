@@ -1,5 +1,10 @@
-from django.urls import path
-from .views import RegisterView, LoginView, VerifyOTPView, UserProfileView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView
+from django.urls import path, include
+from .views import RegisterView, LoginView,UserProfileView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'chat-messages', ChatMessageViewSet, basename='chatmessage')
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -10,4 +15,5 @@ urlpatterns = [
     path('enable-2fa/', Enable2FAView.as_view(), name='enable-2fa'),
     path('disable-2fa/', Disable2FAView.as_view(), name='disable-2fa'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('', include(router.urls)),
 ]

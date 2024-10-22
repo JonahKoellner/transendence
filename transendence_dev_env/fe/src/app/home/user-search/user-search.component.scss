@@ -1,0 +1,47 @@
+/* src/app/components/user-search/user-search.component.scss */
+
+.user-search {
+    padding: 20px;
+  }
+  
+  .user-search input {
+    width: 300px;
+    padding: 8px;
+    margin-right: 10px;
+  }
+  
+  .user-search button {
+    padding: 8px 12px;
+  }
+  
+  .user-search ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .user-search li {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+  }
+  
+  .user-search img {
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .user-search .error {
+    color: red;
+    margin-top: 10px;
+  }
+  
+  .user-search .success {
+    color: green;
+    margin-top: 10px;
+  }
+  
+  .user-search li button {
+    margin-left: auto;
+    padding: 5px 10px;
+  }
+  

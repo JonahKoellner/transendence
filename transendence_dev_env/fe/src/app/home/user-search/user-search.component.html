@@ -1,0 +1,19 @@
+<!-- src/app/components/user-search/user-search.component.html -->
+
+<div class="user-search">
+  <h2>Search Users</h2>
+  <input type="text" [(ngModel)]="searchQuery" placeholder="Enter username, email, or display name" />
+  <button (click)="searchUsers()">Search</button>
+
+  <div *ngIf="isLoading" class="spinner">Loading...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+
+  <ul>
+    <li *ngFor="let user of users">
+      <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" width="50" height="50" />
+      <span>{{ user.display_name || user.username }}</span>
+      <button (click)="addFriend(user.id)">Add Friend</button>
+    </li>
+  </ul>
+</div>

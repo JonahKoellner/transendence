@@ -28,8 +28,11 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
       - DB_HOST=db
+      - REDIS_HOST=redis  # Add Redis host environment variable
+      - REDIS_PORT=6379    # Add Redis port environment variable
     depends_on:
       - db
+      - redis  # Ensure Redis starts before Django
     networks:
       - webnet
 
@@ -43,6 +46,13 @@ services:
       - ./db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - webnet
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
     networks:
       - webnet
 

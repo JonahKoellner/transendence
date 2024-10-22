@@ -1,0 +1,58 @@
+
+<div class="notifications-container">
+  <h2>Notifications</h2>
+  
+  <div class="filters">
+    <label for="type">Filter by Type:</label>
+    <select id="type" [(ngModel)]="filterType">
+      <option value="all">All</option>
+      <option value="friend_request">Friend Requests</option>
+      <option value="game_invite">Game Invites</option>
+      <option value="new_message">New Messages</option>
+      <!-- Add other types as needed -->
+    </select>
+
+    <label for="priority">Filter by Priority:</label>
+    <select id="priority" [(ngModel)]="filterPriority">
+      <option value="all">All</option>
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+  </div>
+
+  <ul>
+    <li *ngFor="let notification of notifications | notificationFilter:filterType:filterPriority"
+        [ngClass]="getPriorityClass(notification.priority)"
+        [class.unread]="!notification.is_read"
+        (click)="handleNotification(notification)">
+      <div class="notification-content">
+        <span>{{ notification.sender.username }} {{ getNotificationText(notification.notification_type) }}</span>
+        <small>{{ notification.timestamp | date:'short' }}</small>
+      </div>
+      <button *ngIf="!notification.is_read" (click)="markAsRead(notification); $event.stopPropagation();">Mark as Read</button>
+    </li>
+  </ul>
+</div>
+
+<!-- Friend Request Dialog -->
+<app-friend-request-dialog
+  *ngIf="showFriendRequestDialog && currentNotification"
+  [notification]="currentNotification"
+  (close)="onCloseFriendRequestDialog($event)">
+</app-friend-request-dialog>
+
+<!-- Game Invite Dialog -->
+<app-game-invite-dialog
+  *ngIf="showGameInviteDialog && currentNotification"
+  [notification]="currentNotification"
+  (close)="onCloseGameInviteDialog($event)">
+</app-game-invite-dialog>
+
+<!-- Chat Window -->
+<app-chat-window
+  *ngIf="selectedFriendId && selectedFriendUsername"
+  [friendId]="selectedFriendId"
+  [friendUsername]="selectedFriendUsername"
+  (close)="closeChat()">
+</app-chat-window>

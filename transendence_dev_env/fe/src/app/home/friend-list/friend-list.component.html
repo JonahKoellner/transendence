@@ -1,0 +1,23 @@
+<div *ngIf="isLoading">Loading friends...</div>
+<div *ngIf="!isLoading">
+  <h2>Your Friends</h2>
+  <div *ngIf="friends.length === 0">
+    <p>You have no friends yet.</p>
+  </div>
+  <ul>
+    <li *ngFor="let friend of friends">
+      <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" width="50" height="50">
+      <span>{{ friend.display_name || friend.username }}</span>
+      <button (click)="removeFriend(friend.id)">Remove Friend</button>
+      <button (click)="blockUser(friend.id)">Block User</button>
+      <!-- New button to navigate to chat window -->
+      <button (click)="openChat(friend.id, friend.username)">Chat</button>
+    </li>
+  </ul>
+  <div *ngIf="error">
+    <p class="error">{{ error }}</p>
+  </div>
+
+  <!-- Chat window (shown conditionally) -->
+  <app-chat-window *ngIf="selectedFriendId" [friendId]="selectedFriendId"></app-chat-window>
+</div>

@@ -1,0 +1,15 @@
+<div class="chat-window">
+  <div class="messages">
+    <div *ngFor="let message of messages" class="message">
+      <span [ngClass]="{'own-message': message.sender.id === friendId}">
+        <strong>{{ message.sender.username }}: </strong>{{ message.message }}
+        <span class="timestamp">{{ message.timestamp | date:'shortTime' }}</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="send-message">
+    <input [(ngModel)]="newMessage" placeholder="Type a message..." />
+    <button (click)="sendMessage()" [disabled]="newMessage.trim() === ''">Send</button>
+  </div>
+</div>

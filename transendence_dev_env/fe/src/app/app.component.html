@@ -1,2 +1,13 @@
-
+<app-notifications></app-notifications>
+<nav>
+    <ul>
+      <li><a routerLink="/search-users">Search Users</a></li>
+      <li><a routerLink="/friends">Friends</a></li>
+      <li><a routerLink="/chat">Chat</a></li>
+      <li><a (click)="logout()">Logout</a></li>
+      <li><a routerLink="/register">register</a></li>
+      <li><a routerLink="/settings">settings</a></li>
+      <li><a routerLink="/profile">prfoil</a></li>
+    </ul>
+  </nav>
 <router-outlet></router-outlet>

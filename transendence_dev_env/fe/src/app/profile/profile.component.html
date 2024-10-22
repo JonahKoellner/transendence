@@ -1,6 +1,6 @@
 <!-- profile.component.html -->
 <div *ngIf="isLoading">Loading...</div>
-<div *ngIf="!isLoading">
+<div *ngIf="!isLoading && userProfile">
   <h2>Your Profile</h2>
 
   <div>
@@ -33,4 +33,7 @@
 
     <button type="submit">Update Profile</button>
   </form>
+</div>
+<div *ngIf="!isLoading && !userProfile">
+  <p>No profile data available.</p>
 </div>

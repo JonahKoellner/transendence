@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { WebsocketService } from './services/websocket.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,20 +13,20 @@ export class AuthService {
   private apiUrl = 'http://127.0.0.1:8000';  // Your Django backend URL
   public jwtHelper = new JwtHelperService();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService) {}
 
   // Register a new user
   register(username: string, email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/accounts/register/`, { username, email, password });
+    return this.http.post(`${this.apiUrl}/accounts/register/`, { username, email, password }, { withCredentials: true });
   }
 
   // Login and store tokens
   login(username: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/accounts/login/`, { username, password }).pipe(
+    return this.http.post(`${this.apiUrl}/accounts/login/`, { username, password }, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response.access) {
           this.storeTokens(response.access);
-  
+          this.websocketService.connectNotifications(response.access);
           // Check if otp_uri is present
           if (response.otp_uri) {
             // 2FA is not enabled yet, starting setup
@@ -131,21 +132,22 @@ export class AuthService {
 
   refreshTokenIfNeeded(): Observable<any> {
     const accessToken = this.getAccessToken();
-  
+
     if (!accessToken) {
       this.logout();
       return of(null);
     }
-  
+
     if (!this.jwtHelper.isTokenExpired(accessToken)) {
       return of({ access: accessToken });
     }
-  
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}).pipe(
+
+    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response && response.access) {
           console.log('Access token refreshed successfully', response.access);
           localStorage.setItem('access_token', response.access);
+          this.websocketService.connectNotifications(response.access);
         } else {
           console.log('Refresh token failed, logging out');
           this.logout();
@@ -166,7 +168,7 @@ export class AuthService {
       throw new Error('Access token is missing');
     }
 
-    return this.http.get(`${this.apiUrl}/accounts/profile/`, {
+    return this.http.get(`${this.apiUrl}/accounts/users/`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
       tap((response: any) => {

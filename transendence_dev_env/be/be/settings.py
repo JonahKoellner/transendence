@@ -65,6 +65,8 @@ MIDDLEWARE = [
     'csp.middleware.CSPMiddleware'
 ]
 
+
+
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'",)
 CSP_STYLE_SRC = ("'self'",)
@@ -85,13 +87,15 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',       # For anonymous users
+        'rest_framework.throttling.UserRateThrottle',       # For authenticated users
+        'rest_framework.throttling.ScopedRateThrottle',     # For scoped throttling
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',  # Adjust as needed
-        'user': '1000/day',  # Adjust as needed
-    }
+        'anon': '100000/day',
+        'user': '1000000/day',
+        'register': '1000000/hour',    # Example for a specific view
+    },
 }
 
 SIMPLE_JWT = {
@@ -124,7 +128,16 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'be.asgi.application'
 WSGI_APPLICATION = "be.wsgi.application"
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(os.getenv('REDIS_HOST', 'redis'), int(os.getenv('REDIS_PORT', 6379)))],
+        },
+    },
+}
 
 
 # Database
@@ -176,6 +189,7 @@ else:
     SECURE_CONTENT_TYPE_NOSNIFF = False
     SECURE_REFERRER_POLICY = 'no-referrer'
     X_FRAME_OPTIONS = 'SAMEORIGIN'  # Allows iframe embedding in development
+    CORS_ALLOW_ALL_ORIGINS = True
 
 
 
