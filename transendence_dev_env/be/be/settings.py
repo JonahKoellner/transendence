@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django_password_validators',
     'django_password_validators.password_history',
     'django_password_validators.password_character_requirements',
+    'channels'
     
 ]
 
@@ -67,14 +68,14 @@ MIDDLEWARE = [
 
 
 
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
-CSP_STYLE_SRC = ("'self'",)
-CSP_IMG_SRC = ("'self'", "data:")
-CSP_FONT_SRC = ("'self'",)
-CSP_CONNECT_SRC = ("'self'",)
-CSP_OBJECT_SRC = ("'none'",)
-CSP_FRAME_SRC = ("'none'",)
+CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000")
+CSP_SCRIPT_SRC = ("'self'", "ws://localhost:8000")
+CSP_STYLE_SRC = ("'self'", "ws://localhost:8000")
+CSP_IMG_SRC = ("'self'", "data:", "ws://localhost:8000")
+CSP_FONT_SRC = ("'self'", "ws://localhost:8000")
+CSP_CONNECT_SRC = ("'self'", "ws://localhost:8000")
+CSP_OBJECT_SRC = ("'none'", "ws://localhost:8000")
+CSP_FRAME_SRC = ("'none'", "ws://localhost:8000")
 CSP_REPORT_URI = '/csp-violation-report/'
 CORS_ALLOW_CREDENTIALS = True
 

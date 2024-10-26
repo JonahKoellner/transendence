@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NotificationService } from '../notification.service';
 import { ProfileService } from 'src/app/profile.service';
 import { ChatService } from 'src/app/chat/chat.service';
+import { AuthService } from 'src/app/auth.service';
 
 
 interface Notification {
@@ -36,23 +37,27 @@ export class NotificationsComponent implements OnInit {
   constructor(
     private notificationService: NotificationService,
     private userService: ProfileService,
-    private chatService: ChatService
+    private chatService: ChatService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.notificationService.fetchNotifications().subscribe(
-      (notifications) => {
-        this.notificationService.updateNotifications(notifications);  // Use the service to update the notification list
-      },
-      (error) => console.error(error)
-    );
-  
-    this.notificationService.getNotifications().subscribe(
-      (notifications) => {
-        this.notifications = notifications;
-      },
-      (error) => console.error(error)
-    );
+    if (this.authService.isAuthenticated())
+    {
+      this.notificationService.fetchNotifications().subscribe(
+        (notifications) => {
+          this.notificationService.updateNotifications(notifications);  // Use the service to update the notification list
+        },
+        (error) => console.error(error)
+      );
+    
+      this.notificationService.getNotifications().subscribe(
+        (notifications) => {
+          this.notifications = notifications;
+        },
+        (error) => console.error(error)
+      );
+    }
   }
 
 

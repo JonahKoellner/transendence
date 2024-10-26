@@ -11,17 +11,20 @@ import os
 import django
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
-from accounts.routing import websocket_urlpatterns
-from accounts.middleware import JWTAuthMiddlewareStack 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "be.settings")
-django.setup()
+django.setup()  # Ensure Django apps are fully initialized
 
-application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": JWTAuthMiddlewareStack(
-        URLRouter(
-            websocket_urlpatterns
-        )
-    ),
-})
+# Define the application after setup
+def get_application():
+    from accounts.middleware import JWTAuthMiddlewareStack  # Import after setup
+    from accounts.routing import websocket_urlpatterns      # Import after setup
+
+    return ProtocolTypeRouter({
+        "http": get_asgi_application(),
+        "websocket": JWTAuthMiddlewareStack(
+            URLRouter(websocket_urlpatterns)
+        ),
+    })
+
+application = get_application()

@@ -20,7 +20,7 @@ services:
   django:
     build:
       context: ./be
-    command: python manage.py runserver 0.0.0.0:8000
+    command: daphne -b 0.0.0.0 -p 8000 be.asgi:application  # Use Daphne for ASGI support
     ports:
       - "8000:8000"
     environment:
@@ -30,6 +30,7 @@ services:
       - DB_HOST=db
       - REDIS_HOST=redis  # Add Redis host environment variable
       - REDIS_PORT=6379    # Add Redis port environment variable
+      - DJANGO_SETTINGS_MODULE=be.settings
     depends_on:
       - db
       - redis  # Ensure Redis starts before Django

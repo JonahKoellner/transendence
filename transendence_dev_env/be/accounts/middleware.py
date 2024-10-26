@@ -14,8 +14,16 @@ def get_user(token):
     try:
         validated_token = UntypedToken(token)
         user = JWTAuthentication().get_user(validated_token)
+        print(f"Authenticated user: {user.username}")  # Debugging log
         return user
-    except Exception:
+    except jwt.ExpiredSignatureError:
+        print("Token expired")  # Debugging log
+        return AnonymousUser()
+    except jwt.InvalidTokenError:
+        print("Invalid token")  # Debugging log
+        return AnonymousUser()
+    except Exception as e:
+        print(f"Authentication error: {e}")  # Debugging log
         return AnonymousUser()
 
 class JWTAuthMiddleware(BaseMiddleware):
