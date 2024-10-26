@@ -73,19 +73,21 @@ export class ChatService {
 
   receiveMessages(): Observable<ChatMessage> {
     return this.websocketService.notifications$.pipe(
-      map((notification: any) => ({
+      map((notification: any) => {
+        console.log('Received notification:', notification);
+        return {
         sender: {
           id: notification.senderId,
-          username: notification.senderUsername,
+          username: notification.sender,
         },
         receiver: {
           id: notification.receiverId,
           username: notification.receiverUsername,
         },
-        message: notification.message,
+        message: notification.data.message,
         timestamp: notification.timestamp,
         is_read: notification.isRead,
-      }))
+      }})
     );
   }
 

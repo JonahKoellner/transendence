@@ -31,10 +31,15 @@ export class ChatWindowComponent implements OnInit {
   listenForIncomingMessages(): void {
     this.chatService.receiveMessages().subscribe((message: ChatMessage) => {
       // Check if the message is part of the current chat
+      console.log(message)
+      console.log(message.sender.username)
+      console.log(message.receiver.username)
+      console.log(this.friendUsername)
       if (
         message.sender.username === this.friendUsername ||
         message.receiver.username === this.friendUsername
       ) {
+        console.log("Pusing message")
         this.messages.push(message);  // Add the new message to the chat
       }
     });
