@@ -12,3 +12,4 @@ django-csp
 django-password-validators
 Pillow
 channels_redis
+daphne

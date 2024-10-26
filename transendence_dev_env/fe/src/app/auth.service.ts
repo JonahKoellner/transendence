@@ -97,16 +97,19 @@ export class AuthService {
           // On success, clear local storage and navigate to the login page
           this.clearTokens();
           this.router.navigate(['/login']);
+          this.websocketService.disconnect();
         },
         (error) => {
           console.error('Logout error:', error);
           this.clearTokens();  // Still clear tokens in case of an error
           this.router.navigate(['/login']);
+          this.websocketService.disconnect();
         }
       );
     } else {
       this.clearTokens();
       this.router.navigate(['/login']);
+      this.websocketService.disconnect();
     }
   }
 
@@ -228,4 +231,10 @@ export class AuthService {
       })
     );
   }
+  initializeWebSocket(): void {
+    const token = this.getAccessToken();
+    if (token) {
+        this.websocketService.connectNotifications(token);
+    }
+}
 }

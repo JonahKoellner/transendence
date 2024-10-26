@@ -15,7 +15,7 @@ COPY . .
 ENV CHOKIDAR_USEPOLLING=true
 
 # Default command: Run Angular development server
-CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--configuration", "development", "--poll", "2000", "--watch"]
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--configuration", "development", "--poll", "2000", "--watch" "--disable-host-check"]
 
 # # Use Nginx to serve the Angular files
 # FROM nginx:alpine

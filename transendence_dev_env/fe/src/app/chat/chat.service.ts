@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { WebsocketService } from '../services/websocket.service';
-import { Observable, BehaviorSubject, map, of, tap } from 'rxjs';
+import { Observable, BehaviorSubject, map, of, tap, filter, retryWhen, delay } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
@@ -34,16 +34,19 @@ export class ChatService {
 
   joinRoom(roomName: string): void {
     this.websocketService.waitForConnection().pipe(
-      tap(connected => {
-        if (connected) {
-          console.log(`Joining room: ${roomName}`);
-          this.websocketService.sendMessage({ event: 'join_room', room: roomName });
-        } else {
-          console.error('WebSocket is not connected, cannot join room.');
-        }
-      })
-    ).subscribe();
-  }
+        filter(connected => connected),  // Only proceed if connected
+        tap(() => {
+            console.log(`Joining room: ${roomName}`);
+            this.websocketService.sendMessage({ event: 'join_room', room: roomName });
+        }),
+        retryWhen(errors => errors.pipe(
+            delay(5000),
+            tap(() => console.log(`Retrying to join room: ${roomName}`))
+        ))
+    ).subscribe({
+        error: (err) => console.error('Error joining room:', err)
+    });
+}
 
   sendMessageViaRest(message: string, receiverId: number): Observable<any> {
     console.log("message ", message, "receiver_id ", receiverId);

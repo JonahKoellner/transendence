@@ -9,7 +9,10 @@ import { Router } from '@angular/router';
 })
 export class AppComponent {
   title = 'fe';
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService, private router: Router) {
+    this.authService.initializeWebSocket();
+  }
+
   logout(): void {
     this.authService.logout()
   }

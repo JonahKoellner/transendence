@@ -32,6 +32,9 @@ export class WebsocketService implements OnDestroy {
 
   // Connect to WebSocket with token
   connectNotifications(token: string): void {
+    // If there's an existing connection, return to avoid reconnecting
+    if (this.isConnected.value) return;
+
     this.socket$ = this.createWebSocket(token);
 
     this.socket$.pipe(
@@ -41,25 +44,27 @@ export class WebsocketService implements OnDestroy {
           delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
         )
       )
-    ).subscribe(
-      msg => {
-        this.isConnected.next(true);  // WebSocket is connected
+    ).subscribe({
+      next: msg => {
+        if (!this.isConnected.value) {
+          this.isConnected.next(true);  // WebSocket is connected
+        }
         if (msg.event === 'chat_message') {
           this.notifications$.next(msg);  // Handle chat messages
         } else {
           this.notifications$.next(msg);  // Handle other notifications
         }
       },
-      err => {
+      error: err => {
         console.error('WebSocket error:', err);
         this.isConnected.next(false);  // WebSocket is disconnected
       },
-      () => {
+      complete: () => {
         this.isConnected.next(false);  // WebSocket connection closed
         console.warn('WebSocket connection closed');
       }
-    );
-  }
+    });
+}
 
   // Create WebSocket instance
   private createWebSocket(token: string): WebSocketSubject<any> {

@@ -7,11 +7,17 @@ from .models import Notification, ChatMessage
 User = get_user_model()
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.group_name = None  # Ensures group_name is initialized
+        
     async def connect(self):
         user = self.scope['user']
         if user.is_anonymous:
+            print("User is anonymous, closing connection.")
             await self.close()
         else:
+            print(f"User {user.username} is connecting...")
             self.group_name = f'notifications_{user.id}'
             await self.channel_layer.group_add(
                 self.group_name,
@@ -21,11 +27,12 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             await self.set_user_online(True)
 
     async def disconnect(self, close_code):
-        user = self.scope['user']
-        await self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name
-        )
+        print(f"Disconnecting with group_name: {self.group_name}")
+        if self.group_name:
+            await self.channel_layer.group_discard(
+                self.group_name,
+                self.channel_name
+            )
         await self.set_user_online(False)
 
     async def send_notification(self, event):
