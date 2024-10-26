@@ -10,6 +10,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { UserSearchComponent } from './home/user-search/user-search.component';
 import { ChatWindowComponent } from './chat/chat-window/chat-window.component';
 import { FriendListComponent } from './home/friend-list/friend-list.component';
+import { SelectionComponent } from './games/selection/selection.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -21,6 +22,7 @@ const routes: Routes = [
   { path: 'search-users', component: UserSearchComponent , canActivate: [AuthGuard] },
   { path: 'friends', component: FriendListComponent, canActivate: [AuthGuard] },
   { path: 'chat/:username', component: ChatWindowComponent, canActivate: [AuthGuard] },
+  { path: 'games',component: SelectionComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: 'login' }
 ];
 

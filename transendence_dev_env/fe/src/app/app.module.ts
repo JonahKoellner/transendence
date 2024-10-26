@@ -19,6 +19,13 @@ import { ChatWindowComponent } from './chat/chat-window/chat-window.component';
 import { NotificationFilterPipe } from './pipes/notification-filter.pipe';
 import { UserSearchComponent } from './home/user-search/user-search.component';
 import { FriendListComponent } from './home/friend-list/friend-list.component';
+import { SelectionComponent } from './games/selection/selection.component';
+import { LocalPveComponent } from './games/local-pve/local-pve.component';
+import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
+import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
+import { LobbyComponent } from './games/tournament/lobby/lobby.component';
+import { TournamentComponent } from './games/tournament/tournament.component';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -35,7 +42,13 @@ import { FriendListComponent } from './home/friend-list/friend-list.component';
     ChatWindowComponent,
     NotificationFilterPipe,
     UserSearchComponent,
-    FriendListComponent
+    FriendListComponent,
+    SelectionComponent,
+    LocalPveComponent,
+    LocalPvpComponent,
+    OnlinePvpComponent,
+    LobbyComponent,
+    TournamentComponent
     
   ],
   imports: [
@@ -43,7 +56,8 @@ import { FriendListComponent } from './home/friend-list/friend-list.component';
     FormsModule,
     ReactiveFormsModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    CommonModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
