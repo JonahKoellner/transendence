@@ -27,10 +27,25 @@ export class NotificationService {
   private apiUrl = 'http://localhost:8000/accounts/notifications/';
   private notifications$ = new BehaviorSubject<Notification[]>([]);
 
-  constructor(private http: HttpClient, private websocketService: WebsocketService) {
-    this.receiveNotifications();  // Listen for new notifications via WebSocket
+  constructor(
+    private http: HttpClient,
+    private websocketService: WebsocketService
+  ) {
+    this.retrieveNotifications();  // Fetch initial notifications on service initialization
+    this.receiveNotifications();   // Listen for new notifications via WebSocket
   }
 
+  // Fetch historical notifications from the backend
+  retrieveNotifications(): void {
+    this.fetchNotifications().subscribe(
+      (notifications) => {
+        this.notifications$.next(notifications);  // Populate initial notifications list
+      },
+      (error) => console.error('Error fetching notifications:', error)
+    );
+  }
+
+  // Fetch notifications from the backend API
   fetchNotifications(): Observable<Notification[]> {
     return this.http.get<Notification[]>(this.apiUrl, { withCredentials: true });
   }
@@ -39,18 +54,17 @@ export class NotificationService {
     return this.notifications$.asObservable();
   }
 
+  // Mark a specific notification as read
   markAsRead(notificationId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}${notificationId}/mark-as-read/`, {}, { withCredentials: true });
   }
 
+  // Mark all notifications as read
   markAllAsRead(): Observable<any> {
     return this.http.post(`${this.apiUrl}mark-all-as-read/`, {}, { withCredentials: true });
   }
 
-  updateNotifications(newNotifications: Notification[]): void {
-    this.notifications$.next(newNotifications);
-  }
-  
+  // Listen for new notifications from WebSocket
   private receiveNotifications(): void {
     this.websocketService.notifications$.subscribe((notification: Notification) => {
       const currentNotifications = this.notifications$.value;

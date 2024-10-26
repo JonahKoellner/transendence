@@ -42,15 +42,8 @@ export class NotificationsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (this.authService.isAuthenticated())
-    {
-      this.notificationService.fetchNotifications().subscribe(
-        (notifications) => {
-          this.notificationService.updateNotifications(notifications);  // Use the service to update the notification list
-        },
-        (error) => console.error(error)
-      );
-    
+    if (this.authService.isAuthenticated()) {
+      // Fetch historical notifications on component initialization
       this.notificationService.getNotifications().subscribe(
         (notifications) => {
           this.notifications = notifications;
@@ -60,7 +53,6 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
-
   markAsRead(notification: Notification): void {
     this.notificationService.markAsRead(notification.id).subscribe(
       () => {
@@ -69,7 +61,6 @@ export class NotificationsComponent implements OnInit {
       (error) => console.error(error)
     );
   }
-
 
   handleNotification(notification: Notification): void {
     this.currentNotification = notification;
@@ -81,7 +72,7 @@ export class NotificationsComponent implements OnInit {
         this.showGameInviteDialog = true;
         break;
       case 'new_message':
-        this.openChat(notification.sender.id, notification.sender.username);  // Pass both id and username
+        this.openChat(notification.sender.id, notification.sender.username);
         break;
       default:
         console.log('Unhandled notification type:', notification.notification_type);
@@ -90,11 +81,6 @@ export class NotificationsComponent implements OnInit {
 
   onCloseFriendRequestDialog(result: string): void {
     this.showFriendRequestDialog = false;
-    if (result === 'accepted') {
-      // Handle acceptance, e.g., refresh friend list
-    } else if (result === 'declined') {
-      // Handle decline, e.g., remove friend request
-    }
     if (this.currentNotification) {
       this.markAsRead(this.currentNotification);
     }
@@ -103,11 +89,8 @@ export class NotificationsComponent implements OnInit {
 
   onCloseGameInviteDialog(result: string): void {
     this.showGameInviteDialog = false;
-    if (result === 'accepted') {
-      // Navigate to the game or accept invite
-      if (this.currentNotification && this.currentNotification.data.game_id) {
-        this.chatService.navigateToGame(this.currentNotification.data.game_id);
-      }
+    if (result === 'accepted' && this.currentNotification?.data?.game_id) {
+      this.chatService.navigateToGame(this.currentNotification.data.game_id);
     }
     if (this.currentNotification) {
       this.markAsRead(this.currentNotification);
@@ -125,7 +108,6 @@ export class NotificationsComponent implements OnInit {
     this.selectedFriendUsername = null;
   }
 
-
   getNotificationText(type: string): string {
     switch (type) {
       case 'friend_request':
@@ -134,7 +116,6 @@ export class NotificationsComponent implements OnInit {
         return 'invited you to a game.';
       case 'new_message':
         return 'sent you a new message.';
-      // Add other cases as needed
       default:
         return 'has an update.';
     }
