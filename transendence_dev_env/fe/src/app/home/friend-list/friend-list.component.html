@@ -19,5 +19,6 @@
   </div>
 
   <!-- Chat window (shown conditionally) -->
-  <app-chat-window *ngIf="selectedFriendId" [friendId]="selectedFriendId"></app-chat-window>
+  <app-chat-window *ngIf="selectedFriendId && selectedFriendUsername" [friendId]="selectedFriendId" [friendUsername]="selectedFriendUsername!"></app-chat-window>
+  
 </div>
