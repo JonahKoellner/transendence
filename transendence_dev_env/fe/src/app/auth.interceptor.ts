@@ -9,7 +9,6 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const accessToken = this.authService.getAccessToken();
-    console.log('Access token in interceptor:', accessToken);  // Debug log
   
     if (accessToken && !this.authService.jwtHelper.isTokenExpired(accessToken)) {
       req = this.addTokenToRequest(req, accessToken);
@@ -17,24 +16,29 @@ export class AuthInterceptor implements HttpInterceptor {
   
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-      console.error('Interceptor caught error:', error);  // Debug log
-      if (error.status === 401 && localStorage.getItem('refresh_token')) {
-        return this.authService.refreshTokenIfNeeded().pipe(
-          switchMap((response: any) => {
-            console.log('Refresh token response:', response);  // Debug log
-            if (response && response.access) {
-              req = this.addTokenToRequest(req, response.access);
-              return next.handle(req);
-            }
-            return throwError(error);
-          }),
-          catchError(err => {
-            this.authService.logout();
-            return throwError(err);
-          })
-        );
-      }
-  
+        console.error('Interceptor caught error:', error); // Debug log
+        
+        // Check if 401 and refresh token available
+        if (error.status === 401 && localStorage.getItem('refresh_token')) {
+          return this.authService.refreshTokenIfNeeded().pipe(
+            switchMap((response: any) => {
+              console.log('Refresh token response:', response); // Debug log
+              if (response && response.access) {
+                req = this.addTokenToRequest(req, response.access);
+                return next.handle(req);
+              }
+              this.authService.logout(); // Explicitly log out if refresh token fails
+              return throwError(error);
+            }),
+            catchError(err => {
+              this.authService.logout();
+              return throwError(err);
+            })
+          );
+        }
+        
+        // Log out immediately if a 401 without refresh token is received
+        this.authService.logout();
         return throwError(error);
       })
     );

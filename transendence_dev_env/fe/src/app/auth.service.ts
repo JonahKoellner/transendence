@@ -25,7 +25,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/accounts/login/`, { username, password }, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response.access) {
-          this.storeTokens(response.access);
+          this.storeTokens(response.access, response.refresh);
           this.websocketService.connectNotifications(response.access);
           // Check if otp_uri is present
           if (response.otp_uri) {
@@ -70,8 +70,9 @@ export class AuthService {
   }
 
   // Store the access token in local storage
-  private storeTokens(accessToken: string): void {
+  private storeTokens(accessToken: string, refreshToken: string): void {
     localStorage.setItem('access_token', accessToken);
+    localStorage.setItem('refresh_token', refreshToken);
   }
 
   // Get the access token
@@ -134,18 +135,14 @@ export class AuthService {
   }
 
   refreshTokenIfNeeded(): Observable<any> {
-    const accessToken = this.getAccessToken();
-
-    if (!accessToken) {
+    const refreshToken = localStorage.getItem('refresh_token');
+  
+    if (!refreshToken) {
       this.logout();
       return of(null);
     }
-
-    if (!this.jwtHelper.isTokenExpired(accessToken)) {
-      return of({ access: accessToken });
-    }
-
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
+  
+    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, { refresh: refreshToken }, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response && response.access) {
           console.log('Access token refreshed successfully', response.access);

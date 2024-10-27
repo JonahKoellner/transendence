@@ -30,20 +30,23 @@ export class ProfileComponent implements OnInit {
       (data) => {
         this.isLoading = false;
         this.userProfile = data;
-
+  
         // Set the display_name in the form
         this.profileForm.patchValue({
           display_name: data.display_name,
         });
-
+  
         // Construct the full URL for the avatar
         const avatarUrl = data.avatar
           ? `http://localhost:8000${data.avatar}`
           : 'assets/default_avatar.png';
-
+  
         this.avatarPreview = avatarUrl;
         this.loadGameHistory(data.id);
-        console.log("Done loading", data)
+        console.log("Done loading", data);
+  
+        // Reset form to pristine state to avoid accidental submissions
+        this.profileForm.markAsPristine();
       },
       (error) => {
         console.error(error);

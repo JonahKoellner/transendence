@@ -73,10 +73,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return UserDetailSerializer(blocked_users, many=True).data
 
     def update(self, instance, validated_data):
-        """
-        Update User and Profile fields.
-        """
-        # Update User fields
+        # Update User fields if they are included
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
         instance.save()
@@ -84,9 +81,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
         # Update Profile fields
         profile_data = validated_data.get('profile', {})
         profile = instance.profile
-        profile.display_name = profile_data.get('display_name', profile.display_name)
+
+        # Update display_name if present
+        if 'display_name' in profile_data:
+            profile.display_name = profile_data['display_name']
+        
+        # Update avatar if present
         if 'avatar' in profile_data:
             profile.avatar = profile_data['avatar']
+        
+        # Save the profile instance
         profile.save()
 
         return instance
