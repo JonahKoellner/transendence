@@ -132,6 +132,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
 
     this.currentGame.rounds.push(newRound);
     this.logs.push(`Round ${roundNumber} started.`);
+    console.log(this.currentGame)
     this.startRoundTimer(); // Start the round timer
   }
 

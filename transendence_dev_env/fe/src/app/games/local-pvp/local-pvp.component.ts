@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
+import { ProfileService } from 'src/app/profile.service';
 
 interface GameSettings {
   maxGameScore: number;
@@ -32,21 +33,30 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
     roundScoreLimit: 3
   };
 
-  constructor(private gameService: GameService) {}
+  constructor(private gameService: GameService, private profileService: ProfileService) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.profileService.getProfile().subscribe(
+      profile => {
+        this.player1Name = profile.display_name || profile.username;
+      },
+      error => {
+        console.error('Failed to load profile:', error);
+      }
+    );
+  }
 
   ngOnDestroy(): void {
-    this.clearTimers(); // Clear intervals when the component is destroyed
+    this.clearTimers();
   }
 
   startNewGame(): void {
     if (!this.validateSettings()) return;
 
     const newGame: Game = {
-      game_mode: 'pvp',
+      game_mode: 'local_pvp',
       player1: { id: 1, username: this.player1Name },
-      player2: { id: 2, username: this.player2Name },
+      player2: { id: 0, username: this.player2Name },
       start_time: new Date().toISOString(),
       score_player1: 0,
       score_player2: 0,
@@ -66,16 +76,15 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
       this.currentGame = game;
       this.gameInProgress = true;
       this.logs.push(`New game started between ${this.player1Name} and ${this.player2Name}`);
-      this.startTimers(); // Start game timer
-      this.startNewRound(); // Start the first round
+      this.startTimers();
+      this.startNewRound();
     });
   }
 
   startTimers(): void {
-    this.clearTimers(); // Clear any existing timers
+    this.clearTimers();
     const gameStart = new Date();
 
-    // Game timer
     this.gameIntervalId = setInterval(() => {
       const elapsed = Math.floor((new Date().getTime() - gameStart.getTime()) / 1000);
       this.gameElapsedTime = `${elapsed} seconds`;
@@ -83,10 +92,10 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   }
 
   startRoundTimer(): void {
-    this.clearRoundTimer(); // Clear any existing round timer
+    console.log(this.currentGame)
+    this.clearRoundTimer();
     const roundStart = new Date();
 
-    // Round timer
     this.roundIntervalId = setInterval(() => {
       const elapsed = Math.floor((new Date().getTime() - roundStart.getTime()) / 1000);
       this.roundElapsedTime = `${elapsed} seconds`;
@@ -119,23 +128,23 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
       start_time: new Date().toISOString(),
       score_player1: 0,
       score_player2: 0,
-      winner: '' // Initialize winner as empty
+      winner: ''
     };
 
     this.currentGame.rounds.push(newRound);
     this.logs.push(`Round ${roundNumber} started.`);
-    this.startRoundTimer(); // Start the round timer
+    this.startRoundTimer();
   }
 
   updateScore(player: 'player1' | 'player2'): void {
     if (!this.currentGame || !this.gameInProgress) return;
 
     const currentRound = this.getCurrentRound();
-    const playerName = player === 'player1' ? this.currentGame.player1.username : this.currentGame.player2?.username;
+    const playerName = player === 'player1' ? this.player1Name : this.player2Name;
 
     const move: MoveLog = {
       time: new Date().toISOString(),
-      player: playerName!,
+      player: playerName,
       action: 'scored',
     };
     this.currentGame.moves_log.push(move);
@@ -159,9 +168,9 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   private checkRoundCompletion(round: Round): void {
     if (round.score_player1 >= this.settings.roundScoreLimit || round.score_player2 >= this.settings.roundScoreLimit) {
       round.end_time = new Date().toISOString();
-      round.winner = round.score_player1 > round.score_player2 ? this.currentGame!.player1.username : this.currentGame!.player2?.username || 'Unknown';
+      round.winner = round.score_player1 > round.score_player2 ? this.player1Name : this.player2Name;
       this.logs.push(`Round ${round.round_number} ended. Winner: ${round.winner || 'None'}`);
-      this.clearRoundTimer(); // Stop the round timer
+      this.clearRoundTimer();
 
       if (this.currentGame!.rounds.length < this.settings.maxRounds && !this.currentGame!.is_completed) {
         this.startNewRound();
@@ -180,15 +189,9 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
     this.currentGame!.end_time = now.toISOString();
     this.currentGame!.duration = (now.getTime() - new Date(this.currentGame!.start_time).getTime()) / 1000;
     this.currentGame!.is_completed = true;
-    this.clearTimers(); // Stop all timers
+    this.clearTimers();
 
-    // Determine and set the game winner based on scores
-    if (this.currentGame!.score_player1 >= this.settings.maxGameScore) {
-      this.currentGame!.winner = this.currentGame!.player1;
-    } else if (this.currentGame!.score_player2 >= this.settings.maxGameScore) {
-      this.currentGame!.winner = this.currentGame!.player2;
-    }
-
+    this.currentGame!.winner = this.currentGame!.score_player1 >= this.settings.maxGameScore ? this.currentGame!.player1 : this.currentGame!.player2;
     this.gameInProgress = false;
     this.logs.push(`Game ended. Winner: ${this.currentGame!.winner?.username || 'None'}`);
 
