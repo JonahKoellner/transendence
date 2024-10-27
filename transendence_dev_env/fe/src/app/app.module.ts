@@ -31,6 +31,7 @@ import { UserDetailsComponent } from './profile/user-details/user-details.compon
 import { StatsComponent } from './profile/stats/stats.component';
 import { NgChartsModule } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
+import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.component';
 
 @NgModule({
   declarations: [
@@ -56,7 +57,8 @@ import { RouterModule } from '@angular/router';
     TournamentComponent,
     GameDetailsComponent,
     UserDetailsComponent,
-    StatsComponent
+    StatsComponent,
+    GameCanvasComponent
     
   ],
   imports: [
