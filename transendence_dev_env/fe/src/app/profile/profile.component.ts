@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ProfileService, UserProfile } from '../profile.service';
+import { Game, GameService } from '../games/game.service';
 
 @Component({
   selector: 'app-profile',
@@ -12,8 +13,8 @@ export class ProfileComponent implements OnInit {
   avatarPreview!: string | ArrayBuffer;
   isLoading = true;
   userProfile!: UserProfile;
-
-  constructor(private profileService: ProfileService, private fb: FormBuilder) {}
+  gameHistory: Game[] = [];
+  constructor(private profileService: ProfileService, private fb: FormBuilder, private gameService: GameService) {}
 
   ngOnInit() {
     this.profileForm = this.fb.group({
@@ -41,6 +42,7 @@ export class ProfileComponent implements OnInit {
           : 'assets/default_avatar.png';
 
         this.avatarPreview = avatarUrl;
+        this.loadGameHistory(data.id);
         console.log("Done loading", data)
       },
       (error) => {
@@ -67,7 +69,16 @@ export class ProfileComponent implements OnInit {
       reader.readAsDataURL(file);
     }
   }
-
+  loadGameHistory(userId: number) {
+    this.gameService.getGamesByUser(userId).subscribe(
+      (games) => {
+        this.gameHistory = games;
+      },
+      (error) => {
+        console.error('Error loading game history:', error);
+      }
+    );
+  }
   onSubmit() {
     const formData = new FormData();
     formData.append('display_name', this.profileForm.get('display_name')!.value);

@@ -26,7 +26,6 @@ const routes: Routes = [
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
   { path: 'search-users', component: UserSearchComponent , canActivate: [AuthGuard] },
   { path: 'friends', component: FriendListComponent, canActivate: [AuthGuard] },
-  { path: 'chat/:username', component: ChatWindowComponent, canActivate: [AuthGuard] },
   { path: 'games',component: SelectionComponent, canActivate: [AuthGuard] },
   { path: 'games/local-pve',component: LocalPveComponent, canActivate: [AuthGuard] },
   { path: 'games/local-pvp',component: LocalPvpComponent, canActivate: [AuthGuard] },

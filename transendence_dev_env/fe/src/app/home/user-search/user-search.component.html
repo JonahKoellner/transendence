@@ -14,6 +14,7 @@
       <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" width="50" height="50" />
       <span>{{ user.display_name || user.username }}</span>
       <button (click)="addFriend(user.id)">Add Friend</button>
+      <a [routerLink]="['/profile/user-details/', user.id]">Account Page</a>
     </li>
   </ul>
 </div>

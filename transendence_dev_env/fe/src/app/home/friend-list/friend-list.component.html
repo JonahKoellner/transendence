@@ -12,6 +12,7 @@
       <button (click)="blockUser(friend.id)">Block User</button>
       <!-- New button to navigate to chat window -->
       <button (click)="openChat(friend.id, friend.username)">Chat</button>
+      <a [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
     </li>
   </ul>
   <div *ngIf="error">
