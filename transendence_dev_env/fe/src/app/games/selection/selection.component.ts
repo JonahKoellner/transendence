@@ -35,12 +35,14 @@ export class SelectionComponent {
   createGame(gameMode: string): void {
     const newGame: Game = {
       game_mode: gameMode,
-      player1: { id: 1, username: 'PlayerOne' },  // Replace with actual player data
-      player2: null,
+      player1: { id: 1, username: 'PlayerOne' }, // Replace with actual player data
+      player2: { id: 2, username: 'PlayerTwo' },
       start_time: new Date().toISOString(),
       score_player1: 0,
       score_player2: 0,
-      is_completed: false
+      is_completed: false,
+      moves_log: [],
+      rounds: []
     };
   
     this.gameService.createGame(newGame).subscribe(

@@ -11,6 +11,9 @@ import { UserSearchComponent } from './home/user-search/user-search.component';
 import { ChatWindowComponent } from './chat/chat-window/chat-window.component';
 import { FriendListComponent } from './home/friend-list/friend-list.component';
 import { SelectionComponent } from './games/selection/selection.component';
+import { GameDetailsComponent } from './games/game-details/game-details.component';
+import { UserDetailsComponent } from './profile/user-details/user-details.component';
+import { LocalPveComponent } from './games/local-pve/local-pve.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -18,11 +21,15 @@ const routes: Routes = [
   { path: 'verify-otp', component: VerifyOtpComponent },
   { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
+  { path: 'profile/user-details/:id', component: UserDetailsComponent, canActivate: [AuthGuard] },
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
   { path: 'search-users', component: UserSearchComponent , canActivate: [AuthGuard] },
   { path: 'friends', component: FriendListComponent, canActivate: [AuthGuard] },
   { path: 'chat/:username', component: ChatWindowComponent, canActivate: [AuthGuard] },
   { path: 'games',component: SelectionComponent, canActivate: [AuthGuard] },
+  { path: 'games/local-pve',component: LocalPveComponent, canActivate: [AuthGuard] },
+  { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
+
   { path: '**', redirectTo: 'login' }
 ];
 

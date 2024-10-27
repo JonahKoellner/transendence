@@ -26,6 +26,8 @@ import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
 import { LobbyComponent } from './games/tournament/lobby/lobby.component';
 import { TournamentComponent } from './games/tournament/tournament.component';
 import { CommonModule } from '@angular/common';
+import { GameDetailsComponent } from './games/game-details/game-details.component';
+import { UserDetailsComponent } from './profile/user-details/user-details.component';
 
 @NgModule({
   declarations: [
@@ -48,7 +50,9 @@ import { CommonModule } from '@angular/common';
     LocalPvpComponent,
     OnlinePvpComponent,
     LobbyComponent,
-    TournamentComponent
+    TournamentComponent,
+    GameDetailsComponent,
+    UserDetailsComponent
     
   ],
   imports: [

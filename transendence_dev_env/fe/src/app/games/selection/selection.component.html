@@ -3,7 +3,7 @@
   
     <!-- Game Mode Selection Buttons -->
     <div class="game-mode-buttons">
-      <button (click)="selectGameMode('pve')">Player vs Environment (PVE)</button>
+      <li><a routerLink="/games/local-pve/">Player vs Environment (PVE)</a></li>
       <button (click)="selectGameMode('local_pvp')">Local Player vs Player (PvP)</button>
       <button (click)="selectGameMode('online_pvp')">Online Player vs Player (PvP)</button>
       <button (click)="selectGameMode('tournament')">Tournament</button>
@@ -19,10 +19,12 @@
       <h3>All Games</h3>
       <ul>
         <li *ngFor="let game of games">
-          {{ game.player1.username }} vs {{ game.player2?.username || 'AI' }} - 
-          Mode: {{ game.game_mode }} - 
-          Score: {{ game.score_player1 }} : {{ game.score_player2 }} 
-          <span *ngIf="game.is_completed"> (Completed)</span>
+          <a [routerLink]="['/games/details/', game.id]">
+            {{ game.player1.username }} vs {{ game.player2?.username || 'AI' }} - 
+            Mode: {{ game.game_mode }} - 
+            Score: {{ game.score_player1 }} : {{ game.score_player2 }}
+            <span *ngIf="game.is_completed"> (Completed)</span>
+          </a>
         </li>
       </ul>
     </div>

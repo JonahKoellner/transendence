@@ -39,11 +39,13 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(event['content'])
 
     @database_sync_to_async
-    def set_user_online(self, status):
-        user = self.scope['user']
-        user.is_online = status
-        user.save()
-
+    def set_user_online(self, is_online):
+        user = self.scope.get('user')
+        if user.is_authenticated:
+            user.profile.is_online = is_online
+            user.profile.save()  # Saving the profile instead of user directly
+            
+            
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         user = self.scope['user']
@@ -82,7 +84,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 await self.channel_layer.group_send(
                     f'chat_{receiver.id}',
                     {
-                        'type': 'chat_message',  # This type should match what the front-end expects
+                        'type': 'send_chat_message',  # This type should match what the front-end expects
                         'content': {
                             'id': chat_message.id,
                             'sender': self.user.username,
