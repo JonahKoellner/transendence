@@ -25,7 +25,7 @@ class Game(models.Model):
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='games_as_player2', 
-        blank=True, null=True
+        blank=True, null=True  # Allow null to represent AI
     )
 
     game_mode = models.CharField(max_length=20, choices=GAME_MODES)
@@ -48,8 +48,12 @@ class Game(models.Model):
     )
     is_completed = models.BooleanField(default=False)
 
+    def is_against_ai(self):
+        """ Check if the game is a PvE game against an AI. """
+        return self.player2 is None
+
     def __str__(self):
-        return f"{self.player1.username} vs {self.player2.username if self.player2 else 'AI'} - {self.game_mode}"
+        return f"{self.player1.username} vs {'AI' if self.is_against_ai() else self.player2.username} - {self.game_mode}"
     
     class Meta:
         ordering = ['-start_time']

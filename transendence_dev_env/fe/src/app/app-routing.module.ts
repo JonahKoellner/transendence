@@ -14,6 +14,7 @@ import { SelectionComponent } from './games/selection/selection.component';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
 import { UserDetailsComponent } from './profile/user-details/user-details.component';
 import { LocalPveComponent } from './games/local-pve/local-pve.component';
+import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -28,6 +29,7 @@ const routes: Routes = [
   { path: 'chat/:username', component: ChatWindowComponent, canActivate: [AuthGuard] },
   { path: 'games',component: SelectionComponent, canActivate: [AuthGuard] },
   { path: 'games/local-pve',component: LocalPveComponent, canActivate: [AuthGuard] },
+  { path: 'games/local-pvp',component: LocalPvpComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: 'login' }

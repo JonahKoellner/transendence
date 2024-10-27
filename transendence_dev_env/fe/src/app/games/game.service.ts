@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 
 export interface Player {
-  id: number;
+  id: number | null;
   username: string;
 }
 
@@ -26,7 +26,7 @@ export interface Game {
   id?: number;
   game_mode: string;
   player1: Player;
-  player2:  Player | null;
+  player2:  Player;
   start_time: string;
   end_time?: string;
   duration?: number;

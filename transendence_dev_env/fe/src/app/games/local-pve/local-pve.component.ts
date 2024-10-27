@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
+import { ProfileService } from 'src/app/profile.service';
 
 interface GameSettings {
   maxGameScore: number;
@@ -19,7 +20,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   previousGames: string[] = [];
   gameElapsedTime: string = '0 seconds';
   roundElapsedTime: string = '0 seconds';
-
+  player1Name: string = 'PlayerOne'; // Default until profile loads
   private gameIntervalId: any;
   private roundIntervalId: any;
 
@@ -29,9 +30,19 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     roundScoreLimit: 3
   };
 
-  constructor(private gameService: GameService) {}
+  constructor(private gameService: GameService, private profileService: ProfileService) {}
 
-  ngOnInit(): void {}
+
+  ngOnInit(): void {
+    this.profileService.getProfile().subscribe(
+      profile => {
+        this.player1Name = profile.display_name || profile.username;
+      },
+      error => {
+        console.error('Failed to load profile:', error);
+      }
+    );
+  }
 
   ngOnDestroy(): void {
     this.clearTimers(); // Clear intervals when the component is destroyed
@@ -39,11 +50,11 @@ export class LocalPveComponent implements OnInit, OnDestroy {
 
   startNewGame(): void {
     if (!this.validateSettings()) return;
-
+  
     const newGame: Game = {
       game_mode: 'pve',
-      player1: { id: 1, username: 'PlayerOne' },
-      player2: null, // Initialize as null for AI
+      player1: { id: 1, username: this.player1Name },
+      player2: { id: 0, username: 'AI' },
       start_time: new Date().toISOString(),
       score_player1: 0,
       score_player2: 0,
@@ -54,17 +65,17 @@ export class LocalPveComponent implements OnInit, OnDestroy {
       end_time: undefined,
       winner: null,
     };
-
+  
     this.gameService.createGame(newGame).subscribe((game) => {
       if (this.logs.length) {
         this.previousGames.push(...this.logs);
         this.logs = [];
       }
-      this.currentGame = { ...game, player2: game.player2 || { id: 0, username: 'AI' } }; // Default to AI if player2 is null
+      this.currentGame = { ...game, player2: game.player2 || { id: 0, username: 'AI' } };
       this.gameInProgress = true;
       this.logs.push('New game started in PvE mode');
-      this.startTimers(); // Start game timer
-      this.startNewRound(); // Start the first round
+      this.startTimers();
+      this.startNewRound();
     });
   }
 
@@ -124,27 +135,27 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     this.startRoundTimer(); // Start the round timer
   }
 
-  updateScore(player: 'player1' | 'player2'): void {
+  updateScore(player: 'human' | 'bot'): void {
     if (!this.currentGame || !this.gameInProgress) return;
-
+  
     const currentRound = this.getCurrentRound();
-    const playerName = player === 'player1' ? this.currentGame.player1.username : (this.currentGame.player2?.username || 'AI');
-
+    const scoringPlayer = player === 'human' ? this.player1Name : 'AI';
+  
     const move: MoveLog = {
       time: new Date().toISOString(),
-      player: playerName,
+      player: scoringPlayer,
       action: 'scored',
     };
     this.currentGame.moves_log.push(move);
-
-    if (player === 'player1') {
+  
+    if (player === 'human') {
       this.currentGame.score_player1++;
       currentRound.score_player1++;
     } else {
       this.currentGame.score_player2++;
       currentRound.score_player2++;
     }
-
+  
     this.checkRoundCompletion(currentRound);
     this.checkGameCompletion();
   }

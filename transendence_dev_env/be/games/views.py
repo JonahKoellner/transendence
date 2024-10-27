@@ -30,20 +30,40 @@ class GameViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         Override the creation process to set the authenticated user as player1.
+        Default player2 to None if the game mode is PvE.
         """
-        serializer.save(player1=self.request.user)
+        game_mode = serializer.validated_data.get('game_mode')
+        if game_mode == Game.PVE:
+            serializer.save(player1=self.request.user, player2=None)  # AI as player2
+        else:
+            serializer.save(player1=self.request.user)
 
     def perform_update(self, serializer):
         """
         Override the update process. If the game is marked as completed,
         automatically set the end time, calculate the duration, and determine the winner.
+        Handles both Player-vs-Player and Player-vs-AI cases.
         """
         instance = self.get_object()
-        
+
         if serializer.validated_data.get('is_completed', False):
-            # Calculate duration when game is marked as complete
+            # Calculate duration when the game is marked complete
             duration = (timezone.now() - instance.start_time).total_seconds()
-            winner = instance.player1 if instance.score_player1 > instance.score_player2 else instance.player2
+
+            # Determine the winner
+            if instance.is_against_ai():  # PvE mode
+                if instance.score_player1 > instance.score_player2:
+                    winner = instance.player1  # Human player wins
+                else:
+                    winner = None  # AI wins, set as None or some custom logic if desired
+            else:  # PvP mode
+                if instance.score_player1 > instance.score_player2:
+                    winner = instance.player1
+                elif instance.score_player2 > instance.score_player1:
+                    winner = instance.player2
+                else:
+                    winner = None  # Draw or no winner
+
             serializer.save(
                 end_time=timezone.now(),
                 duration=duration,
