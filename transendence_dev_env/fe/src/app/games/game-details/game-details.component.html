@@ -1,17 +1,52 @@
 <div class="game-details-container" *ngIf="game; else errorTemplate">
-    <h2>Game Details</h2>
+  <h2>Game Details</h2>
+  
+  <section class="general-info">
     <p><strong>Game Mode:</strong> {{ game.game_mode }}</p>
-    <p><strong>Player 1:</strong> {{ game.player1.username }}</p>
-    <p><strong>Player 2:</strong> {{ game.player2?.username || 'AI' }}</p>
+    <p><strong>Player 1:</strong> {{ game.player1 }}</p>
+    <p><strong>Player 2:</strong> {{ game.player2 || 'AI' }}</p>
     <p><strong>Score:</strong> {{ game.score_player1 }} : {{ game.score_player2 }}</p>
     <p><strong>Completed:</strong> {{ game.is_completed ? 'Yes' : 'No' }}</p>
     <p *ngIf="game.winner"><strong>Winner:</strong> {{ game.winner.username }}</p>
     <p><strong>Start Time:</strong> {{ game.start_time | date }}</p>
     <p *ngIf="game.end_time"><strong>End Time:</strong> {{ game.end_time | date }}</p>
     <p *ngIf="game.duration"><strong>Duration:</strong> {{ game.duration }} seconds</p>
-  </div>
-  
-  <ng-template #errorTemplate>
-    <p class="error-message">{{ errorMessage }}</p>
-  </ng-template>
-  
+  </section>
+
+  <section class="rounds-info" *ngIf="game.rounds?.length">
+    <h3>Rounds</h3>
+    <ul>
+      <li *ngFor="let round of game.rounds">
+        <strong>Round {{ round.round_number }}</strong>
+        <p>Start Time: {{ round.start_time | date }}</p>
+        <p *ngIf="round.end_time">End Time: {{ round.end_time | date }}</p>
+        <p>Score - Player 1: {{ round.score_player1 }} | Player 2: {{ round.score_player2 }}</p>
+        <p>Winner: {{ round.winner }}</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="moves-log" *ngIf="game.moves_log?.length">
+    <h3>Move Log</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Player</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let move of game.moves_log">
+          <td>{{ move.time }}</td>
+          <td>{{ move.player }}</td>
+          <td>{{ move.action }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<ng-template #errorTemplate>
+  <p class="error-message">{{ errorMessage }}</p>
+</ng-template>

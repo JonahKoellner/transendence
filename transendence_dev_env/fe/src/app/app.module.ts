@@ -28,6 +28,9 @@ import { TournamentComponent } from './games/tournament/tournament.component';
 import { CommonModule } from '@angular/common';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
 import { UserDetailsComponent } from './profile/user-details/user-details.component';
+import { StatsComponent } from './profile/stats/stats.component';
+import { NgChartsModule } from 'ng2-charts';
+import { RouterModule } from '@angular/router';
 import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.component';
 
 @NgModule({
@@ -54,6 +57,7 @@ import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.c
     TournamentComponent,
     GameDetailsComponent,
     UserDetailsComponent,
+    StatsComponent,
     GameCanvasComponent
     
   ],
@@ -63,7 +67,9 @@ import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.c
     ReactiveFormsModule,
     AppRoutingModule,
     HttpClientModule,
-    CommonModule
+    CommonModule,
+    NgChartsModule,
+    RouterModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
