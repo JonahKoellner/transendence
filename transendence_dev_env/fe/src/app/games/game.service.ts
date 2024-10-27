@@ -37,6 +37,21 @@ export interface Game {
   moves_log: MoveLog[];
   rounds: Round[];
 }
+
+export interface UserStats {
+  pve_games: number;
+  pvp_games: number;
+  win_rate: number;
+  average_duration: number;
+  scores?: number[];
+  avg_rounds_per_game: number;
+  avg_score_per_round: number;
+  monthly_performance: { [month: string]: { games: number; win_rate: number } };
+  current_win_streak: number;
+  max_win_streak: number;
+  first_move_win_rate: number;
+  performance_by_time: { [hour: string]: { games: number; win_rate: number } };
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -108,6 +123,14 @@ export class GameService {
     return this.http.delete<void>(`${this.apiUrl}${gameId}/`, { headers: this.getHeaders() }).pipe(
       catchError((error) => {
         console.error(`Error deleting game ${gameId}:`, error);
+        return of();
+      })
+    );
+  }
+  userGameStatistics(): Observable<UserStats> {
+    return this.http.get<UserStats>(`${this.apiUrl}user-stats/`, { headers: this.getHeaders() }).pipe(
+      catchError((error) => {
+        console.error('Error fetching user game statistics:', error);
         return of();
       })
     );

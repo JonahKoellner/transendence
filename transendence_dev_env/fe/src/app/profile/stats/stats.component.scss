@@ -1,0 +1,44 @@
+/* Center and control the layout of the entire StatsComponent */
+:host {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+  }
+  
+  /* Container for charts to control individual chart size */
+  .chart-container {
+    width: 100%;
+    max-width: 400px;  /* Adjust max width as needed */
+    margin: 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+  }
+  
+  /* Chart titles */
+  .chart-title {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  /* General styling for chart canvases to make them responsive */
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Flexbox layout for multiple charts */
+  .charts-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+  

@@ -1,12 +1,58 @@
 .game-details-container {
-    padding: 1em;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f9f9f9;
-  }
-  
-  .error-message {
-    color: red;
-    font-weight: bold;
-  }
-  
+  padding: 1em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fafafa;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.game-details-container h2,
+.game-details-container h3 {
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+.general-info p,
+.rounds-info ul li,
+.moves-log table {
+  margin: 0.5em 0;
+  color: #555;
+}
+
+.rounds-info ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.rounds-info ul li {
+  border-bottom: 1px solid #ddd;
+  padding: 0.5em 0;
+}
+
+.moves-log table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+.moves-log table th,
+.moves-log table td {
+  padding: 0.5em;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.moves-log table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+}

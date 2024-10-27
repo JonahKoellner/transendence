@@ -28,6 +28,9 @@ import { TournamentComponent } from './games/tournament/tournament.component';
 import { CommonModule } from '@angular/common';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
 import { UserDetailsComponent } from './profile/user-details/user-details.component';
+import { StatsComponent } from './profile/stats/stats.component';
+import { NgChartsModule } from 'ng2-charts';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
   declarations: [
@@ -52,7 +55,8 @@ import { UserDetailsComponent } from './profile/user-details/user-details.compon
     LobbyComponent,
     TournamentComponent,
     GameDetailsComponent,
-    UserDetailsComponent
+    UserDetailsComponent,
+    StatsComponent
     
   ],
   imports: [
@@ -61,7 +65,9 @@ import { UserDetailsComponent } from './profile/user-details/user-details.compon
     ReactiveFormsModule,
     AppRoutingModule,
     HttpClientModule,
-    CommonModule
+    CommonModule,
+    NgChartsModule,
+    RouterModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
