@@ -1,20 +1,49 @@
-<!-- src/app/components/user-search/user-search.component.html -->
+<div class="user-search card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="mb-0">Search Users</h3>
+    <div class="input-group">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        class="form-control"
+        placeholder="Enter username, email, or display name"
+      />
+      <div class="input-group-append">
+        <button class="btn btn-outline-primary" (click)="searchUsers()">Search</button>
+      </div>
+    </div>
+  </div>
 
-<div class="user-search">
-  <h2>Search Users</h2>
-  <input type="text" [(ngModel)]="searchQuery" placeholder="Enter username, email, or display name" />
-  <button (click)="searchUsers()">Search</button>
+  <div class="card-body">
+    <div *ngIf="isLoading" class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
 
-  <div *ngIf="isLoading" class="spinner">Loading...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
-  <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+    <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
 
-  <ul>
-    <li *ngFor="let user of users">
-      <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" width="50" height="50" />
-      <span>{{ user.display_name || user.username }}</span>
-      <button (click)="addFriend(user.id)">Add Friend</button>
-      <a [routerLink]="['/profile/user-details/', user.id]">Account Page</a>
-    </li>
-  </ul>
+    <ul *ngIf="users.length > 0" class="list-group">
+      <li *ngFor="let user of users" class="list-group-item d-flex align-items-center">
+        <img
+          [src]="user.avatar || 'assets/default_avatar.png'"
+          alt="{{ user.username }}"
+          class="rounded-circle mr-3"
+          width="50"
+          height="50"
+        />
+        <div class="flex-grow-1">
+          <h5 class="mb-0">{{ user.display_name || user.username }}</h5>
+          <small class="text-muted">Username: {{ user.username }}</small>
+        </div>
+        <button class="btn btn-outline-primary btn-sm mr-2" (click)="addFriend(user.id)">Add Friend</button>
+        <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', user.id]">Account Page</a>
+      </li>
+    </ul>
+
+    <div *ngIf="users.length === 0 && !isLoading && !error" class="text-muted mt-3">
+      No users found.
+    </div>
+  </div>
 </div>

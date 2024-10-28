@@ -1,47 +1,22 @@
-/* src/app/components/user-search/user-search.component.scss */
-
 .user-search {
-    padding: 20px;
+  .card-header {
+    background-color: #f8f9fa;
   }
-  
-  .user-search input {
-    width: 300px;
-    padding: 8px;
-    margin-right: 10px;
-  }
-  
-  .user-search button {
-    padding: 8px 12px;
-  }
-  
-  .user-search ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .user-search li {
+
+  .list-group-item {
+    padding: 15px;
     display: flex;
     align-items: center;
-    margin: 10px 0;
+    .btn {
+      margin-left: auto;
+    }
   }
-  
-  .user-search img {
-    border-radius: 50%;
+
+  .rounded-circle {
     margin-right: 10px;
   }
-  
-  .user-search .error {
-    color: red;
-    margin-top: 10px;
+
+  .alert {
+    margin-top: 15px;
   }
-  
-  .user-search .success {
-    color: green;
-    margin-top: 10px;
-  }
-  
-  .user-search li button {
-    margin-left: auto;
-    padding: 5px 10px;
-  }
-  
+}

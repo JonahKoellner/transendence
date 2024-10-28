@@ -1,0 +1,45 @@
+/* Fullscreen Background for OTP Verification */
+.verify-otp-container {
+    background-color: #121212;
+  }
+  
+  /* Dark Theme for Form */
+  .form-dark .form-control {
+    background-color: #343a40;
+    color: #e0e0e0;
+    border-radius: 5px;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 10px;
+  }
+  
+  .card h3 {
+    color: #e0e0e0;
+  }
+  
+  /* QR Code Styling */
+  .img-fluid {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #343a40;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  
+  /* Error Message Styling */
+  .alert-danger {
+    background-color: #b71c1c;
+    color: #ffffff;
+  }
+  
+  .btn-primary {
+    background-color: #007bff;
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  

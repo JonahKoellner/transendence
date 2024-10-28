@@ -1,58 +1,63 @@
+<div class="notifications-icon" (click)="toggleNotifications()">
+  <i class="fas fa-bell">ICON</i>
+  <span *ngIf="unreadCount > 0" class="badge badge-danger">{{ unreadCount }}</span>
+</div>
 
-<div class="notifications-container">
-  <h2>Notifications</h2>
-  
-  <div class="filters">
-    <label for="type">Filter by Type:</label>
-    <select id="type" [(ngModel)]="filterType">
-      <option value="all">All</option>
-      <option value="friend_request">Friend Requests</option>
-      <option value="game_invite">Game Invites</option>
-      <option value="new_message">New Messages</option>
-      <!-- Add other types as needed -->
-    </select>
-
-    <label for="priority">Filter by Priority:</label>
-    <select id="priority" [(ngModel)]="filterPriority">
-      <option value="all">All</option>
-      <option value="low">Low</option>
-      <option value="medium">Medium</option>
-      <option value="high">High</option>
-    </select>
+<div class="notifications-container card" *ngIf="showNotifications">
+  <div class="card-header d-flex justify-content-between">
+    <h5 class="mb-0">Notifications</h5>
+    <button class="btn btn-sm btn-secondary" (click)="markAllAsRead()">Mark All as Read</button>
   </div>
 
-  <ul>
-    <li *ngFor="let notification of notifications | notificationFilter:filterType:filterPriority"
-        [ngClass]="getPriorityClass(notification.priority)"
-        [class.unread]="!notification.is_read"
-        (click)="handleNotification(notification)">
+  <ul class="list-group list-group-flush">
+    <li
+      *ngFor="let notification of notifications"
+      [ngClass]="getPriorityClass(notification.priority)"
+      class="list-group-item notification-item"
+      (click)="handleNotification(notification)"
+    >
+      <i
+        [ngClass]="{
+          'fa fa-user-plus': notification.notification_type === 'friend_request',
+          'fa fa-gamepad': notification.notification_type === 'game_invite',
+          'fa fa-envelope': notification.notification_type === 'new_message'
+        }"
+        class="notification-icon"
+      ></i>
       <div class="notification-content">
         <span>{{ notification.sender.username }} {{ getNotificationText(notification.notification_type) }}</span>
-        <small>{{ notification.timestamp | date:'short' }}</small>
+        <small class="text-muted">{{ notification.timestamp | date: 'short' }}</small>
       </div>
-      <button *ngIf="!notification.is_read" (click)="markAsRead(notification); $event.stopPropagation();">Mark as Read</button>
+      <button
+        *ngIf="!notification.is_read"
+        class="btn btn-sm btn-outline-warning mark-read-btn"
+        (click)="markAsRead(notification); $event.stopPropagation();"
+      >
+        Mark as Read
+      </button>
     </li>
   </ul>
 </div>
+
 
 <!-- Friend Request Dialog -->
 <app-friend-request-dialog
   *ngIf="showFriendRequestDialog && currentNotification"
   [notification]="currentNotification"
-  (close)="onCloseFriendRequestDialog($event)">
-</app-friend-request-dialog>
+  (close)="onCloseFriendRequestDialog($event)"
+></app-friend-request-dialog>
 
 <!-- Game Invite Dialog -->
 <app-game-invite-dialog
   *ngIf="showGameInviteDialog && currentNotification"
   [notification]="currentNotification"
-  (close)="onCloseGameInviteDialog($event)">
-</app-game-invite-dialog>
+  (close)="onCloseGameInviteDialog($event)"
+></app-game-invite-dialog>
 
 <!-- Chat Window -->
 <app-chat-window
   *ngIf="selectedFriendId && selectedFriendUsername"
   [friendId]="selectedFriendId"
   [friendUsername]="selectedFriendUsername"
-  (close)="closeChat()">
-</app-chat-window>
+  (close)="closeChat()"
+></app-chat-window>

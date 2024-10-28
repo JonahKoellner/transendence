@@ -32,7 +32,7 @@ import { StatsComponent } from './profile/stats/stats.component';
 import { NgChartsModule } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
 import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.component';
-
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 @NgModule({
   declarations: [
     AppComponent,
@@ -69,7 +69,8 @@ import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.c
     HttpClientModule,
     CommonModule,
     NgChartsModule,
-    RouterModule
+    RouterModule,
+    NgbModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

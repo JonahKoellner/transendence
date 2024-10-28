@@ -26,13 +26,15 @@ interface Notification {
 })
 export class NotificationsComponent implements OnInit {
   notifications: Notification[] = [];
+  unreadCount: number = 0;
   filterType: string = 'all';
   filterPriority: string = 'all';
+  showNotifications: boolean = false;
   showFriendRequestDialog: boolean = false;
   showGameInviteDialog: boolean = false;
   currentNotification: Notification | null = null;
-  selectedFriendId: number | null = null;  // Track friend ID
-  selectedFriendUsername: string | null = null;  // Track friend username
+  selectedFriendId: number | null = null;
+  selectedFriendUsername: string | null = null;
 
   constructor(
     private notificationService: NotificationService,
@@ -42,24 +44,43 @@ export class NotificationsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (this.authService.isAuthenticated()) {
-      // Fetch historical notifications on component initialization
-      this.notificationService.getNotifications().subscribe(
-        (notifications) => {
-          this.notifications = notifications;
-        },
-        (error) => console.error(error)
-      );
+    this.notificationService.getNotifications().subscribe(
+      (notifications) => {
+        this.notifications = notifications;
+        this.updateUnreadCount();
+      },
+      (error) => console.error(error)
+    );
+  }
+
+  toggleNotifications(): void {
+    this.showNotifications = !this.showNotifications;
+    if (this.showNotifications) {
+      this.markAllAsRead();
     }
   }
 
   markAsRead(notification: Notification): void {
-    this.notificationService.markAsRead(notification.id).subscribe(
-      () => {
-        notification.is_read = true;
-      },
-      (error) => console.error(error)
-    );
+    if (!notification.is_read) {
+      this.notificationService.markAsRead(notification.id).subscribe(
+        () => {
+          notification.is_read = true;
+          this.updateUnreadCount();
+        },
+        (error) => console.error('Error marking as read:', error)
+      );
+    }
+  }
+
+  markAllAsRead(): void {
+    this.notificationService.markAllAsRead().subscribe(() => {
+      this.notifications.forEach((notification) => (notification.is_read = true));
+      this.updateUnreadCount();
+    });
+  }
+
+  updateUnreadCount(): void {
+    this.unreadCount = this.notifications.filter((notif) => !notif.is_read).length;
   }
 
   handleNotification(notification: Notification): void {
@@ -77,6 +98,7 @@ export class NotificationsComponent implements OnInit {
       default:
         console.log('Unhandled notification type:', notification.notification_type);
     }
+    this.markAsRead(notification);
   }
 
   onCloseFriendRequestDialog(result: string): void {

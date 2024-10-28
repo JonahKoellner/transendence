@@ -1,19 +1,45 @@
+/* Dark Theme for Profile Page */
 .user-details-container {
-    padding: 1em;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f9f9f9;
-  }
-  
-  .avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin-bottom: 1em;
-  }
-  
-  .error-message {
-    color: red;
-    font-weight: bold;
-  }
-  
+  background-color: #121212;
+}
+
+/* Card Styling */
+.card {
+  border: 1px solid #343a40;
+  border-radius: 8px;
+}
+
+.card-header {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-bottom: 1px solid #343a40;
+}
+
+/* Badge Styling */
+.badge-success {
+  background-color: #28a745;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+}
+
+/* Avatar Styling */
+.avatar {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  border: 3px solid #ffffff;
+}
+
+/* List Group Dark Mode */
+.list-group-item {
+  background-color: #1e1e1e;
+  border-color: #343a40;
+}
+
+.list-group-item .badge {
+  font-size: 0.8rem;
+}

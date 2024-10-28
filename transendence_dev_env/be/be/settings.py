@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'django_password_validators.password_history',
     'django_password_validators.password_character_requirements',
     'channels'
-    
 ]
 
 MIDDLEWARE = [

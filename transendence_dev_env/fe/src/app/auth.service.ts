@@ -138,6 +138,7 @@ export class AuthService {
     const refreshToken = localStorage.getItem('refresh_token');
   
     if (!refreshToken) {
+      console.error('Refresh token is missing, logging out');
       this.logout();
       return of(null);
     }

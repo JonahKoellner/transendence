@@ -1,10 +1,10 @@
 <div class="dialog-overlay">
-  <div class="dialog-content">
-    <h3>Friend Request</h3>
-    <p>{{ notification.sender.username }} has sent you a friend request.</p>
-    <div class="dialog-actions">
-      <button (click)="onDecline()">Decline</button>
-      <button (click)="onAccept()">Accept</button>
+  <div class="dialog-content shadow-lg rounded">
+    <h3 class="h5 mb-3">Friend Request</h3>
+    <p><strong>{{ notification.sender.username }}</strong> has sent you a friend request.</p>
+    <div class="dialog-actions d-flex justify-content-end mt-4">
+      <button class="btn btn-outline-secondary mr-2" (click)="onDecline()">Decline</button>
+      <button class="btn btn-primary" (click)="onAccept()">Accept</button>
     </div>
   </div>
 </div>

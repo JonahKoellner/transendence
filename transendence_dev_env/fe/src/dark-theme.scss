@@ -1,0 +1,45 @@
+
+$background-color: #121212;
+$primary-color: #bb86fc;
+$secondary-color: #03dac6;
+$text-color: #e0e0e0;
+$surface-color: #1e1e1e;
+$error-color: #cf6679;
+
+body, .dark-theme {
+  background-color: $background-color;
+  color: $text-color;
+}
+
+a {
+  color: $primary-color;
+}
+
+button, .btn {
+  background-color: $primary-color;
+  color: $text-color;
+  border: none;
+}
+
+button:hover, .btn:hover {
+  background-color: lighten($primary-color, 10%);
+}
+
+input, select, textarea {
+  background-color: $surface-color;
+  color: $text-color;
+  border: 1px solid darken($surface-color, 20%);
+}
+
+.card, .container, .navbar {
+  background-color: $surface-color;
+  color: $text-color;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+table, th, td {
+  background-color: $surface-color;
+  color: $text-color;
+  border: 1px solid darken($surface-color, 10%);
+}

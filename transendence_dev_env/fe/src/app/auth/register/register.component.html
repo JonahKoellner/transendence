@@ -1,17 +1,28 @@
-<div class="register-container">
-    <h2>Register</h2>
-    <form (submit)="register()">
-      <label for="username">Username:</label>
-      <input id="username" [(ngModel)]="username" name="username" required />
-  
-      <label for="email">Email:</label>
-      <input id="email" [(ngModel)]="email" name="email" required />
-  
-      <label for="password">Password:</label>
-      <input id="password" type="password" [(ngModel)]="password" name="password" required />
-  
-      <button type="submit">Register</button>
+<div class="container d-flex justify-content-center align-items-center vh-100 register-container">
+  <div class="card bg-dark text-light shadow-lg p-4" style="width: 100%; max-width: 400px;">
+    <h2 class="text-center mb-4">Register</h2>
+    <form (submit)="register()" class="form-dark">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input id="username" [(ngModel)]="username" name="username" required class="form-control bg-secondary text-light border-0">
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input id="email" [(ngModel)]="email" name="email" required class="form-control bg-secondary text-light border-0">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input id="password" type="password" [(ngModel)]="password" name="password" required class="form-control bg-secondary text-light border-0">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block mt-3">Register</button>
+      <div class="text-center mt-3">
+        <a [routerLink]="['/login']" class="text-light">Already have an account? Login here.</a>
+      </div>
     </form>
-    <div *ngIf="error" class="error">{{ error }}</div>
+
+    <div *ngIf="error" class="alert alert-danger mt-3 text-center">{{ error }}</div>
   </div>
-  
+</div>

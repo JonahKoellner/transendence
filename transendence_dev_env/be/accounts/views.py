@@ -338,7 +338,33 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.is_read = True
         notification.save()
         return Response({'status': 'Notification marked as read.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='mark-all-as-read')
+    def mark_all_as_read(self, request):
+        notifications = Notification.objects.filter(receiver=request.user, is_read=False)
+        notifications.update(is_read=True)
+        return Response({'status': 'All notifications marked as read.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path='delete')
+    def delete_notification(self, request, pk=None):
+        notification = get_object_or_404(Notification, pk=pk, receiver=request.user)
+        notification.delete()
+        return Response({'status': 'Notification deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['delete'], url_path='clear-all')
+    def clear_all_notifications(self, request):
+        Notification.objects.filter(receiver=request.user).delete()
+        return Response({'status': 'All notifications cleared.'}, status=status.HTTP_204_NO_CONTENT)
     
+    @action(detail=False, methods=['get'], url_path='by-type')
+    def get_notifications_by_type(self, request):
+        notification_type = request.query_params.get('type')
+        if notification_type not in dict(Notification.NOTIFICATION_TYPES).keys():
+            return Response({'error': 'Invalid notification type.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        notifications = Notification.objects.filter(receiver=request.user, notification_type=notification_type)
+        serializer = self.get_serializer(notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ChatMessageViewSet(viewsets.ModelViewSet):
     serializer_class = ChatMessageSerializer

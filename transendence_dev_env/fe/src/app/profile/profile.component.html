@@ -1,59 +1,66 @@
-<div *ngIf="isLoading">Loading...</div>
-<div *ngIf="!isLoading && userProfile">
-  <h2>Your Profile</h2>
-
-  <div>
-    <strong>ID:</strong> {{ userProfile.id }}
-  </div>
-  <div>
-    <strong>Username:</strong> {{ userProfile.username }}
-  </div>
-  <div>
-    <strong>Email:</strong> {{ userProfile.email }}
-  </div>
-
-  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-    <div>
-      <label for="display_name"><strong>Display Name:</strong></label>
-      <input id="display_name" formControlName="display_name" type="text" />
+<div *ngIf="isLoading" class="text-light">Loading...</div>
+<div *ngIf="!isLoading && userProfile" class="container mt-4 text-light">
+  <!-- Profile Card -->
+  <div class="card bg-dark shadow-sm mb-4 border-secondary">
+    <div class="card-header bg-dark border-secondary">
+      <h2 class="h5 mb-0 text-light">Your Profile</h2>
     </div>
+    <div class="card-body">
+      <p><strong>ID:</strong> {{ userProfile.id }}</p>
+      <p><strong>Username:</strong> {{ userProfile.username }}</p>
+      <p><strong>Email:</strong> {{ userProfile.email }}</p>
 
-    <div>
-      <label for="avatar"><strong>Avatar:</strong></label><br />
-      <img
-        [src]="avatarPreview"
-        alt="Avatar"
-        width="150"
-        height="150"
-        onerror="this.onerror=null; this.src='assets/default_avatar.png';"
-      /><br />
-      <input id="avatar" type="file" (change)="onFileChange($event)" />
+      <!-- Profile Form -->
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="form-dark">
+        <div class="form-group">
+          <label for="display_name"><strong>Display Name:</strong></label>
+          <input id="display_name" formControlName="display_name" type="text" class="form-control bg-secondary text-light border-0">
+        </div>
+
+        <div class="form-group">
+          <label for="avatar"><strong>Avatar:</strong></label><br />
+          <img
+            [src]="avatarPreview"
+            alt="Avatar"
+            class="rounded-circle mb-3 border border-light"
+            width="150"
+            height="150"
+            onerror="this.onerror=null; this.src='assets/default_avatar.png';"
+          /><br />
+          <input id="avatar" type="file" (change)="onFileChange($event)" class="form-control-file text-light">
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Update Profile</button>
+      </form>
     </div>
-
-    <button type="submit">Update Profile</button>
-  </form>
+  </div>
 
   <!-- Game History Section -->
-  <h3>Your Game History</h3>
-  <div *ngIf="gameHistory.length > 0; else noHistory">
-    <ul>
-      <li *ngFor="let game of gameHistory">
+  <div class="card bg-dark shadow-sm border-secondary">
+    <div class="card-header bg-dark border-secondary">
+      <h3 class="h6 mb-0 text-light">Your Game History</h3>
+    </div>
+    <ul *ngIf="gameHistory.length > 0; else noHistory" class="list-group list-group-flush">
+      <li *ngFor="let game of gameHistory" class="list-group-item bg-dark text-light border-secondary">
         <p><strong>Game ID:</strong> {{ game.id }}</p>
         <p><strong>Mode:</strong> {{ game.game_mode }}</p>
-        <p><strong>Score:</strong> {{ game.player1.username }} ({{ game.score_player1 }}) vs 
-          {{ game.player2 ? game.player2.username : 'AI' }} ({{ game.score_player2 }})
+        <p>
+          <strong>Score:</strong> 
+          {{ game.player1.username }} ({{ game.score_player1 }}) vs {{ game.player2 ? game.player2.username : 'AI' }} ({{ game.score_player2 }})
         </p>
         <p><strong>Winner:</strong> {{ game.winner?.username || 'AI' }}</p>
         <p><strong>Duration:</strong> {{ game.duration | number: '1.2-2' }} seconds</p>
       </li>
     </ul>
+    <ng-template #noHistory>
+      <p class="alert alert-info text-center mb-0">No game history available.</p>
+    </ng-template>
   </div>
-  <ng-template #noHistory>
-    <p>No game history available.</p>
-  </ng-template>
 </div>
 
-<div *ngIf="!isLoading && !userProfile">
+<div *ngIf="!isLoading && !userProfile" class="alert alert-danger text-center">
   <p>No profile data available.</p>
 </div>
+
+<!-- Stats Component -->
 <app-stats></app-stats>

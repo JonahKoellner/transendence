@@ -1,25 +1,47 @@
-<div *ngIf="isLoading">Loading friends...</div>
-<div *ngIf="!isLoading">
-  <h2>Your Friends</h2>
-  <div *ngIf="friends.length === 0">
-    <p>You have no friends yet.</p>
+<div *ngIf="isLoading" class="text-center mt-4">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">Loading friends...</span>
   </div>
-  <ul>
-    <li *ngFor="let friend of friends">
-      <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" width="50" height="50">
-      <span>{{ friend.display_name || friend.username }}</span>
-      <button (click)="removeFriend(friend.id)">Remove Friend</button>
-      <button (click)="blockUser(friend.id)">Block User</button>
-      <!-- New button to navigate to chat window -->
-      <button (click)="openChat(friend.id, friend.username)">Chat</button>
-      <a [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
+</div>
+
+<div *ngIf="!isLoading">
+  <h2 class="mb-4">Your Friends</h2>
+
+  <div *ngIf="friends.length === 0" class="alert alert-info">
+    You have no friends yet.
+  </div>
+
+  <ul class="list-group">
+    <li *ngFor="let friend of friends" class="list-group-item d-flex align-items-center">
+      <img
+        [src]="friend.avatar || 'assets/default_avatar.png'"
+        alt="{{ friend.username }}"
+        class="rounded-circle mr-3"
+        width="50"
+        height="50"
+      />
+      <div class="flex-grow-1">
+        <h5 class="mb-0">{{ friend.display_name || friend.username }}</h5>
+        <small class="text-muted">Username: {{ friend.username }}</small>
+      </div>
+      <button class="btn btn-outline-danger btn-sm mr-2" (click)="removeFriend(friend.id)">Remove</button>
+      <button class="btn btn-outline-secondary btn-sm mr-2" (click)="blockUser(friend.id)">Block</button>
+      <button class="btn btn-primary btn-sm mr-2" (click)="openChat(friend.id, friend.username)">Chat</button>
+      <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
     </li>
   </ul>
-  <div *ngIf="error">
-    <p class="error">{{ error }}</p>
+
+  <div *ngIf="error" class="alert alert-danger mt-3">
+    {{ error }}
   </div>
 
   <!-- Chat window (shown conditionally) -->
-  <app-chat-window *ngIf="selectedFriendId && selectedFriendUsername" [friendId]="selectedFriendId" [friendUsername]="selectedFriendUsername!"></app-chat-window>
-  
+  <app-chat-window
+    *ngIf="selectedFriendId && selectedFriendUsername"
+    [friendId]="selectedFriendId"
+    [friendUsername]="selectedFriendUsername"
+    class="mt-4"
+  ></app-chat-window>
 </div>
+
+<app-user-search></app-user-search>
