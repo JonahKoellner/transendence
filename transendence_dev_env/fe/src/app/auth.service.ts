@@ -114,11 +114,35 @@ export class AuthService {
     }
   }
 
-  private clearTokens(): void {
+  public clearTokens(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('otp_verified');
     localStorage.removeItem('otp_uri');
   }
+
+  clearAll(): void {
+    localStorage.clear();
+    sessionStorage.clear();
+    this.clearCookies();
+  }
+
+  clearLocalStorage(): void {
+    localStorage.clear();
+  }
+
+  clearSessionStorage(): void {
+    sessionStorage.clear();
+  }
+
+  private clearCookies(): void {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const eqPos = cookie.indexOf('=');
+      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+      document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+    }
+  }
+
 
   // Handle redirection after login based on authentication state
   handleAuthNavigation() {
@@ -134,11 +158,11 @@ export class AuthService {
     }
   }
 
-  refreshTokenIfNeeded(): Observable<any> {
+  refreshTokenIfNeeded(): Observable<string | null> {
     const refreshToken = localStorage.getItem('refresh_token');
-  
     if (!refreshToken) {
       console.error('Refresh token is missing, logging out');
+      this.clearAll();
       this.logout();
       return of(null);
     }
@@ -147,15 +171,18 @@ export class AuthService {
       tap((response: any) => {
         if (response && response.access) {
           console.log('Access token refreshed successfully', response.access);
-          localStorage.setItem('access_token', response.access);
+          // Store the new tokens, assuming response contains the updated refresh token if rotation is enabled
+          this.storeTokens(response.access, response.refresh || refreshToken);
           this.websocketService.connectNotifications(response.access);
         } else {
           console.log('Refresh token failed, logging out');
+          this.clearAll();
           this.logout();
         }
       }),
       catchError(error => {
         console.error('Error refreshing token, logging out', error);
+        this.clearAll();
         this.logout();
         return of(null);
       })
