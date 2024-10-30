@@ -26,7 +26,7 @@ export class LoginComponent implements OnInit{
     this.authService.login(this.username, this.password).subscribe(
       (response: any) => {
         localStorage.setItem('access_token', response.access);
-        this.router.navigate(['/verify-otp']);  // Redirect to OTP verification
+        this.router.navigate(['/verify-otp', response.otp_uri]);
       },
       (error) => {
         this.error = 'Invalid username or password';

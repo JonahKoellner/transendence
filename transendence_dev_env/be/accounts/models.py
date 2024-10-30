@@ -7,7 +7,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     otp_secret = models.CharField(max_length=16, blank=True, null=True)
     is_2fa_enabled = models.BooleanField(default=False)
-
+    has_logged_in = models.BooleanField(default=False)
 
     display_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default_avatar.png', blank=True, null=True)

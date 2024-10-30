@@ -6,7 +6,9 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import ValidationError
+import random
 from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
     TokenSerializer, UserProfileSerializer, NotificationSerializer,
@@ -23,6 +25,8 @@ from rest_framework.decorators import action
 from .models import Notification, ChatMessage
 from django.db import models
 
+import be.settings as besettings
+
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -37,29 +41,59 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+
+            # Check if the profile exists; if not, raise an error
+            try:
+                profile = user.profile
+            except ObjectDoesNotExist:
+                raise ValidationError({"profile": "User profile does not exist."})
+
+            # Retrieve the `is_2fa_enabled` attribute from the user's profile
+            is_2fa_enabled = profile.is_2fa_enabled
+
+            # Response data
             data = {
-                'access': str(refresh.access_token),
-                'is_2fa_enabled': user.profile.is_2fa_enabled
+                'access': access_token,
+                'refresh': str(refresh),
+                'is_2fa_enabled': is_2fa_enabled
             }
 
-            otp_uri = user.profile.generate_otp()  # Generates and saves the OTP secret
-            data['otp_uri'] = otp_uri  # Include otp_uri in the response data
+            # OTP URI handling (if needed)
+            if is_2fa_enabled or should_generate_otp(profile) or True:
+                otp_uri = profile.generate_otp()
+                if otp_uri:
+                    data['otp_uri'] = otp_uri
 
-            response = JsonResponse(data)
+            response = Response(data)
 
-            # Set the refresh token as an HTTP-only secure cookie
-            cookie_max_age = api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()
-            response.set_cookie(
-                'refresh_token',
-                str(refresh),
-                max_age=cookie_max_age,
-                httponly=True,
-                secure=True,  # Ensure this is True in production with HTTPS
-                samesite='Lax'
-            )
+            # Set refresh token in HttpOnly cookie
+            try:
+                response.set_cookie(
+                    'refresh_token',
+                    str(refresh),
+                    max_age=api_settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                    httponly=True,
+                    secure=not besettings.DEBUG,
+                    samesite='Lax' if besettings.DEBUG else 'None'
+                )
+                print("Refresh token cookie set successfully")
+            except Exception as e:
+                print("Error setting refresh token cookie:", e)
+
             return response
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+def should_generate_otp(profile):
+    # Generate OTP on first login after registering
+    if not profile.has_logged_in:
+        profile.has_logged_in = True
+        profile.save()
+        return True
+
+    # Generate OTP at random intervals
+    return random.choice([True, False])
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -67,17 +101,24 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-            # Get the refresh token from the cookies
             refresh_token = request.COOKIES.get('refresh_token')
+            print("Received refresh token from cookies during logout:", refresh_token)
+
             if refresh_token is None:
+                print("No refresh token found in cookies.")
                 return Response({"message": "Refresh token not found"}, status=status.HTTP_400_BAD_REQUEST)
+            
             token = RefreshToken(refresh_token)
-            token.blacklist()
+            token.blacklist()  # Blacklist the refresh token
+            
+            # Create the logout response
             response = Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
-            # Delete the refresh token cookie
             response.delete_cookie('refresh_token')
+            print("Refresh token blacklisted and cookie cleared.")
             return response
+
         except Exception as e:
+            print("Error during logout:", e)
             return Response({"message": "Invalid refresh token or error in logout"}, status=status.HTTP_400_BAD_REQUEST)
         
 class Enable2FAView(APIView):
@@ -170,42 +211,30 @@ class UserProfileView(APIView):
     
 class TokenRefreshView(SimpleJWTTokenRefreshView):
     def post(self, request, *args, **kwargs):
-        try:
-            # Retrieve the refresh token from the cookies
-            refresh_token = request.COOKIES.get('refresh_token')
-            if refresh_token is None:
-                return Response({"message": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-            # Validate the refresh token
-            serializer = self.get_serializer(data={'refresh': refresh_token})
-            serializer.is_valid(raise_exception=True)
-            
-            # Generate new tokens
-            access_token = serializer.validated_data['access']
-            refresh = serializer.validated_data.get('refresh')
-            
-            response_data = {'access': access_token}
-            response = Response(response_data)
-
-            # If rotating refresh tokens, set the new refresh token in the cookie
-            if api_settings.ROTATE_REFRESH_TOKENS and refresh:
-                cookie_max_age = api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()
-                response.set_cookie(
-                    'refresh_token',
-                    str(refresh),
-                    max_age=cookie_max_age,
-                    httponly=True,
-                    secure=not settings.DEBUG,  # True in production, False in development
-                    samesite='Lax'
-                )
-            return response
-
-        except InvalidToken:
-            return Response({"message": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
-        except TokenError as e:
-            return Response({"message": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-        except Exception as e:
-            return Response({"message": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        refresh_token = request.COOKIES.get('refresh_token')
+        if not refresh_token:
+            return Response({"message": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        serializer = self.get_serializer(data={'refresh': refresh_token})
+        serializer.is_valid(raise_exception=True)
+        
+        # Set new tokens
+        access_token = serializer.validated_data['access']
+        new_refresh_token = serializer.validated_data.get('refresh')
+        response_data = {'access': access_token}
+        response = Response(response_data)
+        
+        # Update refresh token cookie if rotated
+        if api_settings.ROTATE_REFRESH_TOKENS and new_refresh_token:
+            response.set_cookie(
+                'refresh_token',
+                new_refresh_token,
+                max_age=api_settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                httponly=True,
+                secure=not DEBUG,
+                samesite='Lax' if DEBUG else 'None'
+            )
+        return response
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

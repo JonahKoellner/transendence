@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { AuthService } from '../auth.service';
 
 export interface User {
   id: number;
@@ -29,7 +30,8 @@ export class NotificationService {
 
   constructor(
     private http: HttpClient,
-    private websocketService: WebsocketService
+    private websocketService: WebsocketService,
+    private authService: AuthService
   ) {
     this.retrieveNotifications();  // Fetch initial notifications on service initialization
     this.receiveNotifications();   // Listen for new notifications via WebSocket
@@ -37,12 +39,13 @@ export class NotificationService {
 
   // Fetch historical notifications from the backend
   retrieveNotifications(): void {
-    this.fetchNotifications().subscribe(
-      (notifications) => {
-        this.notifications$.next(notifications);  // Populate initial notifications list
-      },
-      (error) => console.error('Error fetching notifications:', error)
-    );
+    if (!this.authService.isAuthenticated()) return;
+      this.fetchNotifications().subscribe(
+        (notifications) => {
+          this.notifications$.next(notifications);  // Populate initial notifications list
+        },
+        (error) => console.error('Error fetching notifications:', error)
+      );
   }
 
   // Fetch notifications from the backend API
@@ -66,6 +69,7 @@ export class NotificationService {
 
   // Listen for new notifications from WebSocket
   private receiveNotifications(): void {
+    if (!this.authService.isAuthenticated()) return;
     this.websocketService.notifications$.subscribe((notification: Notification) => {
       const currentNotifications = this.notifications$.value;
       this.notifications$.next([notification, ...currentNotifications]);

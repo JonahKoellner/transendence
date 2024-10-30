@@ -19,7 +19,7 @@ import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
-  { path: 'verify-otp', component: VerifyOtpComponent },
+  { path: 'verify-otp/:id', component: VerifyOtpComponent },
   { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'profile/user-details/:id', component: UserDetailsComponent, canActivate: [AuthGuard] },

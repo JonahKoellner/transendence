@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/auth.service';
 import * as QRCode from 'qrcode';
 
@@ -14,17 +14,26 @@ export class VerifyOtpComponent {
   qrCodeImage: string = '';  // For storing the QR code image
   isLoading: boolean = false;
   showQRCode: boolean = false;  // Control whether to display QR code
+  otp_uri: string = "";
+  constructor(private authService: AuthService, private router: Router, private route: ActivatedRoute) {}
 
-  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
-    const otpUri = localStorage.getItem('otp_uri');
-    if (otpUri) {
-      this.showQRCode = true;
-      this.generateQRCode(otpUri);
-    } else {
-      this.showQRCode = false;
-    }
+    this.route.paramMap.subscribe(params => {
+      this.otp_uri = params.get('id')!;
+      if (this.otp_uri) {
+        this.showQRCode = true;
+        this.generateQRCode(this.otp_uri);
+      } else {
+        const otpUri = localStorage.getItem('otp_uri');
+        if (otpUri) {
+          this.showQRCode = true;
+          this.generateQRCode(otpUri);
+        } else {
+          this.showQRCode = false;
+        }
+      }
+    });
   }
 
   generateQRCode(otpUri: string) {

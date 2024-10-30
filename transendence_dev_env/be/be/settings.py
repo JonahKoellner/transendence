@@ -190,7 +190,7 @@ else:
     SECURE_CONTENT_TYPE_NOSNIFF = False
     SECURE_REFERRER_POLICY = 'no-referrer'
     X_FRAME_OPTIONS = 'SAMEORIGIN'  # Allows iframe embedding in development
-    CORS_ALLOW_ALL_ORIGINS = True
+    # CORS_ALLOW_ALL_ORIGINS = True
 
 
 

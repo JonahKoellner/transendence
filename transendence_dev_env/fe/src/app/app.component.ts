@@ -1,4 +1,4 @@
-import { AfterViewChecked, AfterViewInit, Component,Renderer2, ViewChild  } from '@angular/core';
+import { AfterViewChecked, AfterViewInit, Component,OnInit,Renderer2, ViewChild  } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
 import { NotificationsComponent } from './notifications/notifications/notifications.component';
@@ -8,7 +8,7 @@ import { NotificationsComponent } from './notifications/notifications/notificati
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit{
   title = 'MyApp';
   isDarkTheme = true;
 
@@ -18,6 +18,23 @@ export class AppComponent {
   ) {
     this.authService.initializeWebSocket();
     this.applyTheme();
+  }
+
+  ngOnInit(): void {
+      console.log("------ Local Storage ------");
+      for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) {
+              console.log(`${key}: ${localStorage.getItem(key)}`);
+          }
+      }
+  
+      console.log("------ Cookies ------");
+      const cookies = document.cookie.split(';');
+      cookies.forEach(cookie => {
+          const [name, value] = cookie.split('=');
+          console.log(`${name.trim()}: ${decodeURIComponent(value)}`);
+      });
   }
 
   logout(): void {

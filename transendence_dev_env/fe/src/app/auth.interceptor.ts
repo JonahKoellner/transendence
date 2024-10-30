@@ -6,7 +6,6 @@ import { catchError, switchMap, filter, take } from 'rxjs/operators';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  private refreshInProgress = false;
   private refreshTokenSubject: Subject<string | null> = new Subject<string | null>();
 
   constructor(private authService: AuthService) {}
@@ -23,14 +22,14 @@ export class AuthInterceptor implements HttpInterceptor {
         console.error('Interceptor caught error:', error);
 
         // 401 error handling with refresh token logic
-        if (error.status === 401 && localStorage.getItem('refresh_token')) {
-          if (!this.refreshInProgress) {
-            this.refreshInProgress = true;
+        if (error.status === 401) {
+          if (!this.authService.refreshInProgress) {
+            this.authService.refreshInProgress = true;
             this.refreshTokenSubject.next(null); // Reset the subject for new refresh
 
             return this.authService.refreshTokenIfNeeded().pipe(
               switchMap((newAccessToken) => {
-                this.refreshInProgress = false;
+                this.authService.refreshInProgress = false;
                 if (newAccessToken) {
                   this.refreshTokenSubject.next(newAccessToken);
                   req = this.addTokenToRequest(req, newAccessToken);
@@ -42,7 +41,7 @@ export class AuthInterceptor implements HttpInterceptor {
                 }
               }),
               catchError((refreshError) => {
-                this.refreshInProgress = false;
+                this.authService.refreshInProgress = false;
                 this.authService.clearAll();
                 this.authService.logout();
                 return throwError(refreshError);
@@ -61,19 +60,17 @@ export class AuthInterceptor implements HttpInterceptor {
           }
         }
 
-        this.authService.clearAll();
-        this.authService.logout();
         return throwError(error);
       })
     );
   }
 
-  // Add token to request headers
   private addTokenToRequest(req: HttpRequest<any>, token: string): HttpRequest<any> {
     return req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
-      }
+      },
+      withCredentials: true,
     });
   }
 }

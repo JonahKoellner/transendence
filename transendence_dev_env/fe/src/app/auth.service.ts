@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
 
@@ -12,7 +12,8 @@ import { WebsocketService } from './services/websocket.service';
 export class AuthService {
   private apiUrl = 'http://127.0.0.1:8000';  // Your Django backend URL
   public jwtHelper = new JwtHelperService();
-
+  public refreshInProgress = false;
+  
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService) {}
 
   // Register a new user
@@ -24,26 +25,16 @@ export class AuthService {
   login(username: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/accounts/login/`, { username, password }, { withCredentials: true }).pipe(
       tap((response: any) => {
-        if (response.access) {
+        if (response.access && response.refresh) {
           this.storeTokens(response.access, response.refresh);
+          localStorage.setItem('otp_uri', response.otp_uri);
           this.websocketService.connectNotifications(response.access);
-          // Check if otp_uri is present
-          if (response.otp_uri) {
-            // 2FA is not enabled yet, starting setup
-            localStorage.setItem('otp_uri', response.otp_uri);  // Save OTP URI for QR code generation
-            this.router.navigate(['/verify-otp']);  // Redirect to OTP setup and verification
-          } else {
-            // 2FA is enabled, proceed to home
-            this.router.navigate(['/home']);
-          }
         } else {
-          console.error('Login failed: Access token not received');
-          // Handle login failure (e.g., show an error message)
+          console.error('Login failed: Access or refresh token not received');
         }
       }),
       catchError(error => {
         console.error('Login error:', error);
-        // Handle error (e.g., show an error message)
         return of(null);
       })
     );
@@ -72,7 +63,11 @@ export class AuthService {
   // Store the access token in local storage
   private storeTokens(accessToken: string, refreshToken: string): void {
     localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
+    document.cookie = `refresh_token=${refreshToken}; path=/; SameSite=Lax; Secure=False`;
+    console.log('Access token stored:', accessToken);  // Debug log
+    console.log('Refresh token stored:', refreshToken);  // Debug log
+    console.log('Cookies:', document.cookie);  // Debug log
+    console.log('Via getCookie:', this.getRefreshToken());  // Debug log
   }
 
   // Get the access token
@@ -80,6 +75,9 @@ export class AuthService {
     const token = localStorage.getItem('access_token');
     console.log('Retrieved access token:', token);  // Debug log
     return token;
+  }
+  public getRefreshToken(): string | null {
+    return this.getCookie('refresh_token');
   }
 
   isAuthenticated(): boolean {
@@ -89,30 +87,31 @@ export class AuthService {
 
   logout(): void {
     const accessToken = localStorage.getItem('access_token');
+    console.log('Attempting to logout. Access token:', accessToken);
 
     if (accessToken) {
       const headers = { Authorization: `Bearer ${accessToken}` };
-
-      this.http.post(`${this.apiUrl}/accounts/logout/`, {}, { headers }).subscribe(
-        () => {
-          // On success, clear local storage and navigate to the login page
-          this.clearTokens();
+      this.http.post(`${this.apiUrl}/accounts/logout/`, {}, { headers, withCredentials: true }).subscribe(
+        (response) => {
+          console.log('Logout successful. Response:', response);
+          this.clearAll();
           this.router.navigate(['/login']);
           this.websocketService.disconnect();
         },
         (error) => {
           console.error('Logout error:', error);
-          this.clearTokens();  // Still clear tokens in case of an error
+          this.clearAll();
           this.router.navigate(['/login']);
           this.websocketService.disconnect();
         }
       );
     } else {
-      this.clearTokens();
+      this.clearAll();
       this.router.navigate(['/login']);
       this.websocketService.disconnect();
     }
   }
+
 
   public clearTokens(): void {
     localStorage.removeItem('access_token');
@@ -123,15 +122,8 @@ export class AuthService {
   clearAll(): void {
     localStorage.clear();
     sessionStorage.clear();
+    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
     this.clearCookies();
-  }
-
-  clearLocalStorage(): void {
-    localStorage.clear();
-  }
-
-  clearSessionStorage(): void {
-    sessionStorage.clear();
   }
 
   private clearCookies(): void {
@@ -139,7 +131,7 @@ export class AuthService {
     for (let cookie of cookies) {
       const eqPos = cookie.indexOf('=');
       const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-      document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
     }
   }
 
@@ -159,32 +151,41 @@ export class AuthService {
   }
 
   refreshTokenIfNeeded(): Observable<string | null> {
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = this.getCookie('refresh_token');
+
     if (!refreshToken) {
-      console.error('Refresh token is missing, logging out');
+      console.warn('Refresh token is missing. Logging out...');
       this.clearAll();
       this.logout();
       return of(null);
     }
-  
+    console.log("Refreshing with rf token: ",refreshToken)
+    // Prevent multiple refresh calls if a refresh is already in progress
+    if (this.refreshInProgress) {
+      return throwError('Refresh token process already in progress');
+    }
+
+    this.refreshInProgress = true;
+
     return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, { refresh: refreshToken }, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response && response.access) {
-          console.log('Access token refreshed successfully', response.access);
-          // Store the new tokens, assuming response contains the updated refresh token if rotation is enabled
           this.storeTokens(response.access, response.refresh || refreshToken);
           this.websocketService.connectNotifications(response.access);
         } else {
-          console.log('Refresh token failed, logging out');
+          console.warn('Failed to refresh token, logging out');
           this.clearAll();
           this.logout();
         }
       }),
       catchError(error => {
-        console.error('Error refreshing token, logging out', error);
+        console.error('Error refreshing token, logging out:', error);
         this.clearAll();
         this.logout();
         return of(null);
+      }),
+      tap(() => {
+        this.refreshInProgress = false; // Reset the refresh flag
       })
     );
   }
@@ -261,5 +262,11 @@ export class AuthService {
     if (token) {
         this.websocketService.connectNotifications(token);
     }
-}
+  }
+  private getCookie(name: string): string | null {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  }
 }
