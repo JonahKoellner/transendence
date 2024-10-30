@@ -27,6 +27,8 @@ from django.db import models
 
 import be.settings as besettings
 
+
+
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -36,7 +38,13 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
+    
     def post(self, request):
+        def get_cookie_settings():
+            if besettings.DEBUG:
+                return {'httponly': True, 'secure': False, 'samesite': 'Lax'}
+            else:
+                return {'httponly': True, 'secure': True, 'samesite': 'None'}
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
@@ -69,13 +77,15 @@ class LoginView(APIView):
 
             # Set refresh token in HttpOnly cookie
             try:
+                cookie_settings = get_cookie_settings()
+
                 response.set_cookie(
                     'refresh_token',
                     str(refresh),
                     max_age=api_settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
-                    httponly=True,
-                    secure=not besettings.DEBUG,
-                    samesite='Lax' if besettings.DEBUG else 'None'
+                    httponly=cookie_settings['httponly'],
+                    secure=cookie_settings['secure'],
+                    samesite=cookie_settings['samesite']
                 )
                 print("Refresh token cookie set successfully")
             except Exception as e:
@@ -231,8 +241,8 @@ class TokenRefreshView(SimpleJWTTokenRefreshView):
                 new_refresh_token,
                 max_age=api_settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
                 httponly=True,
-                secure=not DEBUG,
-                samesite='Lax' if DEBUG else 'None'
+                secure=False,
+                samesite='Lax' if besettings.DEBUG else 'None'
             )
         return response
 

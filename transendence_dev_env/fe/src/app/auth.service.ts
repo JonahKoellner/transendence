@@ -10,7 +10,7 @@ import { WebsocketService } from './services/websocket.service';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://127.0.0.1:8000';  // Your Django backend URL
+  private apiUrl = 'http://localhost:8000';  // Your Django backend URL
   public jwtHelper = new JwtHelperService();
   public refreshInProgress = false;
   
