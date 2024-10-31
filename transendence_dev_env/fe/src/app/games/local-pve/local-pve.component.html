@@ -5,10 +5,6 @@
   <div *ngIf="!gameInProgress && !currentGame" class="game-settings">
     <h3>Game Settings</h3>
     <label>
-      Max Game Score:
-      <input type="number" [(ngModel)]="settings.maxGameScore" min="1">
-    </label>
-    <label>
       Max Rounds:
       <input type="number" [(ngModel)]="settings.maxRounds" min="1">
     </label>
@@ -26,18 +22,23 @@
     <p>Game Timer: {{ gameElapsedTime }}</p>
     <p>Round Timer: {{ roundElapsedTime }}</p>
     <p>Current Round: {{ currentGame.rounds.length }} of {{ settings.maxRounds }}</p>
-    <p>Score: {{ player1Name }} ({{ currentGame.score_player1 }}/{{ settings.maxGameScore }}) - AI ({{ currentGame.score_player2 }}/{{ settings.maxGameScore }})</p>
+    <p>Score: {{ player1Name }} ({{ currentGame!.score_player1 }}/{{ settings.maxRounds }}) - AI ({{ currentGame!.score_player2 }}/{{ settings.maxRounds }})</p>
 
-    <div class="controls">
+    <app-game-canvas
+    [gameSettings]="settings"
+    (onScore)='this.updateScore($event)'
+    ></app-game-canvas>
+
+    <!-- <div class="controls">
       <button (click)="updateScore('human')">{{ player1Name }} Scores</button>
       <button (click)="updateScore('bot')">AI Scores</button>
-    </div>
+    </div> -->
   </div>
 
   <!-- Game results after completion -->
   <div *ngIf="!gameInProgress && currentGame && currentGame.is_completed" class="game-result">
     <h2>Game Over</h2>
-    <p>Winner: {{ currentGame.winner?.username || 'None' }}</p>
+    <p>Winner: {{ currentGame.winner! }}</p>
     <p>Game Duration: {{ currentGame.duration | number:'1.2-2' }} seconds</p>
 
     <h3>Rounds</h3>

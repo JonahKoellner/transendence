@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
 import { ProfileService } from 'src/app/profile.service';
+import { GameCanvasComponent } from './game-canvas/game-canvas.component';
 
-interface GameSettings {
-  maxGameScore: number;
+export interface GameSettings {
   maxRounds: number;
   roundScoreLimit: number;
 }
@@ -25,13 +25,11 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   private roundIntervalId: any;
 
   settings: GameSettings = {
-    maxGameScore: 5,
     maxRounds: 3,
     roundScoreLimit: 3
   };
 
   constructor(private gameService: GameService, private profileService: ProfileService) {}
-
 
   ngOnInit(): void {
     this.profileService.getProfile().subscribe(
@@ -50,7 +48,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
 
   startNewGame(): void {
     if (!this.validateSettings()) return;
-  
+
     const newGame: Game = {
       game_mode: 'pve',
       player1: { id: 1, username: this.player1Name },
@@ -65,7 +63,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
       end_time: undefined,
       winner: null,
     };
-  
+
     this.gameService.createGame(newGame).subscribe((game) => {
       if (this.logs.length) {
         this.previousGames.push(...this.logs);
@@ -111,7 +109,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   }
 
   validateSettings(): boolean {
-    if (this.settings.maxGameScore <= 0 || this.settings.maxRounds <= 0 || this.settings.roundScoreLimit <= 0) {
+    if (this.settings.maxRounds <= 0 || this.settings.roundScoreLimit <= 0) {
       this.logs.push('Settings values must be positive.');
       return false;
     }
@@ -148,14 +146,12 @@ export class LocalPveComponent implements OnInit, OnDestroy {
       action: 'scored',
     };
     this.currentGame.moves_log.push(move);
-  
-    if (player === 'human') {
-      this.currentGame.score_player1++;
+    this.logs.push(`${move.player} ${move.action}`);
+
+    if (player === 'human')
       currentRound.score_player1++;
-    } else {
-      this.currentGame.score_player2++;
+    else
       currentRound.score_player2++;
-    }
   
     this.checkRoundCompletion(currentRound);
     this.checkGameCompletion();
@@ -168,20 +164,26 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   private checkRoundCompletion(round: Round): void {
     if (round.score_player1 >= this.settings.roundScoreLimit || round.score_player2 >= this.settings.roundScoreLimit) {
       round.end_time = new Date().toISOString();
-      round.winner = round.score_player1 > round.score_player2 ? this.currentGame!.player1.username : (this.currentGame!.player2?.username || 'AI');
+      if (round.score_player1 > round.score_player2)
+        round.winner = String(this.currentGame!.player1);
+      else
+        round.winner = String(this.currentGame?.player2);
+      // round.winner = round.score_player1 > round.score_player2 ? this.currentGame!.player1.username : (this.currentGame!.player2?.username || 'AI');
+      if (round.winner == String(this.currentGame!.player1))
+        this.currentGame!.score_player1++;
+      else
+        this.currentGame!.score_player2++;
       this.logs.push(`Round ${round.round_number} ended. Winner: ${round.winner || 'None'}`);
       this.clearRoundTimer(); // Stop the round timer
 
-      if (this.currentGame!.rounds.length < this.settings.maxRounds && !this.currentGame!.is_completed) {
+      if (this.currentGame!.rounds.length < this.settings.maxRounds && !this.currentGame!.is_completed)
         this.startNewRound();
-      }
     }
   }
 
   private checkGameCompletion(): void {
-    if (this.currentGame!.score_player1 >= this.settings.maxGameScore || this.currentGame!.score_player2 >= this.settings.maxGameScore) {
+    if (this.currentGame!.rounds.length >= this.settings.maxRounds && this.getCurrentRound().winner)
       this.endGame();
-    }
   }
 
   private endGame(): void {
@@ -192,14 +194,16 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     this.clearTimers(); // Stop all timers
 
     // Determine and set the game winner based on scores
-    if (this.currentGame!.score_player1 >= this.settings.maxGameScore) {
+    if (this.currentGame!.score_player1 > this.currentGame!.score_player2)
       this.currentGame!.winner = this.currentGame!.player1;
-    } else if (this.currentGame!.score_player2 >= this.settings.maxGameScore) {
-      this.currentGame!.winner = this.currentGame!.player2 || { id: 0, username: 'AI' };
-    }
+    else if (this.currentGame!.score_player1 < this.currentGame!.score_player2)
+      this.currentGame!.winner = this.currentGame!.player2;
+    else
+      this.currentGame!.winner = {id: -1, username: 'Tie'};
+    console.log("Winner test: " + String(this.currentGame!.winner));
 
     this.gameInProgress = false;
-    this.logs.push(`Game ended. Winner: ${this.currentGame!.winner?.username || 'None'}`);
+    this.logs.push(`Game ended. Winner: ${String(this.currentGame!.winner) || 'None'}`);
 
     if (this.currentGame && this.currentGame.id) {
       const updatedGameData: Partial<Game> = {

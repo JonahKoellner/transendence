@@ -1,4 +1,5 @@
-import { Component, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input } from '@angular/core';
+import { GameSettings } from '../local-pve.component';
 
 @Component({
   selector: 'app-game-canvas',
@@ -8,6 +9,13 @@ import { Component, ElementRef, ViewChild, HostListener } from '@angular/core';
 export class GameCanvasComponent {
   @ViewChild('GameCanvas', {read: ElementRef, static: false}) canvas!: ElementRef;
   context!: CanvasRenderingContext2D;
+
+  @Input()  gameSettings!: GameSettings;
+  @Output() onScore = new EventEmitter<"human" | "bot">();
+
+  updateScore(player: "human" | "bot") {
+    this.onScore.emit(player);
+  }
 
   // Game controller data
   readonly canvasWidth = 1000;
@@ -19,26 +27,28 @@ export class GameCanvasComponent {
   readonly dashWidth = 10;
   readonly scoreToWin = 5;
 
-  gameRunning:        boolean = false;
-  startTime!:         Date;
+  round:              number = 0;
   intervalID!:        number;
-  leftScore!:         number;
-  rightScore!:        number;
-  leftPaddleY!:       number;
-  rightPaddleY!:      number;
   leftPaddleSpeed!:   number;
   rightPaddleSpeed!:  number;
+  leftPaddleY!:       number;
+  rightPaddleY!:      number;
   ballX!:             number;
   ballY!:             number;
-  ballSpeed!:         number;
   ballDirectionX!:    number;
   ballDirectionY!:    number;
+  ballSpeed!:         number;
+  leftScore!:         number;
+  rightScore!:        number;
 
   ngAfterViewInit() {
     this.context = this.canvas.nativeElement.getContext('2d');
+    this.resetRound();
+    this.startGame();
   }
 
-  startMatch() {
+  resetRound() {
+    this.round += 1;
     this.leftPaddleSpeed = 0;
     this.rightPaddleSpeed = 0;
     this.leftPaddleY = this.canvasHeight / 2;
@@ -50,9 +60,10 @@ export class GameCanvasComponent {
     this.ballSpeed = 5;
     this.leftScore = 0;
     this.rightScore = 0;
-    this.gameRunning = true;
-    this.startTime = new Date();
-    this.startGame();
+    if (this.round >= this.gameSettings.maxRounds
+      &&(this.leftScore >= this.gameSettings.roundScoreLimit
+      ||this.rightScore >= this.gameSettings.roundScoreLimit))
+      this.endGame();
   }
 
   startGame() {
@@ -173,7 +184,7 @@ export class GameCanvasComponent {
           this.ballDirectionY = 0;
         if (this.ballSpeed < 100)
           this.ballSpeed *= 1.25;
-        console.log(this.ballSpeed);
+        // console.log(this.ballSpeed);
       }
   }
 
@@ -181,15 +192,18 @@ export class GameCanvasComponent {
 
     if (this.ballX - this.ballRadius < this.paddleWidth){
       this.rightScore++;
+      this.updateScore("bot");
       this.resetBall();
     }
     else if (this.ballX + this.ballRadius > this.canvasWidth - this.paddleWidth){
       this.leftScore++;
+      this.updateScore("human");
       this.resetBall();
     }
 
-    if (this.leftScore == this.scoreToWin || this.rightScore == this.scoreToWin)
-      this.endGame();
+    if (this.leftScore >= this.gameSettings.roundScoreLimit
+      ||this.rightScore >= this.gameSettings.roundScoreLimit)
+      this.resetRound();
   }
 
   updateBallPos() {
@@ -216,7 +230,6 @@ export class GameCanvasComponent {
     window.clearInterval(this.intervalID);
     this.context.fillStyle = 'white';
     this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-    this.gameRunning = false;
   }
 
   @HostListener('window:keydown', ['$event'])
