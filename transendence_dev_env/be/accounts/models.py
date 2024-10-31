@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 import pyotp
-
+from .utils import create_notification
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     otp_secret = models.CharField(max_length=16, blank=True, null=True)
@@ -69,7 +69,7 @@ class Profile(models.Model):
 
         # Create a notification if the player leveled up
         if leveled_up:
-            Notification.objects.create(
+            create_notification(
                 sender=self.user,
                 receiver=self.user,
                 notification_type='level_up',

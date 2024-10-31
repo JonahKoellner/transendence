@@ -11,8 +11,6 @@ from django.db import models
 from datetime import timedelta
 from django.db.models import Avg, Max, Min, Count, Q
 import calendar
-from rest_framework.exceptions import PermissionDenied
-from django.contrib.auth.models import User
 class GameViewSet(viewsets.ModelViewSet):
     """
     A viewset for performing CRUD operations on games.
