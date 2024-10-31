@@ -134,10 +134,20 @@ export class NotificationsComponent implements OnInit {
     switch (type) {
       case 'friend_request':
         return 'sent you a friend request.';
+      case 'friend_request_accepted':
+        return 'accepted your friend request.';
+      case 'friend_request_rejected':
+        return 'rejected your friend request.';
       case 'game_invite':
         return 'invited you to a game.';
+      case 'arena_invite':
+        return 'invited you to an arena.';
+      case 'tournament':
+        return 'sent you a tournament notification.';
       case 'new_message':
         return 'sent you a new message.';
+      case 'system_alert':
+        return 'sent you a system alert.';
       default:
         return 'has an update.';
     }

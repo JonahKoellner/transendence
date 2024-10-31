@@ -11,6 +11,7 @@ from django.db import models
 from datetime import timedelta
 from django.db.models import Avg, Max, Min, Count, Q
 import calendar
+from rest_framework.exceptions import PermissionDenied
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -174,11 +175,37 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='game-detail')
     def get_game_by_id(self, request, pk=None):
         """
-        Custom endpoint to retrieve a single game by its ID, accessible only to participants.
+        Custom endpoint to retrieve a single game by its ID, accessible to participants or friends of participants.
         """
-        game = get_object_or_404(Game, models.Q(player1=request.user) | models.Q(player2=request.user), pk=pk)
-        serializer = self.get_serializer(game)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        game = get_object_or_404(Game, pk=pk)
+
+        # Retrieve authenticated user and their friends
+        user = request.user
+        friends_profiles = user.profile.get_friends()  # This returns Profile instances
+        friends_users = [profile.user for profile in friends_profiles]  # Convert to User instances
+
+        # Collect debugging information
+        debug_info = {
+            "user": user.username,
+            "friends": [friend.username for friend in friends_users],
+            "game_participants": {
+                "player1": game.player1.username,
+                "player2": game.player2.username if game.player2 else "AI"
+            }
+        }
+        # Check if the user is a participant or a friend of a participant
+        if game.player1 == user or game.player2 == user or \
+        game.player1 in friends_users or (game.player2 in friends_users if game.player2 else False):
+            serializer = self.get_serializer(game)
+            
+            # Include debug information in the response
+            response_data = serializer.data
+            response_data['debug_info'] = debug_info
+            return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            # Return debug information if permission is denied
+            debug_info['error'] = "You do not have permission to view this game."
+            return Response(debug_info, status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request, *args, **kwargs):
         """

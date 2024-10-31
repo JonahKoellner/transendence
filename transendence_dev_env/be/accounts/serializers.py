@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Profile, User, Notification, ChatMessage
+from .models import Profile, User, Notification, ChatMessage, FriendRequest
 
 class ProfileSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(max_length=None, allow_empty_file=True, required=False)
@@ -49,11 +49,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     friends = serializers.SerializerMethodField()
     blocked_users = serializers.SerializerMethodField()
+    is_2fa_enabled  = serializers.BooleanField(source='profile.is_2fa_enabled')
+    has_logged_in = serializers.BooleanField(source='profile.has_logged_in')
+    
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
+    
+    
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'friends', 'blocked_users', 'is_online']
+        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'friends', 'blocked_users', 'is_online', 'is_2fa_enabled', 'has_logged_in', ]
         read_only_fields = ['friends', 'blocked_users', 'is_online']
         
     def get_friends(self, obj):
@@ -124,3 +129,8 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = ['id', 'sender', 'receiver', 'message', 'timestamp', 'is_read']
+        
+class FriendRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FriendRequest
+        fields = ['id', 'sender', 'receiver', 'status', 'timestamp']

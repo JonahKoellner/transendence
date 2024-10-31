@@ -12,7 +12,8 @@ import random
 from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
     TokenSerializer, UserProfileSerializer, NotificationSerializer,
-    UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer
+    UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
+    FriendRequestSerializer
 )
 from .utils import create_notification
 from django.http import JsonResponse
@@ -22,9 +23,9 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from .models import Notification, ChatMessage
+from .models import Notification, ChatMessage, FriendRequest
 from django.db import models
-
+from django.db.models import Q
 import be.settings as besettings
 
 
@@ -67,8 +68,7 @@ class LoginView(APIView):
                 'is_2fa_enabled': is_2fa_enabled
             }
 
-            # OTP URI handling (if needed)
-            if is_2fa_enabled or should_generate_otp(profile) or True:
+            if not is_2fa_enabled or not profile.has_logged_in:
                 otp_uri = profile.generate_otp()
                 if otp_uri:
                     data['otp_uri'] = otp_uri
@@ -95,15 +95,6 @@ class LoginView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def should_generate_otp(profile):
-    # Generate OTP on first login after registering
-    if not profile.has_logged_in:
-        profile.has_logged_in = True
-        profile.save()
-        return True
-
-    # Generate OTP at random intervals
-    return random.choice([True, False])
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -184,10 +175,8 @@ class VerifyOTPView(APIView):
 
             # Verify the OTP code using the user's profile
             if request.user.profile.verify_otp(otp_code):
-                # Automatically enable 2FA after successful OTP verification
-                if not request.user.profile.is_2fa_enabled:
-                    request.user.profile.is_2fa_enabled = True  # Enable 2FA
-                    request.user.profile.save()
+                request.user.profile.is_2fa_enabled = True  # Enable 2FA
+                request.user.profile.save()
 
                 return Response({"success": True, "message": "OTP verified successfully, 2FA is now enabled"}, status=status.HTTP_200_OK)
             
@@ -196,29 +185,6 @@ class VerifyOTPView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-# View user profile (JWT required)
-class UserProfileView(APIView):
-    """
-    API View for retrieving and updating the authenticated user's profile.
-    """
-    permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
-    parser_classes = [MultiPartParser, FormParser]
-
-    def get(self, request):
-        user = request.user
-        serializer = UserProfileSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def put(self, request):
-        user = request.user
-        serializer = UserProfileSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Profile updated successfully", "user": serializer.data}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class TokenRefreshView(SimpleJWTTokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get('refresh_token')
@@ -280,42 +246,123 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], url_path='add-friend')
-    def add_friend(self, request, pk=None):
+    @action(detail=False, methods=['get'], url_path='friend-requests')
+    def friend_requests(self, request):
         """
-        Add a user as a friend.
+        Get all friend requests sent by and received by the authenticated user.
+        """
+        # Filter friend requests where the user is either the sender or the receiver
+        sent_requests = FriendRequest.objects.filter(sender=request.user)
+        received_requests = FriendRequest.objects.filter(receiver=request.user)
+
+        # Combine the sent and received requests
+        all_requests = sent_requests | received_requests
+
+        # Serialize the friend requests
+        serializer = FriendRequestSerializer(all_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='send-friend-request')
+    def send_friend_request(self, request, pk=None):
+        """
+        Send a friend request to another user.
         """
         user_to_add = get_object_or_404(User, pk=pk)
 
-        # Prevent adding oneself as a friend
+        # Prevent sending a request to oneself
         if user_to_add == request.user:
-            return Response({'detail': 'You cannot add yourself as a friend.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Access profiles
+            return Response({'detail': 'You cannot send a friend request to yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         sender_profile = request.user.profile
         receiver_profile = user_to_add.profile
 
-        # Check if already friends
+        # Check if they are already friends
         if receiver_profile in sender_profile.friends.all():
-            return Response({'detail': 'Already friends.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Add the receiver's profile to sender's friends
-        sender_profile.friends.add(receiver_profile)
-        
-        # Create a notification for the user being added
+            return Response({'detail': 'You are already friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the user is blocked
+        if receiver_profile in sender_profile.blocked_users.all() or sender_profile in receiver_profile.blocked_users.all():
+            return Response({'detail': 'You cannot send a friend request to a blocked user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if a friend request already exists in either direction
+        existing_request = FriendRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=user_to_add)) | 
+            (Q(sender=user_to_add) & Q(receiver=request.user))
+        ).first()
+        if existing_request:
+            if existing_request.status == FriendRequest.ACCEPTED:
+                return Response({'detail': 'You are already friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
+            # elif existing_request.status == FriendRequest.PENDING: TODO FIX THIS
+            #     return Response({'detail': 'Friend request already sent.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Create a friend request
+        friend_request = FriendRequest.objects.create(sender=request.user, receiver=user_to_add)
+
+        # Create a notification for the receiver
         create_notification(
             sender=request.user,
             receiver=user_to_add,
             notification_type='friend_request',
-            data={'message': f'{request.user.username} added you as a friend.'},
+            data={'message': f'{request.user.username} sent you a friend request.'},
             priority='medium'
         )
-        return Response({'status': 'Friend added.'}, status=status.HTTP_200_OK)
+
+        return Response({'status': 'Friend request sent.', 'friend_request_id': friend_request.id})
+
+
+    @action(detail=True, methods=['post'], url_path='accept-request')
+    def accept_friend_request(self, request, pk=None):
+        """
+        Accept a friend request from a user.
+        """
+        friend_request = get_object_or_404(FriendRequest, pk=pk, receiver=request.user, status=FriendRequest.PENDING)
+
+        # Access profiles
+        sender_profile = friend_request.sender.profile
+        receiver_profile = friend_request.receiver.profile
+
+        # Add the receiver's profile to sender's friends
+        sender_profile.friends.add(receiver_profile)
+        # Add the sender's profile to receiver's friends
+        receiver_profile.friends.add(sender_profile)
+
+        # Update the friend request status
+        friend_request.status = FriendRequest.ACCEPTED
+        friend_request.save()
+        
+        # Create a notification for the sender that the request was accepted
+        create_notification(
+            sender=request.user,
+            receiver=friend_request.sender,
+            notification_type='friend_request_accepted',
+            data={'message': f'{request.user.username} accepted your friend request.'},
+            priority='medium'
+        )
+
+        return Response({'status': 'Friend request accepted.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='reject-request')
+    def reject_friend_request(self, request, pk=None):
+        """
+        Reject a pending friend request.
+        """
+        friend_request = get_object_or_404(FriendRequest, sender_id=pk, receiver=request.user)
+        friend_request.delete()
+        
+        # Optionally create a notification to inform the sender that the request was rejected
+        create_notification(
+            sender=request.user,
+            receiver=friend_request.sender,
+            notification_type='friend_request_rejected',
+            data={'message': f'{request.user.username} declined your friend request.'},
+            priority='medium'
+        )
+
+        return Response({'status': 'Friend request rejected.'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='remove-friend')
     def remove_friend(self, request, pk=None):
         """
-        Remove a user from friends.
+        Unfriend a user.
         """
         user_to_remove = get_object_or_404(User, pk=pk)
 
@@ -324,10 +371,19 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Check if they are friends
         if receiver_profile not in sender_profile.friends.all():
-            return Response({'detail': 'Not friends.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'You are not friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Remove the receiver's profile from sender's friends
         sender_profile.friends.remove(receiver_profile)
+        # Remove the sender's profile from receiver's friends
+        receiver_profile.friends.remove(sender_profile)
+
+        # Check if a friend request already exists in either direction and delete it
+        FriendRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=user_to_remove)) | 
+            (Q(sender=user_to_remove) & Q(receiver=request.user))
+        ).delete()
+
         return Response({'status': 'Friend removed.'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='block-user')
@@ -348,10 +404,50 @@ class UserViewSet(viewsets.ModelViewSet):
         if receiver_profile in sender_profile.blocked_users.all():
             return Response({'detail': 'User already blocked.'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Remove from friends if they are friends
+        if receiver_profile in sender_profile.friends.all():
+            sender_profile.friends.remove(receiver_profile)
+            receiver_profile.friends.remove(sender_profile)
+        
         # Block the receiver's profile
         sender_profile.blocked_users.add(receiver_profile)
-        return Response({'status': 'User blocked.'}, status=status.HTTP_200_OK)
 
+        # Check if a friend request already exists in either direction and delete it
+        FriendRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=user_to_block)) | 
+            (Q(sender=user_to_block) & Q(receiver=request.user))
+        ).delete()
+
+        return Response({'status': 'User blocked and removed from friends.'}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], url_path='blocked-users')
+    def list_blocked_users(self, request):
+        """
+        List all users blocked by the authenticated user.
+        """
+        sender_profile = request.user.profile
+        blocked_profiles = sender_profile.blocked_users.all()
+        blocked_users = [profile.user for profile in blocked_profiles]
+        serializer = UserDetailSerializer(blocked_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='unblock-user')
+    def unblock_user(self, request, pk=None):
+        """
+        Unblock a user.
+        """
+        user_to_unblock = get_object_or_404(User, pk=pk)
+        sender_profile = request.user.profile
+        receiver_profile = user_to_unblock.profile
+
+        # Check if the user is currently blocked
+        if receiver_profile not in sender_profile.blocked_users.all():
+            return Response({'detail': 'User is not in your blocked list.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove the receiver's profile from the blocked users
+        sender_profile.blocked_users.remove(receiver_profile)
+
+        return Response({'status': 'User unblocked successfully.'}, status=status.HTTP_200_OK)
     @action(detail=False, methods=['get'], url_path='friends')
     def list_friends(self, request):
         """

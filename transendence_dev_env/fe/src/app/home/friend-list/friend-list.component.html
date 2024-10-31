@@ -1,47 +1,86 @@
 <div *ngIf="isLoading" class="text-center mt-4">
   <div class="spinner-border text-primary" role="status">
-    <span class="sr-only">Loading friends...</span>
+    <span class="sr-only">Loading...</span>
   </div>
 </div>
 
 <div *ngIf="!isLoading">
-  <h2 class="mb-4">Your Friends</h2>
-
-  <div *ngIf="friends.length === 0" class="alert alert-info">
-    You have no friends yet.
-  </div>
-
-  <ul class="list-group">
-    <li *ngFor="let friend of friends" class="list-group-item d-flex align-items-center">
-      <img
-        [src]="friend.avatar || 'assets/default_avatar.png'"
-        alt="{{ friend.username }}"
-        class="rounded-circle mr-3"
-        width="50"
-        height="50"
-      />
-      <div class="flex-grow-1">
-        <h5 class="mb-0">{{ friend.display_name || friend.username }}</h5>
-        <small class="text-muted">Username: {{ friend.username }}</small>
-      </div>
-      <button class="btn btn-outline-danger btn-sm mr-2" (click)="removeFriend(friend.id)">Remove</button>
-      <button class="btn btn-outline-secondary btn-sm mr-2" (click)="blockUser(friend.id)">Block</button>
-      <button class="btn btn-primary btn-sm mr-2" (click)="openChat(friend.id, friend.username)">Chat</button>
-      <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'friends'" (click)="selectTab('friends')">Friends</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'requests'" (click)="selectTab('requests')">Friend Requests</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'blocked'" (click)="selectTab('blocked')">Blocked Users</a>
     </li>
   </ul>
+
+  <div *ngIf="activeTab === 'friends'">
+    <h2 class="mb-4">Your Friends</h2>
+    <div *ngIf="friends.length === 0" class="alert alert-info">
+      You have no friends yet.
+    </div>
+    <ul class="list-group">
+      <li *ngFor="let friend of friends" class="list-group-item d-flex align-items-center">
+        <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" class="rounded-circle mr-3" width="50" height="50" />
+        <div class="flex-grow-1">
+          <h5 class="mb-0">{{ friend.display_name || friend.username }}</h5>
+          <small class="text-muted">Username: {{ friend.username }}</small>
+        </div>
+        <button class="btn btn-outline-danger btn-sm mr-2" (click)="removeFriend(friend.id)">Remove</button>
+        <button class="btn btn-outline-secondary btn-sm mr-2" (click)="blockUser(friend.id)">Block</button>
+        <button class="btn btn-primary btn-sm mr-2" (click)="openChat(friend.id, friend.username)">Chat</button>
+        <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
+      </li>
+    </ul>
+  </div>
+
+  <div *ngIf="activeTab === 'requests'">
+    <h2 class="mb-4">Your Friend Requests</h2>
+    <div *ngIf="friendRequests.length === 0" class="alert alert-info">
+      No friend requests at the moment.
+    </div>
+    <ul class="list-group">
+      <li *ngFor="let request of friendRequests" class="list-group-item d-flex align-items-center">
+        <div class="flex-grow-1">
+          <h5 class="mb-0">{{ request.sender_username }} <small class="text-muted">sent {{request.receiver_username}} a Friend Requests</small></h5>
+          <small class="text-muted">Status: {{ request.status }}</small>
+        </div>
+        <ng-container *ngIf="currentUser?.id === request.receiver">
+          <button class="btn btn-success btn-sm mr-2" *ngIf="request.status === 'pending'" (click)="acceptFriendRequest(request.id)">
+            Accept
+          </button>
+          <button class="btn btn-danger btn-sm" *ngIf="request.status === 'pending'" (click)="rejectFriendRequest(request.id)">
+            Reject
+          </button>
+        </ng-container>
+      </li>
+    </ul>
+  </div>
+  
+
+  <div *ngIf="activeTab === 'blocked'">
+    <h2 class="mb-4">Blocked Users</h2>
+    <div *ngIf="blockedUsers.length === 0" class="alert alert-info">
+      No users blocked at the moment.
+    </div>
+    <ul class="list-group">
+      <li *ngFor="let blockedUser of blockedUsers" class="list-group-item d-flex align-items-center">
+        <img [src]="blockedUser.avatar || 'assets/default_avatar.png'" alt="{{ blockedUser.username }}" class="rounded-circle mr-3" width="50" height="50" />
+        <div class="flex-grow-1">
+          <h5 class="mb-0">{{ blockedUser.display_name || blockedUser.username }}</h5>
+          <small class="text-muted">Username: {{ blockedUser.username }}</small>
+        </div>
+        <button class="btn btn-outline-success btn-sm" (click)="unblockUser(blockedUser.id)">Unblock</button>
+      </li>
+    </ul>
+  </div>
 
   <div *ngIf="error" class="alert alert-danger mt-3">
     {{ error }}
   </div>
-
-  <!-- Chat window (shown conditionally) -->
-  <app-chat-window
-    *ngIf="selectedFriendId && selectedFriendUsername"
-    [friendId]="selectedFriendId"
-    [friendUsername]="selectedFriendUsername"
-    class="mt-4"
-  ></app-chat-window>
 </div>
 
 <app-user-search></app-user-search>

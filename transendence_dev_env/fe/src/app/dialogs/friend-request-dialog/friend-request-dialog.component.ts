@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { FriendService } from 'src/app/friend.service';
 import { ProfileService } from 'src/app/profile.service';
 
 interface Notification {
@@ -24,11 +25,11 @@ export class FriendRequestDialogComponent {
   @Input() notification!: Notification;
   @Output() close = new EventEmitter<string>();
 
-  constructor(private userService: ProfileService) { }
+  constructor(private friendsService: FriendService) { }
 
   onAccept(): void {
     console.log(this.notification)
-    this.userService.addFriend(this.notification.sender.id).subscribe(
+    this.friendsService.acceptFriendRequest(this.notification.sender.id).subscribe(
       () => {
         this.close.emit('accepted');
       },
@@ -38,9 +39,15 @@ export class FriendRequestDialogComponent {
       }
     );
   }
-
   onDecline(): void {
-    // Optionally, implement decline logic
-    this.close.emit('declined');
+    this.friendsService.rejectFriendRequest(this.notification.sender.id).subscribe(
+      () => {
+        this.close.emit('declined');
+      },
+      (error) => {
+        console.error(error);
+        this.close.emit('error');
+      }
+    );
   }
 }

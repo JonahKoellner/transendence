@@ -37,7 +37,7 @@ export class UserSearchComponent {
     );
   }
 
-  addFriend(userId: number): void {
+  sendFriendRequest(userId: number): void {
     this.friendService.sendFriendRequest(userId).subscribe(
       () => {
         this.successMessage = 'Friend request sent successfully.';
