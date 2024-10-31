@@ -11,6 +11,20 @@
       <img *ngIf="user.profile?.avatar || user.avatar" [src]="user.profile?.avatar || user.avatar" alt="Avatar" class="avatar rounded-circle mb-3 border border-light">
       <h5 class="card-title">{{ user.profile?.display_name || user.display_name || user.username }}</h5>
       <p><strong>Email:</strong> {{ user.email }}</p>
+            <!-- Level, XP, and Progress -->
+            <div class="mt-4">
+              <h6 class="text-light">Level {{ user.level }}</h6>
+              <p>XP: {{ user.xp }} / {{ user.xp_for_next_level }}</p>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar" role="progressbar" 
+                     [style.width.%]="getXpProgress()" 
+                     [attr.aria-valuenow]="getXpProgress()" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                  {{ getXpProgress() | number: '1.0-0' }}%
+                </div>
+              </div>
+            </div>
     </div>
   </div>
 

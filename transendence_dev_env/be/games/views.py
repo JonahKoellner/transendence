@@ -12,7 +12,7 @@ from datetime import timedelta
 from django.db.models import Avg, Max, Min, Count, Q
 import calendar
 from rest_framework.exceptions import PermissionDenied
-
+from django.contrib.auth.models import User
 class GameViewSet(viewsets.ModelViewSet):
     """
     A viewset for performing CRUD operations on games.
@@ -22,6 +22,32 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = GameSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    
+    def calculate_xp_gain(game):
+        """
+        Calculate the XP gain based on game duration, mode, and outcome.
+        """
+        base_xp = 50  # Base XP for winning a game
+
+        # Additional XP based on game duration (e.g., 1 XP per second, capped at 600)
+        duration_xp = min(int(game.duration or 0), 600)  # Cap duration-based XP at 600
+
+        # PvE games give less XP than PvP
+        if game.game_mode == Game.PVE:
+            mode_multiplier = 0.8  # PvE games are easier, so less XP
+        elif game.game_mode == Game.LOCAL_PVP:
+            mode_multiplier = 1.0  # Local PvP gives normal XP
+        else:
+            mode_multiplier = 1.2  # Online PvP is harder, so more XP
+
+        # Calculate total XP and apply mode multiplier
+        xp_gain = (base_xp + duration_xp) * mode_multiplier
+
+        # Bonus XP if the player won
+        if game.winner == game.player1 or game.winner == game.player2:
+            xp_gain += 50  # Additional XP for winning the game
+
+        return int(xp_gain)
 
     def get_queryset(self):
         """
@@ -46,22 +72,21 @@ class GameViewSet(viewsets.ModelViewSet):
         """
         Override the update process. If the game is marked as completed,
         automatically set the end time, calculate the duration, and determine the winner
-        if not provided. Handles both Player-vs-Player and Player-vs-AI cases.
+        if not provided. Additionally, calculate XP for both winner and loser.
         """
         instance = self.get_object()
         validated_data = serializer.validated_data
-
+        winner = None
+        loser = None
         if validated_data.get('is_completed', False):
-            # Calculate duration when the game is marked complete
+            # Calculate game duration when the game is marked complete
             duration = (timezone.now() - instance.start_time).total_seconds()
 
-            # Use provided winner if sent, otherwise determine the winner
+            # Determine the winner based on provided data or scores
             winner_data = validated_data.get('winner')
             if winner_data:
-                # Set winner based on provided ID
                 winner = User.objects.get(id=winner_data['id'])
             else:
-                # Determine winner based on scores if not provided
                 score_player1 = validated_data.get('score_player1', instance.score_player1)
                 score_player2 = validated_data.get('score_player2', instance.score_player2)
                 if instance.is_against_ai():  # PvE mode
@@ -69,17 +94,31 @@ class GameViewSet(viewsets.ModelViewSet):
                 else:  # PvP mode
                     if score_player1 > score_player2:
                         winner = instance.player1
+                        loser = instance.player2
                     elif score_player2 > score_player1:
                         winner = instance.player2
+                        loser = instance.player1
                     else:
                         winner = None  # Draw or no winner
+                        loser = None
 
-            # Save updates with end time, duration, and winner (either provided or calculated)
+            # Save the game as completed with end time, duration, and winner
             serializer.save(
                 end_time=timezone.now(),
                 duration=duration,
                 winner=winner
             )
+
+            # Calculate XP gain for the winner and loser
+            if winner:
+                winner_xp = self.calculate_xp_gain(instance)  # Calculate XP for winner
+                winner.profile.add_xp(winner_xp)  # Add XP and handle level-up for winner
+
+            # Award consolation XP to the loser if there is one
+            if loser:
+                loser_xp = max(10, winner_xp // 4)  # Give loser a fraction of winner's XP or minimum XP
+                loser.profile.add_xp(loser_xp)  # Add XP and handle level-up for loser
+
         else:
             serializer.save()
     @action(detail=False, methods=['get'], url_path='user-stats')

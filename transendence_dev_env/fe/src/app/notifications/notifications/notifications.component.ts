@@ -145,7 +145,9 @@ export class NotificationsComponent implements OnInit {
       case 'tournament':
         return 'sent you a tournament notification.';
       case 'new_message':
-        return 'sent you a new message.';
+        return 'sent you a new message.'
+      case 'level_up':
+        return 'congratulated you on leveling up!';
       case 'system_alert':
         return 'sent you a system alert.';
       default:

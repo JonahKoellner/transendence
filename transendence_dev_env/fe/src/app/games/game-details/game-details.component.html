@@ -1,33 +1,68 @@
 <div class="game-details-container" *ngIf="game; else errorTemplate">
-  <h2>Game Details</h2>
-  
-  <section class="general-info">
-    <p><strong>Game Mode:</strong> {{ game.game_mode }}</p>
-    <p><strong>Player 1:</strong> {{ game.player1 }}</p>
-    <p><strong>Player 2:</strong> {{ game.player2 || 'AI' }}</p>
-    <p><strong>Score:</strong> {{ game.score_player1 }} : {{ game.score_player2 }}</p>
-    <p><strong>Completed:</strong> {{ game.is_completed ? 'Yes' : 'No' }}</p>
-    <p *ngIf="game.winner"><strong>Winner:</strong> {{ game.winner.username }}</p>
-    <p><strong>Start Time:</strong> {{ game.start_time | date }}</p>
-    <p *ngIf="game.end_time"><strong>End Time:</strong> {{ game.end_time | date }}</p>
-    <p *ngIf="game.duration"><strong>Duration:</strong> {{ game.duration }} seconds</p>
+  <h2>🎮 Game Stats</h2>
+
+  <!-- Player Info and Score Section -->
+  <section class="player-info">
+    <div class="players">
+      <span class="player">{{ game.player1.username }}</span>
+      <span class="vs">VS</span>
+      <span class="player">{{ game.player2.username || 'AI' }}</span>
+    </div>
+    <div class="score">
+      <span>{{ game.score_player1 }}</span>
+      <span class="colon">:</span>
+      <span>{{ game.score_player2 }}</span>
+    </div>
+    <div class="game-mode">{{ game.game_mode }}</div>
+    <div class="game-status">
+      <span [ngClass]="{
+        'status-running': getGameStatus(game) === 'Running',
+        'status-canceled': getGameStatus(game) === 'Canceled',
+        'status-completed': getGameStatus(game) === 'Completed'
+      }">
+        {{ getGameStatus(game) }}
+      </span>
+      <span *ngIf="game.is_completed" class="winner">🏆 Winner: {{ game.winner?.username || 'AI' }}</span>
+    </div>
   </section>
 
+  <!-- Game Times Section -->
+  <section class="game-times">
+    <div class="time-box">
+      <div class="time-label">Game Started</div>
+      <div class="time-value">{{ game.start_time | date:'MMMM d, yyyy, h:mm:ss a' }}</div>
+    </div>
+    <div class="time-box">
+      <div class="time-label">Game Ended</div>
+      <div class="time-value">{{ game.end_time | date:'MMMM d, yyyy, h:mm:ss a' }}</div>
+    </div>
+    <div class="duration-box">
+      <div class="duration-label">⏱ Duration</div>
+      <div class="duration-value">
+        {{ game.duration ? (game.duration | duration) : 'N/A' }}
+      </div>
+    </div>
+  </section>
+
+  <!-- Rounds Info -->
   <section class="rounds-info" *ngIf="game.rounds?.length">
-    <h3>Rounds</h3>
+    <h3>🏆 Rounds</h3>
     <ul>
       <li *ngFor="let round of game.rounds">
-        <strong>Round {{ round.round_number }}</strong>
-        <p>Start Time: {{ round.start_time | date }}</p>
-        <p *ngIf="round.end_time">End Time: {{ round.end_time | date }}</p>
-        <p>Score - Player 1: {{ round.score_player1 }} | Player 2: {{ round.score_player2 }}</p>
-        <p>Winner: {{ round.winner }}</p>
+        <div class="round-header">Round {{ round.round_number }}</div>
+        <div class="round-details">
+          <span>⏲ Start: {{ round.start_time | date:'mediumTime' }}</span>
+          <span *ngIf="round.end_time">⏲ End: {{ round.end_time | date:'mediumTime' }}</span>
+          <span>Score: {{ round.score_player1 }} - {{ round.score_player2 }}</span>
+          <span>Winner: {{ round.winner }}</span>
+        </div>
       </li>
     </ul>
   </section>
 
+  <!-- Move Log -->
   <section class="moves-log" *ngIf="game.moves_log?.length">
-    <h3>Move Log</h3>
+    <h3>📜 Move Log</h3>
     <table>
       <thead>
         <tr>
@@ -38,7 +73,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let move of game.moves_log">
-          <td>{{ move.time }}</td>
+          <td>{{ move.time | date:'mediumTime' }}</td>
           <td>{{ move.player }}</td>
           <td>{{ move.action }}</td>
         </tr>
@@ -48,5 +83,5 @@
 </div>
 
 <ng-template #errorTemplate>
-  <p class="error-message">{{ errorMessage }}</p>
+  <p class="error-message">❌ {{ errorMessage }}</p>
 </ng-template>

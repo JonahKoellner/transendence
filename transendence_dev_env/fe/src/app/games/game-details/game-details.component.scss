@@ -1,58 +1,188 @@
 .game-details-container {
-  padding: 1em;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #fafafa;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-  max-width: 600px;
-  margin: 0 auto;
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #212529, #495057);
+  color: #e9ecef;
+  font-family: 'Arial', sans-serif;
+  max-width: 700px;
+  margin: 20px auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
-.game-details-container h2,
-.game-details-container h3 {
-  color: #333;
+.game-details-container h2 {
+  font-size: 1.8em;
   font-weight: bold;
-  margin-bottom: 0.5em;
+  text-align: center;
+  color: #f8f9fa;
 }
 
-.general-info p,
-.rounds-info ul li,
-.moves-log table {
-  margin: 0.5em 0;
-  color: #555;
+.player-info {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.players {
+  display: flex;
+  justify-content: center;
+  font-size: 1.6em;
+  margin-bottom: 8px;
+}
+
+.player {
+  margin: 0 10px;
+  font-weight: bold;
+  color: #e9ecef;
+}
+
+.vs {
+  font-size: 1.2em;
+  color: #f03e3e;
+}
+
+.score {
+  font-size: 2em;
+  font-weight: bold;
+  color: #ffe066;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.colon {
+  margin: 0 5px;
+  font-size: 1.5em;
+}
+
+.game-mode {
+  margin-top: 5px;
+  font-size: 1.2em;
+  color: #74c0fc;
+}
+
+.game-status {
+  margin-top: 10px;
+  font-size: 1.1em;
+}
+
+.winner {
+  font-weight: bold;
+  color: #fab005;
+}
+
+.game-times {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 15px;
+  margin: 20px 0;
+  color: #e9ecef;
+  font-size: 1em;
+}
+.time-box, .duration-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.time-label, .duration-label {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #adb5bd;
+}
+
+.time-value, .duration-value {
+  font-size: 1.2em;
+  color: #fff;
+  font-weight: 500;
+}
+
+.time-item {
+  font-size: 0.9em;
+  color: #adb5bd;
+}
+
+.rounds-info h3,
+.moves-log h3 {
+  font-size: 1.4em;
+  margin-top: 15px;
+  border-bottom: 2px solid #51cf66;
+  padding-bottom: 5px;
 }
 
 .rounds-info ul {
-  list-style-type: none;
+  list-style: none;
   padding: 0;
 }
 
 .rounds-info ul li {
-  border-bottom: 1px solid #ddd;
-  padding: 0.5em 0;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e9ecef;
+}
+
+.round-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.round-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.9em;
 }
 
 .moves-log table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1em;
+  margin-top: 15px;
+  font-size: 0.9em;
 }
 
 .moves-log table th,
 .moves-log table td {
-  padding: 0.5em;
-  border: 1px solid #ddd;
-  text-align: left;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  text-align: center;
 }
 
 .moves-log table th {
-  background-color: #f0f0f0;
-  font-weight: bold;
+  background-color: #495057;
+  color: #e9ecef;
 }
 
 .error-message {
-  color: red;
+  color: #f03e3e;
   font-weight: bold;
   text-align: center;
+  font-size: 1.2em;
+}
+.duration-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2em;
+  color: #ff6b6b;
+}
+
+.duration-label {
+  color: #51cf66;
+}
+.status-running {
+  color: #ffc107; /* Yellow for Running */
+  font-weight: bold;
+}
+
+.status-canceled {
+  color: #dc3545; /* Red for Canceled */
+  font-weight: bold;
+}
+
+.status-completed {
+  color: #28a745; /* Green for Completed */
+  font-weight: bold;
 }

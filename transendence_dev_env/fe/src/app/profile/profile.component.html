@@ -9,7 +9,20 @@
       <p><strong>ID:</strong> {{ userProfile.id }}</p>
       <p><strong>Username:</strong> {{ userProfile.username }}</p>
       <p><strong>Email:</strong> {{ userProfile.email }}</p>
-
+            <!-- Level, XP, and Progress -->
+            <div class="mt-4">
+              <h6 class="text-light">Level {{ userProfile.level }}</h6>
+              <p>XP: {{ userProfile.xp }} / {{ userProfile.xp_for_next_level }}</p>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar" role="progressbar" 
+                     [style.width.%]="getXpProgress()" 
+                     [attr.aria-valuenow]="getXpProgress()" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                  {{ getXpProgress() | number: '1.0-0' }}%
+                </div>
+              </div>
+            </div>
       <!-- Profile Form -->
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="form-dark">
         <div class="form-group">
@@ -36,20 +49,34 @@
   </div>
 
   <!-- Game History Section -->
-  <div class="card bg-dark shadow-sm border-secondary">
+  <div class="card bg-dark shadow-sm border-secondary mt-4">
     <div class="card-header bg-dark border-secondary">
       <h3 class="h6 mb-0 text-light">Your Game History</h3>
     </div>
     <ul *ngIf="gameHistory.length > 0; else noHistory" class="list-group list-group-flush">
       <li *ngFor="let game of gameHistory" class="list-group-item bg-dark text-light border-secondary">
-        <p><strong>Game ID:</strong> {{ game.id }}</p>
-        <p><strong>Mode:</strong> {{ game.game_mode }}</p>
-        <p>
-          <strong>Score:</strong> 
-          {{ game.player1.username }} ({{ game.score_player1 }}) vs {{ game.player2 ? game.player2.username : 'AI' }} ({{ game.score_player2 }})
-        </p>
-        <p><strong>Winner:</strong> {{ game.winner?.username || 'AI' }}</p>
-        <p><strong>Duration:</strong> {{ game.duration | number: '1.2-2' }} seconds</p>
+        <div class="game-summary d-flex justify-content-between align-items-center">
+          <div class="players">
+            <strong>{{ game.player1.username }}</strong> 
+            <span class="vs">VS</span> 
+            <strong>{{ game.player2.username || 'AI' }}</strong>
+          </div>
+          <div class="score text-warning">
+            {{ game.score_player1 }} : {{ game.score_player2 }}
+          </div>
+        </div>
+        <div class="additional-info mt-1">
+          <span class="text-muted">Mode:</span> {{ game.game_mode }}
+          <span class="text-muted">| Winner:</span> <strong>{{ game.winner?.username || 'AI' }}</strong>
+        </div>
+        <a [routerLink]="['/games/details/', game.id]" class="text-info small">View Details</a>
+        <span [ngClass]="{
+          'status-running': getGameStatus(game) === 'Running',
+          'status-canceled': getGameStatus(game) === 'Canceled',
+          'status-completed': getGameStatus(game) === 'Completed'
+        }">
+          {{ getGameStatus(game) }}
+        </span>
       </li>
     </ul>
     <ng-template #noHistory>

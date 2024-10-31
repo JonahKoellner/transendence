@@ -1,48 +1,70 @@
-/* Dark Theme for Profile Page */
+/***** Dark Theme Profile Page *****/
 .container {
-    background-color: #121212;
-    color: #e0e0e0;
-  }
-  
-  /* Card Styling */
-  .card {
-    border: 1px solid #343a40;
-    border-radius: 8px;
-  }
-  
-  /* Card Header */
-  .card-header {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
-    border-bottom: 1px solid #343a40;
-  }
-  
-  /* Form Styling */
-  .form-dark .form-control {
-    background-color: #343a40;
-    color: #e0e0e0;
-  }
-  
-  .form-dark .form-control-file {
-    color: #e0e0e0;
-  }
-  
-  /* Avatar Styling */
-  .avatar {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid #ffffff;
-  }
-  
-  /* List Group for Game History */
-  .list-group-item {
-    background-color: #1e1e1e;
-    border-color: #343a40;
-  }
-  
-  .list-group-item p {
-    margin-bottom: 0.5rem;
-  }
-  
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/***** Card Styling *****/
+.card {
+  border: 1px solid #343a40;
+  border-radius: 8px;
+}
+
+.card-header {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-bottom: 1px solid #343a40;
+}
+
+/***** Game History Styling *****/
+.list-group-item {
+  background-color: #1e1e1e;
+  border-color: #343a40;
+  padding: 15px;
+}
+
+.game-summary {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #e0e0e0;
+}
+
+.players {
+  display: inline-flex;
+  align-items: center;
+}
+
+.vs {
+  margin: 0 5px;
+  color: #ff6b6b; /* Highlight the "VS" text */
+}
+
+.score {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.additional-info {
+  font-size: 0.9em;
+  color: #adb5bd;
+}
+
+.badge-success {
+  font-size: 0.8em;
+  color: #e0e0e0;
+  background-color: #28a745;
+}
+.status-running {
+  color: #ffc107; /* Yellow for Running */
+  font-weight: bold;
+}
+
+.status-canceled {
+  color: #dc3545; /* Red for Canceled */
+  font-weight: bold;
+}
+
+.status-completed {
+  color: #28a745; /* Green for Completed */
+  font-weight: bold;
+}

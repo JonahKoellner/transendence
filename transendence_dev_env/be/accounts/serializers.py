@@ -4,13 +4,6 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, User, Notification, ChatMessage, FriendRequest
 
-class ProfileSerializer(serializers.ModelSerializer):
-    avatar = serializers.ImageField(max_length=None, allow_empty_file=True, required=False)
-    class Meta:
-        model = Profile
-        fields = ['display_name', 'avatar', 'is_2fa_enabled']
-        read_only_fields = ['is_2fa_enabled']
-
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -54,12 +47,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
     
-    
+    xp = serializers.IntegerField(source='profile.xp', read_only=True)
+    level = serializers.IntegerField(source='profile.level', read_only=True)
+    xp_for_next_level = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'friends', 'blocked_users', 'is_online', 'is_2fa_enabled', 'has_logged_in', ]
-        read_only_fields = ['friends', 'blocked_users', 'is_online']
+        fields = [
+            'id', 'username', 'email', 'display_name', 'avatar', 'friends',
+            'blocked_users', 'is_online', 'is_2fa_enabled', 'has_logged_in',
+            'xp', 'level', 'xp_for_next_level'
+        ]
+        read_only_fields = ['friends', 'blocked_users', 'is_online', 'xp', 'level', 'xp_for_next_level']
         
     def get_friends(self, obj):
         """
@@ -99,6 +98,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+    def get_xp_for_next_level(self, obj):
+        """Get the XP required to reach the next level."""
+        return obj.profile.xp_for_next_level()
 
 class TokenSerializer(serializers.Serializer):
     refresh = serializers.CharField()
@@ -108,12 +110,42 @@ class UserDetailSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='profile.display_name', required=False)
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
-
+    
+    xp = serializers.IntegerField(source='profile.xp', read_only=True)
+    level = serializers.IntegerField(source='profile.level', read_only=True)
+    xp_for_next_level = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online']
-        read_only_fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online']
+        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'level', 'xp_for_next_level']
+        read_only_fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'level', 'xp_for_next_level']
+    
+    
+    def update(self, instance, validated_data):
+        # Update User fields if they are included
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
 
+        # Update Profile fields
+        profile_data = validated_data.get('profile', {})
+        profile = instance.profile
+
+        # Update display_name if present
+        if 'display_name' in profile_data:
+            profile.display_name = profile_data['display_name']
+        
+        # Update avatar if present
+        if 'avatar' in profile_data:
+            profile.avatar = profile_data['avatar']
+        
+        # Save the profile instance
+        profile.save()
+
+        return instance
+    def get_xp_for_next_level(self, obj):
+        """Get the XP required to reach the next level."""
+        return obj.profile.xp_for_next_level()
+    
 class NotificationSerializer(serializers.ModelSerializer):
     sender = UserDetailSerializer(read_only=True)
     receiver = UserDetailSerializer(read_only=True)

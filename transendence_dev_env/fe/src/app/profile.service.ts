@@ -15,7 +15,10 @@ export interface UserProfile {
   profile?: Profile; // Make profile optional if data is flattened
   display_name?: string; // Include these if your API response is flattened
   avatar?: string;
-  is_online: boolean
+  is_online: boolean;
+  xp: number;          // Current XP
+  level: number;       // Current level
+  xp_for_next_level: number;  // XP required to reach the next level
 }
 
 

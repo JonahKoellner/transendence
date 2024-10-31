@@ -48,4 +48,8 @@ export class UserDetailsComponent implements OnInit {
       }
     );
   }
+  getXpProgress(): number {
+    if (!this.user) return 0;
+    return Math.min((this.user.xp / this.user.xp_for_next_level) * 100, 100);
+  }
 }

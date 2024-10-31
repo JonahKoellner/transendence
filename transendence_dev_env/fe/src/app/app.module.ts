@@ -33,6 +33,7 @@ import { NgChartsModule } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
 import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { DurationPipe } from './duration.pipe';
 @NgModule({
   declarations: [
     AppComponent,
@@ -58,7 +59,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     GameDetailsComponent,
     UserDetailsComponent,
     StatsComponent,
-    GameCanvasComponent
+    GameCanvasComponent,
+    DurationPipe
     
   ],
   imports: [

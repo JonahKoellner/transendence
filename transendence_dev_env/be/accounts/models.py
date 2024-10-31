@@ -15,6 +15,10 @@ class Profile(models.Model):
     friends = models.ManyToManyField('self', symmetrical=False, related_name='friends_with', blank=True)
     blocked_users = models.ManyToManyField('self', symmetrical=False, related_name='blocked_by', blank=True)
     is_online = models.BooleanField(default=False)
+    
+    xp = models.IntegerField(default=0)
+    level = models.IntegerField(default=1)
+    
     # Generate a new OTP secret and provisioning URI for QR code
     def generate_otp(self):
         if not self.otp_secret:
@@ -42,6 +46,31 @@ class Profile(models.Model):
     def get_friends(self):
         return self.friends.all()
     
+    def xp_for_next_level(self):
+        """ Calculate XP needed for the next level using exponential growth. """
+        return int(100 * (1.1 ** self.level))  # Example: exponential growth in XP requirements
+
+    def add_xp(self, xp_amount):
+        self.xp += xp_amount
+        leveled_up = False
+
+        while self.xp >= self.xp_for_next_level():
+            self.level += 1
+            self.xp -= self.xp_for_next_level()
+            leveled_up = True
+
+        self.save()
+
+        # If the player leveled up, create a notification
+        if leveled_up:
+            Notification.objects.create(
+                sender=self.user,
+                receiver=self.user,
+                notification_type='level_up',
+                priority='medium',
+                data={'new_level': self.level}
+            )
+    
 class Notification(models.Model):
     NOTIFICATION_TYPES = (
         ('friend_request', 'Friend Request'),
@@ -52,6 +81,7 @@ class Notification(models.Model):
         ('tournament', 'Tournament Notification'),
         ('new_message', 'New Message'),
         ('system_alert', 'System Alert'),
+        ('level_up', 'Level Up'),
     )
     PRIORITY_LEVELS = (
         ('low', 'Low'),
