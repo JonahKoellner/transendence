@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
-import { ProfileService } from 'src/app/profile.service';
+import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { GameCanvasComponent } from './game-canvas/game-canvas.component';
 
 export interface GameSettings {
@@ -20,9 +20,11 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   previousGames: string[] = [];
   gameElapsedTime: string = '0 seconds';
   roundElapsedTime: string = '0 seconds';
-  player1Name: string = 'PlayerOne'; // Default until profile loads
+  hostProfile: UserProfile | null = null; // Default until profile loads
   private gameIntervalId: any;
   private roundIntervalId: any;
+
+  displayNameHost: string = 'Player 1';
 
   settings: GameSettings = {
     maxRounds: 3,
@@ -34,7 +36,8 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.profileService.getProfile().subscribe(
       profile => {
-        this.player1Name = profile.display_name || profile.username;
+        this.hostProfile = profile;
+        console.log('Profile loaded:', profile);
       },
       error => {
         console.error('Failed to load profile:', error);
@@ -48,10 +51,10 @@ export class LocalPveComponent implements OnInit, OnDestroy {
 
   startNewGame(): void {
     if (!this.validateSettings()) return;
-
+    this.displayNameHost = this.hostProfile?.display_name || this.hostProfile?.username || 'Player 1';
     const newGame: Game = {
       game_mode: 'pve',
-      player1: { id: 1, username: this.player1Name },
+      player1: { id: this.hostProfile?.id || -1, username: this.displayNameHost },
       player2: { id: 0, username: 'AI' },
       start_time: new Date().toISOString(),
       score_player1: 0,
@@ -63,14 +66,15 @@ export class LocalPveComponent implements OnInit, OnDestroy {
       end_time: undefined,
       winner: null,
     };
-
+    console.log('Creating new game:', newGame);
     this.gameService.createGame(newGame).subscribe((game) => {
       if (this.logs.length) {
         this.previousGames.push(...this.logs);
         this.logs = [];
       }
-      this.currentGame = { ...game, player2: game.player2 || { id: 0, username: 'AI' } };
+      this.currentGame = game;
       this.gameInProgress = true;
+      console.log('New game started in PvE mode:', this.currentGame);
       this.logs.push('New game started in PvE mode');
       this.startTimers();
       this.startNewRound();
@@ -138,7 +142,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     if (!this.currentGame || !this.gameInProgress) return;
   
     const currentRound = this.getCurrentRound();
-    const scoringPlayer = player === 'human' ? this.player1Name : 'AI';
+    const scoringPlayer = player === 'human' ? this.displayNameHost : 'AI';
   
     const move: MoveLog = {
       time: new Date().toISOString(),
@@ -165,11 +169,11 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     if (round.score_player1 >= this.settings.roundScoreLimit || round.score_player2 >= this.settings.roundScoreLimit) {
       round.end_time = new Date().toISOString();
       if (round.score_player1 > round.score_player2)
-        round.winner = String(this.currentGame!.player1);
+        round.winner = this.currentGame!.player1.username;
       else
-        round.winner = String(this.currentGame?.player2);
+        round.winner = this.currentGame!.player2.username;
       // round.winner = round.score_player1 > round.score_player2 ? this.currentGame!.player1.username : (this.currentGame!.player2?.username || 'AI');
-      if (round.winner == String(this.currentGame!.player1))
+      if (round.winner == this.currentGame!.player1.username)
         this.currentGame!.score_player1++;
       else
         this.currentGame!.score_player2++;
@@ -200,10 +204,10 @@ export class LocalPveComponent implements OnInit, OnDestroy {
       this.currentGame!.winner = this.currentGame!.player2;
     else
       this.currentGame!.winner = {id: -1, username: 'Tie'};
-    console.log("Winner test: " + String(this.currentGame!.winner));
+    console.log("Winner test: " + this.currentGame!.winner.username);
 
     this.gameInProgress = false;
-    this.logs.push(`Game ended. Winner: ${String(this.currentGame!.winner) || 'None'}`);
+    this.logs.push(`Game ended. Winner: ${this.currentGame!.winner.username || 'None'}`);
 
     if (this.currentGame && this.currentGame.id) {
       const updatedGameData: Partial<Game> = {

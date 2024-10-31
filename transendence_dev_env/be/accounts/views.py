@@ -285,16 +285,20 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'You cannot send a friend request to a blocked user.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if a friend request already exists in either direction
-        existing_request = FriendRequest.objects.filter(
-            (Q(sender=request.user) & Q(receiver=user_to_add)) | 
-            (Q(sender=user_to_add) & Q(receiver=request.user))
-        ).first()
-        if existing_request:
-            if existing_request.status == FriendRequest.ACCEPTED:
-                return Response({'detail': 'You are already friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            existing_request = FriendRequest.objects.filter(
+                (Q(sender=request.user) & Q(receiver=user_to_add)) | 
+                (Q(sender=user_to_add) & Q(receiver=request.user))
+            ).first()
+            if existing_request:
+                if existing_request.status == FriendRequest.ACCEPTED:
+                    return Response({'detail': 'You are already friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
             # elif existing_request.status == FriendRequest.PENDING: TODO FIX THIS
             #     return Response({'detail': 'Friend request already sent.'}, status=status.HTTP_400_BAD_REQUEST)
         # Create a friend request
+        except Exception as e:
+            return Response({'detail': 'Cant send friend request.'}, status=status.HTTP_400_BAD_REQUEST)
         friend_request = FriendRequest.objects.create(sender=request.user, receiver=user_to_add)
 
         # Create a notification for the receiver
@@ -379,11 +383,13 @@ class UserViewSet(viewsets.ModelViewSet):
         receiver_profile.friends.remove(sender_profile)
 
         # Check if a friend request already exists in either direction and delete it
-        FriendRequest.objects.filter(
-            (Q(sender=request.user) & Q(receiver=user_to_remove)) | 
-            (Q(sender=user_to_remove) & Q(receiver=request.user))
-        ).delete()
-
+        try:
+            FriendRequest.objects.filter(
+                (Q(sender=request.user) & Q(receiver=user_to_remove)) | 
+                (Q(sender=user_to_remove) & Q(receiver=request.user))
+            ).delete()
+        except Exception as e:
+            return Response({'detail': 'User cant be unfriended.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': 'Friend removed.'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='block-user')
@@ -413,10 +419,13 @@ class UserViewSet(viewsets.ModelViewSet):
         sender_profile.blocked_users.add(receiver_profile)
 
         # Check if a friend request already exists in either direction and delete it
-        FriendRequest.objects.filter(
-            (Q(sender=request.user) & Q(receiver=user_to_block)) | 
-            (Q(sender=user_to_block) & Q(receiver=request.user))
-        ).delete()
+        try: 
+            FriendRequest.objects.filter(
+                (Q(sender=request.user) & Q(receiver=user_to_block)) | 
+                (Q(sender=user_to_block) & Q(receiver=request.user))
+            ).delete()
+        except Exception as e:
+            return Response({'detail': 'User cant be blocked.'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'status': 'User blocked and removed from friends.'}, status=status.HTTP_200_OK)
     

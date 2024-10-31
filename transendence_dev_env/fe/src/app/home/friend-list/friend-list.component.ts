@@ -43,9 +43,6 @@ export class FriendListComponent {
     this.loadBlockedUsers();
   } 
   
-  
-
-
   selectTab(tab: string): void {
     this.initData();
     this.activeTab = tab;
@@ -64,7 +61,6 @@ export class FriendListComponent {
       }
     );
   }
-
 
   loadFriendRequests(): void {
     this.friendService.getFriendRequests().subscribe(

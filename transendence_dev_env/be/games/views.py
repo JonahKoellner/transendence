@@ -45,29 +45,36 @@ class GameViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """
         Override the update process. If the game is marked as completed,
-        automatically set the end time, calculate the duration, and determine the winner.
-        Handles both Player-vs-Player and Player-vs-AI cases.
+        automatically set the end time, calculate the duration, and determine the winner
+        if not provided. Handles both Player-vs-Player and Player-vs-AI cases.
         """
         instance = self.get_object()
+        validated_data = serializer.validated_data
 
-        if serializer.validated_data.get('is_completed', False):
+        if validated_data.get('is_completed', False):
             # Calculate duration when the game is marked complete
             duration = (timezone.now() - instance.start_time).total_seconds()
 
-            # Determine the winner
-            if instance.is_against_ai():  # PvE mode
-                if instance.score_player1 > instance.score_player2:
-                    winner = instance.player1  # Human player wins
-                else:
-                    winner = None  # AI wins, set as None or some custom logic if desired
-            else:  # PvP mode
-                if instance.score_player1 > instance.score_player2:
-                    winner = instance.player1
-                elif instance.score_player2 > instance.score_player1:
-                    winner = instance.player2
-                else:
-                    winner = None  # Draw or no winner
+            # Use provided winner if sent, otherwise determine the winner
+            winner_data = validated_data.get('winner')
+            if winner_data:
+                # Set winner based on provided ID
+                winner = User.objects.get(id=winner_data['id'])
+            else:
+                # Determine winner based on scores if not provided
+                score_player1 = validated_data.get('score_player1', instance.score_player1)
+                score_player2 = validated_data.get('score_player2', instance.score_player2)
+                if instance.is_against_ai():  # PvE mode
+                    winner = instance.player1 if score_player1 > score_player2 else None
+                else:  # PvP mode
+                    if score_player1 > score_player2:
+                        winner = instance.player1
+                    elif score_player2 > score_player1:
+                        winner = instance.player2
+                    else:
+                        winner = None  # Draw or no winner
 
+            # Save updates with end time, duration, and winner (either provided or calculated)
             serializer.save(
                 end_time=timezone.now(),
                 duration=duration,

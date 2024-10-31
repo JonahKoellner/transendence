@@ -18,11 +18,11 @@
   <!-- Game progress and controls -->
   <div *ngIf="gameInProgress && currentGame" class="game-info">
     <p>Game Mode: {{ currentGame.game_mode }}</p>
-    <p>{{ player1Name }} vs AI</p>
+    <p>{{ displayNameHost }} vs {{ currentGame.player2.username }}</p>
     <p>Game Timer: {{ gameElapsedTime }}</p>
     <p>Round Timer: {{ roundElapsedTime }}</p>
     <p>Current Round: {{ currentGame.rounds.length }} of {{ settings.maxRounds }}</p>
-    <p>Score: {{ player1Name }} ({{ currentGame!.score_player1 }}/{{ settings.maxRounds }}) - AI ({{ currentGame!.score_player2 }}/{{ settings.maxRounds }})</p>
+    <p>Score: {{ displayNameHost }} ({{ currentGame!.score_player1 }}/{{ settings.maxRounds }}) - AI ({{ currentGame!.score_player2 }}/{{ settings.maxRounds }})</p>
 
     <app-game-canvas
     [gameSettings]="settings"
