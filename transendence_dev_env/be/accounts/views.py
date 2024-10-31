@@ -15,7 +15,7 @@ from .serializers import (
     UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
     FriendRequestSerializer
 )
-from .utils import create_notification
+from .utils import create_notification, update_profile_with_transaction
 from django.http import JsonResponse
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
@@ -27,7 +27,6 @@ from .models import Notification, ChatMessage, FriendRequest
 from django.db import models
 from django.db.models import Q
 import be.settings as besettings
-
 
 
 class RegisterView(APIView):
@@ -235,8 +234,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def put(self, request):
         user = request.user
         serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        
         if serializer.is_valid():
-            serializer.save()
+            # Use the transaction-safe method
+            update_profile_with_transaction(user, serializer.validated_data.get('profile', {}))
             return Response({"message": "Profile updated successfully", "user": serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

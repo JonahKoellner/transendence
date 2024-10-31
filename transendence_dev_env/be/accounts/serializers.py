@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, User, Notification, ChatMessage, FriendRequest
-
+from django.db import transaction
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -76,9 +76,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return UserDetailSerializer(blocked_users, many=True).data
 
     def update(self, instance, validated_data):
-        # Update Profile fields directly if they exist
         profile_data = validated_data.pop('profile', {})
-        Profile.objects.update_or_create(user=instance, defaults=profile_data)
+
+        # Use atomic transaction to ensure all or nothing
+        with transaction.atomic():
+            for attr, value in profile_data.items():
+                setattr(instance.profile, attr, value)
+            instance.profile.save()  # Commit all profile changes
+            instance.save()  # Save the user instance
+
         return instance
 
     def get_xp_for_next_level(self, obj):

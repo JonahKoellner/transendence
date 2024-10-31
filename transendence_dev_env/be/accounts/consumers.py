@@ -41,10 +41,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def set_user_online(self, is_online):
         user = self.scope.get('user')
-        if user.is_authenticated:
-            profile = user.profile
-            profile.is_online = is_online
-            profile.save()
+        #WIP TODO - set user online or offline
+        # if user.is_authenticated:
+        #     user.profile.is_online = is_online
+        #     user.profile.save()  # Persist state change explicitly
             
             
 class ChatConsumer(AsyncJsonWebsocketConsumer):

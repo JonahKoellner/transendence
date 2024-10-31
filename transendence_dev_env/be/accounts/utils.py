@@ -1,7 +1,20 @@
 from .models import Notification
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.db import transaction
+from .models import Profile
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
+@transaction.atomic
+def update_profile_with_transaction(user, profile_data):
+    """
+    Updates the user's profile within an atomic transaction.
+    """
+    for attr, value in profile_data.items():
+        setattr(user.profile, attr, value)
+    user.profile.save()
+    
 def create_notification(sender, receiver, notification_type, data=None, priority='medium'):
     notification = Notification.objects.create(
         sender=sender,
