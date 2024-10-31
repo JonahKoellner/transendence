@@ -83,4 +83,11 @@
   </div>
 </div>
 
+<app-chat-window
+    *ngIf="selectedFriendId && selectedFriendUsername"
+    [friendId]="selectedFriendId"
+    [friendUsername]="selectedFriendUsername"
+    class="mt-4"
+  ></app-chat-window>
+
 <app-user-search></app-user-search>
