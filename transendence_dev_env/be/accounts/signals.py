@@ -10,4 +10,5 @@ def create_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
+    instance.profile.refresh_from_db()  # Refresh to clear cache
     instance.profile.save()

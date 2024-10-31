@@ -228,7 +228,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         Override the list method to return only the authenticated user's data.
         """
-        user = request.user
+        user = self.get_queryset().get(id=request.user.id)  # Retrieve fresh instance
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
