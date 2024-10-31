@@ -24,32 +24,18 @@ export interface UserProfile {
 })
 export class ProfileService {
   private apiUrl = 'http://localhost:8000/accounts/users/'; // Adjust the URL accordingly
-  private apiUrl2 = 'http://localhost:8000/accounts/profile/'; // Adjust the URL accordingly
-
   constructor(private http: HttpClient) {}
 
   getProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(this.apiUrl2, { withCredentials: true });
+    return this.http.get<UserProfile>(this.apiUrl, { withCredentials: true });
   }
 
   updateProfile(data: FormData): Observable<any> {
-    return this.http.put(this.apiUrl2, data, { withCredentials: true });
+    return this.http.put(this.apiUrl, data, { withCredentials: true });
   }
   searchUsers(query: string): Observable<UserProfile[]> {
     const params = new HttpParams().set('q', query);
     return this.http.get<UserProfile[]>(`${this.apiUrl}search/`,  { params, withCredentials: true });
-  }
-
-  addFriend(userId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}${userId}/add-friend/`, {}, { withCredentials: true });
-  }
-
-  removeFriend(userId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}${userId}/remove-friend/`, {}, { withCredentials: true });
-  }
-
-  blockUser(userId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}${userId}/block-user/`,{}, { withCredentials: true });
   }
 
   getUserDetails(userId: number): Observable<UserProfile> {
@@ -57,8 +43,6 @@ export class ProfileService {
   }
 
   getCurrentUserId(): number {
-    // Implement logic to retrieve the current user's ID, e.g., from JWT token
-    // This is a placeholder
     return 1;
   }
   

@@ -15,7 +15,7 @@ export class FriendService {
   constructor(private http: HttpClient) { }
 
   sendFriendRequest(userId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}${userId}/add-friend/`, {}, { withCredentials: true });
+    return this.http.post(`${this.apiUrl}${userId}/send-friend-request/`, {}, { withCredentials: true });
   }
 
   removeFriend(userId: number): Observable<any> {
@@ -39,5 +39,16 @@ export class FriendService {
   getFriends(): Observable<UserProfile[]> { // Explicit return type
     const url = `${this.apiUrl}friends/`;
     return this.http.get<UserProfile[]>(url, { withCredentials: true });
+  }
+  getFriendRequests(): Observable<any> {
+    const url = `${this.apiUrl}friend-requests/`;
+    return this.http.get(url, { withCredentials: true });
+  }
+  getBlockedUsers(): Observable<UserProfile[]> {
+    return this.http.get<UserProfile[]>(`${this.apiUrl}blocked-users/`, { withCredentials: true });
+  }
+
+  unblockUser(userId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}${userId}/unblock-user/`, {}, { withCredentials: true });
   }
 }

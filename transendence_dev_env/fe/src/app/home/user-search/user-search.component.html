@@ -37,7 +37,7 @@
           <h5 class="mb-0">{{ user.display_name || user.username }}</h5>
           <small class="text-muted">Username: {{ user.username }}</small>
         </div>
-        <button class="btn btn-outline-primary btn-sm mr-2" (click)="addFriend(user.id)">Add Friend</button>
+        <button class="btn btn-outline-primary btn-sm mr-2" (click)="sendFriendRequest(user.id)">Add Friend</button>
         <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', user.id]">Account Page</a>
       </li>
     </ul>

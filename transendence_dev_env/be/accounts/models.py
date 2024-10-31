@@ -45,6 +45,8 @@ class Profile(models.Model):
 class Notification(models.Model):
     NOTIFICATION_TYPES = (
         ('friend_request', 'Friend Request'),
+        ('friend_request_accepted', 'Friend Accept'),
+        ('friend_request_rejected', 'Friend Reject'),
         ('game_invite', 'Game Invite'),
         ('arena_invite', 'Arena Invite'),
         ('tournament', 'Tournament Notification'),
@@ -78,3 +80,25 @@ class ChatMessage(models.Model):
 
     class Meta:
         ordering = ['timestamp']
+        
+class FriendRequest(models.Model):
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    REJECTED = 'rejected'
+
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (ACCEPTED, 'Accepted'),
+        (REJECTED, 'Rejected'),
+    ]
+
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_friend_requests', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='received_friend_requests', on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('sender', 'receiver')
+
+    def __str__(self):
+        return f"{self.sender} -> {self.receiver} ({self.status})"
