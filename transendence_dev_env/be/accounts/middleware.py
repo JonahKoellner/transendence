@@ -32,11 +32,15 @@ class JWTAuthMiddleware(BaseMiddleware):
         query_params = parse_qs(query_string)
         token = query_params.get('token')
         if token:
-            token = token[0]
             user = await get_user(token)
-            scope['user'] = user
+            if user.is_authenticated:
+                scope['user'] = user
+            else:
+                scope['user'] = AnonymousUser()
+                print("Token validation failed, user set as anonymous.")
         else:
             scope['user'] = AnonymousUser()
+            print("No token provided, user set as anonymous.")
         return await super().__call__(scope, receive, send)
 
 def JWTAuthMiddlewareStack(inner):

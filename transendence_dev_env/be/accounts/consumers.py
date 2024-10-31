@@ -42,8 +42,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     def set_user_online(self, is_online):
         user = self.scope.get('user')
         if user.is_authenticated:
-            user.profile.is_online = is_online
-            user.profile.save()  # Saving the profile instead of user directly
+            profile = user.profile
+            profile.is_online = is_online
+            profile.save()
             
             
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -54,7 +55,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         else:
             self.user = user
             self.room_name = self.scope['url_route']['kwargs']['room_name']
-            self.room_group_name = f'chat_{self.room_name}'
+            self.room_group_name = f'chat_{self.room_name}_{self.user.id}'
 
             await self.channel_layer.group_add(
                 self.room_group_name,

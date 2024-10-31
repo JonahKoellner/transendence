@@ -51,17 +51,23 @@ class Profile(models.Model):
         return int(100 * (1.1 ** self.level))  # Example: exponential growth in XP requirements
 
     def add_xp(self, xp_amount):
+        """
+        Add XP to the profile, level up if the XP threshold is met, and handle multiple level-ups.
+        """
         self.xp += xp_amount
         leveled_up = False
 
+        # Loop to handle cases where XP overflow could result in multiple level-ups
         while self.xp >= self.xp_for_next_level():
-            self.level += 1
+            # Subtract required XP for the current level
             self.xp -= self.xp_for_next_level()
+            # Increment the level
+            self.level += 1
             leveled_up = True
 
         self.save()
 
-        # If the player leveled up, create a notification
+        # Create a notification if the player leveled up
         if leveled_up:
             Notification.objects.create(
                 sender=self.user,
@@ -70,6 +76,17 @@ class Profile(models.Model):
                 priority='medium',
                 data={'new_level': self.level}
             )
+
+    def xp_for_next_level(self):
+        """
+        Calculate the XP required for the next level using a combination of linear and exponential growth.
+        """
+        base_xp = 100  # Base XP for level 1
+        linear_growth = 2.5  # Constant increase per level for linear scaling
+        exponential_growth_rate = 1.05  # Slightly lower exponential factor for smoother scaling
+
+        # Calculate XP using combined linear and exponential growth components
+        return int(base_xp + (linear_growth * self.level) + (base_xp * (exponential_growth_rate ** self.level)))
     
 class Notification(models.Model):
     NOTIFICATION_TYPES = (

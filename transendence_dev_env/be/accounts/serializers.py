@@ -58,7 +58,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'blocked_users', 'is_online', 'is_2fa_enabled', 'has_logged_in',
             'xp', 'level', 'xp_for_next_level'
         ]
-        read_only_fields = ['friends', 'blocked_users', 'is_online', 'xp', 'level', 'xp_for_next_level']
         
     def get_friends(self, obj):
         """
@@ -77,27 +76,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return UserDetailSerializer(blocked_users, many=True).data
 
     def update(self, instance, validated_data):
-        # Update User fields if they are included
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.save()
-
-        # Update Profile fields
-        profile_data = validated_data.get('profile', {})
-        profile = instance.profile
-
-        # Update display_name if present
-        if 'display_name' in profile_data:
-            profile.display_name = profile_data['display_name']
-        
-        # Update avatar if present
-        if 'avatar' in profile_data:
-            profile.avatar = profile_data['avatar']
-        
-        # Save the profile instance
-        profile.save()
-
+        # Update Profile fields directly if they exist
+        profile_data = validated_data.pop('profile', {})
+        Profile.objects.update_or_create(user=instance, defaults=profile_data)
         return instance
+
     def get_xp_for_next_level(self, obj):
         """Get the XP required to reach the next level."""
         return obj.profile.xp_for_next_level()
@@ -117,7 +100,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'level', 'xp_for_next_level']
-        read_only_fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'level', 'xp_for_next_level']
     
     
     def update(self, instance, validated_data):
