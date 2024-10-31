@@ -25,7 +25,14 @@
         class="notification-icon"
       ></i>
       <div class="notification-content">
-        <span>{{ notification.sender.username }} {{ getNotificationText(notification.notification_type) }}</span>
+        <span *ngIf="notification.sender?.username; else noUsername">
+          {{ notification.sender.username }} {{ getNotificationText(notification.notification_type) }}
+        </span>
+        <ng-template #noUsername>
+          <span>
+            {{ notification.sender }} {{ getNotificationText(notification.notification_type) }}
+          </span>
+        </ng-template>
         <small class="text-muted">{{ notification.timestamp | date: 'short' }}</small>
       </div>
       <button
