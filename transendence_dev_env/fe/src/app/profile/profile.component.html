@@ -33,13 +33,14 @@
         <div class="form-group">
           <label for="avatar"><strong>Avatar:</strong></label><br />
           <img
-            [src]="avatarPreview"
-            alt="Avatar"
-            class="rounded-circle mb-3 border border-light"
-            width="150"
-            height="150"
-            onerror="this.onerror=null; this.src='assets/default_avatar.png';"
-          /><br />
+          [src]="avatarPreview || userProfile.avatar"
+          alt="Avatar"
+          class="rounded-circle mb-3 border border-light"
+          width="150"
+          height="150"
+          onerror="this.onerror=null; this.src='assets/default_avatar.png';"
+        />
+          <br />
           <input id="avatar" type="file" (change)="onFileChange($event)" class="form-control-file text-light">
         </div>
 

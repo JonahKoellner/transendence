@@ -36,14 +36,12 @@ export class ProfileComponent implements OnInit {
           display_name: data.display_name,
         });
   
-        // Construct the full URL for the avatar
         const avatarUrl = data.avatar
-          ? `http://localhost:8000${data.avatar}`
+          ?  data.avatar
           : 'assets/default_avatar.png';
   
         this.avatarPreview = avatarUrl;
         this.loadGameHistory(data.id);
-        console.log("Done loading", data);
   
         // Reset form to pristine state to avoid accidental submissions
         this.profileForm.markAsPristine();
