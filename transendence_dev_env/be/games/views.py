@@ -11,6 +11,7 @@ from django.db import models
 from datetime import timedelta
 from django.db.models import Avg, Max, Min, Count, Q
 import calendar
+from django.contrib.auth.models import User 
 class GameViewSet(viewsets.ModelViewSet):
     """
     A viewset for performing CRUD operations on games.
@@ -68,24 +69,29 @@ class GameViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         return Game.objects.filter(models.Q(player1=user) | models.Q(player2=user))
-
+    
     def perform_create(self, serializer):
-        """
-        Override the creation process to set the authenticated user as player1.
-        Default player2 to None if the game mode is PvE.
-        """
-        game_mode = serializer.validated_data.get('game_mode')
-        if game_mode == Game.PVE:
-            serializer.save(player1=self.request.user, player2=None)  # AI as player2
-        else:
-            serializer.save(player1=self.request.user)
+        data = serializer.validated_data
+        game_mode = data.get('game_mode')
 
+        if game_mode == Game.LOCAL_PVP and data.get('player2', {}).get('id') == 0:
+            # Local PvP with placeholder name
+            player2_name_pvp_local = data.get('player2', {}).get('username')
+            serializer.save(player1=self.request.user, player2_name_pvp_local=player2_name_pvp_local)
+        else:
+            # Regular PvP or PvE game
+            serializer.save(player1=self.request.user)
 
     def perform_update(self, serializer):
         instance = self.get_object()
         validated_data = serializer.validated_data
         winner, loser = None, None
         winner_xp, loser_xp = 0, 0
+        
+        if validated_data.get('game_mode') == Game.LOCAL_PVP and validated_data.get('player2', {}).get('id') == 0:
+            # Update player2_name if provided in local PvP game mode
+            instance.player2_name_pvp_local = validated_data.get('player2', {}).get('username')
+
 
         if validated_data.get('is_completed', False):
             # Calculate and set duration if not already set
@@ -100,26 +106,34 @@ class GameViewSet(viewsets.ModelViewSet):
                     winner = instance.player1
                 else:
                     loser = instance.player1  # Player loses to AI
-            else:  # PvP mode
-                if score_player1 > score_player2:
-                    winner, loser = instance.player1, instance.player2
-                elif score_player2 > score_player1:
-                    winner, loser = instance.player2, instance.player1
+            else:  # PvP mode, including local PvP with a name placeholder for player2
+                if isinstance(instance.player2, User):  # player2 is an authenticated User
+                    if score_player1 > score_player2:
+                        winner, loser = instance.player1, instance.player2
+                    elif score_player2 > score_player1:
+                        winner, loser = instance.player2, instance.player1
+                elif instance.game_mode == Game.LOCAL_PVP and isinstance(instance.player2, str):
+                    # Local PvP with a placeholder name for player2
+                    if score_player1 > score_player2:
+                        winner = instance.player1
+                    else:
+                        loser = instance.player1  # Player1 loses to a named player2
 
             # Calculate XP gain for the winner and loser
             if winner:
-                winner_xp = self.calculate_xp_gain(instance, winner, is_winner=True)  # Calculate XP for winner
+                winner_xp = self.calculate_xp_gain(instance, winner, is_winner=True)
 
             if loser:
-                loser_xp = max(10, self.calculate_xp_gain(instance, loser, is_winner=False) // 4)  # Loser gets a fraction of XP
+                # Loser gets a fraction of XP; ensure they get at least a minimum amount
+                loser_xp = max(10, self.calculate_xp_gain(instance, loser, is_winner=False) // 4)
 
             # Save game with end time, duration, and winner
             serializer.save(end_time=timezone.now(), duration=instance.duration, winner=winner)
 
-            # Apply XP to profiles
-            if winner:
+            # Apply XP to profiles if winner and loser are actual User instances
+            if isinstance(winner, User):
                 winner.profile.add_xp(winner_xp)
-            if loser:
+            if isinstance(loser, User):
                 loser.profile.add_xp(loser_xp)
 
         else:

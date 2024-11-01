@@ -27,6 +27,8 @@ class Game(models.Model):
         related_name='games_as_player2', 
         blank=True, null=True  # Allow null to represent AI
     )
+    
+    player2_name_pvp_local = models.CharField(max_length=100, blank=True, null=True)
 
     game_mode = models.CharField(max_length=20, choices=GAME_MODES)
     start_time = models.DateTimeField(auto_now_add=True)
@@ -53,7 +55,7 @@ class Game(models.Model):
         return self.player2 is None
 
     def __str__(self):
-        return f"{self.player1.username} vs {'AI' if self.is_against_ai() else self.player2.username} - {self.game_mode}"
+        return f"{self.player1.username} vs {self.player2_name_pvp_local or self.player2 or 'AI'} - {self.game_mode}"
     
     class Meta:
         ordering = ['-start_time']

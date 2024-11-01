@@ -9,6 +9,7 @@
     <div class="card-header bg-dark border-secondary">
       <h2 class="h5 mb-0 text-light">Your Profile</h2>
     </div>
+    <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', userProfile.id]">Account Page</a>
     <div class="card-body">
       <p><strong>ID:</strong> {{ userProfile.id }}</p>
       <p><strong>Username:</strong> {{ userProfile.username }}</p>

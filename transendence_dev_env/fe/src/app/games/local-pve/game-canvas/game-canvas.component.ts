@@ -73,10 +73,16 @@ export class GameCanvasComponent {
   resetBall() {
     this.ballX = this.canvasWidth / 2;
     this.ballY = this.canvasHeight / 2;
-    this.ballDirectionX = 1;
-    this.ballDirectionY = 0;
+    
+    // Randomly set the ball direction to left or right
+    this.ballDirectionX = Math.random() < 0.5 ? -1 : 1;
+    
+    // Set the ball direction Y to a small random value to avoid straight horizontal movement
+    this.ballDirectionY = (Math.random() * 2 - 1) * 0.5; // Random value between -0.5 and 0.5
+    
     this.ballSpeed = 5;
   }
+
   drawBackground() {
     this.context.fillStyle = 'black';
     this.context.fillRect(0, 0, 1000, 500);
@@ -183,7 +189,7 @@ export class GameCanvasComponent {
         else
           this.ballDirectionY = 0;
         if (this.ballSpeed < 100)
-          this.ballSpeed *= 1.25;
+          this.ballSpeed *= 1.05;
       }
   }
 
@@ -214,8 +220,8 @@ export class GameCanvasComponent {
     this.checkRoofCollision();
     this.checkPaddleCollision();
     this.checkScore();
-    this.moveAI();
     this.updateBallPos();
+    this.moveAI();
     this.enforcePaddleBounds();
     this.drawBackground();
     this.drawCenter();
