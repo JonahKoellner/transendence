@@ -308,7 +308,7 @@ class UserViewSet(viewsets.ModelViewSet):
             sender=request.user,
             receiver=user_to_add,
             notification_type='friend_request',
-            data={'message': f'{request.user.username} sent you a friend request.'},
+            data={'message': f'{request.user.username} sent you a friend request.', 'friend_request_id': friend_request.id},
             priority='medium'
         )
 
@@ -351,7 +351,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         Reject a pending friend request.
         """
-        friend_request = get_object_or_404(FriendRequest, sender_id=pk, receiver=request.user)
+        friend_request = get_object_or_404(FriendRequest, pk=pk, receiver=request.user, status=FriendRequest.PENDING)
         friend_request.delete()
         
         # Optionally create a notification to inform the sender that the request was rejected

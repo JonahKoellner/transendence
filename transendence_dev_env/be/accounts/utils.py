@@ -14,7 +14,8 @@ def update_profile_with_transaction(user, profile_data):
     user.profile.save()
     
 def create_notification(sender, receiver, notification_type, data=None, priority='medium'):
-    from .models import Notification  # Delayed import to prevent circular import issues
+    from .models import Notification
+    from .serializers import UserMinimalSerializer
     notification = Notification.objects.create(
         sender=sender,
         receiver=receiver,
@@ -22,6 +23,12 @@ def create_notification(sender, receiver, notification_type, data=None, priority
         data=data,
         priority=priority
     )
+
+    # Serialize sender and receiver details using UserMinimalSerializer
+    serialized_sender = UserMinimalSerializer(sender).data
+    serialized_receiver = UserMinimalSerializer(receiver).data
+
+    # Send the notification via WebSocket
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         f'notifications_{receiver.id}',
@@ -29,7 +36,8 @@ def create_notification(sender, receiver, notification_type, data=None, priority
             'type': 'send_notification',
             'content': {
                 'id': notification.id,
-                'sender': sender.username,
+                'sender': serialized_sender,
+                'receiver': serialized_receiver,
                 'notification_type': notification.notification_type,
                 'priority': notification.priority,
                 'timestamp': notification.timestamp.isoformat(),

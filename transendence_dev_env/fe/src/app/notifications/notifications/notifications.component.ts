@@ -1,23 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { NotificationService } from '../notification.service';
+import { Notification, NotificationService } from '../notification.service';
 import { ProfileService } from 'src/app/profile.service';
 import { ChatService } from 'src/app/chat/chat.service';
 import { AuthService } from 'src/app/auth.service';
 
-
-interface Notification {
-  id: number;
-  sender: {
-    id: number;
-    username: string;
-    email: string;
-  };
-  notification_type: string;
-  priority: string;
-  timestamp: string;
-  is_read: boolean;
-  data?: any;
-}
 
 @Component({
   selector: 'app-notifications',
@@ -47,6 +33,7 @@ export class NotificationsComponent implements OnInit {
     this.notificationService.getNotifications().subscribe(
       (notifications) => {
         this.notifications = notifications;
+        console.log(notifications);
         this.updateUnreadCount();
       },
       (error) => console.error(error)

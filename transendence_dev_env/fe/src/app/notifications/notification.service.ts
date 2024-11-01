@@ -12,13 +12,22 @@ export interface User {
 
 export interface Notification {
   id: number;
-  sender: User;
-  receiver: User;
+  sender: {
+    id: number;
+    username: string;
+    email: string;
+  };
+  receiver: {
+    id: number;
+    username: string;
+    email: string;
+  };
   notification_type: string;
   priority: string;
   timestamp: string;
   is_read: boolean;
   data?: any;
+  friend_request_id?: number;
 }
 
 @Injectable({

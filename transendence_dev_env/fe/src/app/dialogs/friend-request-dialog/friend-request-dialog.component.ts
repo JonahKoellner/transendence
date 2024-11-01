@@ -1,20 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FriendService } from 'src/app/friend.service';
+import { Notification } from 'src/app/notifications/notification.service';
 import { ProfileService } from 'src/app/profile.service';
-
-interface Notification {
-  id: number;
-  sender: {
-    id: number;
-    username: string;
-    email: string;
-  };
-  notification_type: string;
-  priority: string;
-  timestamp: string;
-  is_read: boolean;
-  data?: any;
-}
 
 @Component({
   selector: 'app-friend-request-dialog',
@@ -28,8 +15,9 @@ export class FriendRequestDialogComponent {
   constructor(private friendsService: FriendService) { }
 
   onAccept(): void {
-    console.log(this.notification)
-    this.friendsService.acceptFriendRequest(this.notification.sender.id).subscribe(
+    console.log(this.notification);
+    const friendRequestId = this.notification.data.friend_request_id ?? 0;
+    this.friendsService.acceptFriendRequest(friendRequestId).subscribe(
       () => {
         this.close.emit('accepted');
       },
@@ -40,7 +28,9 @@ export class FriendRequestDialogComponent {
     );
   }
   onDecline(): void {
-    this.friendsService.rejectFriendRequest(this.notification.sender.id).subscribe(
+    console.log(this.notification);
+    const friendRequestId = this.notification.data.friend_request_id ?? 0;
+    this.friendsService.rejectFriendRequest(friendRequestId).subscribe(
       () => {
         this.close.emit('declined');
       },

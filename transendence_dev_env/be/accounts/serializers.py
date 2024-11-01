@@ -134,9 +134,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
         """Get the XP required to reach the next level."""
         return obj.profile.xp_for_next_level()
     
+class UserMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
 class NotificationSerializer(serializers.ModelSerializer):
-    sender = UserDetailSerializer(read_only=True)
-    receiver = UserDetailSerializer(read_only=True)
+    sender = UserMinimalSerializer(read_only=True)
+    receiver = UserMinimalSerializer(read_only=True)
     
     class Meta:
         model = Notification
