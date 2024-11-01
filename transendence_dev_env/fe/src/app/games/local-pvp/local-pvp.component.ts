@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
 import { ProfileService } from 'src/app/profile.service';
+import { GameCanvasComponentPVP } from './game-canvas/game-canvas.component';
 
-interface GameSettings {
-  maxGameScore: number;
+
+export interface GameSettings {
   maxRounds: number;
   roundScoreLimit: number;
 }
@@ -28,7 +29,6 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   private roundIntervalId: any;
 
   settings: GameSettings = {
-    maxGameScore: 5,
     maxRounds: 3,
     roundScoreLimit: 3
   };
@@ -112,7 +112,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   }
 
   validateSettings(): boolean {
-    if (this.settings.maxGameScore <= 0 || this.settings.maxRounds <= 0 || this.settings.roundScoreLimit <= 0) {
+    if (this.settings.maxRounds <= 0 || this.settings.roundScoreLimit <= 0) {
       this.logs.push('Settings values must be positive.');
       return false;
     }
@@ -149,13 +149,13 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
     };
     this.currentGame.moves_log.push(move);
 
-    if (player === 'player1') {
-      this.currentGame.score_player1++;
+    if (player === 'player1')
       currentRound.score_player1++;
-    } else {
-      this.currentGame.score_player2++;
+    else
       currentRound.score_player2++;
-    }
+
+     this.logs.push(`Round ${this.getCurrentRound().round_number} ${playerName} scored.`);
+
 
     this.checkRoundCompletion(currentRound);
     this.checkGameCompletion();
@@ -168,7 +168,14 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   private checkRoundCompletion(round: Round): void {
     if (round.score_player1 >= this.settings.roundScoreLimit || round.score_player2 >= this.settings.roundScoreLimit) {
       round.end_time = new Date().toISOString();
-      round.winner = round.score_player1 > round.score_player2 ? this.player1Name : this.player2Name;
+      if (round.score_player1 > round.score_player2)
+        round.winner = this.currentGame!.player1.username;
+      else
+        round.winner = this.currentGame!.player2.username;
+      if (round.winner == this.currentGame!.player1.username)
+        this.currentGame!.score_player1++;
+      else
+        this.currentGame!.score_player2++;
       this.logs.push(`Round ${round.round_number} ended. Winner: ${round.winner || 'None'}`);
       this.clearRoundTimer();
 
@@ -179,9 +186,8 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   }
 
   private checkGameCompletion(): void {
-    if (this.currentGame!.score_player1 >= this.settings.maxGameScore || this.currentGame!.score_player2 >= this.settings.maxGameScore) {
+    if (this.currentGame!.rounds.length >= this.settings.maxRounds && this.getCurrentRound().winner)
       this.endGame();
-    }
   }
 
   private endGame(): void {
@@ -191,7 +197,13 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
     this.currentGame!.is_completed = true;
     this.clearTimers();
 
-    this.currentGame!.winner = this.currentGame!.score_player1 >= this.settings.maxGameScore ? this.currentGame!.player1 : this.currentGame!.player2;
+    if (this.currentGame!.score_player1 > this.currentGame!.score_player2)
+      this.currentGame!.winner = this.currentGame!.player1;
+    else if (this.currentGame!.score_player1 < this.currentGame!.score_player2)
+      this.currentGame!.winner = this.currentGame!.player2;
+    else
+      this.currentGame!.winner = {id: -1, username: 'Tie'};
+    console.log("Winner test: " + this.currentGame!.winner.username);
     this.gameInProgress = false;
     this.logs.push(`Game ended. Winner: ${this.currentGame!.winner?.username || 'None'}`);
 

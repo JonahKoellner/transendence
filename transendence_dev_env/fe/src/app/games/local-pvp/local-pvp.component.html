@@ -5,10 +5,6 @@
     <div *ngIf="!gameInProgress && !currentGame" class="game-settings">
       <h3>Game Settings</h3>
       <label>
-        Max Game Score:
-        <input type="number" [(ngModel)]="settings.maxGameScore" min="1">
-      </label>
-      <label>
         Max Rounds:
         <input type="number" [(ngModel)]="settings.maxRounds" min="1">
       </label>
@@ -27,22 +23,23 @@
       </label>
       <button (click)="startNewGame()">Start New Game</button>
     </div>
-  
+
     <!-- Game progress and controls -->
     <div *ngIf="gameInProgress && currentGame" class="game-info">
       <p>Game Mode: {{ currentGame.game_mode }}</p>
-      <p>{{ currentGame.player1 }} vs {{ currentGame.player2 }}</p>
+      <p>{{ player1Name }} vs {{ player2Name }}</p>
       <p>Game Timer: {{ gameElapsedTime }}</p>
       <p>Round Timer: {{ roundElapsedTime }}</p>
       <p>Current Round: {{ currentGame.rounds.length }} of {{ settings.maxRounds }}</p>
-      <p>Score: {{ currentGame.player1 }} ({{ currentGame.score_player1 }}/{{ settings.maxGameScore }}) - {{ currentGame.player2 }} ({{ currentGame.score_player2 }}/{{ settings.maxGameScore }})</p>
-  
-      <div class="controls">
-        <button (click)="updateScore('player1')">{{ currentGame.player1 }} Scores</button>
-        <button (click)="updateScore('player2')">{{ currentGame.player2 }} Scores</button>
-      </div>
+      <p>Score: {{ player1Name }} ({{ currentGame.score_player1 }}/{{ settings.maxRounds }}) - {{ player2Name }} ({{ currentGame.score_player2 }}/{{ settings.maxRounds }})</p>
+
+      <app-game-canvas-pvp
+      [gameSettings]="settings"
+      (onScore)='this.updateScore($event)'
+      ></app-game-canvas-pvp>
+
     </div>
-  
+
     <!-- Game results after completion -->
     <div *ngIf="!gameInProgress && currentGame && currentGame.is_completed" class="game-result">
       <h2>Game Over</h2>

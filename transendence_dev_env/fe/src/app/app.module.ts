@@ -32,6 +32,7 @@ import { StatsComponent } from './profile/stats/stats.component';
 import { NgChartsModule } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
 import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.component';
+import { GameCanvasComponentPVP } from './games/local-pvp/game-canvas/game-canvas.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { DurationPipe } from './duration.pipe';
 @NgModule({
@@ -60,8 +61,8 @@ import { DurationPipe } from './duration.pipe';
     UserDetailsComponent,
     StatsComponent,
     GameCanvasComponent,
+    GameCanvasComponentPVP,
     DurationPipe
-    
   ],
   imports: [
     BrowserModule,
