@@ -1,5 +1,7 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, ComponentFactoryResolver, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { PveGameCanvasComponent } from '../pve-game-canvas/pve-game-canvas.component';
+import { PvpGameCanvasComponent } from '../pvp-game-canvas/pvp-game-canvas.component';
 
 export enum TournamentType {
   SINGLE_ELIMINATION = 'Single Elimination',
@@ -20,8 +22,7 @@ export enum RoundType {
 }
 
 export enum MatchOutcome {
-  WIN = 'Win',
-  LOSS = 'Loss',
+  FINISHED = 'Finished',
   TIE = 'Tie',
 }
 
@@ -69,7 +70,8 @@ export class StartComponent implements OnInit {
   selectedTournamentDescription: string = '';
   tournamentResults: Match[] = [];
   finalTournament: Tournament | null = null;
-
+  currentMatchDisplay: string = '';
+  @ViewChild('gameCanvasContainer', { read: ViewContainerRef }) gameCanvasContainer!: ViewContainerRef;
   tournamentTypes = [
     { 
       type: 'Single Elimination',
@@ -86,6 +88,7 @@ export class StartComponent implements OnInit {
   bracket: Round[] = [];
   roundRobinMatches: Match[] = [];
 
+  constructor(private resolver: ComponentFactoryResolver) { }
 
   ngOnInit(): void {
     // Initialize default settings if needed
@@ -215,27 +218,115 @@ export class StartComponent implements OnInit {
     this.simulateTournament();
   }
 
-  simulateMatch(match: Match): void {
+  async simulateMatch(match: Match): Promise<void> {
+    match.player1Score = 0; // Initialize player1Score to 0
+    match.player2Score = 0; // Initialize player2Score to 0
+    
+    // Show alert if a human is playing in this match
+    if (match.player1Type === 'Player' || match.player2Type === 'Player') {
+      alert(`Next Match: ${match.player1} (Player: ${match.player1Type}) vs ${match.player2} (Player: ${match.player2Type})`);
+    }
+    
+    if (match.player1Type === 'Bot' && match.player2Type === 'Bot') {
+      this.autoSimulateMatch(match);
+    } else if (match.player1Type === 'Player' && match.player2Type === 'Bot') {
+      await this.loadPveGameCanvas(match);
+    } else if (match.player1Type === 'Player' && match.player2Type === 'Player') {
+      await this.loadPvpGameCanvas(match);
+    }
+  }
+
+  autoSimulateMatch(match: Match): void {
+    // Logic for automatically simulating bot vs. bot matches...
     match.player1Score = Math.floor(Math.random() * 10);
     match.player2Score = Math.floor(Math.random() * 10);
-
     if (match.player1Score > match.player2Score) {
-        match.winner = match.player1;
-        match.winnerType = match.player1Type;
-        match.outcome = MatchOutcome.WIN;
+      match.winner = match.player1;
+      match.winnerType = match.player1Type;
+      match.outcome = MatchOutcome.FINISHED;
     } else if (match.player2Score > match.player1Score) {
-        match.winner = match.player2;
-        match.winnerType = match.player2Type;
-        match.outcome = MatchOutcome.WIN;
+      match.winner = match.player2;
+      match.winnerType = match.player2Type;
+      match.outcome = MatchOutcome.FINISHED;
     } else {
-        // Handle tie scenario
-        match.outcome = MatchOutcome.TIE;
-        this.resolveTie(match);
+      match.outcome = MatchOutcome.TIE;
+      this.resolveTie(match);
     }
-    this.tournamentResults.push(match);
-}
+  }
 
-  simulateTournament(): void {
+  async loadPveGameCanvas(match: Match): Promise<void> {
+    this.currentMatchDisplay = `${match.player1} (Player) vs ${match.player2} (Bot)`; // Set display text
+    
+    const factory = this.resolver.resolveComponentFactory(PveGameCanvasComponent);
+    const componentRef = this.gameCanvasContainer.createComponent(factory);
+  
+    return new Promise((resolve) => {
+      componentRef.instance.onScore.subscribe((scorer: 'human' | 'bot') => {
+        this.updateScore(match, scorer);
+      });
+  
+      componentRef.instance.onGameEnd.subscribe(() => {
+        if (match.player1Score === match.player2Score) {
+          match.outcome = MatchOutcome.TIE;
+          this.resolveTie(match);
+        } else if (match.player1Score! > match.player2Score!) {
+          match.winner = match.player1;
+          match.winnerType = match.player1Type;
+          match.outcome = MatchOutcome.FINISHED;
+        } else {
+          match.winner = match.player2;
+          match.winnerType = match.player2Type;
+          match.outcome = MatchOutcome.FINISHED;
+        }
+  
+        componentRef.destroy();
+        this.currentMatchDisplay = ''; // Clear display text after match
+        resolve();
+      });
+    });
+  }
+
+  async loadPvpGameCanvas(match: Match): Promise<void> {
+    this.currentMatchDisplay = `${match.player1} (Player) vs ${match.player2} (Player)`; // Set display text
+  
+    const factory = this.resolver.resolveComponentFactory(PvpGameCanvasComponent);
+    const componentRef = this.gameCanvasContainer.createComponent(factory);
+  
+    return new Promise((resolve) => {
+      componentRef.instance.onScore.subscribe((scorer: 'player1' | 'player2') => {
+        this.updateScore(match, scorer);
+      });
+  
+      componentRef.instance.onGameEnd.subscribe(() => {
+        if (match.player1Score === match.player2Score) {
+          match.outcome = MatchOutcome.TIE;
+          this.resolveTie(match);
+        } else if (match.player1Score! > match.player2Score!) {
+          match.winner = match.player1;
+          match.winnerType = match.player1Type;
+          match.outcome = MatchOutcome.FINISHED;
+        } else {
+          match.winner = match.player2;
+          match.winnerType = match.player2Type;
+          match.outcome = MatchOutcome.FINISHED;
+        }
+  
+        componentRef.destroy();
+        this.currentMatchDisplay = ''; // Clear display text after match
+        resolve();
+      });
+    });
+  }
+
+  updateScore(match: Match, scorer: 'player1' | 'player2' | 'human' | 'bot'): void {
+    if (scorer === 'player1' || scorer === 'human') {
+      match.player1Score = (match.player1Score ?? 0) + 1;
+    } else {
+      match.player2Score = (match.player2Score ?? 0) + 1;
+    }
+  }
+
+  async simulateTournament(): Promise<void> {
     const tournament: Tournament = {
       name: this.tournamentName,
       type: this.selectedTournamentType as TournamentType,
@@ -245,36 +336,38 @@ export class StartComponent implements OnInit {
     };
 
     if (this.selectedTournamentType === TournamentType.SINGLE_ELIMINATION) {
-      this.simulateSingleElimination(tournament);
+      await this.simulateSingleElimination(tournament);
     } else if (this.selectedTournamentType === TournamentType.ROUND_ROBIN) {
-      this.simulateRoundRobin(tournament);
+      await this.simulateRoundRobin(tournament);
     }
 
     this.finalTournament = tournament;
     console.log("Final Tournament Result:", this.finalTournament);
   }
 
-  simulateSingleElimination(tournament: Tournament): void {
-    this.bracket.forEach((round, roundIndex) => {
-      round.matches.forEach((match) => this.simulateMatch(match));
+  async simulateSingleElimination(tournament: Tournament): Promise<void> {
+    for (const [roundIndex, round] of this.bracket.entries()) {
+      for (const match of round.matches) {
+        await this.simulateMatch(match);
+      }
       if (roundIndex < this.bracket.length - 1) {
         this.propagateWinnersToNextRound(roundIndex);
       }
       tournament.rounds.push(round);
-    });
+    }
     const finalRound = this.bracket[this.bracket.length - 1];
     tournament.finalWinner = finalRound.matches[0].winner;
     tournament.finalWinnerType = finalRound.matches[0].winnerType;
   }
 
-  simulateRoundRobin(tournament: Tournament): void {
+  async simulateRoundRobin(tournament: Tournament): Promise<void> {
     const scores = new Map<string, number>();
-    this.roundRobinMatches.forEach(match => {
-      this.simulateMatch(match);
+    for (const match of this.roundRobinMatches) {
+      await this.simulateMatch(match);
       if (match.winner) {
         scores.set(match.winner, (scores.get(match.winner) || 0) + 1);
       }
-    });
+    }
 
     tournament.rounds.push({
       roundNumber: 1,
@@ -296,7 +389,7 @@ export class StartComponent implements OnInit {
         match.winner = match.player2;
         match.winnerType = match.player2Type;
     }
-    match.outcome = MatchOutcome.WIN;
+    match.outcome = MatchOutcome.FINISHED;
     match.tieResolved = true; // Track if the match was a tie and resolved
 }
   selectTournamentType(type: any): void {

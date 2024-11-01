@@ -51,7 +51,10 @@
 
         <button class="start-btn" (click)="setPlayers()">Set Players & View Bracket</button>
     </div>
-
+    <div *ngIf="currentMatchDisplay" class="current-match-display">
+        <h3>Current Match: {{ currentMatchDisplay }}</h3>
+      </div>
+    <div #gameCanvasContainer></div>
     <!-- Tournament Bracket Display -->
     <div *ngIf="playersSet" class="tournament-bracket-display">
         <div class="bracket-header">
