@@ -23,8 +23,6 @@ import { SelectionComponent } from './games/selection/selection.component';
 import { LocalPveComponent } from './games/local-pve/local-pve.component';
 import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
 import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
-import { LobbyComponent } from './games/tournament/lobby/lobby.component';
-import { TournamentComponent } from './games/tournament/tournament.component';
 import { CommonModule } from '@angular/common';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
 import { UserDetailsComponent } from './profile/user-details/user-details.component';
@@ -35,6 +33,7 @@ import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.c
 import { GameCanvasComponentPVP } from './games/local-pvp/game-canvas/game-canvas.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { DurationPipe } from './duration.pipe';
+import { StartComponent } from './games/tournament/local/start/start.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -55,14 +54,13 @@ import { DurationPipe } from './duration.pipe';
     LocalPveComponent,
     LocalPvpComponent,
     OnlinePvpComponent,
-    LobbyComponent,
-    TournamentComponent,
     GameDetailsComponent,
     UserDetailsComponent,
     StatsComponent,
     GameCanvasComponent,
     GameCanvasComponentPVP,
-    DurationPipe
+    DurationPipe,
+    StartComponent
   ],
   imports: [
     BrowserModule,
