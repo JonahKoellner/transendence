@@ -14,7 +14,7 @@ export class UserDetailsComponent implements OnInit {
   user: UserProfile | null = null;
   games: Game[] = [];
   errorMessage: string = '';
-
+  isLoading = true;
   constructor(
     private route: ActivatedRoute,
     private profileService: ProfileService,
@@ -25,26 +25,27 @@ export class UserDetailsComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.userId = +params.get('id')!;
       this.loadUserProfile(this.userId);
-      this.loadUserGames(this.userId);
     });
   }
 
   loadUserProfile(userId: number): void {
     this.profileService.getUserDetails(userId).subscribe(
-      (user) => this.user = user,
+      (user) => {this.user = user; this.loadUserGames(userId);},
       (error) => {
         console.error('Failed to load user profile:', error);
         this.errorMessage = 'Could not load user profile.';
+        this.isLoading = false;
       }
     );
   }
 
   loadUserGames(userId: number): void {
     this.gameService.getGamesByUser(userId).subscribe(
-      (games) => this.games = games,
+      (games) => {this.games = games; this.isLoading = false;},
       (error) => {
         console.error('Failed to load user games:', error);
         this.errorMessage = 'Could not load user games.';
+        this.isLoading = false;
       }
     );
   }

@@ -11,6 +11,7 @@ export class GameDetailsComponent implements OnInit {
   gameId: string = '';
   game: Game | null = null;
   errorMessage: string = '';
+  isLoading = true;
 
   constructor(private route: ActivatedRoute, private gameService: GameService) { }
 
@@ -24,10 +25,11 @@ export class GameDetailsComponent implements OnInit {
   // Load game details from the service
   loadGameDetails(gameId: string): void {
     this.gameService.getGameById(parseInt(gameId, 10)).subscribe(
-      (game) => this.game = game,
+      (game) => {this.game = game; this.isLoading = false;},
       (error) => {
         console.error('Error loading game details:', error);
         this.errorMessage = 'Failed to load game details.';
+        this.isLoading = false;
       }
     );
   }

@@ -10,7 +10,7 @@ export class SelectionComponent {
   games: Game[] = [];      // Holds fetched games
   selectedGameMode: string = ''; // Tracks selected game mode
   logs: string[] = [];      // For displaying logs or feedback
-
+  isLoading = true;        // For displaying loading spinner
   constructor(private gameService: GameService) {}
 
   ngOnInit(): void {
@@ -23,10 +23,12 @@ export class SelectionComponent {
       (games) => {
         this.games = Array.isArray(games) ? [...games] : []; // Ensure `games` is an array
         this.logs = [...this.logs, 'Fetched all games successfully.'];
+        this.isLoading = false;
       },
       (error) => {
         console.error('Failed to fetch games:', error);
         this.logs = [...this.logs, 'Failed to fetch games.'];
+        this.isLoading = false;
       }
     );
   }

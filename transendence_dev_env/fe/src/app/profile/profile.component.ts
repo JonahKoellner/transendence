@@ -28,7 +28,6 @@ export class ProfileComponent implements OnInit {
   loadProfile() {
     this.profileService.getProfile().subscribe(
       (data) => {
-        this.isLoading = false;
         this.userProfile = data;
   
         // Set the display_name in the form
@@ -74,13 +73,16 @@ export class ProfileComponent implements OnInit {
     this.gameService.getGamesByUser(userId).subscribe(
       (games) => {
         this.gameHistory = games;
+        this.isLoading = false;
       },
       (error) => {
+        this.isLoading = false;
         console.error('Error loading game history:', error);
       }
     );
   }
   onSubmit() {
+    this.isLoading = true;
     const formData = new FormData();
     formData.append('display_name', this.profileForm.get('display_name')!.value);
 
@@ -95,6 +97,7 @@ export class ProfileComponent implements OnInit {
         this.loadProfile();
       },
       (error) => {
+        this.isLoading = false;
         console.error(error);
       }
     );

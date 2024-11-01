@@ -99,13 +99,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='profile.display_name', required=False)
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
-    
+    is_2fa_enabled  = serializers.BooleanField(source='profile.is_2fa_enabled')
     xp = serializers.IntegerField(source='profile.xp', read_only=True)
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'level', 'xp_for_next_level']
+        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level']
     
     
     def update(self, instance, validated_data):

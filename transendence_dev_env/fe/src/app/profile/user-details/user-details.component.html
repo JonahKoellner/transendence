@@ -1,58 +1,69 @@
-<div class="container mt-4 user-details-container text-light" *ngIf="user; else errorTemplate">
-  <!-- User Profile Card -->
-  <div class="card bg-dark shadow-sm mb-4 border-secondary">
-    <div class="card-header d-flex align-items-center bg-dark border-secondary">
-      <h2 class="h5 mb-0 text-light">{{ user.username }}'s Profile</h2>
-      <span class="badge ml-auto" [ngClass]="user.is_online ? 'badge-success' : 'badge-secondary'">
-        {{ user.is_online ? 'Online' : 'Offline' }}
-      </span>
-    </div>
-    <div class="card-body text-center">
-      <img *ngIf="user.profile?.avatar || user.avatar" [src]="user.profile?.avatar || user.avatar" alt="Avatar" class="avatar rounded-circle mb-3 border border-light">
-      <h5 class="card-title">{{ user.profile?.display_name || user.display_name || user.username }}</h5>
-      <p><strong>Email:</strong> {{ user.email }}</p>
-            <!-- Level, XP, and Progress -->
-            <div class="mt-4">
-              <h6 class="text-light">Level {{ user.level }}</h6>
-              <p>XP: {{ user.xp }} / {{ user.xp_for_next_level }}</p>
-              <div class="progress" style="height: 20px;">
-                <div class="progress-bar" role="progressbar" 
-                     [style.width.%]="getXpProgress()" 
-                     [attr.aria-valuenow]="getXpProgress()" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100">
-                  {{ getXpProgress() | number: '1.0-0' }}%
-                </div>
-              </div>
-            </div>
-    </div>
-  </div>
-
-  <!-- Game History Section -->
-  <div class="card bg-dark shadow-sm border-secondary">
-    <div class="card-header bg-dark border-secondary">
-      <h3 class="h6 mb-0 text-light">{{ user.username }}'s Games</h3>
-    </div>
-    <ul class="list-group list-group-flush">
-      <li *ngFor="let game of games" class="list-group-item d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
-        <div>
-          <a [routerLink]="['/games/details/', game.id]" class="text-info">
-            <strong>{{ game.player1.username }}</strong> vs <strong>{{ game.player2.username || 'AI' }}</strong>
-          </a>
-          <p class="mb-0 text-muted">Mode: {{ game.game_mode }} | Score: {{ game.score_player1 }} : {{ game.score_player2 }}</p>
-        </div>
-        <span *ngIf="game.is_completed" class="badge badge-success badge-pill">Completed</span>
-      </li>
-    </ul>
+<div class="d-flex justify-content-center align-items-center" *ngIf="isLoading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
   </div>
 </div>
 
-<!-- Error Template -->
-<ng-template #errorTemplate>
-  <p class="alert alert-danger text-center"> {{ errorMessage }}</p>
-</ng-template>
 
-<!-- No Games Template -->
-<ng-template #noGamesTemplate>
-  <p class="alert alert-info text-center mb-0">This user has no games.</p>
-</ng-template>
+<div *ngIf="!isLoading">
+  <div class="container mt-4 user-details-container text-light" *ngIf="user; else errorTemplate">
+    <!-- User Profile Card -->
+    <div class="card bg-dark shadow-sm mb-4 border-secondary">
+      <div class="card-header d-flex align-items-center bg-dark border-secondary">
+        <h2 class="h5 mb-0 text-light">{{ user.username }}'s Profile</h2>
+        <span class="badge ml-auto" [ngClass]="user.is_online ? 'badge-success' : 'badge-secondary'">
+          {{ user.is_online ? 'Online' : 'Offline' }}
+        </span>
+      </div>
+      <div class="card-body text-center">
+        <img *ngIf="user.profile?.avatar || user.avatar" [src]="user.profile?.avatar || user.avatar" alt="Avatar" class="avatar rounded-circle mb-3 border border-light">
+        <h5 class="card-title">{{ user.profile?.display_name || user.display_name || user.username }}</h5>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+              <!-- Level, XP, and Progress -->
+              <div class="mt-4">
+                <h6 class="text-light">Level {{ user.level }}</h6>
+                <p>XP: {{ user.xp }} / {{ user.xp_for_next_level }}</p>
+                <div class="progress" style="height: 20px;">
+                  <div class="progress-bar" role="progressbar" 
+                       [style.width.%]="getXpProgress()" 
+                       [attr.aria-valuenow]="getXpProgress()" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ getXpProgress() | number: '1.0-0' }}%
+                  </div>
+                </div>
+              </div>
+      </div>
+    </div>
+  
+    <!-- Game History Section -->
+    <div class="card bg-dark shadow-sm border-secondary">
+      <div class="card-header bg-dark border-secondary">
+        <h3 class="h6 mb-0 text-light">{{ user.username }}'s Games</h3>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let game of games" class="list-group-item d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+          <div>
+            <a [routerLink]="['/games/details/', game.id]" class="text-info">
+              <strong>{{ game.player1.username }}</strong> vs <strong>{{ game.player2.username || 'AI' }}</strong>
+            </a>
+            <p class="mb-0 text-muted">Mode: {{ game.game_mode }} | Score: {{ game.score_player1 }} : {{ game.score_player2 }}</p>
+          </div>
+          <span *ngIf="game.is_completed" class="badge badge-success badge-pill">Completed</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Error Template -->
+  <ng-template #errorTemplate>
+    <p class="alert alert-danger text-center"> {{ errorMessage }}</p>
+  </ng-template>
+  
+  <!-- No Games Template -->
+  <ng-template #noGamesTemplate>
+    <p class="alert alert-info text-center mb-0">This user has no games.</p>
+  </ng-template>
+  
+</div>
+
