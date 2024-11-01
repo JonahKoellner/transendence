@@ -172,7 +172,6 @@ export class LocalPveComponent implements OnInit, OnDestroy {
         round.winner = this.currentGame!.player1.username;
       else
         round.winner = this.currentGame!.player2.username;
-      // round.winner = round.score_player1 > round.score_player2 ? this.currentGame!.player1.username : (this.currentGame!.player2?.username || 'AI');
       if (round.winner == this.currentGame!.player1.username)
         this.currentGame!.score_player1++;
       else

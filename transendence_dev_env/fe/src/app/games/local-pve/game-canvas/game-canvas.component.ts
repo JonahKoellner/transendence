@@ -156,7 +156,7 @@ export class GameCanvasComponent {
   }
 
   paddleCollision(ballPaddleDiff: number) {
-    if (ballPaddleDiff > -this.paddleHeight &&ballPaddleDiff < this.paddleHeight){
+    if (ballPaddleDiff > -this.paddleHeight - this.ballRadius && ballPaddleDiff < this.paddleHeight + this.ballRadius){
         this.ballDirectionX *= -1;
         if (ballPaddleDiff < 0)
           {
@@ -184,7 +184,6 @@ export class GameCanvasComponent {
           this.ballDirectionY = 0;
         if (this.ballSpeed < 100)
           this.ballSpeed *= 1.25;
-        // console.log(this.ballSpeed);
       }
   }
 

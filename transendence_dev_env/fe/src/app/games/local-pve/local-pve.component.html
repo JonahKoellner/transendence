@@ -38,7 +38,7 @@
   <!-- Game results after completion -->
   <div *ngIf="!gameInProgress && currentGame && currentGame.is_completed" class="game-result">
     <h2>Game Over</h2>
-    <p>Winner: {{ currentGame.winner! }}</p>
+    <p>Winner: {{ currentGame.winner!.username }}</p>
     <p>Game Duration: {{ currentGame.duration | number:'1.2-2' }} seconds</p>
 
     <h3>Rounds</h3>
