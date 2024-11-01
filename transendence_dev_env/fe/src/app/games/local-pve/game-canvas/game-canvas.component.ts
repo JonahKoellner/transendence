@@ -53,11 +53,7 @@ export class GameCanvasComponent {
     this.rightPaddleSpeed = 0;
     this.leftPaddleY = this.canvasHeight / 2;
     this.rightPaddleY = this.canvasHeight / 2;
-    this.ballX = this.canvasWidth / 2;
-    this.ballY = this.canvasHeight / 2;
-    this.ballDirectionX = 1;
-    this.ballDirectionY = 0;
-    this.ballSpeed = 5;
+    this.resetBall();
     this.leftScore = 0;
     this.rightScore = 0;
     if (this.round >= this.gameSettings.maxRounds
