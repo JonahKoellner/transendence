@@ -17,7 +17,13 @@ class GameSerializer(serializers.ModelSerializer):
         }
 
     def get_player2(self, obj):
-        if obj.is_against_ai():
+        # Check for local PvP placeholder name first
+        if obj.game_mode == Game.LOCAL_PVP and obj.player2_name_pvp_local:
+            return {
+                "id": 0,  # Placeholder ID for non-existent users
+                "username": obj.player2_name_pvp_local
+            }
+        elif obj.is_against_ai():  # Handle AI case
             return {
                 "id": 0,
                 "username": "AI"
@@ -27,12 +33,7 @@ class GameSerializer(serializers.ModelSerializer):
                 "id": obj.player2.id,
                 "username": obj.player2.username
             }
-        elif obj.game_mode == Game.LOCAL_PVP and obj.player2_name_pvp_local:  # local PvP with placeholder name
-            return {
-                "id": 0,  # ID set to 0 for non-existent users
-                "username": obj.player2_name_pvp_local
-            }
-        return None
+        return None  # No player2 set
 
     def get_winner(self, obj):
         return {

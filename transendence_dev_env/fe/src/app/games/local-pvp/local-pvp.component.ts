@@ -66,6 +66,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
       duration: undefined,
       end_time: undefined,
       winner: null,
+      player2_name_pvp_local: this.player2Name
     };
 
     this.gameService.createGame(newGame).subscribe((game) => {

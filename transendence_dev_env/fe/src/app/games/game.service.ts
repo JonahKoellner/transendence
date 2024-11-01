@@ -36,6 +36,7 @@ export interface Game {
   is_completed: boolean;
   moves_log: MoveLog[];
   rounds: Round[];
+  player2_name_pvp_local?: string;
 }
 
 export interface UserStats {
