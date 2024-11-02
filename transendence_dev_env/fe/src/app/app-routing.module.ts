@@ -5,10 +5,7 @@ import { RegisterComponent } from './auth/register/register.component';
 import { VerifyOtpComponent } from './auth/verify-otp/verify-otp.component';
 import { AuthGuard } from './auth.guard';
 import { HomeComponent } from './home/home/home.component';
-import { SettingsComponent } from './settings/settings.component';
 import { ProfileComponent } from './profile/profile.component';
-import { UserSearchComponent } from './home/user-search/user-search.component';
-import { ChatWindowComponent } from './chat/chat-window/chat-window.component';
 import { FriendListComponent } from './home/friend-list/friend-list.component';
 import { SelectionComponent } from './games/selection/selection.component';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
@@ -16,6 +13,8 @@ import { UserDetailsComponent } from './profile/user-details/user-details.compon
 import { LocalPveComponent } from './games/local-pve/local-pve.component';
 import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
 import { StartComponent } from './games/tournament/local/start/start.component';
+import { TournamentDetailsComponent } from './games/tournament/tournament-details/tournament-details.component';
+import { TournamentListComponent } from './games/tournament/tournament-list/tournament-list.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -30,6 +29,8 @@ const routes: Routes = [
   { path: 'games/local-pvp',component: LocalPvpComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: 'login' }
 ];

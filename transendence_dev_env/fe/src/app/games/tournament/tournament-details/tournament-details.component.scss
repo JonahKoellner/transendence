@@ -1,0 +1,135 @@
+.tournament-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    max-width: 800px;
+    margin: auto;
+
+    .tournament-header {
+        text-align: center;
+        h2 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .status {
+            font-size: 1.1rem;
+            color: #777;
+            &.completed {
+                color: #4CAF50;
+            }
+        }
+    }
+
+    .tournament-info {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        gap: 2rem;
+        .info-section, .winner-section {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            h3 {
+                color: #4CAF50;
+                font-weight: bold;
+                font-size: 1.3rem;
+                margin-bottom: 1rem;
+            }
+            p {
+                font-size: 1rem;
+                color: #555;
+                margin: 0.5rem 0;
+                strong {
+                    color: #333;
+                }
+            }
+            .winner-determination {
+                font-style: italic;
+                color: #777;
+                font-size: 0.9rem;
+            }
+        }
+    }
+
+    .rounds-section {
+        width: 100%;
+        h3 {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .round-card {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+            h4 {
+                font-size: 1.2rem;
+                color: #333;
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+            }
+            p {
+                font-size: 0.9rem;
+                color: #666;
+                margin: 0.2rem 0;
+                strong {
+                    color: #333;
+                }
+            }
+
+            .match-card {
+                background: #fff;
+                padding: 1rem;
+                border-radius: 5px;
+                border: 1px solid #ddd;
+                margin: 0.75rem 0;
+                .players {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    .player {
+                        display: flex;
+                        flex-direction: column;
+                        text-align: center;
+                        .name {
+                            font-weight: bold;
+                            color: #333;
+                        }
+                        .type {
+                            color: #777;
+                            font-size: 0.85rem;
+                        }
+                        .score {
+                            font-size: 0.9rem;
+                            color: #4CAF50;
+                        }
+                    }
+                    .vs {
+                        font-size: 1rem;
+                        font-weight: bold;
+                        color: #333;
+                    }
+                }
+                .match-result {
+                    font-size: 0.9rem;
+                    color: #333;
+                    margin-top: 0.5rem;
+                    .tie-note {
+                        font-style: italic;
+                        color: #999;
+                    }
+                }
+            }
+        }
+    }
+}

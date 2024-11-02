@@ -40,12 +40,20 @@ export class WebsocketService implements OnDestroy {
     this.socket$.pipe(
       retryWhen(errors =>
         errors.pipe(
-          tap(err => console.error('WebSocket error, retrying...', err)),
+          tap(err => {
+            if (!this.authService.isAuthenticated()) return
+            console.error('WebSocket error, retrying...', err)}),
           delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
         )
       )
     ).subscribe({
       next: msg => {
+        if(!this.authService.isAuthenticated())
+        {
+          this.socket$.complete();
+          this.isConnected.next(false);
+          return;
+        }
         if (!this.isConnected.value) {
           this.isConnected.next(true);  // WebSocket is connected
         }

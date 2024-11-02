@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-
+from django.contrib.auth.models import User
 class Game(models.Model):
     # Game Modes
     PVE = 'pve'
@@ -59,3 +59,79 @@ class Game(models.Model):
     
     class Meta:
         ordering = ['-start_time']
+
+class TournamentType(models.TextChoices):
+    SINGLE_ELIMINATION = 'Single Elimination'
+    ROUND_ROBIN = 'Round Robin'
+
+class Stage(models.TextChoices):
+    PRELIMINARIES = 'Preliminaries'
+    QUALIFIERS = 'Qualifiers'
+    QUARTER_FINALS = 'Quarter Finals'
+    SEMI_FINALS = 'Semi Finals'
+    GRAND_FINALS = 'Grand Finals'
+    ROUND_ROBIN_STAGE = 'Round Robin Stage'
+
+class MatchOutcome(models.TextChoices):
+    FINISHED = 'Finished'
+    TIE = 'Tie'
+
+class TiebreakerMethod(models.TextChoices):
+    TOTAL_POINTS = 'Total Points'
+    MOST_WINS = 'Most Wins'
+    RANDOM_SELECTION = 'Random Selection'
+
+class Match(models.Model):
+    player1 = models.CharField(max_length=255)
+    player1_type = models.CharField(max_length=50)
+    player2 = models.CharField(max_length=255)
+    player2_type = models.CharField(max_length=50)
+    winner = models.CharField(max_length=255, blank=True, null=True)
+    winner_type = models.CharField(max_length=50, blank=True, null=True)
+    outcome = models.CharField(max_length=50, choices=MatchOutcome.choices, blank=True, null=True)
+    player1_score = models.IntegerField(blank=True, null=True)
+    player2_score = models.IntegerField(blank=True, null=True)
+    tie_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField(blank=True, null=True)
+    duration = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=50, choices=[
+        ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed'), ('failed', 'Failed')
+    ])
+
+class Round(models.Model):
+    round_number = models.IntegerField()
+    matches = models.ManyToManyField(Match, related_name='rounds')
+    stage = models.CharField(max_length=50, choices=Stage.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField(blank=True, null=True)
+    duration = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=50, choices=[
+        ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed')
+    ])
+
+class Tournament(models.Model):
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=50, choices=TournamentType.choices)
+    rounds = models.ManyToManyField(Round, related_name='tournaments')
+    final_winner = models.CharField(max_length=255, blank=True, null=True)
+    final_winner_type = models.CharField(max_length=50, blank=True, null=True)
+    all_participants = models.JSONField(blank=True, null=True)
+    players_only = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField(blank=True, null=True)
+    duration = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=50, choices=[
+        ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed')
+    ])
+    winner_determination_method_message = models.TextField(blank=True, null=True)
+    tiebreaker_method = models.CharField(max_length=50, choices=TiebreakerMethod.choices, blank=True, null=True)
+    winner_tie_resolved = models.BooleanField(default=False)
+    host = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='hosted_tournaments'
+    )

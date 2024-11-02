@@ -1,0 +1,58 @@
+<div class="tournament-list">
+  <h2>All Tournaments</h2>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+
+  <!-- Filter and Sort Controls -->
+  <div class="controls">
+      <input
+          type="text"
+          [(ngModel)]="searchName"
+          (input)="applyFilters()"
+          placeholder="Search by name"
+          class="filter-input"
+      />
+
+      <input
+          type="text"
+          [(ngModel)]="searchParticipant"
+          (input)="applyFilters()"
+          placeholder="Search by participant"
+          class="filter-input"
+      />
+
+      <label>
+          Start Date:
+          <input type="date" [(ngModel)]="startDate" (change)="applyFilters()" />
+      </label>
+
+      <label>
+          End Date:
+          <input type="date" [(ngModel)]="endDate" (change)="applyFilters()" />
+      </label>
+
+      <select [(ngModel)]="sortOrder" (change)="applyFilters()" class="sort-select">
+          <option value="desc">Newest First</option>
+          <option value="asc">Oldest First</option>
+      </select>
+  </div>
+
+  <!-- Tournament Cards -->
+  <div class="tournament-cards">
+      <div *ngFor="let tournament of filteredTournaments" class="tournament-card">
+          <a [routerLink]="['/games/tournament/details', tournament.id]" class="card-link">
+              <div class="card-header">
+                  <h3>{{ tournament.name }}</h3>
+                  <span class="status" [class.completed]="tournament.status === 'completed'">
+                      {{ tournament.status | titlecase }}
+                  </span>
+              </div>
+              <div class="card-body">
+                  <p><strong>Type:</strong> {{ tournament.type }}</p>
+                  <p><strong>Participants:</strong> {{ tournament.all_participants?.length || 0 }}</p>
+                  <p><strong>Winner:</strong> {{ tournament.final_winner || 'TBD' }}</p>
+                  <p><strong>Start:</strong> {{ tournament.start_time | date: 'short' }}</p>
+              </div>
+          </a>
+      </div>
+  </div>
+</div>

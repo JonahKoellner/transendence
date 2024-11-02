@@ -4,6 +4,8 @@ import { PveGameCanvasComponent } from '../pve-game-canvas/pve-game-canvas.compo
 import { PvpGameCanvasComponent } from '../pvp-game-canvas/pvp-game-canvas.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
+import { GameService } from 'src/app/games/game.service';
+import { firstValueFrom } from 'rxjs';
 
 export enum TournamentType {
   SINGLE_ELIMINATION = 'Single Elimination',
@@ -32,50 +34,51 @@ export enum TiebreakerMethod {
 
 interface Match {
   player1: string;
-  player1Type: 'Player' | 'Bot';
+  player1_type: 'Player' | 'Bot';
   player2: string;
-  player2Type: 'Player' | 'Bot';
+  player2_type: 'Player' | 'Bot';
   winner: string | null;
-  winnerType: 'Player' | 'Bot' | null;
+  winner_type: 'Player' | 'Bot' | null;
   outcome: MatchOutcome | null;
-  player1Score?: number;
-  player2Score?: number;
-  tieResolved?: boolean; // New property to show if a tie was resolved
-  createdAt: Date;
-  startTime: Date;
-  endTime: Date | null;
+  player1_score?: number;
+  player2_score?: number;
+  tie_resolved?: boolean;
+  created_at: Date;
+  start_time: Date;
+  end_time: Date | null;
   duration: number | null;
   status: 'pending' | 'ongoing' | 'completed' | 'failed';
 }
 
 interface Round {
-  roundNumber: number;
+  round_number: number;
   matches: Match[];
   stage: Stage;
-  createdAt: Date;
-  startTime: Date;
-  endTime: Date | null;
+  created_at: Date;
+  start_time: Date;
+  end_time: Date | null;
   duration: number | null;
   status: 'pending' | 'ongoing' | 'completed';
 }
 
-interface Tournament {
+export interface Tournament {
+  id: number | null;
   name: string;
   type: TournamentType;
   rounds: Round[];
-  finalWinner: string | null;
-  finalWinnerType: 'Player' | 'Bot' | null;
-  allParticipants?: string[];
-  playersOnly?: string[];
-  createdAt: Date;
-  startTime: Date;
-  endTime: Date | null;
+  final_winner: string | null;
+  final_winner_type: 'Player' | 'Bot' | null;
+  all_participants?: string[];
+  players_only?: string[];
+  created_at: Date;
+  start_time: Date;
+  end_time: Date | null;
   duration: number | null;
   status: 'pending' | 'ongoing' | 'completed';
-  winnerDeterminationMethodMessage?: string; // e.g., 'Most Wins', 'Most Points', 'Random Selection'
-  tiebreakerMethod?: TiebreakerMethod;
-  winnerTieResolved?: boolean; // Indicates if a tie-breaking method was applied
-  host: UserProfile
+  winner_determination_method_message?: string;
+  tiebreaker_method?: TiebreakerMethod;
+  winner_tie_resolved?: boolean;
+  host: number
 }
 
 
@@ -101,6 +104,7 @@ export class StartComponent implements OnInit {
   match: Match | null = null;
   player1Ready: boolean = false;
   player2Ready: boolean = false;
+  createdTournamentFromServer: Tournament | null = null;
   isPaused: boolean = false;
   private currentGameComponentRef: ComponentRef<PveGameCanvasComponent | PvpGameCanvasComponent> | null = null;
   tournamentTypes = [
@@ -123,7 +127,7 @@ export class StartComponent implements OnInit {
   gameReady: boolean = false;
   hostname: string = '';
   host: UserProfile | null = null;
-  constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver, private profileService: ProfileService ) { }
+  constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver, private profileService: ProfileService, private gameService: GameService ) { }
 
   ngOnInit(): void {
     this.profileService.getProfile().subscribe(
@@ -186,15 +190,15 @@ export class StartComponent implements OnInit {
     for (let i = 0; i < this.maxPlayers; i += 2) {
       firstRoundMatches.push({
         player1: this.slots[i].name,
-        player1Type: this.slots[i].isBot ? 'Bot' : 'Player',
+        player1_type: this.slots[i].isBot ? 'Bot' : 'Player',
         player2: this.slots[i + 1]?.name || '',
-        player2Type: this.slots[i + 1]?.isBot ? 'Bot' : 'Player',
+        player2_type: this.slots[i + 1]?.isBot ? 'Bot' : 'Player',
         winner: null,
-        winnerType: null,
+        winner_type: null,
         outcome: null,
-        createdAt: new Date(),
-        startTime: new Date(),
-        endTime: null,
+        created_at: new Date(),
+        start_time: new Date(),
+        end_time: null,
         duration: null,
         status: 'pending',
       });
@@ -216,12 +220,12 @@ export class StartComponent implements OnInit {
   
     // First round entry in the bracket
     this.bracket.push({
-      roundNumber: 1,
+      round_number: 1,
       matches: firstRoundMatches,
       stage: startingStage,
-      createdAt: new Date(),
-      startTime: new Date(),
-      endTime: null,
+      created_at: new Date(),
+      start_time: new Date(),
+      end_time: null,
       duration: null,
       status: 'pending',
     });
@@ -233,15 +237,15 @@ export class StartComponent implements OnInit {
       for (let i = 0; i < previousRoundMatches.length; i += 2) {
         roundMatches.push({
           player1: '',
-          player1Type: 'Player',
+          player1_type: 'Player',
           player2: '',
-          player2Type: 'Player',
+          player2_type: 'Player',
           winner: null,
-          winnerType: null,
+          winner_type: null,
           outcome: null,
-          createdAt: new Date(),
-          startTime: new Date(),
-          endTime: null,
+          created_at: new Date(),
+          start_time: new Date(),
+          end_time: null,
           duration: null,
           status: 'pending',
         });
@@ -263,12 +267,12 @@ export class StartComponent implements OnInit {
       }
   
       this.bracket.push({
-        roundNumber: round + 1,
+        round_number: round + 1,
         matches: roundMatches,
         stage: stage,
-        createdAt: new Date(),
-        startTime: new Date(),
-        endTime: null,
+        created_at: new Date(),
+        start_time: new Date(),
+        end_time: null,
         duration: null,
         status: 'pending',
       });
@@ -282,10 +286,10 @@ export class StartComponent implements OnInit {
       const nextRoundMatchIndex = Math.floor(matchIndex / 2);
       if (matchIndex % 2 === 0) {
         nextRound.matches[nextRoundMatchIndex].player1 = match.winner!;
-        nextRound.matches[nextRoundMatchIndex].player1Type = match.winnerType!;
+        nextRound.matches[nextRoundMatchIndex].player1_type = match.winner_type!;
       } else {
         nextRound.matches[nextRoundMatchIndex].player2 = match.winner!;
-        nextRound.matches[nextRoundMatchIndex].player2Type = match.winnerType!;
+        nextRound.matches[nextRoundMatchIndex].player2_type = match.winner_type!;
       }
     });
   }
@@ -294,8 +298,8 @@ export class StartComponent implements OnInit {
       const match = matches[index];
       if (!match || !match.winner) return null;
       return match.winner === match.player1
-          ? { name: match.player2, type: match.player2Type }
-          : { name: match.player1, type: match.player1Type };
+          ? { name: match.player2, type: match.player2_type }
+          : { name: match.player1, type: match.player1_type };
   }
 
   buildRoundRobinMatches(): void {
@@ -304,15 +308,15 @@ export class StartComponent implements OnInit {
       for (let j = i + 1; j < this.maxPlayers; j++) {
         this.roundRobinMatches.push({
           player1: this.slots[i].name,
-          player1Type: this.slots[i].isBot ? 'Bot' : 'Player',
+          player1_type: this.slots[i].isBot ? 'Bot' : 'Player',
           player2: this.slots[j].name,
-          player2Type: this.slots[j].isBot ? 'Bot' : 'Player',
+          player2_type: this.slots[j].isBot ? 'Bot' : 'Player',
           winner: null,
-          winnerType: null,
+          winner_type: null,
           outcome: null,
-          createdAt: new Date(),
-          startTime: new Date(), // Will be set when the match actually starts
-          endTime: null,
+          created_at: new Date(),
+          start_time: new Date(), // Will be set when the match actually starts
+          end_time: null,
           duration: null,
           status: 'pending',
         });
@@ -372,28 +376,29 @@ export class StartComponent implements OnInit {
       name: this.tournamentName,
       type: TournamentType.SINGLE_ELIMINATION,
       rounds: [],
-      finalWinner: null,
-      finalWinnerType: null,
-      createdAt: new Date(),
-      startTime: new Date(),
-      endTime: null,
+      final_winner: null,
+      final_winner_type: null,
+      created_at: new Date(),
+      start_time: new Date(),
+      end_time: null,
       duration: null,
       status: 'pending',
-      host: this.host!
+      id: null,
+      host: this.host?.id || 0
     };
 
     // Reset match-level tie resolution flags and scores
     this.bracket?.forEach((round) => {
       round.matches.forEach((match) => {
         match.winner = null;
-        match.winnerType = null;
+        match.winner_type = null;
         match.outcome = MatchOutcome.TIE;
-        match.player1Score = 0;
-        match.player2Score = 0;
-        match.tieResolved = false;
+        match.player1_score = 0;
+        match.player2_score = 0;
+        match.tie_resolved = false;
         match.status = 'pending';
-        match.startTime = new Date();
-        match.endTime = null;
+        match.start_time = new Date();
+        match.end_time = null;
         match.duration = null;
       });
     });
@@ -430,51 +435,51 @@ export class StartComponent implements OnInit {
   async simulateMatch(match: Match, stage: Stage): Promise<void> {
     this.match = match;
     this.gameRunning = true;
-    match.createdAt = new Date();
+    match.created_at = new Date();
     match.status = 'ongoing';
-    match.player1Score = 0;
-    match.player2Score = 0;
+    match.player1_score = 0;
+    match.player2_score = 0;
 
     try {
         // Switch player and bot positions if player is initially player2 and bot is player1
-        if (match.player1Type === 'Bot' && match.player2Type === 'Player') {
+        if (match.player1_type === 'Bot' && match.player2_type === 'Player') {
             // Swap players so the player is always on the left as player1
             [match.player1, match.player2] = [match.player2, match.player1];
-            [match.player1Type, match.player2Type] = [match.player2Type, match.player1Type];
-            [match.player1Score, match.player2Score] = [match.player2Score, match.player1Score];
+            [match.player1_type, match.player2_type] = [match.player2_type, match.player1_type];
+            [match.player1_score, match.player2_score] = [match.player2_score, match.player1_score];
         }
 
         // Handle Bot vs. Bot automatically
-        if (match.player1Type === 'Bot' && match.player2Type === 'Bot') {
+        if (match.player1_type === 'Bot' && match.player2_type === 'Bot') {
             this.autoSimulateMatch(match);
         } else {
             // Show the next match modal for any match involving a player
-            if (match.player1Type === 'Player' || match.player2Type === 'Player') {
+            if (match.player1_type === 'Player' || match.player2_type === 'Player') {
                 await this.showNextMatchModal();
             }
 
-            match.startTime = new Date();
+            match.start_time = new Date();
 
             // Case 1: Player vs. Bot (player is player1, bot is player2)
-            if (match.player1Type === 'Player' && match.player2Type === 'Bot') {
+            if (match.player1_type === 'Player' && match.player2_type === 'Bot') {
                 await this.loadPveGameCanvas(match, stage);
             }
             // Case 2: Player vs. Player
-            else if (match.player1Type === 'Player' && match.player2Type === 'Player') {
+            else if (match.player1_type === 'Player' && match.player2_type === 'Player') {
                 await this.loadPvpGameCanvas(match, stage);
             }
         }
 
         // Mark the match as completed with duration
-        match.endTime = new Date();
-        match.duration = match.endTime.getTime() - match.startTime.getTime();
+        match.end_time = new Date();
+        match.duration = match.end_time.getTime() - match.start_time.getTime();
         match.status = 'completed';
     } catch (error) {
         console.error("Error during match simulation:", error);
         match.status = 'failed';
     } finally {
         this.gameRunning = false;
-        if (match.player1Type === 'Player' || match.player2Type === 'Player') {
+        if (match.player1_type === 'Player' || match.player2_type === 'Player') {
             await this.showMatchResultModal();
         }
     }
@@ -499,15 +504,15 @@ export class StartComponent implements OnInit {
 
   autoSimulateMatch(match: Match): void {
     // Logic for automatically simulating bot vs. bot matches...
-    match.player1Score = Math.floor(Math.random() * 10);
-    match.player2Score = Math.floor(Math.random() * 10);
-    if (match.player1Score > match.player2Score) {
+    match.player1_score = Math.floor(Math.random() * 10);
+    match.player2_score = Math.floor(Math.random() * 10);
+    if (match.player1_score > match.player2_score) {
       match.winner = match.player1;
-      match.winnerType = match.player1Type;
+      match.winner_type = match.player1_type;
       match.outcome = MatchOutcome.FINISHED;
-    } else if (match.player2Score > match.player1Score) {
+    } else if (match.player2_score > match.player1_score) {
       match.winner = match.player2;
-      match.winnerType = match.player2Type;
+      match.winner_type = match.player2_type;
       match.outcome = MatchOutcome.FINISHED;
     } else {
       match.outcome = MatchOutcome.TIE;
@@ -569,16 +574,16 @@ export class StartComponent implements OnInit {
     componentRef: ComponentRef<any>,
     resolve: () => void
   ): void {
-    if (match.player1Score === match.player2Score) {
+    if (match.player1_score === match.player2_score) {
       match.outcome = MatchOutcome.TIE;
       this.resolveTie(match);
-    } else if (match.player1Score! > match.player2Score!) {
+    } else if (match.player1_score! > match.player2_score!) {
       match.winner = match.player1;
-      match.winnerType = match.player1Type;
+      match.winner_type = match.player1_type;
       match.outcome = MatchOutcome.FINISHED;
     } else {
       match.winner = match.player2;
-      match.winnerType = match.player2Type;
+      match.winner_type = match.player2_type;
       match.outcome = MatchOutcome.FINISHED;
     }
   
@@ -589,83 +594,126 @@ export class StartComponent implements OnInit {
 
   updateScore(match: Match, scorer: 'player1' | 'player2' | 'human' | 'bot'): void {
     if (scorer === 'player1' || scorer === 'human') {
-      match.player1Score = (match.player1Score ?? 0) + 1;
+      match.player1_score = (match.player1_score ?? 0) + 1;
     } else {
-      match.player2Score = (match.player2Score ?? 0) + 1;
+      match.player2_score = (match.player2_score ?? 0) + 1;
     }
   }
 
   async simulateTournament(): Promise<void> {
+    try {
+      // Step 1: Create initial tournament structure
+      const tournament = await this.createTournament();
+  
+      // Step 2: Simulate tournament based on the selected type
+      if (this.selectedTournamentType === TournamentType.SINGLE_ELIMINATION) {
+        await this.simulateSingleElimination(tournament);
+      } else if (this.selectedTournamentType === TournamentType.ROUND_ROBIN) {
+        await this.simulateRoundRobin(tournament);
+      }
+  
+      // Step 3: Finalize tournament details after all rounds
+      this.finalizeTournamentDetails(tournament);
+  
+      // Step 4: Check and handle tie-breaking for the final match if necessary
+      this.handleTieBreakingForFinal(tournament);
+  
+      // Step 5: Update tournament on the backend with final details
+      await this.updateTournamentBackend(tournament);
+      
+      console.log("Final Tournament Result:", this.finalTournament);
+    } catch (error) {
+      console.error("Error during tournament simulation:", error);
+    }
+  }
+  
+  private async createTournament(): Promise<Tournament> {
     const tournament: Tournament = {
+      id: null,
       name: this.tournamentName,
       type: this.selectedTournamentType as TournamentType,
       rounds: [],
-      finalWinner: null,
-      finalWinnerType: null,
-      createdAt: new Date(),
-      startTime: new Date(),
-      endTime: null,
+      final_winner: null,
+      final_winner_type: null,
+      created_at: new Date(),
+      start_time: new Date(),
+      end_time: null,
       duration: null,
       status: 'ongoing',
-      host: this.host!
+      host: this.host?.id || 0
     };
   
-    if (this.selectedTournamentType === TournamentType.SINGLE_ELIMINATION) {
-      await this.simulateSingleElimination(tournament);
-    } else if (this.selectedTournamentType === TournamentType.ROUND_ROBIN) {
-      await this.simulateRoundRobin(tournament);
+    // Wait for the tournament creation response
+    const response = await firstValueFrom(this.gameService.createTournament(tournament));
+    console.log("Tournament created:", response);
+    this.createdTournamentFromServer = response;
+    return response;
+  }
+  
+  private finalizeTournamentDetails(tournament: Tournament): void {
+    // Ensure start_time is a Date object
+    if (!(tournament.start_time instanceof Date)) {
+      tournament.start_time = new Date(tournament.start_time);
     }
   
-    // Set tournament's endTime, duration, and status after all rounds complete
-    tournament.endTime = new Date();
-    tournament.duration = tournament.endTime.getTime() - tournament.startTime.getTime();
+    // Set and verify end_time as Date
+    tournament.end_time = new Date();
+    if (!(tournament.end_time instanceof Date)) {
+      tournament.end_time = new Date(tournament.end_time);
+    }
+  
+    // Calculate duration using start and end times
+    tournament.duration = tournament.end_time.getTime() - tournament.start_time.getTime();
     tournament.status = 'completed';
   
-    // Collect all participants and only players
-    const allParticipants = this.slots.map(slot => slot.name);
-    const playersOnly = this.slots.filter(slot => !slot.isBot).map(slot => slot.name);
-
-    // Add these arrays to the final tournament result
+    // Collect participants and set them in finalTournament
+    const all_participants = this.slots.map(slot => slot.name);
+    const players_only = this.slots.filter(slot => !slot.isBot).map(slot => slot.name);
+    
     this.finalTournament = {
       ...tournament,
-      allParticipants,
-      playersOnly,
+      all_participants,
+      players_only
     };
-
-    if (this.selectedTournamentType === TournamentType.SINGLE_ELIMINATION) {
-    // Check for tie resolution in the final round
+  }
+  
+  private handleTieBreakingForFinal(tournament: Tournament): void {
     const finalRound = this.bracket[this.bracket.length - 1];
-    if (finalRound && finalRound.matches && finalRound.matches.length > 0) {
+    if (finalRound && finalRound.matches?.length > 0) {
       const finalMatch = finalRound.matches[0];
-
-      // Check if the final match was resolved by a tie-breaker
-      if (finalMatch.tieResolved && finalRound.stage === Stage.GRAND_FINALS && this.finalTournament.type === TournamentType.SINGLE_ELIMINATION) {
-        this.finalTournament.tiebreakerMethod = TiebreakerMethod.RANDOM_SELECTION;
-        this.finalTournament.winnerDeterminationMethodMessage =
+      
+      if (finalMatch.tie_resolved && finalRound.stage === Stage.GRAND_FINALS) {
+        this.finalTournament!.tiebreaker_method = TiebreakerMethod.RANDOM_SELECTION;
+        this.finalTournament!.winner_determination_method_message = 
           `The tournament winner was determined by ${TiebreakerMethod.RANDOM_SELECTION} due to a tie in the final match.`;
-        this.finalTournament.winnerTieResolved = true;
+        this.finalTournament!.winner_tie_resolved = true;
       }
     } else {
-      console.warn("No final round or matches were found. Tie resolution check skipped.");
+      console.warn("No final round or matches found. Tie resolution check skipped.");
     }
   }
-
-    console.log("Final Tournament Result:", this.finalTournament);
+  
+  private async updateTournamentBackend(tournament: Tournament): Promise<void> {
+    this.finalTournament!.id = this.createdTournamentFromServer?.id ?? null;
+    await firstValueFrom(
+      this.gameService.updateTournament(this.createdTournamentFromServer!.id!, this.finalTournament!)
+    );
+    console.log("Tournament updated successfully:", this.finalTournament);
   }
   
 
   async simulateSingleElimination(tournament: Tournament): Promise<void> {
     for (const [roundIndex, round] of this.bracket.entries()) {
-      round.createdAt = new Date();
-      round.startTime = new Date();
+      round.created_at = new Date();
+      round.start_time = new Date();
       round.status = 'ongoing';
   
       for (const match of round.matches) {
         await this.simulateMatch(match, round.stage);
       }
   
-      round.endTime = new Date();
-      round.duration = round.endTime.getTime() - round.startTime.getTime();
+      round.end_time = new Date();
+      round.duration = round.end_time.getTime() - round.start_time.getTime();
       round.status = 'completed';
   
       if (roundIndex < this.bracket.length - 1) {
@@ -677,18 +725,18 @@ export class StartComponent implements OnInit {
   
     // Finalize tournament winner
     const finalRound = this.bracket[this.bracket.length - 1];
-    tournament.finalWinner = finalRound.matches[0].winner;
-    tournament.finalWinnerType = finalRound.matches[0].winnerType;
+    tournament.final_winner = finalRound.matches[0].winner;
+    tournament.final_winner_type = finalRound.matches[0].winner_type;
   }
 
   async simulateRoundRobin(tournament: Tournament): Promise<void> {
     const round: Round = {
-      roundNumber: 1,
+      round_number: 1,
       matches: this.roundRobinMatches,
       stage: Stage.ROUND_ROBIN_STAGE,
-      createdAt: new Date(),
-      startTime: new Date(),
-      endTime: null,
+      created_at: new Date(),
+      start_time: new Date(),
+      end_time: null,
       duration: null,
       status: 'ongoing',
     };
@@ -703,8 +751,8 @@ export class StartComponent implements OnInit {
   
       if (match.player1 && match.player2) {
         // Update points for both players
-        pointsScored.set(match.player1, (pointsScored.get(match.player1) || 0) + (match.player1Score || 0));
-        pointsScored.set(match.player2, (pointsScored.get(match.player2) || 0) + (match.player2Score || 0));
+        pointsScored.set(match.player1, (pointsScored.get(match.player1) || 0) + (match.player1_score || 0));
+        pointsScored.set(match.player2, (pointsScored.get(match.player2) || 0) + (match.player2_score || 0));
   
         // Update win counts based on match outcome
         if (match.winner) {
@@ -714,8 +762,8 @@ export class StartComponent implements OnInit {
     }
   
     // End the round
-    round.endTime = new Date();
-    round.duration = round.endTime.getTime() - round.startTime.getTime();
+    round.end_time = new Date();
+    round.duration = round.end_time.getTime() - round.start_time.getTime();
     round.status = 'completed';
     tournament.rounds.push(round);
   
@@ -728,11 +776,11 @@ export class StartComponent implements OnInit {
     // Determine the winner based on tiebreakers
     if (topPlayers.length === 1) {
       // Clear win determination based on most wins
-      tournament.finalWinner = topPlayers[0];
+      tournament.final_winner = topPlayers[0];
       const winnerWins = winCounts.get(topPlayers[0]) || 0;
-      tournament.winnerDeterminationMethodMessage = `Most Wins: ${topPlayers[0]} won the most games with ${winnerWins} wins.`;
-      tournament.winnerTieResolved = false;
-      tournament.tiebreakerMethod = TiebreakerMethod.MOST_WINS;
+      tournament.winner_determination_method_message = `Most Wins: ${topPlayers[0]} won the most games with ${winnerWins} wins.`;
+      tournament.winner_tie_resolved = false;
+      tournament.tiebreaker_method = TiebreakerMethod.MOST_WINS;
     } else {
       // Resolve ties by total points scored
       const topScorer = topPlayers.reduce((highest, player) => {
@@ -746,23 +794,23 @@ export class StartComponent implements OnInit {
   
       if (tiedTopScorers.length === 1) {
         // If only one top scorer by points, they are the winner
-        tournament.finalWinner = tiedTopScorers[0];
+        tournament.final_winner = tiedTopScorers[0];
         const winnerPoints = pointsScored.get(tiedTopScorers[0]) || 0;
-        tournament.winnerDeterminationMethodMessage = `Most Points: ${tiedTopScorers[0]} won based on scoring the highest total points (${winnerPoints}) among tied players with the most wins.`;
-        tournament.winnerTieResolved = true;
-        tournament.tiebreakerMethod = TiebreakerMethod.TOTAL_POINTS;
+        tournament.winner_determination_method_message = `Most Points: ${tiedTopScorers[0]} won based on scoring the highest total points (${winnerPoints}) among tied players with the most wins.`;
+        tournament.winner_tie_resolved = true;
+        tournament.tiebreaker_method = TiebreakerMethod.TOTAL_POINTS;
       } else {
         // Final random selection if there is still a tie
-        tournament.finalWinner = tiedTopScorers[Math.floor(Math.random() * tiedTopScorers.length)];
-        const finalWinnerWins = winCounts.get(tournament.finalWinner) || 0;
-        const finalWinnerPoints = pointsScored.get(tournament.finalWinner) || 0;
-        tournament.winnerDeterminationMethodMessage = `Random Selection: ${tournament.finalWinner} was randomly chosen among players with the highest wins (${finalWinnerWins}) and points (${finalWinnerPoints}) due to a complete tie.`;
-        tournament.winnerTieResolved = true;
-        tournament.tiebreakerMethod = TiebreakerMethod.RANDOM_SELECTION;
+        tournament.final_winner = tiedTopScorers[Math.floor(Math.random() * tiedTopScorers.length)];
+        const finalWinnerWins = winCounts.get(tournament.final_winner) || 0;
+        const finalWinnerPoints = pointsScored.get(tournament.final_winner) || 0;
+        tournament.winner_determination_method_message = `Random Selection: ${tournament.final_winner} was randomly chosen among players with the highest wins (${finalWinnerWins}) and points (${finalWinnerPoints}) due to a complete tie.`;
+        tournament.winner_tie_resolved = true;
+        tournament.tiebreaker_method = TiebreakerMethod.RANDOM_SELECTION;
       }
     }
   
-    tournament.finalWinnerType = this.slots.find(slot => slot.name === tournament.finalWinner)?.isBot ? 'Bot' : 'Player';
+    tournament.final_winner_type = this.slots.find(slot => slot.name === tournament.final_winner)?.isBot ? 'Bot' : 'Player';
   }
 
   resolveTie(match: Match): void {
@@ -770,13 +818,13 @@ export class StartComponent implements OnInit {
     const winnerRandomlyChosen = Math.random() < 0.5;
     if (winnerRandomlyChosen) {
       match.winner = match.player1;
-      match.winnerType = match.player1Type;
+      match.winner_type = match.player1_type;
     } else {
       match.winner = match.player2;
-      match.winnerType = match.player2Type;
+      match.winner_type = match.player2_type;
     }
     match.outcome = MatchOutcome.FINISHED;
-    match.tieResolved = true;
+    match.tie_resolved = true;
   
   }
 
