@@ -8,7 +8,7 @@ import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter } 
 export class PveGameCanvasComponent {
   @ViewChild('GameCanvasPVE', {read: ElementRef, static: false}) canvas!: ElementRef;
   context!: CanvasRenderingContext2D;
-
+  @Output() onReady = new EventEmitter<void>();
   @Output() onScore = new EventEmitter<"human" | "bot">();
   @Output() onGameEnd = new EventEmitter<void>();
   readonly canvasWidth = 1000;
@@ -34,10 +34,11 @@ export class PveGameCanvasComponent {
   ballSpeed: number = 5;
   leftScore: number = 0;
   rightScore: number = 0;
-
+  private gamePaused: boolean = false;
   ngAfterViewInit() {
     this.context = this.canvas.nativeElement.getContext('2d');
     this.resetRound();
+    this.onReady.emit();
     this.startGame();
   }
 
@@ -50,11 +51,10 @@ export class PveGameCanvasComponent {
   }
 
   startGame() {
-    this.intervalID = window.setInterval(() => this.updateGame(), 1000 / 60);
-    this.gameTimerID = window.setInterval(() => this.updateTime(), 1000); // Timer that counts down every second
+    this.resume();
   }
-
   updateTime() {
+    
     if (this.timeLeft > 0) {
       this.timeLeft--;
     } else {
@@ -210,5 +210,26 @@ export class PveGameCanvasComponent {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(e: any) {
     if (e.code === 'KeyW' || e.code === 'KeyS') this.leftPaddleSpeed = 0;
+  }
+  pause() {
+    // Clear both intervals to fully pause the game
+    if (this.intervalID) {
+      clearInterval(this.intervalID);
+      this.intervalID = 0;
+    }
+    if (this.gameTimerID) {
+      clearInterval(this.gameTimerID);
+      this.gameTimerID = 0;
+    }
+  }
+  
+  resume() {
+    // Restart intervals only if they aren't already running
+    if (!this.intervalID) {
+      this.intervalID = window.setInterval(() => this.updateGame(), 1000 / 60);
+    }
+    if (!this.gameTimerID) {
+      this.gameTimerID = window.setInterval(() => this.updateTime(), 1000);
+    }
   }
 }

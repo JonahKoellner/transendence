@@ -1,8 +1,9 @@
 <div class="tournament-settings">
-    <h2>Start Tournament</h2>
-
+    <h2>Tournament</h2>
+    <button *ngIf="finalTournament?.status === 'completed'" class="start-btn" (click)="startTournament()">Restart</button>
+    <button *ngIf="finalTournament?.status === 'completed'" class="start-btn" (click)="goLobby()">Lobby</button>
     <!-- Tournament Setup Section -->
-    <div class="tournament-setup">
+    <div class="tournament-setup" *ngIf="!gameRunning && finalTournament?.status !== 'completed'">
         <div class="tournament-name">
             <label>
                 <span>Tournament Name:</span>
@@ -11,7 +12,7 @@
         </div>
 
         <!-- Tournament Type Selection as Buttons -->
-        <div class="tournament-type-selection">
+        <div class="tournament-type-selection" >
             <h3>Select Tournament Type:</h3>
             <div class="type-buttons">
                 <button *ngFor="let type of tournamentTypes" 
@@ -50,13 +51,12 @@
         </div>
 
         <button class="start-btn" (click)="setPlayers()">Set Players & View Bracket</button>
+        <button *ngIf="gameReady" class="start-btn" (click)="startTournament()">Start</button>
     </div>
-    <div *ngIf="currentMatchDisplay" class="current-match-display">
-        <h3>Current Match: {{ currentMatchDisplay }}</h3>
-      </div>
-    <div #gameCanvasContainer></div>
+
+
     <!-- Tournament Bracket Display -->
-    <div *ngIf="playersSet" class="tournament-bracket-display">
+    <div *ngIf="playersSet && !gameRunning" class="tournament-bracket-display">
         <div class="bracket-header">
             <h3>Bracket - {{ selectedTournamentType }}</h3>
             <div *ngIf="finalTournament?.finalWinner" class="winner-display">
@@ -85,22 +85,140 @@
         </div>
 
         <!-- Round Robin Bracket -->
-    <!-- Round Robin Bracket -->
-    <div *ngIf="selectedTournamentType === 'Round Robin'" class="round-robin-bracket">
-        <h4>Round Robin Matches</h4>
-        <div *ngFor="let match of roundRobinMatches" class="match">
-            <div class="player">
+        <div *ngIf="selectedTournamentType === 'Round Robin'" class="round-robin-bracket">
+            <h4>Round Robin Matches</h4>
+            <div *ngFor="let match of roundRobinMatches" class="match">
+              <div class="player">
                 {{ match.player1 }} ({{ match.player1Type }}) - Score: {{ match.player1Score }}
-            </div>
-            <div class="vs">vs</div>
-            <div class="player">
+              </div>
+              <div class="vs">vs</div>
+              <div class="player">
                 {{ match.player2 }} ({{ match.player2Type }}) - Score: {{ match.player2Score }}
-            </div>
-            <div *ngIf="match.winner" class="winner">
+              </div>
+              <div *ngIf="match.winner" class="winner">
                 Winner: {{ match.winner }}
                 <span *ngIf="match.tieResolved" class="tie-note">(won after tie resolution)</span>
+              </div>
+            </div>
+          
+            <!-- Display final winner determination method -->
+            <div *ngIf="finalTournament?.finalWinner" class="final-winner-info">
+              <h4>Champion: {{ finalTournament?.finalWinner }} ({{ finalTournament?.finalWinnerType }})</h4>
+              <div *ngIf="finalTournament?.winnerTieResolved" class="tie-resolution-info">
+                <span class="tie-note">Winner determined by {{ finalTournament?.winnerDeterminationMethodMessage }}</span>
+              </div>
             </div>
         </div>
     </div>
+
+    <div *ngIf="gameRunning && isPaused && finalTournament?.status !== 'completed'" class="tournament-bracket-display">
+        <div class="bracket-header">
+            <h3>Bracket - {{ selectedTournamentType }}</h3>
+            <div *ngIf="finalTournament?.finalWinner" class="winner-display">
+                <h4>Champion: {{ finalTournament?.finalWinner }} ({{ finalTournament?.finalWinnerType }})</h4>
+            </div>
+        </div>
+    
+        <!-- Single Elimination Bracket -->
+        <div *ngIf="selectedTournamentType === 'Single Elimination'" class="single-elimination-bracket">
+            <div *ngFor="let round of bracket; let r = index" class="round">
+                <h4>Round {{ r + 1 }}</h4>
+                <div *ngFor="let match of round.matches" class="match">
+                    <div class="player">
+                        {{ match.player1 }} ({{ match.player1Type }}) - Score: {{ match.player1Score }}
+                    </div>
+                    <div class="vs">vs</div>
+                    <div class="player">
+                        {{ match.player2 }} ({{ match.player2Type }}) - Score: {{ match.player2Score }}
+                    </div>
+                    <div *ngIf="match.winner" class="winner">
+                        Winner: {{ match.winner }} 
+                        <span *ngIf="match.tieResolved" class="tie-note">(won after tie resolution)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Round Robin Bracket -->
+        <div *ngIf="selectedTournamentType === 'Round Robin'" class="round-robin-bracket">
+            <h4>Round Robin Matches</h4>
+            <div *ngFor="let match of roundRobinMatches" class="match">
+              <div class="player">
+                {{ match.player1 }} ({{ match.player1Type }}) - Score: {{ match.player1Score }}
+              </div>
+              <div class="vs">vs</div>
+              <div class="player">
+                {{ match.player2 }} ({{ match.player2Type }}) - Score: {{ match.player2Score }}
+              </div>
+              <div *ngIf="match.winner" class="winner">
+                Winner: {{ match.winner }}
+                <span *ngIf="match.tieResolved" class="tie-note">(won after tie resolution)</span>
+              </div>
+            </div>
+          
+            <!-- Display final winner determination method -->
+            <div *ngIf="finalTournament?.finalWinner" class="final-winner-info">
+              <h4>Champion: {{ finalTournament?.finalWinner }} ({{ finalTournament?.finalWinnerType }})</h4>
+              <div *ngIf="finalTournament?.winnerTieResolved" class="tie-resolution-info">
+                <span class="tie-note">Winner determined by {{ finalTournament?.winnerDeterminationMethodMessage }}</span>
+              </div>
+            </div>
+        </div>
     </div>
+
 </div>
+
+<div *ngIf="currentMatchDisplay && gameRunning && !isPaused" class="current-match-display">
+    <h3>Current Match: {{ currentMatchDisplay }}</h3>
+</div>
+<div *ngIf="currentMatchDisplay && gameRunning && isPaused" class="current-match-display">
+    <h3>Game Paused (space to continue)</h3>
+</div>
+<div #gameCanvasContainer></div>
+
+<ng-template #nextMatchModal let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title">Next Match</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="match">
+      <p>Next Match: {{ match.player1 }} ({{ match.player1Type }}) vs {{ match.player2 }} ({{ match.player2Type }})</p>
+      <div *ngIf="match.player1Type === 'Player' && match.player2Type === 'Player'">
+        <label>
+          <input type="checkbox" [(ngModel)]="player1Ready" /> {{ match.player1 }} Ready
+        </label>
+        <label>
+          <input type="checkbox" [(ngModel)]="player2Ready" /> {{ match.player2 }} Ready
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="match?.player1Type === 'Player' && match?.player2Type === 'Player' && !(player1Ready && player2Ready)"
+        (click)="modal.close()">
+        Start Match
+      </button>
+    </div>
+  </ng-template>
+  
+  <!-- Match Result Modal -->
+  <ng-template #matchResultModal let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title">Match Result</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="match">
+      <p>Match Result:</p>
+      <p>{{ match.player1 }} {{ match.player1Score }} - {{ match.player2Score }} {{ match.player2 }}</p>
+      <p>Winner: {{ match.winner }}</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" (click)="modal.close()">OK</button>
+    </div>
+  </ng-template>
