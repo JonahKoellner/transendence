@@ -3,7 +3,7 @@
     <button *ngIf="finalTournament?.status === 'completed'" class="start-btn" (click)="startTournament()">Restart</button>
     <button *ngIf="finalTournament?.status === 'completed'" class="start-btn" (click)="goLobby()">Lobby</button>
     <!-- Tournament Setup Section -->
-    <div class="tournament-setup" *ngIf="!gameRunning && finalTournament?.status !== 'completed'">
+    <div class="tournament-setup" *ngIf="!gameRunning && finalTournament?.status !== 'completed' && !playersSet">
         <div class="tournament-name">
             <label>
                 <span>Tournament Name:</span>
@@ -36,26 +36,51 @@
             </div>
         </div>
         <div class="player-list" *ngIf="maxPlayers > 0">
-            <h3>Player Setup:</h3>
-            <div *ngFor="let slot of slots; let i = index" class="player-slot">
-                <label>Player {{ i + 1 }}:</label>
-                <div class="player-selection">
-                    <input type="radio" id="bot-{{i}}" name="playerType{{ i }}" [(ngModel)]="slot.isBot" [value]="true" (change)="updateSlotName(slot, i)" />
-                    <label [class.selected]="slot.isBot" for="bot-{{i}}">Bot</label>
-                    
-                    <input type="radio" id="player-{{i}}" name="playerType{{ i }}" [(ngModel)]="slot.isBot" [value]="false" (change)="updateSlotName(slot, i)" />
-                    <label [class.selected]="!slot.isBot" for="player-{{i}}">Player</label>
-                </div>
-                <input type="text" *ngIf="!slot.isBot" [(ngModel)]="slot.name" placeholder="Enter player name" />
+          <h3>Player Setup:</h3>
+          <div *ngFor="let slot of slots; let i = index" class="player-slot">
+            <label>Player {{ i + 1 }}:</label>
+            <div class="player-selection">
+              <input
+                type="radio"
+                id="bot-{{ i }}"
+                name="playerType{{ i }}"
+                [(ngModel)]="slot.isBot"
+                [value]="true"
+                (change)="updateSlotName(slot, i)"
+                [disabled]="i === 0"
+                *ngIf="i !== 0"
+              />
+              <label [class.selected]="slot.isBot" for="bot-{{ i }}" *ngIf="i !== 0 ">Bot</label>
+        
+              <input
+                type="radio"
+                id="player-{{ i }}"
+                name="playerType{{ i }}"
+                [(ngModel)]="slot.isBot"
+                [value]="false"
+                (change)="updateSlotName(slot, i)"
+                [disabled]="i === 0"
+                *ngIf="i !== 0"
+              />
+              <label [class.selected]="!slot.isBot" for="player-{{ i }}">Player</label>
             </div>
+            <input
+              type="text"
+              *ngIf="!slot.isBot || i === 0"
+              [(ngModel)]="slot.name"
+              [placeholder]="i === 0 ? hostname : 'Enter player name'"
+              [readonly]="i === 0"
+            />
+          </div>
         </div>
 
-        <button class="start-btn" (click)="setPlayers()">Set Players & View Bracket</button>
-        <button *ngIf="gameReady" class="start-btn" (click)="startTournament()">Start</button>
+        <button class="start-btn" (click)="setPlayers()">Set Players & View Bracket</button><button *ngIf="gameReady" class="start-btn" (click)="startTournament()">Start</button>
     </div>
 
 
     <!-- Tournament Bracket Display -->
+    <button *ngIf="playersSet && !gameRunning && finalTournament?.status !== 'completed'" class="back-btn" (click)="goBackToSetup()">Back to Setup</button>
+    <button *ngIf="gameReady && !gameRunning  && finalTournament?.status !== 'completed'" class="start-btn" (click)="startTournament()">Start</button>
     <div *ngIf="playersSet && !gameRunning" class="tournament-bracket-display">
         <div class="bracket-header">
             <h3>Bracket - {{ selectedTournamentType }}</h3>
@@ -67,7 +92,7 @@
         <!-- Single Elimination Bracket -->
         <div *ngIf="selectedTournamentType === 'Single Elimination'" class="single-elimination-bracket">
             <div *ngFor="let round of bracket; let r = index" class="round">
-                <h4>Round {{ r + 1 }}</h4>
+                <h4>Round {{ r + 1 }} {{round.stage}}</h4>
                 <div *ngFor="let match of round.matches" class="match">
                     <div class="player">
                         {{ match.player1 }} ({{ match.player1Type }}) - Score: {{ match.player1Score }}
@@ -122,7 +147,7 @@
         <!-- Single Elimination Bracket -->
         <div *ngIf="selectedTournamentType === 'Single Elimination'" class="single-elimination-bracket">
             <div *ngFor="let round of bracket; let r = index" class="round">
-                <h4>Round {{ r + 1 }}</h4>
+                <h4>Round {{ r + 1 }} {{round.stage}}</h4>
                 <div *ngFor="let match of round.matches" class="match">
                     <div class="player">
                         {{ match.player1 }} ({{ match.player1Type }}) - Score: {{ match.player1Score }}
@@ -169,7 +194,7 @@
 </div>
 
 <div *ngIf="currentMatchDisplay && gameRunning && !isPaused" class="current-match-display">
-    <h3>Current Match: {{ currentMatchDisplay }}</h3>
+    <h3>Current Match: {{ currentMatchDisplay }} Round: </h3>
 </div>
 <div *ngIf="currentMatchDisplay && gameRunning && isPaused" class="current-match-display">
     <h3>Game Paused (space to continue)</h3>

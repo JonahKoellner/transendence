@@ -3,6 +3,7 @@ import { Component, ComponentFactoryResolver, ComponentRef, HostListener, OnInit
 import { PveGameCanvasComponent } from '../pve-game-canvas/pve-game-canvas.component';
 import { PvpGameCanvasComponent } from '../pvp-game-canvas/pvp-game-canvas.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ProfileService, UserProfile } from 'src/app/profile.service';
 
 export enum TournamentType {
   SINGLE_ELIMINATION = 'Single Elimination',
@@ -10,16 +11,12 @@ export enum TournamentType {
 }
 
 export enum Stage {
-  WINNERS_ROUND = 'Winners Round',
-  LOSERS_ROUND = 'Losers Round',
-  FINALS = 'Finals',
-}
-
-export enum RoundType {
-  FIRST_ROUND = 'First Round',
-  SECOND_ROUND = 'Second Round',
-  SEMI_FINAL = 'Semi-Final',
-  FINAL = 'Final',
+  PRELIMINARIES = 'Preliminaries',
+  QUALIFIERS = 'Qualifiers',
+  QUARTER_FINALS = 'Quarter Finals',
+  SEMI_FINALS = 'Semi Finals',
+  GRAND_FINALS = 'Grand Finals',
+  ROUND_ROBIN_STAGE = 'Round Robin Stage',
 }
 
 export enum MatchOutcome {
@@ -55,7 +52,6 @@ interface Round {
   roundNumber: number;
   matches: Match[];
   stage: Stage;
-  roundType: RoundType;
   createdAt: Date;
   startTime: Date;
   endTime: Date | null;
@@ -79,6 +75,7 @@ interface Tournament {
   winnerDeterminationMethodMessage?: string; // e.g., 'Most Wins', 'Most Points', 'Random Selection'
   tiebreakerMethod?: TiebreakerMethod;
   winnerTieResolved?: boolean; // Indicates if a tie-breaking method was applied
+  host: UserProfile
 }
 
 
@@ -124,11 +121,20 @@ export class StartComponent implements OnInit {
   
   gameRunning: boolean = false;
   gameReady: boolean = false;
-
-  constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver) { }
+  hostname: string = '';
+  host: UserProfile | null = null;
+  constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver, private profileService: ProfileService ) { }
 
   ngOnInit(): void {
-    // Initialize default settings if needed
+    this.profileService.getProfile().subscribe(
+      profile => {
+        this.hostname = profile.display_name || profile.username;
+        this.host = profile;
+      },
+      error => {
+        console.error('Failed to load profile:', error);
+      }
+    );
   }
 
   onTournamentTypeChange(): void {
@@ -140,11 +146,20 @@ export class StartComponent implements OnInit {
   }
 
   initializeSlots(): void {
-    this.slots = Array.from({ length: this.maxPlayers }, (_, i) => ({
+    this.slots = Array.from({ length: this.maxPlayers }, (_, i) => {
+      // Set player 1 as the host and prevent them from being a bot
+      if (i === 0) {
+        return {
+          isBot: false,
+          name: this.hostname, // Set player 1 as the host
+        };
+      }
+      return {
         isBot: true,
-        name: `Bot ${i + 1}`, // Set default name for bots
-    }));
-}
+        name: `Bot ${i + 1}`, // Set default name for other bots
+      };
+    });
+  }
 
 
   buildBracket(): boolean {
@@ -166,7 +181,7 @@ export class StartComponent implements OnInit {
     const rounds = Math.log2(this.maxPlayers);
     this.bracket = [];
   
-    // First round with initial players
+    // Initial round setup based on player count
     const firstRoundMatches: Match[] = [];
     for (let i = 0; i < this.maxPlayers; i += 2) {
       firstRoundMatches.push({
@@ -178,18 +193,32 @@ export class StartComponent implements OnInit {
         winnerType: null,
         outcome: null,
         createdAt: new Date(),
-        startTime: new Date(), // Will be set when the match actually starts
+        startTime: new Date(),
         endTime: null,
         duration: null,
         status: 'pending',
       });
     }
   
+    // Define starting stage based on the number of players
+    let startingStage: Stage;
+    if (this.maxPlayers >= 32) {
+      startingStage = Stage.PRELIMINARIES; // Start with Preliminaries for large tournaments
+    } else if (this.maxPlayers >= 16) {
+      startingStage = Stage.QUALIFIERS; // Start with Qualifiers for medium-sized tournaments
+    } else if (this.maxPlayers === 8) {
+      startingStage = Stage.QUARTER_FINALS;
+    } else if (this.maxPlayers === 4) {
+      startingStage = Stage.SEMI_FINALS;
+    } else {
+      throw new Error("Number of players must be a power of 2 and at least 4.");
+    }
+  
+    // First round entry in the bracket
     this.bracket.push({
       roundNumber: 1,
       matches: firstRoundMatches,
-      stage: Stage.WINNERS_ROUND,
-      roundType: RoundType.FIRST_ROUND,
+      stage: startingStage,
       createdAt: new Date(),
       startTime: new Date(),
       endTime: null,
@@ -197,7 +226,7 @@ export class StartComponent implements OnInit {
       status: 'pending',
     });
   
-    // Subsequent rounds
+    // Set up subsequent rounds
     for (let round = 1; round < rounds; round++) {
       const previousRoundMatches = this.bracket[round - 1].matches;
       const roundMatches: Match[] = [];
@@ -217,18 +246,26 @@ export class StartComponent implements OnInit {
           status: 'pending',
         });
       }
-      const roundType =
-        round === rounds - 1
-          ? RoundType.FINAL
-          : round === rounds - 2
-          ? RoundType.SEMI_FINAL
-          : RoundType.SECOND_ROUND;
+  
+      // Assign stages based on the round progression
+      let stage: Stage;
+  
+      if (round === rounds - 1) {
+        stage = Stage.GRAND_FINALS;
+      } else if (round === rounds - 2) {
+        stage = Stage.SEMI_FINALS;
+      } else if (round === rounds - 3 && this.maxPlayers >= 8) {
+        stage = Stage.QUARTER_FINALS;
+      } else if (this.maxPlayers >= 32 && round === 1) {
+        stage = Stage.QUALIFIERS; // After Preliminaries, go to Qualifiers for large tournaments
+      } else {
+        stage = Stage.QUALIFIERS;
+      }
   
       this.bracket.push({
         roundNumber: round + 1,
         matches: roundMatches,
-        stage: Stage.WINNERS_ROUND,
-        roundType: roundType,
+        stage: stage,
         createdAt: new Date(),
         startTime: new Date(),
         endTime: null,
@@ -237,6 +274,7 @@ export class StartComponent implements OnInit {
       });
     }
   }
+
   propagateWinnersToNextRound(roundIndex: number): void {
     const currentRound = this.bracket[roundIndex];
     const nextRound = this.bracket[roundIndex + 1];
@@ -282,9 +320,46 @@ export class StartComponent implements OnInit {
     }
   }
 
+  goBackToSetup(): void {
+    this.playersSet = false;
+    this.gameReady = false;
+    this.bracket = [];
+    this.roundRobinMatches = [];
+  }
+
   setPlayers(): void {
-    this.playersSet = true;
-    this.gameReady = this.buildBracket();
+    // Collect player names (ignoring bots)
+    const playerNames = this.slots
+      .filter(slot => !slot.isBot)
+      .map(slot => slot.name.trim());
+  
+    // Validate names
+    const uniqueNames = new Set<string>();
+    let allNamesValid = true;
+  
+    for (const name of playerNames) {
+      if (name.length < 2 || name.length > 100) {
+        allNamesValid = false;
+        console.error(`Player name "${name}" must be between 2 and 100 characters.`);
+        break;
+      }
+      if (uniqueNames.has(name)) {
+        allNamesValid = false;
+        console.error(`Player name "${name}" is duplicated.`);
+        break;
+      }
+      uniqueNames.add(name);
+    }
+  
+    // Proceed only if all names are valid
+    if (allNamesValid) {
+      this.playersSet = true;
+      this.gameReady = this.buildBracket();
+    } else {
+      this.playersSet = false;
+      this.gameReady = false;
+      alert("Please ensure all player names are unique and between 2 to 100 characters.");
+    }
   }
   startTournament(): void {
     this.resetTournamentState();
@@ -304,6 +379,7 @@ export class StartComponent implements OnInit {
       endTime: null,
       duration: null,
       status: 'pending',
+      host: this.host!
     };
 
     // Reset match-level tie resolution flags and scores
@@ -351,7 +427,7 @@ export class StartComponent implements OnInit {
     this.selectedTournamentType = '';
     this.currentGameComponentRef = null;
   }
-  async simulateMatch(match: Match): Promise<void> {
+  async simulateMatch(match: Match, stage: Stage): Promise<void> {
     this.match = match;
     this.gameRunning = true;
     match.createdAt = new Date();
@@ -381,11 +457,11 @@ export class StartComponent implements OnInit {
 
             // Case 1: Player vs. Bot (player is player1, bot is player2)
             if (match.player1Type === 'Player' && match.player2Type === 'Bot') {
-                await this.loadPveGameCanvas(match);
+                await this.loadPveGameCanvas(match, stage);
             }
             // Case 2: Player vs. Player
             else if (match.player1Type === 'Player' && match.player2Type === 'Player') {
-                await this.loadPvpGameCanvas(match);
+                await this.loadPvpGameCanvas(match, stage);
             }
         }
 
@@ -439,8 +515,8 @@ export class StartComponent implements OnInit {
     }
   }
 
-  async loadPveGameCanvas(match: Match): Promise<void> {
-    this.currentMatchDisplay = `${match.player1} (Player) vs ${match.player2} (Bot)`;
+  async loadPveGameCanvas(match: Match, stage: Stage): Promise<void> {
+    this.currentMatchDisplay = `${match.player1} (Player) vs ${match.player2} (Bot) on ${stage}` ;
     
     const factory = this.resolver.resolveComponentFactory(PveGameCanvasComponent);
     const componentRef = this.gameCanvasContainer.createComponent(factory);
@@ -464,8 +540,8 @@ export class StartComponent implements OnInit {
     });
   }
 
-  async loadPvpGameCanvas(match: Match): Promise<void> {
-    this.currentMatchDisplay = `${match.player1} (Player) vs ${match.player2} (Player)`;
+  async loadPvpGameCanvas(match: Match, stage: Stage): Promise<void> {
+    this.currentMatchDisplay = `${match.player1} (Player) vs ${match.player2} (Player) on ${stage}` ;
 
     const factory = this.resolver.resolveComponentFactory(PvpGameCanvasComponent);
     const componentRef = this.gameCanvasContainer.createComponent(factory);
@@ -531,6 +607,7 @@ export class StartComponent implements OnInit {
       endTime: null,
       duration: null,
       status: 'ongoing',
+      host: this.host!
     };
   
     if (this.selectedTournamentType === TournamentType.SINGLE_ELIMINATION) {
@@ -562,7 +639,7 @@ export class StartComponent implements OnInit {
       const finalMatch = finalRound.matches[0];
 
       // Check if the final match was resolved by a tie-breaker
-      if (finalMatch.tieResolved && finalRound.roundType === RoundType.FINAL && this.finalTournament.type === TournamentType.SINGLE_ELIMINATION) {
+      if (finalMatch.tieResolved && finalRound.stage === Stage.GRAND_FINALS && this.finalTournament.type === TournamentType.SINGLE_ELIMINATION) {
         this.finalTournament.tiebreakerMethod = TiebreakerMethod.RANDOM_SELECTION;
         this.finalTournament.winnerDeterminationMethodMessage =
           `The tournament winner was determined by ${TiebreakerMethod.RANDOM_SELECTION} due to a tie in the final match.`;
@@ -584,7 +661,7 @@ export class StartComponent implements OnInit {
       round.status = 'ongoing';
   
       for (const match of round.matches) {
-        await this.simulateMatch(match);
+        await this.simulateMatch(match, round.stage);
       }
   
       round.endTime = new Date();
@@ -608,8 +685,7 @@ export class StartComponent implements OnInit {
     const round: Round = {
       roundNumber: 1,
       matches: this.roundRobinMatches,
-      stage: Stage.WINNERS_ROUND,
-      roundType: RoundType.FIRST_ROUND,
+      stage: Stage.ROUND_ROBIN_STAGE,
       createdAt: new Date(),
       startTime: new Date(),
       endTime: null,
@@ -623,7 +699,7 @@ export class StartComponent implements OnInit {
   
     // Run all matches and track wins and points
     for (const match of this.roundRobinMatches) {
-      await this.simulateMatch(match);
+      await this.simulateMatch(match, round.stage);
   
       if (match.player1 && match.player2) {
         // Update points for both players
@@ -717,7 +793,14 @@ export class StartComponent implements OnInit {
       this.initializeSlots();
   }
   updateSlotName(slot: { isBot: boolean; name: string }, index: number): void {
-    slot.name = slot.isBot ? `Bot ${index + 1}` : ''; // Reset to default or empty for manual entry
+    if (index === 0) {
+      // Prevent changes to player 1 to ensure they remain the host
+      slot.isBot = false;
+      slot.name = this.hostname;
+    } else {
+      // Allow changes for other slots
+      slot.name = slot.isBot ? `Bot ${index + 1}` : ''; // Set default for bots or empty for manual entry
+    }
   }
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent): void {
