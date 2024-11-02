@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="player-list" *ngIf="maxPlayers > 0">
-          <h3>Player Setup:</h3>
+          <h3 class="w-100">Player Setup:</h3>
           <div *ngFor="let slot of slots; let i = index" class="player-slot">
             <label>Player {{ i + 1 }}:</label>
             <div class="player-selection">
@@ -110,7 +110,7 @@
         </div>
 
         <!-- Round Robin Bracket -->
-        <div *ngIf="selectedTournamentType === 'Round Robin'" class="round-robin-bracket">
+        <div *ngIf="selectedTournamentType === 'Round Robin'" class="round-robin-bracket help">
             <h4>Round Robin Matches</h4>
             <div *ngFor="let match of roundRobinMatches" class="match">
               <div class="player">

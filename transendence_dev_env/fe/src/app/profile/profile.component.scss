@@ -39,9 +39,11 @@
   color: #ff6b6b; /* Highlight the "VS" text */
 }
 
-.score {
+.score-text {
   font-size: 1.2em;
   font-weight: bold;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  color: #dc3545;
 }
 
 .additional-info {
