@@ -1,6 +1,66 @@
 <div class="home-container">
-    <h2>Welcome to Home</h2>
-    <p>You are logged in!</p>
-    <button (click)="logout()">Logout</button>
-  </div>
-  
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <h1 class="hero-title">Welcome to Pong Arena</h1>
+    <p class="hero-description">
+      Dive into the ultimate Pong experience with thrilling PvP battles, tournaments, and arenas.
+    </p>
+    <button class="cta-button" (click)="navigateToGameSelection()">Get Started</button>
+  </section>
+
+  <!-- Featured Game Modes Section -->
+  <section class="game-modes-section">
+    <h2>Choose Your Challenge</h2>
+    <div class="game-modes-cards">
+      <div class="game-mode-card">
+        <h3>1v1 Player vs Environment</h3>
+        <p>Test your skills against AI opponents and improve your game.</p>
+        <button (click)="navigateToMode('pve')">Play PvE</button>
+      </div>
+      <div class="game-mode-card">
+        <h3>1v1 Local PvP</h3>
+        <p>Challenge a friend in local matches and prove who’s the best.</p>
+        <button (click)="navigateToMode('local_pvp')">Play Local PvP</button>
+      </div>
+      <div class="game-mode-card">
+        <h3>Online PvP</h3>
+        <p>Compete with players around the world and climb the ranks.</p>
+        <button (click)="navigateToMode('online_pvp')">Play Online PvP</button>
+      </div>
+      <div class="game-mode-card">
+        <h3>Tournaments</h3>
+        <p>Enter single-elimination tournaments and emerge as the ultimate champion.</p>
+        <button (click)="navigateToMode('tournament')">Join Tournaments</button>
+      </div>
+      <div class="game-mode-card">
+        <h3>Arena Mode</h3>
+        <p>Enter the Arena and face multiple players in intense free-for-all battles.</p>
+        <button (click)="navigateToMode('arena')">Play Arena</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works-section">
+    <h2>How It Works</h2>
+    <p>Experience fast-paced Pong battles across multiple game modes. Earn XP, level up, and unlock unique achievements as you progress through the ranks. Ready to take on the challenge?</p>
+  </section>
+
+  <!-- Community and Leaderboards Section -->
+  <section class="community-section">
+    <h2>Engage with the Community</h2>
+    <p>Compete with top players, join tournaments, and see where you stand on the leaderboards. Show off your skills and climb to the top!</p>
+    <button (click)="navigateToLeaderboards()">View Leaderboards</button>
+  </section>
+
+  <!-- Call to Action Section -->
+  <section class="cta-section">
+    <h2>Explore More</h2>
+    <p>Check out your Game History, review your Statistics, or update your Profile to personalize your experience.</p>
+    <div class="cta-buttons">
+      <button routerLink="/games/history">Game History</button>
+      <button routerLink="/profile">Your Profile</button>
+      <button routerLink="/stats">Statistics</button>
+    </div>
+  </section>
+</div>

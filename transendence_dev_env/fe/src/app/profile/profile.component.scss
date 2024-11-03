@@ -1,73 +1,196 @@
-/***** Dark Theme Profile Page *****/
-.container {
-  background-color: #121212;
+.profile-page {
+  max-width: 800px;
+  margin: auto;
   color: #e0e0e0;
-}
 
-/***** Card Styling *****/
-.card {
-  border: 1px solid #343a40;
-  border-radius: 8px;
-}
+  .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+  }
 
-.card-header {
-  background-color: #1e1e1e;
-  color: #e0e0e0;
-  border-bottom: 1px solid #343a40;
-}
+  .profile-card {
+      background-color: #1e1e1e;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2rem;
+      text-align: center;
 
-/***** Game History Styling *****/
-.list-group-item {
-  background-color: #1e1e1e;
-  border-color: #343a40;
-  padding: 15px;
-}
+      h2 {
+          color: #4CAF50;
+          font-size: 1.8rem;
+          margin-bottom: 1rem;
+      }
 
-.game-summary {
-  font-size: 1.1em;
-  font-weight: bold;
-  color: #e0e0e0;
-}
+      .account-link {
+          color: #4CAF50;
+          text-decoration: none;
+          font-size: 0.9rem;
+          &:hover {
+              text-decoration: underline;
+          }
+      }
 
-.players {
-  display: inline-flex;
-  align-items: center;
-}
+      .profile-info {
+          margin-bottom: 1.5rem;
+          p {
+              font-size: 1rem;
+              color: #c0c0c0;
+              margin: 0.5rem 0;
+          }
+      }
 
-.vs {
-  margin: 0 5px;
-  color: #ff6b6b; /* Highlight the "VS" text */
-}
+      .level-info {
+          margin-bottom: 1.5rem;
 
-.score-text {
-  font-size: 1.2em;
-  font-weight: bold;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
-  color: #dc3545;
-}
+          h3 {
+              color: #4CAF50;
+              font-size: 1.2rem;
+          }
 
-.additional-info {
-  font-size: 0.9em;
-  color: #adb5bd;
-}
+          .progress {
+              height: 20px;
+              border-radius: 8px;
+              background: #343a40;
+          }
 
-.badge-success {
-  font-size: 0.8em;
-  color: #e0e0e0;
-  background-color: #28a745;
-}
-.status-running {
-  color: #ffc107; /* Yellow for Running */
-  font-weight: bold;
-}
+          .progress-bar {
+              background-color: #4CAF50;
+          }
+      }
 
-.status-canceled {
-  color: #dc3545; /* Red for Canceled */
-  font-weight: bold;
-}
+      form {
+          .form-input {
+              width: 100%;
+              padding: 0.5rem;
+              border: 1px solid #444;
+              border-radius: 5px;
+              background: #2e2e2e;
+              color: #e0e0e0;
+              margin-bottom: 1rem;
+          }
 
-.status-completed {
-  color: #28a745; /* Green for Completed */
-  font-weight: bold;
-}
+          .avatar-section {
+              text-align: center;
+              margin: 1rem 0;
 
+              .avatar-preview {
+                  border-radius: 50%;
+                  width: 100px;
+                  height: 100px;
+                  border: 2px solid #4CAF50;
+                  margin-bottom: 1rem;
+              }
+
+              input[type="file"] {
+                  display: block;
+                  margin: auto;
+                  color: #e0e0e0;
+                  width: 100%;
+              }
+          }
+
+          .update-btn {
+              padding: 0.75rem 1.5rem;
+              border: none;
+              border-radius: 20px;
+              background-color: #4CAF50;
+              color: white;
+              cursor: pointer;
+              transition: background-color 0.3s;
+              &:hover {
+                  background-color: #45A049;
+              }
+          }
+      }
+  }
+
+  .game-history {
+      background-color: #1e1e1e;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2rem;
+
+      h3 {
+          color: #4CAF50;
+          font-size: 1.5rem;
+          margin-bottom: 1rem;
+      }
+
+      .game-item {
+          background-color: #2e2e2e;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+
+          .game-summary {
+              font-size: 1.1rem;
+              font-weight: bold;
+              color: #c0c0c0;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+
+              .vs {
+                  color: #ff6b6b;
+                  margin: 0 0.5rem;
+              }
+
+              .score {
+                  font-size: 1.2rem;
+                  color: #dc3545;
+              }
+          }
+
+          .game-details {
+              font-size: 0.9rem;
+              color: #adb5bd;
+              margin-top: 0.5rem;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+
+              .status {
+                  font-weight: bold;
+                  &.status-running {
+                      color: #ffc107;
+                  }
+                  &.status-canceled {
+                      color: #dc3545;
+                  }
+                  &.status-completed {
+                      color: #28a745;
+                  }
+              }
+
+              .details-link {
+                  color: #4CAF50;
+                  font-size: 0.9rem;
+                  &:hover {
+                      text-decoration: underline;
+                  }
+              }
+          }
+      }
+
+      .no-history {
+          text-align: center;
+          color: #adb5bd;
+          font-size: 1rem;
+          margin-top: 1rem;
+      }
+  }
+
+  .alert-danger {
+      background-color: #dc3545;
+      color: white;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1rem;
+      width: 100%;
+  }
+}

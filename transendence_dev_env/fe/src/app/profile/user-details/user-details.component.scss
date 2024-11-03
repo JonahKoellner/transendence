@@ -1,45 +1,129 @@
-/* Dark Theme for Profile Page */
-.user-details-container {
-  background-color: #121212;
-}
-
-/* Card Styling */
-.card {
-  border: 1px solid #343a40;
-  border-radius: 8px;
-}
-
-.card-header {
-  background-color: #1e1e1e;
+.user-details {
+  max-width: 800px;
+  margin: auto;
+  padding: 2rem;
   color: #e0e0e0;
-  border-bottom: 1px solid #343a40;
-}
 
-/* Badge Styling */
-.badge-success {
-  background-color: #28a745;
-}
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
 
-.badge-secondary {
-  background-color: #6c757d;
-}
+  .profile-card {
+    background-color: #1e1e1e;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    margin-bottom: 2rem;
+    text-align: center;
 
-/* Avatar Styling */
-.avatar {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-bottom: 10px;
-  border: 3px solid #ffffff;
-}
+    h2 {
+      color: #4CAF50;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
 
-/* List Group Dark Mode */
-.list-group-item {
-  background-color: #1e1e1e;
-  border-color: #343a40;
-}
+    .online-status {
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+      .badge-success {
+        background-color: #28a745;
+      }
+      .badge-secondary {
+        background-color: #6c757d;
+      }
+    }
 
-.list-group-item .badge {
-  font-size: 0.8rem;
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+      border: 3px solid #4CAF50;
+      object-fit: cover;
+    }
+
+    .level-info {
+      margin-top: 1.5rem;
+      h4 {
+        color: #4CAF50;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      .progress {
+        height: 20px;
+        border-radius: 8px;
+        background-color: #343a40;
+        .progress-bar {
+          background-color: #4CAF50;
+        }
+      }
+    }
+  }
+
+  .game-history {
+    background-color: #1e1e1e;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    margin-bottom: 2rem;
+
+    h3 {
+      color: #4CAF50;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .game-item {
+      background-color: #2e2e2e;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .game-link {
+        font-weight: bold;
+        color: #e0e0e0;
+        text-decoration: none;
+        &:hover {
+          color: #4CAF50;
+        }
+      }
+
+      .vs {
+        color: #ff6b6b;
+        margin: 0 0.5rem;
+      }
+
+      .game-mode {
+        font-size: 0.9rem;
+        color: #adb5bd;
+      }
+
+      .badge {
+        font-size: 0.8rem;
+        background-color: #28a745;
+      }
+    }
+
+    .alert-info {
+      background-color: #343a40;
+      color: #adb5bd;
+      text-align: center;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+  }
+
+  .alert-danger {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
 }

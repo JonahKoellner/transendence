@@ -1,49 +1,21 @@
-/* Navbar and general styling */
 .navbar {
   padding: 10px 20px;
-  border-bottom: 1px solid #ddd;
-}
+  border-bottom: 1px solid #343a40;
 
-.navbar-brand {
-  font-weight: bold;
-  color: #007bff;
-}
-
-.nav-link {
-  color: #f8f9fa !important;
-  margin: 0 10px;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.nav-link:hover {
-  color: #f1f1f1 !important;
-}
-
-/* Notification Bell Icon */
-.notifications-icon {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  font-size: 1.5rem;
-  color: #f8f9fa;
-  cursor: pointer;
-  z-index: 1000;  /* High z-index to appear above other elements */
-
-  .badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #dc3545;
-    color: white;
-    font-size: 0.75rem;
-    border-radius: 50%;
-    padding: 3px 6px;
-    z-index: 1001;  /* Badge should also be above other elements */
+  .navbar-brand {
+    font-weight: bold;
+    color: #4CAF50 !important;
+    font-size: 1.5rem;
   }
-}
 
-/* Main content padding */
-.container {
-  margin-top: 60px;
+  .nav-link {
+    color: #f8f9fa !important;
+    margin: 0 10px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: #4CAF50 !important;
+    }
+  }
 }
