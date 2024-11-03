@@ -146,11 +146,14 @@ CHANNEL_LAYERS = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",           # Use PostgreSQL
+        "NAME": os.getenv("POSTGRES_DB", "mydb"),            # Database name
+        "USER": os.getenv("POSTGRES_USER", "user"),          # Database user
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "pass"),  # Database password
+        "HOST": os.getenv("DB_HOST", "db"),                  # Host for PostgreSQL
+        "PORT": os.getenv("DB_PORT", "5432"),                # PostgreSQL port
     }
 }
-
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',

@@ -41,7 +41,6 @@ export class WebsocketService implements OnDestroy {
       retryWhen(errors =>
         errors.pipe(
           tap(err => {
-            if (!this.authService.isAuthenticated()) return
             console.error('WebSocket error, retrying...', err)}),
           delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
         )
