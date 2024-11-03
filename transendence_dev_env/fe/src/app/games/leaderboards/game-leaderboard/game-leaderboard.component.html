@@ -1,0 +1,54 @@
+<div *ngIf="loading">Loading game leaderboard...</div>
+<div *ngIf="error">{{ error }}</div>
+<div *ngIf="gameLeaderboard && !loading">
+  <h2>Game Leaderboard</h2>
+
+  <h3>Total Wins</h3>
+  <table>
+    <tr><th>Username</th><th>Total Wins</th></tr>
+    <tr *ngFor="let player of gameLeaderboard.totalWins">
+      <td>{{ player.username }}</td>
+      <td>{{ player.total_wins }}</td>
+    </tr>
+  </table>
+
+  <h3>Total Games Played</h3>
+  <table>
+    <tr><th>Username</th><th>Total Games Played</th></tr>
+    <tr *ngFor="let player of gameLeaderboard.totalGamesPlayed">
+      <td>{{ player.username }}</td>
+      <td>{{ player.total_games }}</td>
+    </tr>
+  </table>
+
+  <h3>Average Score</h3>
+  <table>
+    <tr><th>Username</th><th>Average Score</th></tr>
+    <tr *ngFor="let player of gameLeaderboard.avgScore">
+      <td>{{ player.username }}</td>
+      <td>{{ player.avg_score | number:'1.1-1' }}</td>
+    </tr>
+  </table>
+
+  <h3>Top Scores</h3>
+  <table>
+    <tr><th>Game ID</th><th>Player 1</th><th>Player 2</th><th>Highest Score</th></tr>
+    <tr *ngFor="let game of gameLeaderboard.topScores">
+      <td>{{ game.game_id }}</td>
+      <td>{{ game.player1 }}</td>
+      <td>{{ game.player2 }}</td>
+      <td>{{ game.highest_score }}</td>
+    </tr>
+  </table>
+
+  <h3>Most Recent Games</h3>
+  <table>
+    <tr><th>Game ID</th><th>Player 1</th><th>Player 2</th><th>End Time</th></tr>
+    <tr *ngFor="let game of gameLeaderboard.mostRecentGames">
+      <td>{{ game.game_id }}</td>
+      <td>{{ game.player1 }}</td>
+      <td>{{ game.player2 }}</td>
+      <td>{{ game.end_time | date:'short' }}</td>
+    </tr>
+  </table>
+</div>

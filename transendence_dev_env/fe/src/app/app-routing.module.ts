@@ -15,6 +15,9 @@ import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
 import { StartComponent } from './games/tournament/local/start/start.component';
 import { TournamentDetailsComponent } from './games/tournament/tournament-details/tournament-details.component';
 import { TournamentListComponent } from './games/tournament/tournament-list/tournament-list.component';
+import { GameLeaderboardComponent } from './games/leaderboards/game-leaderboard/game-leaderboard.component';
+import { TournamentLeaderboardComponent } from './games/leaderboards/tournament-leaderboard/tournament-leaderboard.component';
+import { TournamentStatsComponent } from './games/tournament/tournament-stats/tournament-stats.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -31,6 +34,9 @@ const routes: Routes = [
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/stats', component: TournamentStatsComponent, canActivate: [AuthGuard] },
+  { path: 'games/leaderboard/casual', component: GameLeaderboardComponent, canActivate: [AuthGuard] },
+  { path: 'games/leaderboard/tournament', component: TournamentLeaderboardComponent, canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: 'login' }
 ];

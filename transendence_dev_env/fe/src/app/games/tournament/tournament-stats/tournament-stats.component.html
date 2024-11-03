@@ -1,0 +1,336 @@
+<div *ngIf="tournamentStats">
+    <h2>Tournament Overview</h2>
+    <ul>
+      <li><strong>Total Tournaments:</strong> {{ tournamentStats.overview.total_tournaments }}</li>
+      <li><strong>Ongoing Tournaments:</strong> {{ tournamentStats.overview.ongoing_tournaments }}</li>
+      <li><strong>Completed Tournaments:</strong> {{ tournamentStats.overview.completed_tournaments }}</li>
+      <li><strong>Average Duration:</strong> {{ tournamentStats.overview.average_duration | number }} minutes</li>
+      <li><strong>Max Duration:</strong> {{ tournamentStats.overview.max_duration | number }} minutes</li>
+      <li><strong>Min Duration:</strong> {{ tournamentStats.overview.min_duration | number }} minutes</li>
+      <li><strong>Average Participants per Tournament:</strong> 
+        {{ tournamentStats.overview.average_participants_per_tournament }}
+      </li>
+      <li><strong>Average Rounds per Tournament:</strong> 
+        {{ tournamentStats.overview.average_rounds_per_tournament}}
+      </li>
+    </ul>
+  </div>
+
+  <div *ngIf="tournamentStats">
+    <!-- Tournament Overview section (already added) -->
+  
+    <h2>Player Performance</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Wins</th>
+          <th>Losses</th>
+          <th>Total Participations</th>
+          <th>Win Rate (%)</th>
+          <th>Average Placement</th>
+          <th>Longest Win Streak</th>
+          <th>Average Points per Match</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let player of tournamentStats.playerPerformance">
+          <td>{{ player.username }}</td>
+          <td>{{ player.win_count }}</td>
+          <td>{{ player.loss_count }}</td>
+          <td>{{ player.total_participations }}</td>
+          <td>{{ player.win_rate | number:'1.0-2' }}</td>
+          <td>{{ player.average_placement }}</td>
+          <td>{{ player.longest_win_streak }}</td>
+          <td>{{ player.average_points_per_match }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats">
+    <!-- Previous sections for Tournament Overview and Player Performance -->
+  
+    <h2>Historical Performance by Month</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Total Tournaments</th>
+          <th>Completed Tournaments</th>
+          <th>Win Rate (%)</th>
+          <th>Average Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let month of getMonths(tournamentStats.historicalPerformance)">
+          <td>{{ month }}</td>
+          <td>{{ tournamentStats.historicalPerformance[month].total_tournaments }}</td>
+          <td>{{ tournamentStats.historicalPerformance[month].completed_tournaments }}</td>
+          <td>{{ tournamentStats.historicalPerformance[month].win_rate | number:'1.0-2' }}</td>
+          <td>{{ tournamentStats.historicalPerformance[month].average_score }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats && tournamentStats.roundDifficultyAnalysis">
+    <h2>Round Difficulty Analysis</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Average Score Difference</th>
+          <th>Survival Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let stage of getStages(tournamentStats.roundDifficultyAnalysis)">
+          <td>{{ stage }}</td>
+          <td>{{ getStageData(stage)?.average_score_difference | number:'1.1-2' }}</td>
+          <td>{{ getStageData(stage)?.survival_rate | percent }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div *ngIf="tournamentStats && tournamentStats.advancedScoringAnalytics">
+    <h2>Scoring Analytics</h2>
+    
+    <!-- General scoring stats -->
+    <ul>
+      <li><strong>Highest Score:</strong> {{ tournamentStats.advancedScoringAnalytics.highest_score }}</li>
+      <li><strong>Lowest Score:</strong> {{ tournamentStats.advancedScoringAnalytics.lowest_score }}</li>
+      <li><strong>Average Score Gap:</strong> {{ tournamentStats.advancedScoringAnalytics.average_score_gap | number:'1.1-2' }}</li>
+    </ul>
+    
+    <!-- Score distribution table -->
+    <h3>Score Distribution</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Player 1 Score</th>
+          <th>Player 2 Score</th>
+          <th>Frequency</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let score of tournamentStats.advancedScoringAnalytics.score_distribution">
+          <td>{{ score.player1_score }}</td>
+          <td>{{ score.player2_score }}</td>
+          <td>{{ score.frequency }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats && tournamentStats.tournamentParticipationMetrics">
+    <h2>Tournament Participation Metrics</h2>
+    
+    <!-- General metrics for participants -->
+    <ul>
+      <li><strong>Average Rounds per Participant:</strong> 
+        {{ tournamentStats.tournamentParticipationMetrics.average_rounds_per_participant }}
+      </li>
+      <li><strong>Average Matches per Participant:</strong> 
+        {{ tournamentStats.tournamentParticipationMetrics.average_matches_per_participant }}
+      </li>
+    </ul>
+  
+    <!-- Most frequent participants table -->
+    <h3>Most Frequent Participants</h3>
+    <table *ngIf="tournamentStats.tournamentParticipationMetrics.most_frequent_participants.length > 0">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Tournament Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let participant of tournamentStats.tournamentParticipationMetrics.most_frequent_participants">
+          <td>{{ participant.username }}</td>
+          <td>{{ participant.tournament_count }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats && tournamentStats.advancedStageAnalytics">
+    <h2>Stage Analytics</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Average Win Rate</th>
+          <th>Average Score</th>
+          <th>Longest Match Duration (minutes)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loop over each stage in stageAnalytics -->
+        <tr *ngFor="let stage of getStagesSa(tournamentStats.advancedStageAnalytics)">
+          <td>{{ stage }}</td>
+          <td>{{ tournamentStats.advancedStageAnalytics[stage].average_win_rate | percent }}</td>
+          <td>{{ tournamentStats.advancedStageAnalytics[stage].average_score | number:'1.1-2' }}</td>
+          <td>{{ tournamentStats.advancedStageAnalytics[stage].longest_match_duration | number }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats && tournamentStats.tournamentTypePerformance">
+    <h2>Tournament Type Performance</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Tournament Type</th>
+          <th>Total Tournaments</th>
+          <th>Average Win Rate</th>
+          <th>Average Score Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loop over each type in tournamentTypePerformance -->
+        <tr *ngFor="let type of getTournamentTypes(tournamentStats.tournamentTypePerformance)">
+          <td>{{ type }}</td>
+          <td>{{ tournamentStats.tournamentTypePerformance[type].total_tournaments }}</td>
+          <td>{{ tournamentStats.tournamentTypePerformance[type].average_win_rate | percent }}</td>
+          <td>{{ tournamentStats.tournamentTypePerformance[type].average_score_gap | number:'1.1-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats && tournamentStats.timeBasedPerformance">
+    <h2>Time-Based Performance</h2>
+    
+    <!-- Display peak time -->
+    <p><strong>Peak Time of Day:</strong> {{ tournamentStats.timeBasedPerformance.peak_time | titlecase }}</p>
+  
+    <!-- Time of Day Statistics Table -->
+    <h3>Time of Day Statistics</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Time of Day</th>
+          <th>Start Hour</th>
+          <th>End Hour</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Morning</td>
+          <td>{{ tournamentStats.timeBasedPerformance.morning.start }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.morning.end }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.morning.count }}</td>
+        </tr>
+        <tr>
+          <td>Afternoon</td>
+          <td>{{ tournamentStats.timeBasedPerformance.afternoon.start }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.afternoon.end }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.afternoon.count }}</td>
+        </tr>
+        <tr>
+          <td>Evening</td>
+          <td>{{ tournamentStats.timeBasedPerformance.evening.start }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.evening.end }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.evening.count }}</td>
+        </tr>
+        <tr>
+          <td>Night</td>
+          <td>{{ tournamentStats.timeBasedPerformance.night.start }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.night.end }}</td>
+          <td>{{ tournamentStats.timeBasedPerformance.night.count }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div *ngIf="tournamentStats && tournamentStats.roundBasedAnalysis">
+    <h2>Round-Based Analysis</h2>
+    
+    <!-- General Round-Based Statistics -->
+    <ul>
+      <li><strong>Total Rounds:</strong> {{ tournamentStats.roundBasedAnalysis.total_rounds }}</li>
+      <li><strong>Average Rounds per Tournament:</strong> {{ tournamentStats.roundBasedAnalysis.average_rounds_per_tournament }}</li>
+      <li><strong>Average Round Duration:</strong> {{ tournamentStats.roundBasedAnalysis.average_round_duration | number:'1.0-0' }} seconds</li>
+    </ul>
+    
+    <!-- Most Competitive Stage -->
+    <h3>Most Competitive Stage</h3>
+    <ul>
+      <li><strong>Stage:</strong> {{ tournamentStats.roundBasedAnalysis.most_competitive_stage.stage }}</li>
+      <li><strong>Average Score Difference:</strong> {{ tournamentStats.roundBasedAnalysis.most_competitive_stage.average_score_difference | number:'1.1-2' }}</li>
+    </ul>
+  </div>
+  <div *ngIf="tournamentStats && tournamentStats.stagePerformance">
+    <h2>Stage Performance</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Total Rounds</th>
+          <th>Average Matches per Round</th>
+          <th>Average Duration (seconds)</th>
+          <th>Win Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loop over each stage in stagePerformance -->
+        <tr *ngFor="let stage of getStagesSp(tournamentStats.stagePerformance)">
+          <td>{{ stage }}</td>
+          <td>{{ tournamentStats.stagePerformance[stage].total_rounds }}</td>
+          <td>{{ tournamentStats.stagePerformance[stage].average_matches_per_round | number:'1.1-2' }}</td>
+          <td>{{ tournamentStats.stagePerformance[stage].average_duration | number:'1.0-0' }}</td>
+          <td>{{ tournamentStats.stagePerformance[stage].win_rate | percent }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div *ngIf="tournamentStats && tournamentStats.tournamentTypeBreakdown">
+    <h2>Tournament Type Breakdown</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Tournament Type</th>
+          <th>Total Tournaments</th>
+          <th>Win Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loop over each tournament type in tournamentTypeBreakdown -->
+        <tr *ngFor="let type of getTournamentTypesTb(tournamentStats.tournamentTypeBreakdown)">
+          <td>{{ type }}</td>
+          <td>{{ tournamentStats.tournamentTypeBreakdown[type].total_tournaments }}</td>
+          <td>{{ tournamentStats.tournamentTypeBreakdown[type].win_rate | percent }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="tournamentStats && tournamentStats.matchOutcomes">
+    <h2>Match Outcomes</h2>
+    
+    <!-- General Match Statistics -->
+    <ul>
+      <li><strong>Total Matches:</strong> {{ tournamentStats.matchOutcomes.total_matches }}</li>
+      <li><strong>Completed Matches:</strong> {{ tournamentStats.matchOutcomes.completed_matches }}</li>
+      <li><strong>Tied Matches:</strong> {{ tournamentStats.matchOutcomes.tied_matches }}</li>
+      <li><strong>Tie Rate:</strong> {{ tournamentStats.matchOutcomes.tie_rate | percent }}</li>
+      <li><strong>Average Score Difference:</strong> {{ tournamentStats.matchOutcomes.average_score_difference | number:'1.1-2' }}</li>
+    </ul>
+  
+    <!-- Highest Scoring Match -->
+    <h3>Highest Scoring Match</h3>
+    <ul>
+      <li><strong>Player 1:</strong> {{ tournamentStats.matchOutcomes.highest_scoring_match.player1 }} ({{ tournamentStats.matchOutcomes.highest_scoring_match.player1_score }} points)</li>
+      <li>vs</li>
+      <li><strong>Player 2:</strong> {{ tournamentStats.matchOutcomes.highest_scoring_match.player2 }} ({{ tournamentStats.matchOutcomes.highest_scoring_match.player2_score }} points)</li>
+    </ul>
+  </div>

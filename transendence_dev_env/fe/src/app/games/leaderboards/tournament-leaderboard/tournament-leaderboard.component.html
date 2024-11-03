@@ -1,0 +1,50 @@
+<div *ngIf="loading">Loading tournament leaderboard...</div>
+<div *ngIf="error">{{ error }}</div>
+<div *ngIf="tournamentLeaderboard && !loading">
+  <h2>Tournament Leaderboard</h2>
+
+  <h3>Tournament Wins</h3>
+  <table>
+    <tr><th>Username</th><th>Total Wins</th></tr>
+    <tr *ngFor="let player of tournamentLeaderboard.tournamentWins">
+      <td>{{ player.username }}</td>
+      <td>{{ player.tournament_wins }}</td>
+    </tr>
+  </table>
+
+  <h3>Total Tournaments Participated</h3>
+  <table>
+    <tr><th>Username</th><th>Total Tournaments</th></tr>
+    <tr *ngFor="let player of tournamentLeaderboard.totalTournaments">
+      <td>{{ player.username }}</td>
+      <td>{{ player.total_tournaments }}</td>
+    </tr>
+  </table>
+
+  <h3>Average Duration of Tournaments</h3>
+  <table>
+    <tr><th>Tournament Name</th><th>Average Duration (mins)</th></tr>
+    <tr *ngFor="let tournament of tournamentLeaderboard.avgDuration">
+      <td>{{ tournament.name }}</td>
+      <td>{{ tournament.avg_duration | number:'1.1-1' }}</td>
+    </tr>
+  </table>
+
+  <h3>Highest Scores</h3>
+  <table>
+    <tr><th>Tournament Name</th><th>Highest Score</th></tr>
+    <tr *ngFor="let tournament of tournamentLeaderboard.highestScores">
+      <td>{{ tournament.name }}</td>
+      <td>{{ tournament.highest_score }}</td>
+    </tr>
+  </table>
+
+  <h3>Most Recent Tournaments</h3>
+  <table>
+    <tr><th>Tournament Name</th><th>End Time</th></tr>
+    <tr *ngFor="let tournament of tournamentLeaderboard.mostRecentTournaments">
+      <td>{{ tournament.name }}</td>
+      <td>{{ tournament.end_time | date:'short' }}</td>
+    </tr>
+  </table>
+</div>

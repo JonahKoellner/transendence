@@ -38,6 +38,9 @@ import { PvpGameCanvasComponent } from './games/tournament/local/pvp-game-canvas
 import { PveGameCanvasComponent } from './games/tournament/local/pve-game-canvas/pve-game-canvas.component';
 import { TournamentListComponent } from './games/tournament/tournament-list/tournament-list.component';
 import { TournamentDetailsComponent } from './games/tournament/tournament-details/tournament-details.component';
+import { GameLeaderboardComponent } from './games/leaderboards/game-leaderboard/game-leaderboard.component';
+import { TournamentLeaderboardComponent } from './games/leaderboards/tournament-leaderboard/tournament-leaderboard.component';
+import { TournamentStatsComponent } from './games/tournament/tournament-stats/tournament-stats.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -68,7 +71,10 @@ import { TournamentDetailsComponent } from './games/tournament/tournament-detail
     PvpGameCanvasComponent,
     PveGameCanvasComponent,
     TournamentListComponent,
-    TournamentDetailsComponent
+    TournamentDetailsComponent,
+    GameLeaderboardComponent,
+    TournamentLeaderboardComponent,
+    TournamentStatsComponent
   ],
   imports: [
     BrowserModule,
