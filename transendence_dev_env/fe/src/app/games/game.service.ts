@@ -154,6 +154,15 @@ export class GameService {
         })
       );
     }
+
+    getTournamentsByUser(userId: number): Observable<Tournament[]> {
+      return this.http.get<Tournament[]>(`${this.tournamentApiUrl}by-user/${userId}/`, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error fetching games for user ${userId}:`, error);
+          return of([]);
+        })
+      );
+    }
   
     // Get a single tournament by ID
     getTournamentById(tournamentId: number): Observable<Tournament> {

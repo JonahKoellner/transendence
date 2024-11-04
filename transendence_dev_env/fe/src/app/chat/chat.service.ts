@@ -8,14 +8,19 @@ export interface ChatMessage {
   sender: {
     id: number;
     username: string;
+    email: string;
   };
   receiver: {
     id: number;
     username: string;
+    email: string;
   };
   message: string;
   timestamp: string;
   is_read: boolean;
+  notification_type: string;
+  id: number;
+  data: any;
 }
 
 @Injectable({
@@ -75,19 +80,8 @@ export class ChatService {
     return this.websocketService.notifications$.pipe(
       map((notification: any) => {
         console.log('Received notification:', notification);
-        return {
-        sender: {
-          id: notification.senderId,
-          username: notification.sender,
-        },
-        receiver: {
-          id: notification.receiverId,
-          username: notification.receiverUsername,
-        },
-        message: notification.data.message,
-        timestamp: notification.timestamp,
-        is_read: notification.isRead,
-      }})
+        return notification;
+      })
     );
   }
 

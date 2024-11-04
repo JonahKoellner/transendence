@@ -1,143 +1,215 @@
 .home-container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem;
+  color: #e0e0e0;
+
+  /* Hero Section */
+  .hero-section {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(34, 34, 34, 0.9));
+    background-size: cover;
+    background-position: center;
+    text-align: center;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     color: #e0e0e0;
+    margin-bottom: 2rem;
+  }
   
-    /* Hero Section */
-    .hero-section {
-      text-align: center;
-      background: #4CAF50;
-      padding: 2rem;
-      border-radius: 8px;
-      color: #ffffff;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  .hero-content {
+    max-width: 800px;
+    margin: auto;
+  }
   
-      .hero-title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-      }
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+    display: inline-block;
   
-      .hero-description {
-        font-size: 1.2rem;
-        margin-bottom: 1.5rem;
-      }
+    span {
+      color: #4CAF50;
+      text-shadow: 0px 0px 10px rgba(76, 175, 80, 0.8);
+    }
+  }
   
-      .cta-button {
-        background-color: #ffffff;
-        color: #4CAF50;
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        font-weight: bold;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
+  .hero-description {
+    font-size: 1.1rem;
+    color: #cfcfcf;
+    max-width: 700px;
+    margin: auto;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
   
+  .cta-button {
+    background-color: #4CAF50;
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+  
+    &:hover {
+      background-color: #45A049;
+    }
+  }
+
+  /* Game Modes Section */
+  .game-modes-section {
+    margin-top: 2rem;
+    text-align: center;
+
+    h2 {
+      font-size: 2rem;
+      color: #4CAF50;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .game-modes-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+
+      .game-mode-card {
+        background-color: #1e1e1e;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        width: 250px;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+
         &:hover {
-          background-color: #f0f0f0;
+          transform: translateY(-5px);
+          box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+          background-color: #2e2e2e;
         }
-      }
-    }
-  
-    /* Game Modes Section */
-    .game-modes-section {
-      margin-top: 2rem;
-      text-align: center;
-  
-      h2 {
-        font-size: 2rem;
-        color: #4CAF50;
-        font-weight: bold;
-        margin-bottom: 1rem;
-      }
-  
-      .game-modes-cards {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        justify-content: center;
-  
-        .game-mode-card {
-          background-color: #1e1e1e;
-          padding: 1.5rem;
-          border-radius: 8px;
-          box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-          width: 220px;
-          text-align: center;
-  
-          h3 {
-            color: #4CAF50;
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-          }
-  
-          p {
-            font-size: 0.9rem;
-            color: #e0e0e0;
-            margin-bottom: 1rem;
-          }
-  
-          button {
-            background-color: #4CAF50;
-            color: #ffffff;
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-  
-            &:hover {
-              background-color: #45A049;
-            }
+
+        h3 {
+          color: #4CAF50;
+          font-size: 1.4rem;
+          font-weight: bold;
+          margin-bottom: 0.75rem;
+        }
+
+        p {
+          font-size: 0.95rem;
+          color: #bdbdbd;
+          margin-bottom: 1.5rem;
+        }
+
+        button {
+          background-color: #4CAF50;
+          color: #ffffff;
+          padding: 0.5rem 1rem;
+          font-size: 1rem;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s, transform 0.2s;
+
+          &:hover {
+            background-color: #45A049;
+            transform: translateY(-2px);
           }
         }
       }
     }
-  
-    /* How It Works Section */
-    .how-it-works-section {
-      margin-top: 3rem;
-      text-align: center;
-  
-      h2 {
-        font-size: 2rem;
-        color: #4CAF50;
-        font-weight: bold;
-        margin-bottom: 1rem;
-      }
-  
-      p {
-        font-size: 1rem;
-        color: #bfbfbf;
-        max-width: 700px;
-        margin: auto;
+  }
+
+  /* How It Works Section */
+  .how-it-works-section {
+    margin-top: 3rem;
+    text-align: center;
+
+    h2 {
+      font-size: 2rem;
+      color: #4CAF50;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: #bfbfbf;
+      max-width: 700px;
+      margin: auto;
+      line-height: 1.6;
+    }
+  }
+
+  /* Community and Leaderboards Section */
+  .community-section {
+    margin-top: 3rem;
+    text-align: center;
+
+    h2 {
+      font-size: 2rem;
+      color: #4CAF50;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #bfbfbf;
+      max-width: 600px;
+      margin: auto;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: #ffffff;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+
+      &:hover {
+        background-color: #45A049;
+        transform: translateY(-2px);
       }
     }
-  
-    /* Community and Leaderboards Section */
-    .community-section {
-      margin-top: 3rem;
-      text-align: center;
-  
-      h2 {
-        font-size: 2rem;
-        color: #4CAF50;
-        font-weight: bold;
-        margin-bottom: 1rem;
-      }
-  
-      p {
-        font-size: 1rem;
-        color: #bfbfbf;
-        max-width: 600px;
-        margin: auto;
-        margin-bottom: 1.5rem;
-      }
-  
+  }
+
+  /* Call to Action Section */
+  .cta-section {
+    margin-top: 3rem;
+    text-align: center;
+
+    h2 {
+      font-size: 2rem;
+      color: #4CAF50;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #bfbfbf;
+      max-width: 700px;
+      margin: auto;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+
       button {
         background-color: #4CAF50;
         color: #ffffff;
@@ -146,54 +218,12 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        transition: background-color 0.3s;
-  
+        transition: background-color 0.3s, transform 0.2s;
+
         &:hover {
           background-color: #45A049;
         }
       }
     }
-  
-    /* Call to Action Section */
-    .cta-section {
-      margin-top: 3rem;
-      text-align: center;
-  
-      h2 {
-        font-size: 2rem;
-        color: #4CAF50;
-        font-weight: bold;
-        margin-bottom: 1rem;
-      }
-  
-      p {
-        font-size: 1rem;
-        color: #bfbfbf;
-        max-width: 700px;
-        margin: auto;
-        margin-bottom: 1.5rem;
-      }
-  
-      .cta-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-  
-        button {
-          background-color: #4CAF50;
-          color: #ffffff;
-          padding: 0.75rem 1.5rem;
-          font-size: 1rem;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          transition: background-color 0.3s;
-  
-          &:hover {
-            background-color: #45A049;
-          }
-        }
-      }
-    }
   }
-  
+}

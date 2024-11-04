@@ -530,8 +530,20 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         message_text = request.data.get('message')
         receiver = get_object_or_404(User, pk=receiver_id)
 
-        # Prevent sending messages to blocked users
-        if receiver in request.user.profile.blocked_users.all():
+        # Check if the receiver has blocked the sender or vice versa
+        if receiver in request.user.profile.blocked_users.all() or request.user in receiver.profile.blocked_users.all():
+            return Response({'detail': 'Cannot send message to this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Prevent sending messages to self
+        if receiver == request.user:
+            return Response({'detail': 'Cannot send message to yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the message is not empty
+        if not message_text:
+            return Response({'detail': 'Message cannot be empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Allow messaging only between friends
+        if receiver.profile not in request.user.profile.friends.all():
             return Response({'detail': 'Cannot send message to this user.'}, status=status.HTTP_400_BAD_REQUEST)
 
         message = ChatMessage.objects.create(

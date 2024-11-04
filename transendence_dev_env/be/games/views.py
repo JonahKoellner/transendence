@@ -349,6 +349,34 @@ class TournamentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({"error": "Participant parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
     
+    @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
+    def get_tournaments_by_user(self, request, user_id=None):
+        """
+        Custom action to retrieve all tournaments where the specified user (user_id) is a participant or the host.
+        """
+        # Get the user object based on the provided user_id
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Filter tournaments where the user is the host
+        hosted_tournaments = Tournament.objects.filter(host=user)
+
+        # Filter tournaments where the user is in the participants list (checking for username or display_name)
+        participant_tournaments = Tournament.objects.filter(
+            models.Q(all_participants__contains=[user.username]) |
+            models.Q(all_participants__contains=[user.profile.display_name])
+        )
+
+        # Combine hosted and participant tournaments
+        tournaments = hosted_tournaments | participant_tournaments
+        tournaments = tournaments.distinct()  # Remove duplicates if any
+
+        # Serialize and return the results
+        serializer = self.get_serializer(tournaments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     
 class TournamentStatisticsViewSet(viewsets.ViewSet):
     """
@@ -848,6 +876,56 @@ class GameLeaderboardSet(viewsets.ModelViewSet):
         ]
         return Response(leaderboard)
     
+    @action(detail=False, methods=['get'], url_path='user-stats/(?P<user_id>[^/.]+)')
+    def user_game_stats(self, request, user_id=None):
+        """
+        Retrieve game stats and ranks for a specific user by user_id, checking for both username and display_name.
+        """
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Total games won by user and rank in total wins leaderboard
+        total_wins = user.games_won.count()
+        win_rank = User.objects.annotate(total_wins=Count('games_won')).filter(total_wins__gt=total_wins).count() + 1
+
+        # Total games played by user, checking for both username and display_name
+        total_games = Game.objects.filter(
+            Q(player1=user) | Q(player2=user) |
+            Q(player1__username=user.username) | Q(player2__username=user.username) |
+            Q(player1__profile__display_name=user.profile.display_name) |
+            Q(player2__profile__display_name=user.profile.display_name)
+        ).count()
+
+        game_rank = User.objects.annotate(
+            total_games=Count('games_as_player1') + Count('games_as_player2')
+        ).filter(total_games__gt=total_games).count() + 1
+
+        # Average score and rank in average score leaderboard
+        avg_score = Game.objects.filter(
+            Q(player1=user) | Q(player2=user) |
+            Q(player1__username=user.username) | Q(player2__username=user.username) |
+            Q(player1__profile__display_name=user.profile.display_name) |
+            Q(player2__profile__display_name=user.profile.display_name)
+        ).aggregate(
+            avg_score=Avg(F('score_player1') + F('score_player2'))
+        )['avg_score'] or 0
+
+        avg_score_rank = User.objects.annotate(
+            avg_score=Avg(F('games_as_player1__score_player1') + F('games_as_player2__score_player2'))
+        ).filter(avg_score__gt=avg_score).count() + 1
+
+        return Response({
+            "username": user.username,
+            "total_wins": total_wins,
+            "total_games_played": total_games,
+            "avg_score": avg_score,
+            "win_rank": win_rank,
+            "game_rank": game_rank,
+            "avg_score_rank": avg_score_rank
+        })
+    
 class TournamentLeaderboardViewSet(viewsets.ModelViewSet):
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
@@ -885,7 +963,8 @@ class TournamentLeaderboardViewSet(viewsets.ModelViewSet):
             # Count tournaments the user participated in
             participant_count = sum(
                 1 for tournament in participants_count
-                if user.username in tournament.get('all_participants', []) or user.username in tournament.get('players_only', [])
+                if user.username in (tournament.get('all_participants') or []) or
+                   user.username in (tournament.get('players_only') or [])
             )
             
             # Total tournaments for this user
@@ -944,3 +1023,51 @@ class TournamentLeaderboardViewSet(viewsets.ModelViewSet):
             for tournament in recent_tournaments
         ]
         return Response(leaderboard)
+    
+    @action(detail=False, methods=['get'], url_path='user-stats/(?P<user_id>[^/.]+)')
+    def user_tournament_stats(self, request, user_id=None):
+        """
+        Retrieve tournament stats and ranks for a specific user by user_id.
+        """
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Total tournaments won by the user and rank in tournament wins leaderboard
+        total_tournaments_won = Tournament.objects.filter(
+            final_winner=user.username, status='completed'
+        ).count()
+
+        win_rank = User.objects.annotate(
+            tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__status='completed') & Q(hosted_tournaments__final_winner=user.username))
+        ).filter(tournament_wins__gt=total_tournaments_won).count() + 1
+
+        # Total tournaments participated in by checking all_participants and players_only fields
+        total_tournaments_participated = Tournament.objects.filter(
+            Q(all_participants__contains=[user.username]) |
+            Q(players_only__contains=[user.username]) |
+            Q(all_participants__contains=[user.profile.display_name]) |
+            Q(players_only__contains=[user.profile.display_name])
+        ).count()
+
+        participation_rank = User.objects.annotate(
+            total_participations=Count('hosted_tournaments', distinct=True) + Count(
+                'hosted_tournaments',
+                filter=(
+                    Q(hosted_tournaments__all_participants__contains=[user.username]) |
+                    Q(hosted_tournaments__players_only__contains=[user.username]) |
+                    Q(hosted_tournaments__all_participants__contains=[user.profile.display_name]) |
+                    Q(hosted_tournaments__players_only__contains=[user.profile.display_name])
+                ),
+                distinct=True
+            )
+        ).filter(total_participations__gt=total_tournaments_participated).count() + 1
+
+        return Response({
+            "username": user.username,
+            "total_tournaments_won": total_tournaments_won,
+            "total_tournaments_participated": total_tournaments_participated,
+            "win_rank": win_rank,
+            "participation_rank": participation_rank
+        })

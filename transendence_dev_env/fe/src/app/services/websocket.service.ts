@@ -47,20 +47,10 @@ export class WebsocketService implements OnDestroy {
       )
     ).subscribe({
       next: msg => {
-        if(!this.authService.isAuthenticated())
-        {
-          this.socket$.complete();
-          this.isConnected.next(false);
-          return;
-        }
         if (!this.isConnected.value) {
           this.isConnected.next(true);  // WebSocket is connected
         }
-        if (msg.event === 'chat_message') {
-          this.notifications$.next(msg);  // Handle chat messages
-        } else {
-          this.notifications$.next(msg);  // Handle other notifications
-        }
+        this.notifications$.next(msg);  // Handle chat messages
       },
       error: err => {
         console.error('WebSocket error:', err);

@@ -2,6 +2,24 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Injectable } from '@angular/core';
 import { catchError, forkJoin, map, Observable, throwError } from 'rxjs';
 
+export interface GameStats {
+  username: string;               // Username of the player
+  total_wins: number;             // Total games won by the player
+  total_games_played: number;     // Total games played by the player
+  avg_score: number;              // Average score of the player across games
+  win_rank: number;               // Rank of the player in terms of total wins
+  game_rank: number;              // Rank of the player in terms of total games played
+  avg_score_rank: number;         // Rank of the player in terms of average score
+}
+
+export interface TournamentStats {
+  username: string;                       // Username of the player
+  total_tournaments_won: number;          // Total tournaments won by the player
+  total_tournaments_participated: number; // Total tournaments participated in by the player
+  win_rank: number;                       // Rank of the player in terms of tournament wins
+  participation_rank: number;             // Rank of the player in terms of tournament participation
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -124,6 +142,7 @@ export class StatsAnalyticsService {
       .pipe(catchError(this.handleError));
   }
 
+  
   // TournamentLeaderboardViewSet endpoints
   getTournamentLeaderboardWins(): Observable<any> {
     return this.http.get(`${this.baseUrl}/tournament-leaderboard/leaderboard_tournament_wins/`, { headers: this.getHeaders() })
@@ -148,6 +167,16 @@ export class StatsAnalyticsService {
   getTournamentLeaderboardMostRecentTournaments(): Observable<any> {
     return this.http.get(`${this.baseUrl}/tournament-leaderboard/leaderboard_most_recent_tournaments/`, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
+  }
+
+  getTournamentLeaderboardByUser(userId: number): Observable<TournamentStats> {
+    return this.http.get<TournamentStats>(`${this.baseUrl}/tournament-leaderboard/user-stats/${userId}`, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  getGameLeaderboardByUser(userId: number): Observable<GameStats> {
+      return this.http.get<GameStats>(`${this.baseUrl}/game-leaderboard/user-stats/${userId}`, { headers: this.getHeaders() })
+        .pipe(catchError(this.handleError));
   }
 
   getAllTournamentStats(): Observable<any> {
