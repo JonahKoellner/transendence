@@ -20,7 +20,11 @@ services:
   django:
     build:
       context: ./be
-    command: daphne -b 0.0.0.0 -p 8000 be.asgi:application  # Use Daphne for ASGI support
+    command: >
+      sh -c "./wait-for-db.sh && 
+             python manage.py makemigrations accounts games && 
+             python manage.py migrate && 
+             daphne -b 0.0.0.0 -p 8000 be.asgi:application"  # Run makemigrations and migrate on start
     ports:
       - "8000:8000"
     environment:
@@ -28,14 +32,18 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
       - DB_HOST=db
-      - REDIS_HOST=redis  # Add Redis host environment variable
-      - REDIS_PORT=6379    # Add Redis port environment variable
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - DJANGO_SETTINGS_MODULE=be.settings
     depends_on:
       - db
       - redis  # Ensure Redis starts before Django
     networks:
       - webnet
+    volumes:
+      - ./be:/app  # Bind mount for the Django app code
+      - ./static:/app/static  # Static files directory
 
   db:
     image: postgres:13
@@ -44,7 +52,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     volumes:
-      - ./db-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data  # Named volume for database persistence
     ports:
       - "5432:5432"
     networks:
@@ -59,3 +67,6 @@ services:
 
 networks:
   webnet:
+
+volumes:
+  postgres_data:  # Persistent volume for PostgreSQL data

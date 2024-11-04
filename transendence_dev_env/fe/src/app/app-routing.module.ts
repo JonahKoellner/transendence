@@ -5,10 +5,7 @@ import { RegisterComponent } from './auth/register/register.component';
 import { VerifyOtpComponent } from './auth/verify-otp/verify-otp.component';
 import { AuthGuard } from './auth.guard';
 import { HomeComponent } from './home/home/home.component';
-import { SettingsComponent } from './settings/settings.component';
 import { ProfileComponent } from './profile/profile.component';
-import { UserSearchComponent } from './home/user-search/user-search.component';
-import { ChatWindowComponent } from './chat/chat-window/chat-window.component';
 import { FriendListComponent } from './home/friend-list/friend-list.component';
 import { SelectionComponent } from './games/selection/selection.component';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
@@ -17,6 +14,11 @@ import { LocalPveComponent } from './games/local-pve/local-pve.component';
 import { LocalPvpComponent } from './games/local-pvp/local-pvp.component';
 import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
 import { StartComponent } from './games/tournament/local/start/start.component';
+import { TournamentDetailsComponent } from './games/tournament/tournament-details/tournament-details.component';
+import { TournamentListComponent } from './games/tournament/tournament-list/tournament-list.component';
+import { GameLeaderboardComponent } from './games/leaderboards/game-leaderboard/game-leaderboard.component';
+import { TournamentLeaderboardComponent } from './games/leaderboards/tournament-leaderboard/tournament-leaderboard.component';
+import { TournamentStatsComponent } from './games/tournament/tournament-stats/tournament-stats.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -32,6 +34,11 @@ const routes: Routes = [
   { path: 'games/online-pvp',component: OnlinePvpComponent, canActivate: [AuthGuard]},
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/stats', component: TournamentStatsComponent, canActivate: [AuthGuard] },
+  { path: 'games/leaderboard/casual', component: GameLeaderboardComponent, canActivate: [AuthGuard] },
+  { path: 'games/leaderboard/tournament', component: TournamentLeaderboardComponent, canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: 'login' }
 ];

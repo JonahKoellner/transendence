@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 
@@ -17,6 +17,12 @@ export class FriendListComponent {
   selectedFriendId: number | null = null;
   selectedFriendUsername: string | null = null;
   currentUser: UserProfile | null = null;
+
+  chatWindowPosition = { x: 100, y: 100 };
+  isDragging = false;
+  dragOffset = { x: 0, y: 0 };
+
+
   constructor(private friendService: FriendService,private profileService: ProfileService) { }
 
   ngOnInit(): void {
@@ -168,5 +174,45 @@ export class FriendListComponent {
   openChat(friendId: number, friendUsername: string): void {
     this.selectedFriendId = friendId;
     this.selectedFriendUsername = friendUsername;
+  }
+  closeChat(): void {
+    this.selectedFriendId = null;
+    this.selectedFriendUsername = null;
+  }
+
+  onMouseDown(event: MouseEvent): void {
+    this.isDragging = true;
+    this.dragOffset = {
+      x: event.clientX - this.chatWindowPosition.x,
+      y: event.clientY - this.chatWindowPosition.y
+    };
+  }
+
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    if (this.isDragging) {
+      const chatWidth = 350; // Width of the chat window
+      const chatHeight = 400; // Estimated height of the chat window
+
+      // Get viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Calculate new position
+      let newX = event.clientX - this.dragOffset.x;
+      let newY = event.clientY - this.dragOffset.y;
+
+      // Constrain within boundaries
+      newX = Math.max(0, Math.min(newX, viewportWidth - chatWidth));
+      newY = Math.max(0, Math.min(newY, viewportHeight - chatHeight));
+
+      // Set constrained position
+      this.chatWindowPosition = { x: newX, y: newY };
+    }
+  }
+
+  @HostListener('window:mouseup')
+  onMouseUp(): void {
+    this.isDragging = false;
   }
 }

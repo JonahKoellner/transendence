@@ -100,8 +100,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Keep your original access token lifetime
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Keep your original refresh token lifetime
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # Keep your original access token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),  # Keep your original refresh token lifetime
     'ROTATE_REFRESH_TOKENS': True,  # Rotate refresh tokens upon use
     'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens after they are used
     'ALGORITHM': 'HS256',
@@ -146,11 +146,14 @@ CHANNEL_LAYERS = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",           # Use PostgreSQL
+        "NAME": os.getenv("POSTGRES_DB", "mydb"),            # Database name
+        "USER": os.getenv("POSTGRES_USER", "user"),          # Database user
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "pass"),  # Database password
+        "HOST": os.getenv("DB_HOST", "db"),                  # Host for PostgreSQL
+        "PORT": os.getenv("DB_PORT", "5432"),                # PostgreSQL port
     }
 }
-
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',

@@ -1,15 +1,23 @@
-<div class="chat-window">
-  <div class="messages">
-    <div *ngFor="let message of messages" class="message">
-      <span [ngClass]="{'own-message': message.sender.id === friendId}">
-        <strong>{{ message.sender.username }}: </strong>{{ message.message }}
-        <span class="timestamp">{{ message.timestamp | date:'shortTime' }}</span>
-      </span>
+<div *ngIf="isLoading" class="loading-container">
+  <div class="spinner"></div>
+</div>
+
+<div *ngIf="!isLoading" class="chat-window">
+  <!-- Animated messages container -->
+  <div class="messages animated-expand" #messagesContainer>
+    <div *ngFor="let message of messages" 
+         class="message" 
+         [ngClass]="{'own-message': message.sender.id !== friendId}">
+      <div class="message-bubble">
+        <span class="sender">{{ message.sender.id !== friendId ? 'You' : message.sender.username }}</span>
+        <span class="message-content">{{ message.message || message.data.message }}</span>
+        <span class="timestamp">{{ message.timestamp | date: 'shortTime' }}</span>
+      </div>
     </div>
   </div>
 
   <div class="send-message">
-    <input [(ngModel)]="newMessage" placeholder="Type a message..." />
+    <textarea [(ngModel)]="newMessage" (keydown)="onEnterPress($event)" placeholder="Type a message..."></textarea>
     <button (click)="sendMessage()" [disabled]="newMessage.trim() === ''">Send</button>
   </div>
 </div>

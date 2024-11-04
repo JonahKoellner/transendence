@@ -40,7 +40,8 @@ export class WebsocketService implements OnDestroy {
     this.socket$.pipe(
       retryWhen(errors =>
         errors.pipe(
-          tap(err => console.error('WebSocket error, retrying...', err)),
+          tap(err => {
+            console.error('WebSocket error, retrying...', err)}),
           delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
         )
       )
@@ -49,11 +50,7 @@ export class WebsocketService implements OnDestroy {
         if (!this.isConnected.value) {
           this.isConnected.next(true);  // WebSocket is connected
         }
-        if (msg.event === 'chat_message') {
-          this.notifications$.next(msg);  // Handle chat messages
-        } else {
-          this.notifications$.next(msg);  // Handle other notifications
-        }
+        this.notifications$.next(msg);  // Handle chat messages
       },
       error: err => {
         console.error('WebSocket error:', err);

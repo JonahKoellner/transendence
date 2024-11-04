@@ -1,0 +1,108 @@
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  max-width: 800px;
+  margin: auto;
+}
+
+.game-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #4CAF50;
+  text-align: center;
+}
+
+// Card styling for dark theme
+.card {
+  background-color: #2e2e2e; // Dark background
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #4CAF50; // Green border for contrast
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  color: #e0e0e0; // Light text color
+}
+
+.settings-header, .game-header, .result-header, .logs-header {
+  text-align: center;
+  color: #4CAF50; // Green accent color
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.settings-body, .game-details, .result-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.setting-item, .info-section, .timers, .scores, .summary-item, .move-item, .log-item, .prev-game-item, .player-name {
+  background-color: #333; // Darker gray for item backgrounds
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #4CAF50; // Green border
+  color: #e0e0e0; // Light text color
+}
+
+.summary-list, .moves-log, .log-list, .previous-games {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+// Button styling for dark theme
+.start-game-btn, .play-again-btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.3s;
+
+  &:hover {
+    background-color: #45A049;
+    transform: translateY(-2px);
+  }
+}
+
+// Flexbox adjustments for items
+.player-name, .timers, .scores {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-item, .move-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.move-time {
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+// Input styling for dark theme
+input[type="number"], input[type="text"] {
+  background-color: #333;
+  border: 1px solid #4CAF50;
+  color: #e0e0e0;
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.3s;
+
+  &::placeholder {
+    color: #bbb;
+  }
+
+  &:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 4px rgba(76, 175, 80, 0.3);
+  }
+}

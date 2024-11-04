@@ -3,18 +3,21 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ProfileService, UserProfile } from '../profile.service';
 import { Game, GameService } from '../games/game.service';
+import { Tournament } from '../games/tournament/local/start/start.component';
+import { GameStats, StatsAnalyticsService, TournamentStats } from '../services/stats-analytics.service';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
+  styleUrls: ['./profile.component.scss'],
 })
 export class ProfileComponent implements OnInit {
   profileForm!: FormGroup;
   avatarPreview!: string | ArrayBuffer;
   isLoading = true;
   userProfile!: UserProfile;
-  gameHistory: Game[] = [];
-  constructor(private profileService: ProfileService, private fb: FormBuilder, private gameService: GameService) {}
+
+  constructor(private profileService: ProfileService, private fb: FormBuilder, private gameService: GameService, private statsAnalyticsService: StatsAnalyticsService) {}
 
   ngOnInit() {
     this.profileForm = this.fb.group({
@@ -26,32 +29,31 @@ export class ProfileComponent implements OnInit {
   }
 
   loadProfile() {
+    this.isLoading = true;
+  
     this.profileService.getProfile().subscribe(
       (data) => {
         this.userProfile = data;
   
-        // Set the display_name in the form
-        this.profileForm.patchValue({
-          display_name: data.display_name,
-        });
+        // Set the display_name in the form and update avatar
+        this.profileForm.patchValue({ display_name: data.display_name });
+        this.avatarPreview = data.avatar ? data.avatar : 'assets/default_avatar.png';
   
-        const avatarUrl = data.avatar
-          ?  data.avatar
-          : 'assets/default_avatar.png';
-  
-        this.avatarPreview = avatarUrl;
-        this.loadGameHistory(data.id);
-  
-        // Reset form to pristine state to avoid accidental submissions
-        this.profileForm.markAsPristine();
+        // Mark form as pristine to avoid accidental submissions
+        this.profileForm.markAsPristine()
+        this.isLoading = false;
+
       },
       (error) => {
-        console.error(error);
+        console.error('Error loading profile:', error);
         this.isLoading = false;
       }
     );
   }
+  
 
+
+  
   onFileChange(event: { target: any; }) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -69,18 +71,7 @@ export class ProfileComponent implements OnInit {
       reader.readAsDataURL(file);
     }
   }
-  loadGameHistory(userId: number) {
-    this.gameService.getGamesByUser(userId).subscribe(
-      (games) => {
-        this.gameHistory = games;
-        this.isLoading = false;
-      },
-      (error) => {
-        this.isLoading = false;
-        console.error('Error loading game history:', error);
-      }
-    );
-  }
+
   onSubmit() {
     this.isLoading = true;
     const formData = new FormData();
@@ -102,27 +93,7 @@ export class ProfileComponent implements OnInit {
       }
     );
   }
-  getGameStatus(game: any): string {
-    const currentTime = new Date();
-    const startTime = new Date(game.start_time);
 
-    // Check if game is completed
-    if (game.is_completed) {
-      return 'Completed';
-    }
-
-    const TEN_MINUTES = 10 * 60 * 1000; // milliseconds in ten minutes
-    if (!game.end_time && (currentTime.getTime() - startTime.getTime() > TEN_MINUTES)) {
-      return 'Canceled';
-    }
-
-    // If the game has started but not completed, it's still "Running"
-    if (game.start_time && !game.is_completed) {
-      return 'Running';
-    }
-
-    return 'Unknown';
-  }
   getXpProgress(): number {
     if (!this.userProfile) return 0;
     return Math.min((this.userProfile.xp / this.userProfile.xp_for_next_level) * 100, 100);

@@ -1,99 +1,63 @@
-<div class="d-flex justify-content-center align-items-center" *ngIf="isLoading">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
+<div class="profile-page">
+  <!-- Loading Spinner -->
+  <div class="loading" *ngIf="isLoading">
+      <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+      </div>
   </div>
-</div>
-<div *ngIf="!isLoading && userProfile" class="container mt-4 text-light">
-  <!-- Profile Card -->
-  <div class="card bg-dark shadow-sm mb-4 border-secondary">
-    <div class="card-header bg-dark border-secondary">
-      <h2 class="h5 mb-0 text-light">Your Profile</h2>
-    </div>
-    <a class="btn btn-link btn-sm" [routerLink]="['/profile/user-details/', userProfile.id]">Account Page</a>
-    <div class="card-body">
-      <p><strong>ID:</strong> {{ userProfile.id }}</p>
-      <p><strong>Username:</strong> {{ userProfile.username }}</p>
-      <p><strong>Email:</strong> {{ userProfile.email }}</p>
-            <!-- Level, XP, and Progress -->
-            <div class="mt-4">
-              <h6 class="text-light">Level {{ userProfile.level }}</h6>
+
+  <div *ngIf="!isLoading && userProfile">
+      <!-- Profile Card -->
+      <div class="profile-card">
+          <h2>Your Profile</h2>
+          <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
+              Account Page
+          </a>
+          <div class="profile-info">
+              <p><strong>ID:</strong> {{ userProfile.id }}</p>
+              <p><strong>Username:</strong> {{ userProfile.username }}</p>
+              <p><strong>Email:</strong> {{ userProfile.email }}</p>
+          </div>
+
+          <!-- Level, XP, and Progress Bar -->
+          <div class="level-info">
+              <h3>Level {{ userProfile.level }}</h3>
               <p>XP: {{ userProfile.xp }} / {{ userProfile.xp_for_next_level }}</p>
-              <div class="progress" style="height: 20px;">
-                <div class="progress-bar" role="progressbar" 
-                     [style.width.%]="getXpProgress()" 
-                     [attr.aria-valuenow]="getXpProgress()" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100">
-                  {{ getXpProgress() | number: '1.0-0' }}%
-                </div>
+              <div class="progress">
+                  <div class="progress-bar" 
+                       role="progressbar" 
+                       [style.width.%]="getXpProgress()" 
+                       [attr.aria-valuenow]="getXpProgress()" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                      {{ getXpProgress() | number: '1.0-0' }}%
+                  </div>
               </div>
-            </div>
-      <!-- Profile Form -->
-      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="form-dark">
-        <div class="form-group">
-          <label for="display_name"><strong>Display Name:</strong></label>
-          <input id="display_name" formControlName="display_name" type="text" class="form-control bg-secondary text-light border-0">
-        </div>
+          </div>
 
-        <div class="form-group">
-          <label for="avatar"><strong>Avatar:</strong></label><br />
-          <img
-          [src]="avatarPreview || userProfile.avatar"
-          alt="Avatar"
-          class="rounded-circle mb-3 border border-light"
-          width="150"
-          height="150"
-          onerror="this.onerror=null; this.src='assets/default_avatar.png';"
-        />
-          <br />
-          <input id="avatar" type="file" (change)="onFileChange($event)" class="form-control-file text-light">
-        </div>
+          <!-- Profile Update Form -->
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+              <label>
+                  Display Name:
+                  <input type="text" formControlName="display_name" class="form-input" />
+              </label>
 
-        <button type="submit" class="btn btn-primary mt-2">Update Profile</button>
-      </form>
-    </div>
+              <div class="avatar-section">
+                  <label>Avatar:</label>
+                  <img [src]="avatarPreview || userProfile.avatar" alt="Avatar" class="avatar-preview" />
+                  <input type="file" (change)="onFileChange($event)" />
+              </div>
+
+              <button type="submit" class="update-btn">Update Profile</button>
+          </form>
+      </div>
+
+      <!-- Include stats component -->
+      <app-stats></app-stats>
   </div>
 
-  <app-settings></app-settings>
-
-  <!-- Game History Section -->
-  <div class="card bg-dark shadow-sm border-secondary mt-4">
-    <div class="card-header bg-dark border-secondary">
-      <h3 class="h6 mb-0 text-light">Your Game History</h3>
-    </div>
-    <ul *ngIf="gameHistory.length > 0; else noHistory" class="list-group list-group-flush">
-      <li *ngFor="let game of gameHistory" class="list-group-item bg-dark text-light border-secondary">
-        <div class="game-summary d-flex justify-content-between align-items-center">
-          <div class="players">
-            <strong>{{ game.player1.username }}</strong> 
-            <span class="vs">VS</span> 
-            <strong>{{ game.player2.username || 'AI' }}</strong>
-          </div>
-          <div class="score text-warning">
-            {{ game.score_player1 }} : {{ game.score_player2 }}
-          </div>
-        </div>
-        <div class="additional-info mt-1">
-          <span class="text-muted">Mode:</span> {{ game.game_mode }}
-          <span class="text-muted">| Winner:</span> <strong>{{ game.winner?.username || 'AI' }}</strong>
-        </div>
-        <a [routerLink]="['/games/details/', game.id]" class="text-info small">View Details</a>
-        <span [ngClass]="{
-          'status-running': getGameStatus(game) === 'Running',
-          'status-canceled': getGameStatus(game) === 'Canceled',
-          'status-completed': getGameStatus(game) === 'Completed'
-        }">
-          {{ getGameStatus(game) }}
-        </span>
-      </li>
-    </ul>
-    <ng-template #noHistory>
-      <p class="alert alert-info text-center mb-0">No game history available.</p>
-    </ng-template>
+  <!-- Error Message -->
+  <div *ngIf="!isLoading && !userProfile" class="alert alert-danger">
+      <p>No profile data available.</p>
   </div>
-  <app-stats></app-stats>
-</div>
-
-<div *ngIf="!isLoading && !userProfile" class="alert alert-danger text-center">
-  <p>No profile data available.</p>
 </div>

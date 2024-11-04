@@ -1,79 +1,95 @@
 <div class="game-container">
-    <h1>Pong Local PvP Game</h1>
-  
-    <!-- Game Settings and Player Names -->
-    <div *ngIf="!gameInProgress && !currentGame" class="game-settings">
+  <h1 class="game-title">Pong Local PvP Game</h1>
+
+  <!-- Game Settings and Player Names -->
+  <div *ngIf="!gameInProgress && !currentGame" class="game-settings card">
+    <div class="settings-header">
       <h3>Game Settings</h3>
-      <label>
-        Max Rounds:
-        <input type="number" [(ngModel)]="settings.maxRounds" min="1">
-      </label>
-      <label>
-        Round Score Limit:
-        <input type="number" [(ngModel)]="settings.roundScoreLimit" min="1">
-      </label>
-      <h3>Player Names</h3>
-      <label>
-        Player 1 Name:
-        <input type="text" [(ngModel)]="player1Name" placeholder="Enter Player 1 Name">
-      </label>
-      <label>
-        Player 2 Name:
-        <input type="text" [(ngModel)]="player2Name" placeholder="Enter Player 2 Name">
-      </label>
-      <button (click)="startNewGame()">Start New Game</button>
     </div>
-
-    <!-- Game progress and controls -->
-    <div *ngIf="gameInProgress && currentGame" class="game-info">
-      <p>Game Mode: {{ currentGame.game_mode }}</p>
-      <p>{{ player1Name }} vs {{ player2Name }}</p>
-      <p>Game Timer: {{ gameElapsedTime }}</p>
-      <p>Round Timer: {{ roundElapsedTime }}</p>
-      <p>Current Round: {{ currentGame.rounds.length }} of {{ settings.maxRounds }}</p>
-      <p>Score: {{ player1Name }} ({{ currentGame.score_player1 }}/{{ settings.maxRounds }}) - {{ player2Name }} ({{ currentGame.score_player2 }}/{{ settings.maxRounds }})</p>
-
-      <app-game-canvas-pvp
-      [gameSettings]="settings"
-      (onScore)='this.updateScore($event)'
-      ></app-game-canvas-pvp>
-
-    </div>
-
-    <!-- Game results after completion -->
-    <div *ngIf="!gameInProgress && currentGame && currentGame.is_completed" class="game-result">
-      <h2>Game Over</h2>
-      <p>Winner: {{ currentGame.winner }}</p>
-      <p>Game Duration: {{ currentGame.duration | number:'1.2-2' }} seconds</p>
-  
-      <h3>Rounds</h3>
-      <ul>
-        <li *ngFor="let round of currentGame.rounds">
-          Round {{ round.round_number }} - Winner: {{ round.winner || 'In Progress' }} - 
-          Duration: {{ calculateRoundDuration(round) }}
-        </li>
-      </ul>
-  
-      <h3>Moves Log</h3>
-      <ul>
-        <li *ngFor="let move of currentGame.moves_log">
-          {{ move.time }} - {{ move.player }}: {{ move.action }}
-        </li>
-      </ul>
-  
-      <button (click)="startNewGame()">Play Again</button>
-    </div>
-  
-    <!-- Logs for current game and any previous games -->
-    <div class="logs">
-      <h3>Logs</h3>
-      <ul>
-        <li *ngFor="let log of logs">{{ log }}</li>
-      </ul>
-      <h3>Previous Games</h3>
-      <ul>
-        <li *ngFor="let prevLog of previousGames">{{ prevLog }}</li>
-      </ul>
+    <div class="settings-body">
+      <div class="setting-item">
+        <label>Max Rounds:</label>
+        <input type="number" [(ngModel)]="settings.maxRounds" min="1" class="form-control" placeholder="Enter max rounds">
+      </div>
+      <div class="setting-item">
+        <label>Round Score Limit:</label>
+        <input type="number" [(ngModel)]="settings.roundScoreLimit" min="1" class="form-control" placeholder="Enter score limit">
+      </div>
+      <div class="player-names">
+        <h3>Player Names</h3>
+        <div class="player-name">
+          <label>Player 1 Name:</label>
+          <input type="text" [(ngModel)]="player1Name" class="form-control" placeholder="Enter Player 1 Name">
+        </div>
+        <div class="player-name">
+          <label>Player 2 Name:</label>
+          <input type="text" [(ngModel)]="player2Name" class="form-control" placeholder="Enter Player 2 Name">
+        </div>
+      </div>
+      <button class="start-game-btn" (click)="startNewGame()">Start New Game</button>
     </div>
   </div>
-  
+
+  <!-- Game Progress and Controls -->
+  <div *ngIf="gameInProgress && currentGame" class="game-info card">
+    <div class="game-header">
+      <h3>Game in Progress</h3>
+    </div>
+    <div class="game-details">
+      <div class="info-section">
+        <p><strong>Game Mode:</strong> {{ currentGame.game_mode }}</p>
+        <p><strong>{{ player1Name }} vs {{ player2Name }}</strong></p>
+      </div>
+      <div class="timers">
+        <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
+        <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
+      </div>
+      <div class="scores">
+        <p><strong>Current Round:</strong> {{ currentGame.rounds.length }} of {{ settings.maxRounds }}</p>
+        <p><strong>Score:</strong> {{ player1Name }} ({{ currentGame.score_player1 }}/{{ settings.maxRounds }}) - {{ player2Name }} ({{ currentGame.score_player2 }}/{{ settings.maxRounds }})</p>
+      </div>
+      <app-game-canvas-pvp [gameSettings]="settings" (onScore)="updateScore($event)"></app-game-canvas-pvp>
+    </div>
+  </div>
+
+  <!-- Game Results -->
+  <div *ngIf="!gameInProgress && currentGame && currentGame.is_completed" class="game-result card">
+    <div class="result-header">
+      <h3>Game Over</h3>
+    </div>
+    <div class="result-body">
+      <p><strong>Winner:</strong> {{ currentGame.winner }}</p>
+      <p><strong>Game Duration:</strong> {{ currentGame.duration | number:'1.2-2' }} seconds</p>
+
+      <h4>Rounds Summary</h4>
+      <ul class="summary-list">
+        <li *ngFor="let round of currentGame.rounds" class="summary-item">
+          <p>Round {{ round.round_number }} - Winner: {{ round.winner || 'In Progress' }} - Duration: {{ calculateRoundDuration(round) }}</p>
+        </li>
+      </ul>
+
+      <h4>Moves Log</h4>
+      <ul class="moves-log">
+        <li *ngFor="let move of currentGame.moves_log" class="move-item">
+          <span class="move-time">{{ move.time }}</span> - {{ move.player }}: {{ move.action }}
+        </li>
+      </ul>
+
+      <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Game Logs -->
+  <div class="logs card">
+    <div class="logs-header">
+      <h4>Logs</h4>
+    </div>
+    <ul class="log-list">
+      <li *ngFor="let log of logs" class="log-item">{{ log }}</li>
+    </ul>
+    <h4>Previous Games</h4>
+    <ul class="previous-games">
+      <li *ngFor="let prevLog of previousGames" class="prev-game-item">{{ prevLog }}</li>
+    </ul>
+  </div>
+</div>

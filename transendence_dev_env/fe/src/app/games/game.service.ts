@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
+import { Tournament } from './tournament/local/start/start.component';
 
 export interface Player {
   id: number | null;
@@ -57,8 +58,8 @@ export interface UserStats {
   providedIn: 'root'
 })
 export class GameService {
-  private apiUrl = 'http://localhost:8000/games/';
-
+  private apiUrl = 'http://localhost:8000/games/games/';
+  private tournamentApiUrl = 'http://localhost:8000/games/tournaments/';
   constructor(private http: HttpClient) {}
 
   // Headers with authorization token
@@ -136,4 +137,70 @@ export class GameService {
       })
     );
   }
+  createTournament(tournamentData: Tournament): Observable<Tournament> {
+    return this.http.post<Tournament>(this.tournamentApiUrl, tournamentData, { headers: this.getHeaders() }).pipe(
+      catchError((error) => {
+        console.error('Error creating tournament:', error);
+        return of({} as Tournament);
+      })
+    );
+  }
+    // Get all tournaments
+    getTournaments(): Observable<Tournament[]> {
+      return this.http.get<Tournament[]>(this.tournamentApiUrl, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error('Error fetching tournaments:', error);
+          return of([]);
+        })
+      );
+    }
+
+    getTournamentsByUser(userId: number): Observable<Tournament[]> {
+      return this.http.get<Tournament[]>(`${this.tournamentApiUrl}by-user/${userId}/`, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error fetching games for user ${userId}:`, error);
+          return of([]);
+        })
+      );
+    }
+  
+    // Get a single tournament by ID
+    getTournamentById(tournamentId: number): Observable<Tournament> {
+      return this.http.get<Tournament>(`${this.tournamentApiUrl}${tournamentId}/`, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error fetching tournament ${tournamentId}:`, error);
+          return of({} as Tournament);
+        })
+      );
+    }
+  
+    // Update a tournament by ID
+    updateTournament(tournamentId: number, tournamentData: Partial<Tournament>): Observable<Tournament> {
+      return this.http.patch<Tournament>(`${this.tournamentApiUrl}${tournamentId}/`, tournamentData, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error updating tournament ${tournamentId}:`, error);
+          return of({} as Tournament);
+        })
+      );
+    }
+  
+    // Delete a tournament by ID
+    deleteTournament(tournamentId: number): Observable<void> {
+      return this.http.delete<void>(`${this.tournamentApiUrl}${tournamentId}/`, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error deleting tournament ${tournamentId}:`, error);
+          return of();
+        })
+      );
+    }
+  
+    // Get tournaments by participant
+    getTournamentsByParticipant(participantName: string): Observable<Tournament[]> {
+      return this.http.get<Tournament[]>(`${this.tournamentApiUrl}by-participant/?participant=${participantName}`, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error fetching tournaments for participant ${participantName}:`, error);
+          return of([]);
+        })
+      );
+    }
 }

@@ -1,120 +1,182 @@
-/* Friends list container styles */
+.friends-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+
+  h2 {
+    color: #4CAF50;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+
+  .no-items {
+    color: #adb5bd;
+    margin: 1rem 0;
+  }
+
+  .nav-tabs .nav-link {
+    color: #4CAF50;
+    font-weight: bold;
+    border: none;
+    transition: color 0.3s;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: #4CAF50;
+  }
+}
+
 .friends-list {
-    padding: 20px;
-    max-width: 700px;
-    margin: auto;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 0;
+}
+
+.friend-card {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    background-color: #2e2e2e;
   }
-  
-  /* Heading and subtitle */
-  .friends-list h2 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    color: #343a40;
-    font-weight: 600;
-  }
-  
-  .friends-list p {
-    color: #6c757d;
-  }
-  
-  /* Friends list item styles */
-  .friend-item {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid #e9ecef;
-    transition: background-color 0.3s ease;
-  }
-  
-  .friend-item:hover {
-    background-color: #f1f3f5;
-  }
-  
-  /* Friend avatar styling */
-  .friend-item img {
+
+  .avatar {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    object-fit: cover;
-    margin-right: 15px;
-    border: 2px solid #dee2e6;
+    margin-right: 1rem;
   }
-  
-  /* Friend details */
-  .friend-details {
+
+  .friend-info {
     flex-grow: 1;
+    text-align: left;
+
+    h5 {
+      color: #4CAF50;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    small {
+      color: #adb5bd;
+    }
   }
-  
-  .friend-details h5 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #495057;
-  }
-  
-  .friend-details small {
-    color: #adb5bd;
-    font-size: 0.9rem;
-  }
-  
-  /* Button group styling */
-  .friend-actions {
+
+  .actions {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 0.5rem;
   }
-  
-  .friend-actions button,
-  .friend-actions a {
-    font-size: 0.875rem;
-    padding: 6px 12px;
-    border-radius: 5px;
-    text-decoration: none;
-  }
-  
-  .friend-actions .btn-remove {
-    background-color: #dc3545;
+
+  .btn-remove,
+  .btn-block,
+  .btn-chat,
+  .btn-profile,
+  .btn-accept,
+  .btn-reject,
+  .btn-unblock {
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: background-color 0.3s, transform 0.3s;
     color: #fff;
   }
-  
-  .friend-actions .btn-remove:hover {
-    background-color: #c82333;
+
+  .btn-remove {
+    background-color: #ff6b6b;
   }
-  
-  .friend-actions .btn-block {
-    background-color: #6c757d;
-    color: #fff;
+
+  .btn-block {
+    background-color: #ff5722;
   }
-  
-  .friend-actions .btn-block:hover {
-    background-color: #5a6268;
+
+  .btn-chat {
+    background-color: #4CAF50;
   }
-  
-  .friend-actions .btn-chat {
-    background-color: #007bff;
-    color: #fff;
-  }
-  
-  .friend-actions .btn-chat:hover {
-    background-color: #0056b3;
-  }
-  
-  .friend-actions .btn-profile {
-    color: #007bff;
-    padding: 0;
-    font-size: 0.875rem;
+
+  .btn-profile {
+    color: #4CAF50;
+    background: none;
+    border: none;
     text-decoration: underline;
   }
-  
-  .friend-actions .btn-profile:hover {
-    color: #0056b3;
+
+  .btn-accept {
+    background-color: #4CAF50;
   }
-  
-  /* Error message */
-  .error {
-    color: #dc3545;
-    margin-top: 15px;
+
+  .btn-reject {
+    background-color: #ff6b6b;
   }
-  
+
+  .btn-unblock {
+    background-color: #4CAF50;
+  }
+
+  .btn-remove:hover,
+  .btn-block:hover,
+  .btn-chat:hover,
+  .btn-accept:hover,
+  .btn-reject:hover,
+  .btn-unblock:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.chat-popup {
+  position: fixed;
+  top: 100px; // Default position to make it start within view
+  left: 100px;
+  width: 600px;
+  max-width: 90%;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  border: 1px solid #4CAF50;
+  z-index: 1000; // Ensure it overlays other elements
+  cursor: move;
+  transition: transform 0.3s ease;
+  padding-bottom: 1rem; // Space for messages and input
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #4CAF50;
+  color: #ffffff;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  cursor: move;
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+      color: #ff6b6b;
+    }
+  }
+
+  span {
+    font-weight: bold;
+    font-size: 1rem;
+  }
+}

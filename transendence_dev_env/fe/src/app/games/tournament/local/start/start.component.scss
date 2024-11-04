@@ -3,68 +3,89 @@
     flex-direction: column;
     align-items: center;
     gap: 2rem;
+    color: #e0e0e0;
 
     h2 {
-        color: #333;
+        color: #4CAF50;
         font-weight: bold;
+        font-size: 2rem;
     }
+
+    .start-btn {
+        align-self: center;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 20px;
+        background-color: #4CAF50;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #45A049;
+        }
+    }
+
     .tournament-name {
-        background: #fff;
+        background: #1b1b1b;
         padding: 1.5rem;
         border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        border: 1px solid #444;
         max-width: 400px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-    
+
         label {
             font-weight: bold;
             color: #4CAF50;
             font-size: 1rem;
         }
-    
+
         span {
-            color: #555;
+            color: #adb5bd;
             font-size: 1.1rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
             display: block;
         }
-    
+
         input[type="text"] {
             padding: 0.75rem;
-            border: 1px solid #ddd;
+            border: 1px solid #4CAF50;
             border-radius: 4px;
             font-size: 1rem;
             width: 100%;
+            background-color: #333;
+            color: #e0e0e0;
             outline: none;
             transition: border-color 0.3s;
-    
+
             &:focus {
                 border-color: #4CAF50;
                 box-shadow: 0 0 4px rgba(76, 175, 80, 0.3);
             }
-    
+
             &::placeholder {
-                color: #bbb;
+                color: #777;
             }
         }
     }
-    
 
     .tournament-setup {
         display: flex;
         flex-direction: column;
         gap: 1rem;
         width: 100%;
-        max-width: 600px;
+        padding: 0 10%;
 
         label {
             font-weight: bold;
-            color: #333;
+            color: #adb5bd;
         }
 
         .tournament-type-selection, .player-count-selection {
@@ -73,7 +94,7 @@
 
             h3 {
                 margin-bottom: 0.5rem;
-                color: #333;
+                color: #4CAF50;
                 font-size: 1.1rem;
             }
 
@@ -85,20 +106,20 @@
                     padding: 0.5rem 1rem;
                     border: none;
                     border-radius: 20px;
-                    background-color: #e0e0e0;
-                    color: #333;
+                    background-color: #333;
+                    color: #e0e0e0;
                     cursor: pointer;
                     transition: background-color 0.3s, color 0.3s;
                     font-weight: bold;
 
                     &:hover {
                         background-color: #4CAF50;
-                        color: white;
+                        color: #ffffff;
                     }
 
                     &.selected {
                         background-color: #4CAF50;
-                        color: white;
+                        color: #ffffff;
                     }
                 }
             }
@@ -106,11 +127,10 @@
 
         .player-list {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 1.5rem;
             align-items: center;
-            gap: 1rem;
             width: 100%;
-            max-width: 800px;
 
             h3 {
                 font-size: 1.5rem;
@@ -118,17 +138,17 @@
                 color: #4CAF50;
                 margin-bottom: 1rem;
             }
+
             .player-slot {
                 background: #1b1b1b;
                 padding: 1rem;
                 border-radius: 8px;
-                border: 1px solid #333;
+                border: 1px solid #444;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                width: 100%;
+                width: 23%;
                 max-width: 250px;
-        
 
                 label {
                     font-weight: bold;
@@ -148,19 +168,19 @@
                     label {
                         padding: 0.3rem 1rem;
                         border-radius: 20px;
-                        border: 1px solid #ddd;
+                        border: 1px solid #4CAF50;
                         cursor: pointer;
                         transition: background-color 0.3s, color 0.3s;
-                        color: #555;
+                        color: #adb5bd;
                         font-weight: bold;
 
                         &.selected {
                             background-color: #4CAF50;
-                            color: white;
+                            color: #ffffff;
                         }
 
                         &:hover {
-                            background-color: #f0f0f0;
+                            background-color: #3a3a3a;
                         }
                     }
 
@@ -172,28 +192,13 @@
 
                 input[type="text"] {
                     padding: 0.5rem;
-                    border: 1px solid #ddd;
+                    border: 1px solid #4CAF50;
                     border-radius: 4px;
                     font-size: 0.9rem;
                     width: 100%;
+                    background-color: #333;
+                    color: #e0e0e0;
                 }
-            }
-        }
-
-        .start-btn {
-            align-self: center;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 20px;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-
-            &:hover {
-                background-color: #45A049;
             }
         }
     }
@@ -209,14 +214,15 @@
         .bracket-header {
             text-align: center;
             font-size: 1.2rem;
+
             h3 {
-                color: #333;
+                color: #4CAF50;
                 font-weight: bold;
             }
         }
 
         .winner-display {
-            background: #f4f4f4;
+            background: #1b1b1b;
             padding: 1rem;
             border: 2px solid #4CAF50;
             border-radius: 8px;
@@ -231,14 +237,13 @@
             }
         }
 
-        .single-elimination-bracket,
-        .round-robin-bracket {
+        .single-elimination-bracket, .round-robin-bracket {
             width: 100%;
             max-width: 700px;
-            background-color: #f9f9f9;
+            background-color: #1e1e1e;
             padding: 1rem;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 
             .round {
                 display: flex;
@@ -247,8 +252,8 @@
                 padding: 1rem;
                 margin-bottom: 1rem;
                 border-radius: 8px;
-                border: 1px solid #ddd;
-                background-color: #fff;
+                border: 1px solid #4CAF50;
+                background-color: #1f1f1f;
                 width: 100%;
 
                 h4 {
@@ -263,8 +268,8 @@
                     justify-content: space-between;
                     width: 100%;
                     padding: 0.75rem;
-                    background: #ffffff;
-                    border: 1px solid #ddd;
+                    background: #202020;
+                    border: 1px solid #4CAF50;
                     border-radius: 5px;
                     position: relative;
                     margin-bottom: 0.5rem;
@@ -275,12 +280,12 @@
                         padding: 0 1rem;
                         text-align: center;
                         font-weight: bold;
-                        color: #333;
+                        color: #e0e0e0;
                     }
 
                     .vs {
                         font-size: 1rem;
-                        color: #777;
+                        color: #adb5bd;
                         font-weight: bold;
                     }
 
@@ -292,7 +297,7 @@
 
                         .tie-note {
                             font-style: italic;
-                            color: #777;
+                            color: #adb5bd;
                             font-size: 0.8rem;
                         }
                     }
@@ -301,16 +306,6 @@
         }
 
         .round-robin-bracket {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-
-            h4 {
-                color: #4CAF50;
-                font-weight: bold;
-                margin-bottom: 1rem;
-            }
-
             .match-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -319,8 +314,8 @@
             }
 
             .match {
-                background: #fff;
-                border: 1px solid #ddd;
+                background: #1b1b1b;
+                border: 1px solid #4CAF50;
                 border-radius: 8px;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 padding: 0.75rem;
@@ -333,12 +328,12 @@
                 .player {
                     font-size: 0.9rem;
                     font-weight: bold;
-                    color: #333;
+                    color: #e0e0e0;
                     text-align: center;
                 }
 
                 .vs {
-                    color: #777;
+                    color: #adb5bd;
                     font-size: 0.85rem;
                     font-weight: bold;
                     margin: 0.25rem 0;
@@ -354,10 +349,174 @@
                     .tie-note {
                         font-size: 0.75rem;
                         font-style: italic;
-                        color: #777;
+                        color: #adb5bd;
                     }
                 }
             }
         }
     }
 }
+
+.help {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+
+    h4 {
+        width: 100%;
+        color: #4CAF50;
+    }
+
+    .match {
+        width: 32%;
+    }
+}
+
+// General Modal Styles
+::ng-deep .modal-content {
+    background-color: #2e2e2e;
+    color: #e0e0e0;
+    border-radius: 8px;
+    border: 1px solid #4CAF50;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  
+    .modal-header {
+      background-color: #333;
+      color: #4CAF50;
+      border-bottom: 1px solid #4CAF50;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+  
+      h4 {
+        font-weight: bold;
+      }
+  
+      button.close {
+        display: none; // Hide close button
+      }
+    }
+  
+    .modal-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+  
+      p {
+        font-size: 1.1rem;
+        color: #bdbdbd;
+      }
+  
+      .ready-check {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1rem;
+  
+        .player-ready {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem;
+          border-radius: 8px;
+          width: 100%;
+          max-width: 200px;
+          transition: background-color 0.3s, border-color 0.3s;
+          font-weight: bold;
+  
+          // Define fixed height and width to prevent size change on status switch
+          height: 3rem;
+          border: 1px solid #4CAF50;
+  
+          &.ready {
+            background-color: #4CAF50;
+            border-color: #4CAF50;
+  
+            .status {
+              color: #ffffff;
+            }
+  
+            .ready-indicator {
+              background-color: #ffffff;
+            }
+          }
+  
+          // Style for Not Ready state
+          &:not(.ready) {
+            background-color: #444;
+            border-color: #FF5722;
+  
+            .status {
+              color: #FF5722;
+            }
+  
+            .ready-indicator {
+              background-color: #FF5722;
+            }
+          }
+  
+          label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #e0e0e0;
+  
+            .status {
+              font-size: 0.9rem;
+              color: inherit; // Use the color defined by .ready or .not(.ready)
+            }
+  
+            input[type="checkbox"] {
+              accent-color: #4CAF50;
+              transform: scale(1.2);
+            }
+          }
+  
+          .ready-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+          }
+        }
+      }
+    }
+  
+    .modal-footer {
+      background-color: #333;
+      border-top: 1px solid #4CAF50;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      justify-content: center;
+  
+      .btn-primary {
+        background-color: #4CAF50;
+        border: none;
+        font-weight: bold;
+        color: #ffffff;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        transition: background-color 0.3s, transform 0.3s;
+  
+        &:hover {
+          background-color: #45A049;
+          transform: translateY(-2px);
+        }
+  
+        &:disabled {
+          background-color: #6a6a6a;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+  

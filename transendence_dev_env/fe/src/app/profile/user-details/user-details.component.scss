@@ -1,45 +1,214 @@
-/* Dark Theme for Profile Page */
-.user-details-container {
-  background-color: #121212;
-}
-
-/* Card Styling */
-.card {
-  border: 1px solid #343a40;
-  border-radius: 8px;
-}
-
-.card-header {
-  background-color: #1e1e1e;
+.user-details {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
   color: #e0e0e0;
-  border-bottom: 1px solid #343a40;
-}
 
-/* Badge Styling */
-.badge-success {
-  background-color: #28a745;
-}
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
 
-.badge-secondary {
-  background-color: #6c757d;
-}
+  .profile-card {
+    background-color: #1e1e1e;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    margin-bottom: 2rem;
 
-/* Avatar Styling */
-.avatar {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-bottom: 10px;
-  border: 3px solid #ffffff;
-}
+    .online-status {
+      margin: 0.5rem 0;
 
-/* List Group Dark Mode */
-.list-group-item {
-  background-color: #1e1e1e;
-  border-color: #343a40;
-}
+      .badge-success {
+        background-color: #28a745;
+      }
 
-.list-group-item .badge {
-  font-size: 0.8rem;
+      .badge-secondary {
+        background-color: #6c757d;
+      }
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 1rem 0;
+      border: 3px solid #4CAF50;
+    }
+
+    .level-info {
+      h4 {
+        color: #4CAF50;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .progress {
+        background-color: #343a40;
+        border-radius: 8px;
+        height: 20px;
+
+        .progress-bar {
+          background-color: #4CAF50;
+        }
+      }
+    }
+  }
+
+  .tab-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    button {
+      background-color: #2e2e2e;
+      color: #e0e0e0;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+
+      &.active-tab {
+        background-color: #4CAF50;
+        color: #ffffff;
+      }
+
+      &:hover {
+        background-color: #3a3a3a;
+      }
+    }
+  }
+
+  .tab-content {
+    background-color: #1e1e1e;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    margin-bottom: 2rem;
+
+    h3 {
+      color: #4CAF50;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .sub-tab-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    button {
+      background-color: #333;
+      color: #e0e0e0;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-weight: bold;
+
+      &.active-sub-tab {
+        background-color: #4CAF50;
+        color: #ffffff;
+      }
+
+      &:hover {
+        background-color: #444;
+      }
+    }
+  }
+
+  .history-section {
+    margin-bottom: 2rem;
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+
+      .filter-input, select, input[type="date"] {
+        background-color: #333;
+        color: #e0e0e0;
+        border: 1px solid #4CAF50;
+        border-radius: 8px;
+        padding: 0.5rem;
+      }
+    }
+
+    .game-item, .tournament-item {
+      background-color: #2e2e2e;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .game-link, .tournament-link {
+        font-weight: bold;
+        color: #e0e0e0;
+        text-decoration: none;
+
+        &:hover {
+          color: #4CAF50;
+        }
+      }
+
+      .badge {
+        background-color: #28a745;
+        font-size: 0.8rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  .leaderboard {
+    .ranking-section {
+      background-color: #2e2e2e;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+
+      h4 {
+        color: #4CAF50;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+
+        li {
+          padding: 0.5rem 0;
+          color: #bdbdbd;
+
+          strong {
+            color: #e0e0e0;
+          }
+        }
+      }
+    }
+  }
+
+  .alert-info {
+    background-color: #343a40;
+    color: #adb5bd;
+    text-align: center;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
 }

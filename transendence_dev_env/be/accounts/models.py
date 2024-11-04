@@ -5,7 +5,7 @@ import pyotp
 from .utils import create_notification
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    otp_secret = models.CharField(max_length=16, blank=True, null=True)
+    otp_secret = models.CharField(max_length=32, blank=True, null=True)
     is_2fa_enabled = models.BooleanField(default=False)
     has_logged_in = models.BooleanField(default=False)
 
