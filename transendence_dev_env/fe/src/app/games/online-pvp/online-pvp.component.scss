@@ -1,0 +1,52 @@
+.lobby-selection-wrapper {
+  display: flex;
+  justify-content: center; /* Centers the container horizontally */
+  padding: 20px;
+}
+
+.lobby-container {
+  display: flex;
+  align-items: center; /* Centers buttons relative to the list's height */
+  gap: 50px; /* Space between the buttons and the lobby list */
+}
+
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 25px; /* Space between the buttons */
+  justify-content: center; /* Centers buttons vertically within the container */
+  height: 200px; /* Matches the list height for vertical centering */
+}
+
+.lobby-section {
+  text-align: center; /* Centers the title text */
+}
+
+.lobby-section h2 {
+  font-size: x-large;
+}
+
+.lobby-list {
+  width: 200px; /* Adjust width as needed */
+  height: 200px; /* Fixed height for displaying 5 items */
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.lobby-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lobby-list li {
+  padding: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.lobby-list li.selected {
+  background-color: #d3d3d3;
+  color: #000000;
+}

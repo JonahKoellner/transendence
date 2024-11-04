@@ -1,1 +1,27 @@
-<p>online-pvp works!</p>
+<div class="lobby-selection-wrapper">
+  <div [hidden]="currentLobby" class="lobby-container">
+    <div class="lobby-actions">
+      <button (click)="createLobby()">Create Lobby</button>
+      <button [disabled]="!selectedLobby" (click)="joinLobby()">Join Lobby</button>
+    </div>
+
+    <div class="lobby-section">
+      <h2>Available Lobbies</h2>
+      <div class="lobby-list">
+        <ul>
+          <li *ngFor="let lobby of lobbies" 
+              [class.selected]="lobby === selectedLobby" 
+              (click)="selectLobby(lobby)">
+            {{ lobby.name }} &#40;{{lobby.currentPlayers}}/{{lobby.maxPlayers}}&#41;
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="currentLobby" class="current-lobby">
+    <h2>{{ currentLobby!.name }} {{ currentLobby!.currentPlayers }}/{{ currentLobby!.maxPlayers }} </h2>
+    <h3>Host:</h3>
+    <h3>Player:</h3>
+    <button (click)="leaveLobby()">Leave Lobby</button>
+  </div>
+</div>
