@@ -18,6 +18,10 @@ import { TournamentListComponent } from './games/tournament/tournament-list/tour
 import { GameLeaderboardComponent } from './games/leaderboards/game-leaderboard/game-leaderboard.component';
 import { TournamentLeaderboardComponent } from './games/leaderboards/tournament-leaderboard/tournament-leaderboard.component';
 import { TournamentStatsComponent } from './games/tournament/tournament-stats/tournament-stats.component';
+import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
+import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.component';
+import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
+import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -30,6 +34,13 @@ const routes: Routes = [
   { path: 'games',component: SelectionComponent, canActivate: [AuthGuard] },
   { path: 'games/local-pve',component: LocalPveComponent, canActivate: [AuthGuard] },
   { path: 'games/local-pvp',component: LocalPvpComponent, canActivate: [AuthGuard] },
+  { path: 'games/online-pvp',component: OnlinePvpComponent, canActivate: [AuthGuard],
+    children: [
+      { path: 'create', component: CreateRoomComponent, canActivate: [AuthGuard]},
+      { path: 'join', component: JoinRoomComponent, canActivate: [AuthGuard] },
+      { path: 'game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] }
+    ],
+   },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },

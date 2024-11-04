@@ -1,1 +1,41 @@
-<p>online-pvp works!</p>
+<div>
+  <h1>Online PvP Lobby</h1>
+  <nav>
+    <a routerLink="create">Create Room</a>
+    <a routerLink="join">Join Room</a>
+  </nav>
+
+  <h2>Available Rooms</h2>
+  <div *ngIf="rooms.length; else noRooms">
+    <table>
+      <thead>
+        <tr>
+          <th>Room ID</th>
+          <th>Host</th>
+          <th>Guest</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let room of rooms">
+          <td>{{ room.room_id }}</td>
+          <td>{{ room.host }}</td>
+          <td>{{ room.guest || 'Waiting for guest' }}</td>
+          <td>
+            {{ room.all_ready ? 'All Ready' : room.is_full ? 'Waiting for Ready' : 'Open' }}
+          </td>
+          <td>
+            <a [routerLink]="['/games/online-pvp/game-room', room.room_id]">Join</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #noRooms>
+    <p>No available rooms at the moment. Create one to start a game!</p>
+  </ng-template>
+
+  <router-outlet></router-outlet>
+</div>

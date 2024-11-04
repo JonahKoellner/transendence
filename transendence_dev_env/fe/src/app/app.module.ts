@@ -41,6 +41,9 @@ import { TournamentDetailsComponent } from './games/tournament/tournament-detail
 import { GameLeaderboardComponent } from './games/leaderboards/game-leaderboard/game-leaderboard.component';
 import { TournamentLeaderboardComponent } from './games/leaderboards/tournament-leaderboard/tournament-leaderboard.component';
 import { TournamentStatsComponent } from './games/tournament/tournament-stats/tournament-stats.component';
+import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.component';
+import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
+import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -74,7 +77,10 @@ import { TournamentStatsComponent } from './games/tournament/tournament-stats/to
     TournamentDetailsComponent,
     GameLeaderboardComponent,
     TournamentLeaderboardComponent,
-    TournamentStatsComponent
+    TournamentStatsComponent,
+    CreateRoomComponent,
+    JoinRoomComponent,
+    GameRoomComponent
   ],
   imports: [
     BrowserModule,

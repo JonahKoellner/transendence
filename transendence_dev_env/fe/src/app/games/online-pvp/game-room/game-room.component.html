@@ -1,0 +1,19 @@
+<div class="game-room">
+  <h2>Game Room</h2>
+  <p><strong>Room ID:</strong> {{ roomId }}</p>
+
+  <div class="players">
+    <div>
+      <p><strong>Host:</strong> {{ host }}</p>
+      <p>Status: {{ isHostReady ? 'Ready' : 'Not Ready' }}</p>
+    </div>
+    <div>
+      <p><strong>Guest:</strong> {{ guest || 'Waiting for guest...' }}</p>
+      <p>Status: {{ isGuestReady ? 'Ready' : 'Not Ready' }}</p>
+    </div>
+  </div>
+
+  <button (click)="toggleReady()">Toggle Ready</button>
+
+  <p *ngIf="allReady">Both players are ready. Starting game...</p>
+</div>

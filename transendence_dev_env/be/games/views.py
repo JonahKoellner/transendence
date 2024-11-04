@@ -12,10 +12,12 @@ from django.db.models import Avg, Max, Min, Count, Sum, Q, F, Case, When, Intege
 import calendar
 from django.contrib.auth.models import User 
 from accounts.serializers import UserProfileSerializer
-from .models import Tournament, Match, Round, Game
+from .models import Tournament, Match, Round, Game, Lobby
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
+import random
+import string
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -1071,3 +1073,87 @@ class TournamentLeaderboardViewSet(viewsets.ModelViewSet):
             "win_rank": win_rank,
             "participation_rank": participation_rank
         })
+        
+        
+        
+def generate_room_id(length=6):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+class LobbyViewSet(viewsets.ViewSet):
+    
+    @action(detail=False, methods=['post'])
+    def create_room(self, request):
+        room_id = generate_room_id()
+        host = request.user
+        lobby = Lobby.objects.create(room_id=room_id, host=host)
+        return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    def join_room(self, request):
+        room_id = request.data.get("room_id")
+        try:
+            lobby = Lobby.objects.get(room_id=room_id, is_active=True)
+            if lobby.is_full():
+                return Response({"detail": "Room is full"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            lobby.guest = request.user
+            lobby.save()
+            return Response({"detail": "Joined room successfully"}, status=status.HTTP_200_OK)
+        except Lobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'])
+    def set_ready(self, request):
+        room_id = request.data.get("room_id")
+        is_ready = request.data.get("is_ready", False)
+
+        try:
+            lobby = Lobby.objects.get(room_id=room_id, is_active=True)
+            if request.user == lobby.host:
+                lobby.is_host_ready = is_ready
+            elif request.user == lobby.guest:
+                lobby.is_guest_ready = is_ready
+            else:
+                return Response({"detail": "Not part of this lobby"}, status=status.HTTP_400_BAD_REQUEST)
+
+            lobby.save()
+            return Response({"detail": "Ready status updated"}, status=status.HTTP_200_OK)
+        except Lobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'], url_path='status/(?P<room_id>[^/.]+)')
+    def room_status(self, request, room_id=None):
+        try:
+            lobby = Lobby.objects.get(room_id=room_id)
+            return Response({
+                "room_id": room_id,
+                "is_active": lobby.is_active,
+                "host": lobby.host.username,
+                "guest": lobby.guest.username if lobby.guest else None,
+                "is_host_ready": lobby.is_host_ready,
+                "is_guest_ready": lobby.is_guest_ready,
+                "all_ready": lobby.all_ready(),
+                "is_full": lobby.is_full()
+            }, status=status.HTTP_200_OK)
+        except Lobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    @action(detail=False, methods=['get'])
+    def list_rooms(self, request):
+        """
+        Returns a list of all available rooms with host and guest information.
+        """
+        rooms = Lobby.objects.filter(is_active=True)
+        data = [
+            {
+                "room_id": room.room_id,
+                "host": room.host.username,
+                "guest": room.guest.username if room.guest else None,
+                "is_host_ready": room.is_host_ready,
+                "is_guest_ready": room.is_guest_ready,
+                "is_full": room.is_full(),
+                "all_ready": room.all_ready(),
+            }
+            for room in rooms
+        ]
+        return Response(data, status=status.HTTP_200_OK)

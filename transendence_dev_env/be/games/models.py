@@ -135,3 +135,45 @@ class Tournament(models.Model):
         on_delete=models.CASCADE,
         related_name='hosted_tournaments'
     )
+    
+class Lobby(models.Model):
+    room_id = models.CharField(max_length=10, unique=True)
+    host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_lobbies")
+    guest = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name="joined_lobbies")
+    is_host_ready = models.BooleanField(default=False)
+    is_guest_ready = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_full(self):
+        return self.guest is not None
+
+    def all_ready(self):
+        return self.is_host_ready and self.is_guest_ready
+
+    def get_host_name(self):
+        return self.host.username if self.host else "Waiting for host"
+
+    def get_guest_name(self):
+        return self.guest.username if self.guest else "Waiting for guest"
+
+    def set_ready_status(self, user, is_ready):
+        """ Set the ready status for the host or guest based on the user. """
+        if user == self.host:
+            self.is_host_ready = is_ready
+        elif user == self.guest:
+            self.is_guest_ready = is_ready
+        self.save()
+
+    def get_lobby_state(self):
+        """ Return the state of the lobby as a dictionary. """
+        return {
+            "is_host_ready": self.is_host_ready,
+            "is_guest_ready": self.is_guest_ready,
+            "host_name": self.get_host_name(),
+            "guest_name": self.get_guest_name(),
+            "all_ready": self.all_ready()
+        }
+    def has_guest_joined(self):
+        """Returns True if the guest has joined the lobby."""
+        return self.guest is not None
