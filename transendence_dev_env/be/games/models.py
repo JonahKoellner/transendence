@@ -166,13 +166,13 @@ class Lobby(models.Model):
         self.save()
 
     def get_lobby_state(self):
-        """ Return the state of the lobby as a dictionary. """
         return {
             "is_host_ready": self.is_host_ready,
             "is_guest_ready": self.is_guest_ready,
-            "host_name": self.get_host_name(),
-            "guest_name": self.get_guest_name(),
-            "all_ready": self.all_ready()
+            "all_ready": self.all_ready(),
+            "host_name": str(self.host.username) if self.host else None,
+            "guest_name": str(self.guest.username) if self.guest else None,
+            # Avoid including entire model instances
         }
     def has_guest_joined(self):
         """Returns True if the guest has joined the lobby."""

@@ -38,7 +38,7 @@ services:
       - DJANGO_SETTINGS_MODULE=be.settings
     depends_on:
       - db
-      - redis  # Ensure Redis starts before Django
+      - redis
     networks:
       - webnet
     volumes:
@@ -46,7 +46,7 @@ services:
       - ./static:/app/static  # Static files directory
 
   db:
-    image: postgres:13
+    image: postgres:17
     environment:
       - POSTGRES_DB=mydb
       - POSTGRES_USER=user
