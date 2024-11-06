@@ -5,6 +5,7 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
 import asyncio
+import random
 from asyncio import Lock
 
 import logging
@@ -241,14 +242,19 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             )
             
     async def reset_ball(self):
-        # Reset ball position and direction
+        # Reset ball position to the center
         self.ball_x = 500
         self.ball_y = 250
-        self.ball_direction_x *= -1  # Reverse direction towards the last scorer
+        
+        # Randomly set the ball direction to left or right
+        self.ball_direction_x = -1 if random.random() < 0.5 else 1
+        
+        # Set the ball direction Y to a small random value to avoid straight horizontal movement
+        self.ball_direction_y = (random.random() * 2 - 1) * 0.5  # Random value between -0.5 and 0.5
+        
+        # Increase ball speed by 1.05x each reset, capping at 100
+        self.ball_speed = min(self.ball_speed * 1.05, 100) if hasattr(self, 'ball_speed') else 5
 
-        # Slow down ball slightly after each reset to prevent overwhelming gameplay speed
-        self.ball_direction_x *= 0.9
-        self.ball_direction_y *= 0.9
 
     async def game_started(self, event):
         await self.send_json({"type": "game_started"})

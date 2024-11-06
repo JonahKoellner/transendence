@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GameLobbyService } from 'src/app/services/game-lobby.service';
 import { Subscription } from 'rxjs';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
@@ -27,7 +27,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private lobbyService: GameLobbyService,
-    private userProfileService: ProfileService
+    private userProfileService: ProfileService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -54,9 +55,14 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       } else if (msg.type === 'game_started') {
         this.gameInProgress = true;
       } else if (msg.type === 'alert') {
-        alert(msg.message); // Display an alert when a player disconnects
-      }
-    });
+        // Check if the disconnecting user was the host or guest
+        if (msg.user_role === 'host') {
+          alert('The host has left the game. Redirecting you to the lobby.');
+          this.router.navigate(['/games/online-pvp']);
+        } else if (msg.user_role === 'guest') {
+          alert('The guest has left the game. Waiting for a new player to join.');
+        }
+    }});
 
     // Fetch initial state
     this.lobbyService.getRoomStatus(this.roomId).subscribe((data: any) => {
