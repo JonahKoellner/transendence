@@ -1,0 +1,92 @@
+.game-room {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: auto;
+    color: #e0e0e0;
+  
+    h2 {
+      color: #4CAF50;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+    }
+  
+    p {
+      font-size: 1.1rem;
+    }
+  
+    .players {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+  
+      .player-info {
+        background-color: #1e1e1e;
+        padding: 1.5rem;
+        border-radius: 8px;
+        width: 45%;
+        text-align: center;
+        border: 1px solid #444;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  
+        p {
+          margin: 0.5rem 0;
+          font-size: 1rem;
+        }
+  
+        strong {
+          color: #4CAF50;
+        }
+      }
+    }
+  
+    button {
+      background-color: #4CAF50;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      margin: 0.5rem;
+  
+      &:hover {
+        background-color: #45A049;
+        transform: translateY(-5px);
+      }
+    }
+  
+    .game-view {
+      margin: 2rem 0;
+      text-align: center;
+  
+      p {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #4CAF50;
+      }
+    }
+  
+    .game-view app-game-display {
+      margin-top: 1rem;
+    }
+  
+    .game-display {
+      canvas {
+        border: 1px solid #4CAF50;
+        border-radius: 8px;
+        background-color: #1e1e1e;
+      }
+    }
+  
+    p {
+      color: #adb5bd;
+      font-size: 1rem;
+    }
+  }
+  

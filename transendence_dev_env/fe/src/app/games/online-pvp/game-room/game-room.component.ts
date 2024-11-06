@@ -58,24 +58,42 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         // Check if the disconnecting user was the host or guest
         if (msg.user_role === 'host') {
           alert('The host has left the game. Redirecting you to the lobby.');
-          this.router.navigate(['/games/online-pvp']);
+          this.router.navigate(['/games/online-pvp/rooms']);
         } else if (msg.user_role === 'guest') {
           alert('The guest has left the game. Waiting for a new player to join.');
         }
-    }});
+    }
+    if (this.host === "")
+      this.router.navigate(['/games/online-pvp/rooms']);
+    });
 
     // Fetch initial state
-    this.lobbyService.getRoomStatus(this.roomId).subscribe((data: any) => {
-      this.host = data.host;
-      this.guest = data.guest || "Waiting for guest";
-      this.isHostReady = data.is_host_ready;
-      this.isGuestReady = data.is_guest_ready;
-      this.allReady = data.all_ready;
-      this.userProfileService.getProfile().subscribe((profile) => {
-        this.userProfile = profile;
-        this.isHost = this.userProfile?.username === this.host;
-      });
-    });
+    this.lobbyService.getRoomStatus(this.roomId).subscribe(
+      (data: any) => {
+        this.host = data.host;
+        this.guest = data.guest || 'Waiting for guest';
+        this.isHostReady = data.is_host_ready;
+        this.isGuestReady = data.is_guest_ready;
+        this.allReady = data.all_ready;
+        this.userProfileService.getProfile().subscribe(
+          (profile) => {
+            this.userProfile = profile;
+            this.isHost = this.userProfile?.username === this.host;
+            if (this.host === '') {
+              this.router.navigate(['/games/online-pvp/rooms']);
+            }
+          },
+          (error) => {
+            console.error('Error fetching user profile:', error);
+            this.router.navigate(['/games/online-pvp/rooms']);
+          }
+        );
+      },
+      (error) => {
+        console.error('Error fetching room status:', error);
+        this.router.navigate(['/games/online-pvp/rooms']);
+      }
+    );
   }
 
   startGame() {
@@ -91,14 +109,20 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (!this.userProfile) return;
     const isHost = this.userProfile?.username === this.host;
     const newReadyStatus = isHost ? !this.isHostReady : !this.isGuestReady;
-    this.lobbyService.setReadyStatus(this.roomId, newReadyStatus, this.userProfile.id).subscribe(() => {
-      this.lobbyService.sendMessage({
-        action: 'set_ready',
-        room_id: this.roomId,
-        user_id: this.userProfile?.id,
-        is_ready: newReadyStatus
-      });
-    });
+    this.lobbyService.setReadyStatus(this.roomId, newReadyStatus, this.userProfile.id).subscribe(
+      () => {
+        this.lobbyService.sendMessage({
+          action: 'set_ready',
+          room_id: this.roomId,
+          user_id: this.userProfile?.id,
+          is_ready: newReadyStatus
+        });
+      },
+      (error) => {
+        console.error('Error setting ready status:', error);
+        this.router.navigate(['/games/online-pvp/rooms']);
+      }
+    );
   }
 
   // Send keystrokes to backend

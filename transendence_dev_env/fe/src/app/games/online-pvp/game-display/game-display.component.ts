@@ -2,7 +2,7 @@ import { AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild } fro
 
 @Component({
   selector: 'app-game-display',
-  template: `<canvas #gameCanvas height="500" width="1000"></canvas>`,
+  templateUrl: './game-display.component.html',
   styleUrls: ['./game-display.component.scss']
 })
 export class GameDisplayComponent implements AfterViewInit, OnChanges {

@@ -23,6 +23,7 @@ import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.
 import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
 import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
 import { AboutComponent } from './home/about/about.component';
+import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -37,6 +38,7 @@ const routes: Routes = [
   { path: 'games/local-pvp',component: LocalPvpComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp',component: OnlinePvpComponent, canActivate: [AuthGuard],
     children: [
+      { path: 'rooms', component: GameRoomsComponent, canActivate: [AuthGuard]},
       { path: 'create', component: CreateRoomComponent, canActivate: [AuthGuard]},
       { path: 'join', component: JoinRoomComponent, canActivate: [AuthGuard] },
       { path: 'game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] }

@@ -27,7 +27,7 @@ export class HomeComponent {
         this.router.navigate(['/games/local-pvp']);
         break;
       case 'online_pvp':
-        this.router.navigate(['/games/online-pvp']);
+        this.router.navigate(['/games/online-pvp/rooms']);
         break;
       case 'tournament': 
         this.router.navigate(['/games/tournament/local/start']);

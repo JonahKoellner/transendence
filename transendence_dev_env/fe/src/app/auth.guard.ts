@@ -22,11 +22,11 @@ export class AuthGuard implements CanActivate {
     const otpVerified = localStorage.getItem('otp_verified') === 'true';
     console.log('OTP Verified:', otpVerified);
   
-    if (!otpVerified) {
-      console.log('OTP not verified, redirecting to /verify-otp');
-      this.router.navigate(['/verify-otp']);
-      return false;
-    }
+    // if (!otpVerified) {
+    //   console.log('OTP not verified, redirecting to /verify-otp');
+    //   this.router.navigate(['/verify-otp']);
+    //   return false;
+    // }
   
     console.log('Access granted by AuthGuard');
     return true;

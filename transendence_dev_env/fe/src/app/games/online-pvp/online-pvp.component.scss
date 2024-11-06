@@ -1,52 +1,36 @@
-.lobby-selection-wrapper {
-  display: flex;
-  justify-content: center; /* Centers the container horizontally */
-  padding: 20px;
-}
-
-.lobby-container {
-  display: flex;
-  align-items: center; /* Centers buttons relative to the list's height */
-  gap: 50px; /* Space between the buttons and the lobby list */
-}
-
-.lobby-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 25px; /* Space between the buttons */
-  justify-content: center; /* Centers buttons vertically within the container */
-  height: 200px; /* Matches the list height for vertical centering */
-}
-
-.lobby-section {
-  text-align: center; /* Centers the title text */
-}
-
-.lobby-section h2 {
-  font-size: x-large;
-}
-
-.lobby-list {
-  width: 200px; /* Adjust width as needed */
-  height: 200px; /* Fixed height for displaying 5 items */
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.lobby-list ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.lobby-list li {
-  padding: 8px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-}
-
-.lobby-list li.selected {
-  background-color: #d3d3d3;
-  color: #000000;
-}
+.online-pvp-lobby {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: auto;
+    text-align: center;
+  
+    h1 {
+      color: #4CAF50;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      font-weight: bold;
+    }
+  
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+  
+      a {
+        color: #e0e0e0;
+        font-size: 1.2rem;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        background-color: #1e1e1e;
+        transition: background-color 0.3s, transform 0.3s;
+  
+        &:hover {
+          background-color: #2e2e2e;
+          transform: translateY(-5px);
+        }
+      }
+    }
+  }
+  

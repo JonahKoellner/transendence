@@ -107,24 +107,28 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             # If the host disconnects, delete the lobby and notify the guest
             await self.delete_lobby()
             alert_message = "The host has left the game. The game has been ended."
+            user_role = "host"
         else:
             # If the guest disconnects, remove them from the lobby and notify the host
             await self.remove_guest()
             alert_message = "The guest has left the game. Waiting for a new player to join."
+            user_role = "guest"
 
         # Broadcast an alert to remaining players
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "alert",
-                "message": alert_message
+                "message": alert_message,
+                "user_role": user_role
             }
         )
         
     async def alert(self, event):
         await self.send_json({
             "type": "alert",
-            "message": event["message"]
+            "message": event["message"],
+            "user_role": event["user_role"]  # Send the user role along with the message
         })
 
     async def receive_json(self, content):

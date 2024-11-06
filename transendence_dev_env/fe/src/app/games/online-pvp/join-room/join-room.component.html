@@ -1,6 +1,6 @@
-<div>
-    <h2>Join Room</h2>
-    <input [(ngModel)]="roomId" placeholder="Enter Room ID" />
-    <button (click)="joinRoom()">Join Room</button>
-    <p *ngIf="joined">Joined Room {{ roomId }}</p>
-  </div>
+<div class="join-room">
+  <h2>Join Room</h2>
+  <input [(ngModel)]="roomId" placeholder="Enter Room ID" />
+  <button (click)="joinRoom()">Join Room</button>
+  <p *ngIf="joined">Joined Room {{ roomId }}</p>
+</div>

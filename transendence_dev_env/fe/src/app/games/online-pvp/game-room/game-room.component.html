@@ -3,26 +3,25 @@
   <p><strong>Room ID:</strong> {{ roomId }}</p>
 
   <div class="players">
-    <div>
+    <div class="player-info">
       <p><strong>Host:</strong> {{ host }}</p>
       <p>Status: {{ isHostReady ? 'Ready' : 'Not Ready' }}</p>
     </div>
-    <div>
+    <div class="player-info">
       <p><strong>Guest:</strong> {{ guest || 'Waiting for guest...' }}</p>
       <p>Status: {{ isGuestReady ? 'Ready' : 'Not Ready' }}</p>
     </div>
   </div>
 
-  <!-- Only the host can start the game -->
-  <button *ngIf="isHost" (click)="startGame()">Start Game</button>
+  <button *ngIf="isHost && allReady && !gameInProgress" (click)="startGame()">Start Game</button>
+  <button (click)="toggleReady()">Toggle Ready</button>
 
-  <!-- Game view only appears when the game is in progress -->
-  <div>
+  <p *ngIf="allReady && !gameInProgress">
+    Both players are ready. Waiting for host to start the game...
+  </p>
+  <div class="game-view">
     <p><strong>Score:</strong> {{ leftScore }} - {{ rightScore }}</p>
     <app-game-display [gameState]="gameState"></app-game-display>
   </div>
 
-  <button (click)="toggleReady()">Toggle Ready</button>
-
-  <p *ngIf="allReady && !gameInProgress">Both players are ready. Waiting for host to start the game...</p>
 </div>
