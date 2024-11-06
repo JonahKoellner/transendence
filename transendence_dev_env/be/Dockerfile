@@ -10,12 +10,16 @@ COPY . .
 # Ensure wait-for-db.sh is executable
 RUN chmod +x wait-for-db.sh
 
-# Install system dependencies for Python packages
+# Install system dependencies for Python packages and dos2unix
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     netcat-openbsd \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
+
+# Convert wait-for-db.sh to Unix-style line endings
+RUN dos2unix wait-for-db.sh
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
