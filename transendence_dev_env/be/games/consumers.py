@@ -5,6 +5,7 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
 import asyncio
+from asyncio import Lock
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -12,13 +13,19 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.game_in_progress = False  # Initialize game_in_progress here
-
+        self.game_in_progress = False
+        self.left_paddle_y = 250
+        self.right_paddle_y = 250
+        self.left_paddle_speed = 0
+        self.right_paddle_speed = 0
+        self.game_lock = Lock()
+        self.game_manager_channel = None  # Initialize game manager channel
+        
     async def start_game(self):
         if self.game_in_progress:
             return  # Prevent starting a new game if one is already in progress
-        
-        # Initialize game state
+
+        # Initialize game state variables
         self.game_in_progress = True
         self.left_paddle_y = 250
         self.right_paddle_y = 250
@@ -28,8 +35,8 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.ball_direction_y = 0.5
         self.left_score = 0
         self.right_score = 0
-        self.left_paddle_speed = 0    # Initialize left paddle speed
-        self.right_paddle_speed = 0   # Initialize right paddle speed
+        self.left_paddle_speed = 0
+        self.right_paddle_speed = 0
 
         # Notify players that the game has started
         await self.channel_layer.group_send(
@@ -37,8 +44,20 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             {"type": "game_started"}
         )
 
+        # Notify other consumers of the game manager's channel name
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "set_game_manager",
+                "channel_name": self.channel_name,
+            }
+        )
+
         # Start the game loop
         self.game_loop_task = asyncio.create_task(self.game_loop())
+
+    async def set_game_manager(self, event):
+        self.game_manager_channel = event["channel_name"]
         
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
@@ -56,8 +75,14 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
-
+        
+        if await self.is_user_host():
+            self.game_manager_channel = self.channel_name
+        else:
+            # For guests, the game manager channel should have been set via 'set_game_manager'
+            pass
         # Add the user as the guest if applicable and broadcast updated state
+        
         if await self.add_guest_if_applicable():
             await self.broadcast_lobby_state()  # Broadcast if guest is added
         
@@ -118,84 +143,112 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     async def handle_key_event(self, action, content):
         key = content.get("key")
         user_id = content.get("user_id")
-        is_keydown = action == "keydown"
-
-        logger.debug(f"Key event received: {action} for user {user_id} with key {key}")
-
-        if await self.is_user_host_id(user_id):
-            # Host controls the left paddle
+        max_speed = 10
+        
+        # Determine speed based on keydown/keyup
+        if action == "keydown":
             if key == "KeyW":
-                self.left_paddle_speed = -10 if is_keydown else 0
-                logger.debug(f"Host moving left paddle, speed: {self.left_paddle_speed}")
+                speed = -max_speed
             elif key == "KeyS":
-                self.left_paddle_speed = 10 if is_keydown else 0
-                logger.debug(f"Host moving left paddle, speed: {self.left_paddle_speed}")
+                speed = max_speed
+            else:
+                return  # Unrecognized key
+        elif action == "keyup":
+            speed = 0  # Reset speed on keyup
         else:
-            # Guest controls the right paddle
-            if key == "KeyW":
-                self.right_paddle_speed = -10 if is_keydown else 0
-                logger.debug(f"Guest moving right paddle, speed: {self.right_paddle_speed}")
-            elif key == "KeyS":
-                self.right_paddle_speed = 10 if is_keydown else 0
-                logger.debug(f"Guest moving right paddle, speed: {self.right_paddle_speed}")
+            return  # Unrecognized action
+
+        # Send paddle speed update to the game manager
+        if self.game_manager_channel:
+            await self.channel_layer.send(
+                self.game_manager_channel,
+                {
+                    "type": "update_paddle_speed",
+                    "user_id": user_id,
+                    "speed": speed,
+                }
+            )
+        else:
+            logger.warning("Game manager channel not set. Cannot send paddle speed update.")
+
+    async def update_paddle_speed(self, event):
+        user_id = event["user_id"]
+        speed = event["speed"]
+        async with self.game_lock:
+            if await self.is_user_host_id(user_id):
+                self.left_paddle_speed = speed
+                logger.debug(f"Host paddle speed set: {self.left_paddle_speed} (Event from user {user_id})")
+            else:
+                self.right_paddle_speed = speed
+                logger.debug(f"Guest paddle speed set: {self.right_paddle_speed} (Event from user {user_id})")
                 
     async def game_loop(self):
         while self.game_in_progress:
             await self.game_tick()
             await asyncio.sleep(1 / 60)
 
+    def update_paddle_position(self, paddle, speed):
+        if paddle == "left":
+            self.left_paddle_y = max(0, min(self.left_paddle_y + speed, 500 - 60))
+            logger.debug(f"Updated left paddle position to {self.left_paddle_y}")
+        elif paddle == "right":
+            self.right_paddle_y = max(0, min(self.right_paddle_y + speed, 500 - 60))
+            logger.debug(f"Updated right paddle position to {self.right_paddle_y}")
+
     async def game_tick(self):
-        # Update paddles with their respective speeds
-        self.left_paddle_y += self.left_paddle_speed
-        self.right_paddle_y += self.right_paddle_speed
+        async with self.game_lock:
+            logger.debug(f"Tick - Left speed: {self.left_paddle_speed}, Right speed: {self.right_paddle_speed}")
+            
+            self.update_paddle_position("left", self.left_paddle_speed)
+            self.update_paddle_position("right", self.right_paddle_speed)
 
-        # Ensure paddles stay within bounds
-        self.left_paddle_y = max(0, min(self.left_paddle_y, 500 - 60))  # assuming 60 as paddle height
-        self.right_paddle_y = max(0, min(self.right_paddle_y, 500 - 60))
+            self.ball_x += self.ball_direction_x * 5
+            self.ball_y += self.ball_direction_y * 5
 
-        logger.debug(f"Left paddle position: {self.left_paddle_y}, speed: {self.left_paddle_speed}")
-        logger.debug(f"Right paddle position: {self.right_paddle_y}, speed: {self.right_paddle_speed}")
-        
-        # Ball movement and collision logic
-        self.ball_x += self.ball_direction_x * 5
-        self.ball_y += self.ball_direction_y * 5
+            # Handle collisions with top/bottom walls
+            if self.ball_y <= 0 or self.ball_y >= 500:
+                self.ball_direction_y *= -1
 
-        # Collision with top/bottom walls
-        if self.ball_y <= 0 or self.ball_y >= 500:
-            self.ball_direction_y *= -1
+            # Paddle collision handling
+            if self.ball_x <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
+                self.ball_direction_x *= -1
+            elif self.ball_x >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
+                self.ball_direction_x *= -1
 
-        # Collision with paddles
-        if self.ball_x <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
-            self.ball_direction_x *= -1
-        elif self.ball_x >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
-            self.ball_direction_x *= -1
+            # Scoring logic
+            if self.ball_x <= 0:
+                self.right_score += 1
+                await self.reset_ball()
+            elif self.ball_x >= 1000:
+                self.left_score += 1
+                await self.reset_ball()
 
-        # Scoring logic
-        if self.ball_x <= 0:
-            self.right_score += 1
-            await self.reset_ball()
-        elif self.ball_x >= 1000:
-            self.left_score += 1
-            await self.reset_ball()
+            logger.debug(f"Final paddle positions - Left: {self.left_paddle_y}, Right: {self.right_paddle_y}")
 
-        # Broadcast updated game state
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "game_state",
-                "leftScore": self.left_score,
-                "rightScore": self.right_score,
-                "ball_x": self.ball_x,
-                "ball_y": self.ball_y,
-                "left_paddle_y": self.left_paddle_y,
-                "right_paddle_y": self.right_paddle_y
-            }
-        )
-    
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "game_state",
+                    "leftScore": self.left_score,
+                    "rightScore": self.right_score,
+                    "ball_x": self.ball_x,
+                    "ball_y": self.ball_y,
+                    "left_paddle_y": self.left_paddle_y,
+                    "right_paddle_y": self.right_paddle_y,
+                    "left_speed": self.left_paddle_speed,
+                    "right_speed": self.right_paddle_speed,
+                }
+            )
+            
     async def reset_ball(self):
+        # Reset ball position and direction
         self.ball_x = 500
         self.ball_y = 250
-        self.ball_direction_x *= -1  # Send the ball towards the last scorer
+        self.ball_direction_x *= -1  # Reverse direction towards the last scorer
+
+        # Slow down ball slightly after each reset to prevent overwhelming gameplay speed
+        self.ball_direction_x *= 0.9
+        self.ball_direction_y *= 0.9
 
     async def game_started(self, event):
         await self.send_json({"type": "game_started"})
