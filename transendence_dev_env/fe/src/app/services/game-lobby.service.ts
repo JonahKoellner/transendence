@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, delay, Observable, retryWhen, Subject, tap } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
+import { GameSettings } from '../games/online-pvp/create-room/create-room.component';
 
 @Injectable({
   providedIn: 'root'
@@ -57,8 +58,8 @@ export class GameLobbyService {
 
 
 
-  createRoom(): Observable<{ room_id: string }> {
-    return this.http.post<{ room_id: string }>('http://localhost:8000/games/lobby/create/', {});
+  createRoom(settings: GameSettings): Observable<{ room_id: string }> {
+    return this.http.post<{ room_id: string }>('http://localhost:8000/games/lobby/create/', settings);
   }
 
   joinRoom(roomId: string): Observable<any> {

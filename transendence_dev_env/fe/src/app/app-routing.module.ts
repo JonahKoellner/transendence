@@ -40,10 +40,10 @@ const routes: Routes = [
     children: [
       { path: 'rooms', component: GameRoomsComponent, canActivate: [AuthGuard]},
       { path: 'create', component: CreateRoomComponent, canActivate: [AuthGuard]},
-      { path: 'join', component: JoinRoomComponent, canActivate: [AuthGuard] },
-      { path: 'game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] }
+      { path: 'join', component: JoinRoomComponent, canActivate: [AuthGuard] }
     ],
    },
+  { path: 'games/online-pvp/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },

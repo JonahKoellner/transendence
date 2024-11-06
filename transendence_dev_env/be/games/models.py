@@ -144,6 +144,8 @@ class Lobby(models.Model):
     is_guest_ready = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    max_rounds = models.IntegerField(default=3)  # New field for max rounds
+    round_score_limit = models.IntegerField(default=3)  # New field for round score limit
 
     def is_full(self):
         return self.guest is not None
@@ -172,6 +174,12 @@ class Lobby(models.Model):
             "all_ready": self.all_ready(),
             "host_name": str(self.host.username) if self.host else None,
             "guest_name": str(self.guest.username) if self.guest else None,
+            "is_full": self.is_full(),
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat(),
+            "max_rounds": self.max_rounds,
+            "round_score_limit": self.round_score_limit,
+            "room_id": self.room_id
             # Avoid including entire model instances
         }
     def has_guest_joined(self):

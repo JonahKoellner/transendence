@@ -1085,7 +1085,19 @@ class LobbyViewSet(viewsets.ViewSet):
     def create_room(self, request):
         room_id = generate_room_id()
         host = request.user
-        lobby = Lobby.objects.create(room_id=room_id, host=host)
+
+        # Get settings from the request
+        max_rounds = request.data.get("maxRounds", 3)
+        round_score_limit = request.data.get("roundScoreLimit", 3)
+
+        # Create lobby with additional settings
+        lobby = Lobby.objects.create(
+            room_id=room_id,
+            host=host,
+            max_rounds=max_rounds,
+            round_score_limit=round_score_limit
+        )
+
         return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])
@@ -1133,7 +1145,9 @@ class LobbyViewSet(viewsets.ViewSet):
                 "is_host_ready": lobby.is_host_ready,
                 "is_guest_ready": lobby.is_guest_ready,
                 "all_ready": lobby.all_ready(),
-                "is_full": lobby.is_full()
+                "is_full": lobby.is_full(),
+                "max_rounds": lobby.max_rounds,
+                "round_score_limit": lobby.round_score_limit
             }, status=status.HTTP_200_OK)
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -1153,6 +1167,8 @@ class LobbyViewSet(viewsets.ViewSet):
                 "is_guest_ready": room.is_guest_ready,
                 "is_full": room.is_full(),
                 "all_ready": room.all_ready(),
+                "max_rounds": room.max_rounds,
+                "round_score_limit": room.round_score_limit
             }
             for room in rooms
         ]

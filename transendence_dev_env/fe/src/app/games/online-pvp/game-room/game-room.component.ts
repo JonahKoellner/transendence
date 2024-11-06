@@ -23,6 +23,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   isHost: boolean = false;
   private messageSubscription!: Subscription;
   userProfile: UserProfile | null = null;
+  public msgFromServer: any;
+  roomData: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -36,6 +38,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.lobbyService.connect(this.roomId);
 
     this.messageSubscription = this.lobbyService.messages$.subscribe(msg => {
+      this.msgFromServer = msg;
       if (msg.type === 'initial_state') {
         this.host = msg.host;
         this.guest = msg.guest;
@@ -70,6 +73,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     // Fetch initial state
     this.lobbyService.getRoomStatus(this.roomId).subscribe(
       (data: any) => {
+        this.roomData = data;
         this.host = data.host;
         this.guest = data.guest || 'Waiting for guest';
         this.isHostReady = data.is_host_ready;

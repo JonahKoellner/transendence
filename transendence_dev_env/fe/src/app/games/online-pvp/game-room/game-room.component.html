@@ -13,12 +13,23 @@
     </div>
   </div>
 
+  
+  <div class="settings">
+    <div class="setting-item">
+      <label>Max Rounds: {{roomData.max_rounds}}</label>
+    </div>
+    <div class="setting-item">
+      <label>Round Score Limit: {{roomData.round_score_limit}}</label>
+    </div>
+  </div>
+
   <button *ngIf="isHost && allReady && !gameInProgress" (click)="startGame()">Start Game</button>
   <button (click)="toggleReady()">Toggle Ready</button>
 
   <p *ngIf="allReady && !gameInProgress">
     Both players are ready. Waiting for host to start the game...
   </p>
+
   <div class="game-view">
     <p><strong>Score:</strong> {{ leftScore }} - {{ rightScore }}</p>
     <app-game-display [gameState]="gameState"></app-game-display>
