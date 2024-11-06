@@ -22,6 +22,7 @@ import { TournamentStatsComponent } from './games/tournament/tournament-stats/to
 import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.component';
 import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
 import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
+import { AboutComponent } from './home/about/about.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -49,6 +50,7 @@ const routes: Routes = [
   { path: 'games/leaderboard/casual', component: GameLeaderboardComponent, canActivate: [AuthGuard] },
   { path: 'games/leaderboard/tournament', component: TournamentLeaderboardComponent, canActivate: [AuthGuard] },
 
+  { path: 'about', component: AboutComponent},
   { path: '**', redirectTo: 'login' }
 ];
 

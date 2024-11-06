@@ -1,0 +1,116 @@
+.about-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+    color: #e0e0e0;
+
+    h2 {
+        color: #4CAF50;
+        font-weight: bold;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .about-header {
+        text-align: center;
+    }
+
+    .about-description {
+        background: #1b1b1b;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        border: 1px solid #444;
+        max-width: 800px;
+        margin: 0 auto;
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #adb5bd;
+        }
+
+        .contributors {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+
+            li {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                color: #e0e0e0;
+                font-size: 1rem;
+
+                .avatar {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    border: 2px solid;
+                    margin-bottom: 0.5rem;
+                }
+            }
+        }
+
+        iframe {
+            margin-top: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    .about-modules {
+        max-width: 900px;
+        width: 100%;
+
+        h3 {
+            color: #4CAF50;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+
+            li {
+                margin-bottom: 1.5rem;
+
+                ul {
+                    margin-top: 0.5rem;
+                    padding-left: 1.5rem;
+
+                    li {
+                        position: relative;
+                        padding-left: 1.5rem;
+                        line-height: 1.6;
+                        color: #e0e0e0;
+
+                        &::before {
+                            color: #4CAF50;
+                            position: absolute;
+                            left: 0;
+                            top: 0.2rem;
+                        }
+
+                        &.completed {
+                            color: #4CAF50;
+                        }
+
+                        &.incomplete {
+                            color: #FF5722;
+
+                            &::before {
+                                color: #FF5722;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
