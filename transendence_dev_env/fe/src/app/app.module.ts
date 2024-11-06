@@ -44,6 +44,7 @@ import { TournamentStatsComponent } from './games/tournament/tournament-stats/to
 import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.component';
 import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
 import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
+import { GameDisplayComponent } from './games/online-pvp/game-display/game-display.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -80,7 +81,8 @@ import { GameRoomComponent } from './games/online-pvp/game-room/game-room.compon
     TournamentStatsComponent,
     CreateRoomComponent,
     JoinRoomComponent,
-    GameRoomComponent
+    GameRoomComponent,
+    GameDisplayComponent
   ],
   imports: [
     BrowserModule,

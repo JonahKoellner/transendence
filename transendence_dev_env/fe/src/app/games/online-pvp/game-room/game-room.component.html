@@ -13,7 +13,16 @@
     </div>
   </div>
 
+  <!-- Only the host can start the game -->
+  <button *ngIf="isHost" (click)="startGame()">Start Game</button>
+
+  <!-- Game view only appears when the game is in progress -->
+  <div>
+    <p><strong>Score:</strong> {{ leftScore }} - {{ rightScore }}</p>
+    <app-game-display [gameState]="gameState"></app-game-display>
+  </div>
+
   <button (click)="toggleReady()">Toggle Ready</button>
 
-  <p *ngIf="allReady">Both players are ready. Starting game...</p>
+  <p *ngIf="allReady && !gameInProgress">Both players are ready. Waiting for host to start the game...</p>
 </div>

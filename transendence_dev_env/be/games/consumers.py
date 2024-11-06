@@ -4,8 +4,42 @@ from .models import Lobby
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
+import asyncio
 
+import logging
+logger = logging.getLogger('game_debug')
 class LobbyConsumer(AsyncJsonWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.game_in_progress = False  # Initialize game_in_progress here
+
+    async def start_game(self):
+        if self.game_in_progress:
+            return  # Prevent starting a new game if one is already in progress
+        
+        # Initialize game state
+        self.game_in_progress = True
+        self.left_paddle_y = 250
+        self.right_paddle_y = 250
+        self.ball_x = 500
+        self.ball_y = 250
+        self.ball_direction_x = 1
+        self.ball_direction_y = 0.5
+        self.left_score = 0
+        self.right_score = 0
+        self.left_paddle_speed = 0    # Initialize left paddle speed
+        self.right_paddle_speed = 0   # Initialize right paddle speed
+
+        # Notify players that the game has started
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "game_started"}
+        )
+
+        # Start the game loop
+        self.game_loop_task = asyncio.create_task(self.game_loop())
+        
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'lobby_{self.room_id}'
@@ -25,10 +59,13 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Add the user as the guest if applicable and broadcast updated state
         if await self.add_guest_if_applicable():
-            await self.broadcast_lobby_state()
+            await self.broadcast_lobby_state()  # Broadcast if guest is added
+        
+        # Always send the initial state of the lobby to the connecting user
+        await self.send_initial_state()  # Send the initial state to connecting user only
 
-        # Send the initial state of the lobby to the connecting user
-        await self.send_initial_state()
+        # Ensure the state is broadcast to all members regardless of guest addition
+        await self.broadcast_lobby_state()
 
     async def disconnect(self, close_code):
         # Remove the user from the group
@@ -37,21 +74,32 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
 
-        # Check if the disconnecting user is the host or guest and handle accordingly
+        self.game_in_progress = False  # Stop the game loop
+
+        # Determine if the disconnecting user is the host or the guest
         if await self.is_user_host():
-            # If the host disconnects, delete the lobby and notify any remaining guest
+            # If the host disconnects, delete the lobby and notify the guest
             await self.delete_lobby()
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "lobby_closed",
-                    "message": "Lobby has been closed as the host has disconnected."
-                }
-            )
+            alert_message = "The host has left the game. The game has been ended."
         else:
-            # If the guest disconnects, remove them from the lobby and broadcast the updated state
+            # If the guest disconnects, remove them from the lobby and notify the host
             await self.remove_guest()
-            await self.broadcast_lobby_state()
+            alert_message = "The guest has left the game. Waiting for a new player to join."
+
+        # Broadcast an alert to remaining players
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "alert",
+                "message": alert_message
+            }
+        )
+        
+    async def alert(self, event):
+        await self.send_json({
+            "type": "alert",
+            "message": event["message"]
+        })
 
     async def receive_json(self, content):
         action = content.get("action")
@@ -61,6 +109,99 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
             await self.update_ready_status(is_ready, user_id)
             await self.broadcast_lobby_state()
+        if action == "start_game":
+            await self.start_game()
+
+        elif action in ["keydown", "keyup"]:
+            await self.handle_key_event(action, content)
+                
+    async def handle_key_event(self, action, content):
+        key = content.get("key")
+        user_id = content.get("user_id")
+        is_keydown = action == "keydown"
+
+        logger.debug(f"Key event received: {action} for user {user_id} with key {key}")
+
+        if await self.is_user_host_id(user_id):
+            # Host controls the left paddle
+            if key == "KeyW":
+                self.left_paddle_speed = -10 if is_keydown else 0
+                logger.debug(f"Host moving left paddle, speed: {self.left_paddle_speed}")
+            elif key == "KeyS":
+                self.left_paddle_speed = 10 if is_keydown else 0
+                logger.debug(f"Host moving left paddle, speed: {self.left_paddle_speed}")
+        else:
+            # Guest controls the right paddle
+            if key == "KeyW":
+                self.right_paddle_speed = -10 if is_keydown else 0
+                logger.debug(f"Guest moving right paddle, speed: {self.right_paddle_speed}")
+            elif key == "KeyS":
+                self.right_paddle_speed = 10 if is_keydown else 0
+                logger.debug(f"Guest moving right paddle, speed: {self.right_paddle_speed}")
+                
+    async def game_loop(self):
+        while self.game_in_progress:
+            await self.game_tick()
+            await asyncio.sleep(1 / 60)
+
+    async def game_tick(self):
+        # Update paddles with their respective speeds
+        self.left_paddle_y += self.left_paddle_speed
+        self.right_paddle_y += self.right_paddle_speed
+
+        # Ensure paddles stay within bounds
+        self.left_paddle_y = max(0, min(self.left_paddle_y, 500 - 60))  # assuming 60 as paddle height
+        self.right_paddle_y = max(0, min(self.right_paddle_y, 500 - 60))
+
+        logger.debug(f"Left paddle position: {self.left_paddle_y}, speed: {self.left_paddle_speed}")
+        logger.debug(f"Right paddle position: {self.right_paddle_y}, speed: {self.right_paddle_speed}")
+        
+        # Ball movement and collision logic
+        self.ball_x += self.ball_direction_x * 5
+        self.ball_y += self.ball_direction_y * 5
+
+        # Collision with top/bottom walls
+        if self.ball_y <= 0 or self.ball_y >= 500:
+            self.ball_direction_y *= -1
+
+        # Collision with paddles
+        if self.ball_x <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
+            self.ball_direction_x *= -1
+        elif self.ball_x >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
+            self.ball_direction_x *= -1
+
+        # Scoring logic
+        if self.ball_x <= 0:
+            self.right_score += 1
+            await self.reset_ball()
+        elif self.ball_x >= 1000:
+            self.left_score += 1
+            await self.reset_ball()
+
+        # Broadcast updated game state
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "game_state",
+                "leftScore": self.left_score,
+                "rightScore": self.right_score,
+                "ball_x": self.ball_x,
+                "ball_y": self.ball_y,
+                "left_paddle_y": self.left_paddle_y,
+                "right_paddle_y": self.right_paddle_y
+            }
+        )
+    
+    async def reset_ball(self):
+        self.ball_x = 500
+        self.ball_y = 250
+        self.ball_direction_x *= -1  # Send the ball towards the last scorer
+
+    async def game_started(self, event):
+        await self.send_json({"type": "game_started"})
+
+    async def game_state(self, event):
+        await self.send_json(event)
 
     async def ready_status(self, event):
         await self.send_json({
@@ -160,6 +301,12 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         """Check if the disconnecting user is the host."""
         lobby = Lobby.objects.get(room_id=self.room_id)
         return self.user == lobby.host
+    
+    @database_sync_to_async
+    def is_user_host_id(self, user_id):
+        # Accurately checks if the provided user_id belongs to the host
+        lobby = Lobby.objects.get(room_id=self.room_id)
+        return user_id == lobby.host.id
 
     @database_sync_to_async
     def delete_lobby(self):
