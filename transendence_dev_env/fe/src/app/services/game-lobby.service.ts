@@ -4,6 +4,7 @@ import { BehaviorSubject, delay, Observable, retryWhen, Subject, tap } from 'rxj
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
 import { GameSettings } from '../games/online-pvp/create-room/create-room.component';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class GameLobbyService {
   public messages$ = new Subject<any>();
   private isConnected = new BehaviorSubject<boolean>(false);
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService, private router: Router) {}
 
   connect(roomId: string) {
     if (this.socket$) {
@@ -24,12 +25,26 @@ export class GameLobbyService {
     this.socket$ = webSocket(`ws://localhost:8000/ws/lobby/${roomId}/?token=${token}`);
 
     this.socket$.subscribe(
-      (msg) => {this.messages$.next(msg),  console.log(msg)},
-      (err) => console.error('WebSocket error:', err),
+      (msg) => {this.messages$.next(msg),  console.log(msg, roomId)},
+      (err) => {console.error('WebSocket error:', err),this.handleError(err, roomId)},
       () => console.warn('WebSocket connection closed')
     );
   }
 
+  handleError(msg: any, roomId: string) {
+    this.router.navigate(['/games/online-pvp/rooms'])
+
+    this.deleteRoom(roomId).subscribe(
+      (res) => {
+        console.log(res);
+        this.router.navigate(['/games/online-pvp/rooms'])
+      },
+      (err) => {
+        console.log(err);
+        this.router.navigate(['/games/online-pvp/rooms'])
+      }
+    );
+  }
   private reconnectIfNeeded(msg: any) {
     this.connect(msg.room_id); // Attempt to reconnect
     this.isConnected.pipe(
@@ -76,5 +91,8 @@ export class GameLobbyService {
 
   getAllRooms(): Observable<any[]> {
     return this.http.get<any[]>(`http://localhost:8000/games/lobby/rooms/`);
+  }
+  deleteRoom(roomId: string): Observable<any> {
+    return this.http.delete(`http://localhost:8000/games/lobby/delete/${roomId}`);
   }
 }

@@ -18,6 +18,7 @@ from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
 import random
 import string
+from django.db import transaction 
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -1085,7 +1086,7 @@ class LobbyViewSet(viewsets.ViewSet):
     def create_room(self, request):
         room_id = generate_room_id()
         host = request.user
-
+        self.clear_existing_user_rooms(host)
         # Get settings from the request
         max_rounds = request.data.get("maxRounds", 3)
         round_score_limit = request.data.get("roundScoreLimit", 3)
@@ -1101,18 +1102,64 @@ class LobbyViewSet(viewsets.ViewSet):
         return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])
+    @transaction.atomic  # Ensures that the following changes are atomic
     def join_room(self, request):
         room_id = request.data.get("room_id")
+        user = request.user
+
         try:
+            # Try to fetch the requested lobby
             lobby = Lobby.objects.get(room_id=room_id, is_active=True)
+
+            # Check if the user is the host; if so, ignore the request
+            if lobby.host == user:
+                return Response(
+                    {"detail": "You are already the host of this room."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Check if the user is already the guest; if so, allow them to rejoin without modification
+            if lobby.guest == user:
+                return Response(
+                    {"detail": "You are already the guest in this room."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Check if the lobby is full (has a guest already)
             if lobby.is_full():
                 return Response({"detail": "Room is full"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            lobby.guest = request.user
+
+            # If the user is not the host or current guest, set them as the guest
+            # First, clear any other room associations for the user
+            self.remove_user_from_other_rooms(user)
+
+            # Add the user as a guest to the room
+            lobby.guest = user
             lobby.save()
-            return Response({"detail": "Joined room successfully"}, status=status.HTTP_200_OK)
+
+            return Response(
+                {"detail": "Joined room successfully. You were removed from any other active rooms."},
+                status=status.HTTP_200_OK
+            )
+
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def remove_user_from_other_rooms(self, user):
+        """Removes the user from any rooms they are currently in."""
+        # Remove user from any room where they are a guest
+        Lobby.objects.filter(guest=user).update(guest=None, is_guest_ready=False)
+        
+        # Optional: If a user can host and join rooms simultaneously and needs to be removed as a host too
+        # Lobby.objects.filter(host=user).delete()  # Uncomment if needed
+        
+    def clear_existing_user_rooms(self, user):
+        """Clears any existing room associations for the user before creating a new one."""
+        # Remove the user as a guest from any existing lobbies
+        Lobby.objects.filter(guest=user).update(guest=None, is_guest_ready=False)
+
+        # Delete any lobbies where the user is the host
+        Lobby.objects.filter(host=user).delete()
 
     @action(detail=False, methods=['post'])
     def set_ready(self, request):
@@ -1173,3 +1220,23 @@ class LobbyViewSet(viewsets.ViewSet):
             for room in rooms
         ]
         return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<room_id>[^/.]+)')
+    def delete_room(self, request, room_id=None):
+        """
+        Deletes the lobby if the requesting user is the host.
+        """
+        try:
+            # Attempt to retrieve the lobby by room_id
+            lobby = Lobby.objects.get(room_id=room_id, is_active=True)
+
+            # Check if the requesting user is the host
+            if request.user != lobby.host:
+                return Response({"detail": "Only the host can delete this room."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Delete the lobby if the user is the host
+            lobby.delete()
+            return Response({"detail": "Lobby deleted successfully."}, status=status.HTTP_200_OK)
+
+        except Lobby.DoesNotExist:
+            return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)

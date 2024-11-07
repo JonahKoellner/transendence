@@ -14,6 +14,7 @@ lobby_join = LobbyViewSet.as_view({'post': 'join_room'})
 lobby_ready = LobbyViewSet.as_view({'post': 'set_ready'})
 lobby_status = LobbyViewSet.as_view({'get': 'room_status'})
 lobby_list_rooms = LobbyViewSet.as_view({'get': 'list_rooms'})
+lobby_delete = LobbyViewSet.as_view({'delete': 'delete_room'}) 
 
 urlpatterns = [
     path('lobby/create/', lobby_create, name="lobby-create"),
@@ -21,5 +22,6 @@ urlpatterns = [
     path('lobby/set_ready/', lobby_ready, name="lobby-set-ready"),
     path('lobby/status/<str:room_id>/', lobby_status, name="lobby-status"),
     path('lobby/rooms/', lobby_list_rooms, name="lobby-list-rooms"),
+    path('lobby/delete/<str:room_id>/', lobby_delete, name="lobby-delete"),
     path('', include(router.urls)),
 ]

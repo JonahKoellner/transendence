@@ -14,6 +14,20 @@ class Game(models.Model):
         (LOCAL_PVP, 'Local Player vs Local Player'),
         (ONLINE_PVP, 'Online Player vs Online Player')
     ]
+    
+    # Game States
+    STARTED = 'started'
+    RUNNING = 'running'
+    FINISHED = 'finished'
+    CANCELED_BY_HOST = 'canceled_by_host'
+    CANCELED_BY_GUEST = 'canceled_by_guest'
+    STATES = [
+        (STARTED, 'Started'),
+        (RUNNING, 'Running'),
+        (FINISHED, 'Finished'),
+        (CANCELED_BY_HOST, 'Canceled by Host'),
+        (CANCELED_BY_GUEST, 'Canceled by Guest')
+    ]
 
     # Core Fields
     player1 = models.ForeignKey(
@@ -38,10 +52,12 @@ class Game(models.Model):
     # Detailed Logging
     moves_log = models.JSONField(blank=True, null=True)  # Log of moves (timestamps, player actions)
     rounds = models.JSONField(blank=True, null=True)     # Round details (scores, times, round winner)
-
+    status = models.CharField(max_length=20, choices=STATES, default=STARTED)
     # Scores and Results
     score_player1 = models.IntegerField(default=0)
     score_player2 = models.IntegerField(default=0)
+    
+    
     winner = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 

@@ -17,7 +17,7 @@
           <td>{{ room.host }}</td>
           <td>{{ room.guest || 'Waiting for guest' }}</td>
           <td>
-            {{ room.all_ready ? 'All Ready' : room.is_full ? 'Waiting for Ready' : 'Open' }}
+            {{ room.all_ready ? 'Room Full' : room.is_full ? 'Waiting for Ready' : 'Open' }}
           </td>
           <td>
             <a [routerLink]="['/games/online-pvp/game-room', room.room_id]">Join</a>

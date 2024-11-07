@@ -50,9 +50,9 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Initialize rounds data
         self.rounds = []
-
         # Create a new Game instance
         await self.create_new_game_instance()
+        await self.set_game_status(Game.RUNNING)
 
         # Notify players that the game has started
         await self.channel_layer.group_send(
@@ -84,6 +84,15 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             player1_id=self.host.id,
         )
 
+    @database_sync_to_async
+    def clear_existing_user_rooms(self):
+        """Removes the user from any existing rooms and deletes any rooms they created, except the one they are joining."""
+        # Remove the user as a guest from any other lobbies, excluding the current one
+        Lobby.objects.filter(guest=self.user).exclude(room_id=self.room_id).update(guest=None, is_guest_ready=False)
+        
+        # Delete any lobbies where the user is the host, excluding the current one
+        Lobby.objects.filter(host=self.user).exclude(room_id=self.room_id).delete()
+
     async def set_game_manager(self, event):
         # Only set the game_manager_channel if the current consumer is not the host
         if not await self.is_user_host():
@@ -99,7 +108,10 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         # Set self.host and self.guest from the lobby
         self.host = await self.get_lobby_host()
         self.guest = await self.get_lobby_guest()
-
+        
+        # Ensure the user is only in one room by clearing existing associations
+        await self.clear_existing_user_rooms()
+        
         # Check if the user is authenticated
         if isinstance(self.user, AnonymousUser):
             await self.close()
@@ -149,29 +161,68 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
 
-        self.game_in_progress = False  # Stop the game loop
+        # Stop the game if it’s running by canceling the game loop task
+        if hasattr(self, 'game_loop_task') and not self.game_loop_task.done():
+            self.game_loop_task.cancel()
+            self.game_in_progress = False  # Update the game status
 
         # Determine if the disconnecting user is the host or the guest
         if await self.is_user_host():
-            # If the host disconnects, delete the lobby and notify the guest
-            await self.delete_lobby()
-            alert_message = "The host has left the game. The game has been ended."
-            user_role = "host"
+            # If the host disconnects, handle based on game state
+            if self.game_in_progress:
+                # Notify the guest, end the game, and delete the lobby
+                await self.set_game_status(Game.CANCELED_BY_HOST)
+                await self.terminate_game_and_notify("The host has left the game. Game canceled.", "host")
+            else:
+                # If the game is not in progress, notify the guest and delete the lobby
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "alert",
+                        "message": "The host has left the lobby. Game has been canceled.",
+                        "user_role": "host"
+                    }
+                )
+                await self.delete_lobby()
         else:
-            # If the guest disconnects, remove them from the lobby and notify the host
-            await self.remove_guest()
-            alert_message = "The guest has left the game. Waiting for a new player to join."
-            user_role = "guest"
+            # If the guest disconnects, handle accordingly based on game state
+            if self.game_in_progress:
+                # Notify the host, cancel the game, and delete the lobby
+                await self.set_game_status(Game.CANCELED_BY_GUEST)
+                await self.terminate_game_and_notify("The guest has left the game. Game canceled.", "guest")
+            else:
+                # If the guest leaves before the game starts, simply remove the guest from the lobby
+                await self.remove_guest()
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "alert",
+                        "message": "The guest has left the lobby. Waiting for a new player to join.",
+                        "user_role": "guest"
+                    }
+                )
 
-        # Broadcast an alert to remaining players
+    async def terminate_game_and_notify(self, message, user_role):
+        """Ends the game, notifies the players, and deletes the lobby."""
+        await self.finalize_game(None, Game.CANCELED_BY_GUEST if user_role == "guest" else Game.CANCELED_BY_HOST)
+
+        # Notify remaining players about game cancellation
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "alert",
-                "message": alert_message,
+                "message": message,
                 "user_role": user_role
             }
         )
+
+        # Cancel the game loop if running
+        if hasattr(self, 'game_loop_task'):
+            self.game_loop_task.cancel()
+
+        # Delete the lobby
+        await self.delete_lobby()
+
         
     async def alert(self, event):
         await self.send_json({
@@ -366,11 +417,16 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     def _save_rounds_to_game(self):
         self.game.rounds = self.rounds
         self.game.save()   
+
+    @database_sync_to_async
+    def set_game_status(self, status):
+        """Sets the status of the current game."""
+        self.game.status = status
+        self.game.save()
         
     async def end_game(self):
         print("Game ended")
         self.game_in_progress = False
-
         # Determine game winner based on rounds won
         player1_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player1.username)
         player2_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player2.username)
@@ -382,7 +438,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         else:
             winner = None  # Tie
 
-        await self.finalize_game(winner)
+        await self.finalize_game(winner, Game.FINISHED)
 
         # Notify players that the game has ended
         await self.channel_layer.group_send(
@@ -407,11 +463,12 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         return player1_username, player2_username
             
     @database_sync_to_async
-    def finalize_game(self, winner):
+    def finalize_game(self, winner, status):
         self.game.end_time = timezone.now()
         self.game.duration = (self.game.end_time - self.game.start_time).total_seconds()
         self.game.winner = winner
         self.game.is_completed = True
+        self.game.status = status
         self.game.save()
 
     async def reset_ball(self):
