@@ -65,7 +65,12 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         } else if (msg.user_role === 'guest') {
           alert('The guest has left the game. Waiting for a new player to join.');
         }
-    }
+      } else if (msg.type === 'game_ended') {
+        this.gameInProgress = false;
+        alert('Game over!');
+      } else if (msg.type === 'round_completed') {
+        console.log('Round completed!');
+      }
     if (this.host === "")
       this.router.navigate(['/games/online-pvp/rooms']);
     });

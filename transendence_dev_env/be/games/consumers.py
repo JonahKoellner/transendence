@@ -1,12 +1,13 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby
+from .models import Lobby, Game
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
 import asyncio
 import random
 from asyncio import Lock
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -21,6 +22,9 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.right_paddle_speed = 0
         self.game_lock = Lock()
         self.game_manager_channel = None  # Initialize game manager channel
+        self.current_round = 1
+        self.rounds = []
+        self.round_start_time = None
         
     async def start_game(self):
         if self.game_in_progress:
@@ -34,36 +38,67 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.ball_y = 250
         self.ball_direction_x = 1
         self.ball_direction_y = 0.5
+        self.ball_speed = 5
         self.left_score = 0
         self.right_score = 0
-        self.left_paddle_speed = 0
-        self.right_paddle_speed = 0
+        self.current_round = 1
+        self.round_start_time = timezone.now()
+
+        # Get settings from lobby
+        self.max_rounds = self.lobby.max_rounds
+        self.round_score_limit = self.lobby.round_score_limit
+
+        # Initialize rounds data
+        self.rounds = []
+
+        # Create a new Game instance
+        await self.create_new_game_instance()
 
         # Notify players that the game has started
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "game_started"}
         )
-
-        # Notify other consumers of the game manager's channel name
+        
         await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "set_game_manager",
-                "channel_name": self.channel_name,
-            }
-        )
+        self.room_group_name,
+        {
+            "type": "set_game_manager",
+            "channel_name": self.channel_name,
+        }
+    )
 
         # Start the game loop
         self.game_loop_task = asyncio.create_task(self.game_loop())
+        
+    @database_sync_to_async
+    def create_new_game_instance(self):
+        self.game = Game.objects.create(
+            player1=self.host,
+            player2=self.guest,
+            game_mode=Game.ONLINE_PVP,
+            start_time=timezone.now(),
+            is_completed=False,
+            moves_log=[],
+            rounds=[],
+            player1_id=self.host.id,
+        )
 
     async def set_game_manager(self, event):
-        self.game_manager_channel = event["channel_name"]
+        # Only set the game_manager_channel if the current consumer is not the host
+        if not await self.is_user_host():
+            self.game_manager_channel = event["channel_name"]
+            logger.debug(f"Set game_manager_channel for guest: {self.game_manager_channel}")
         
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.lobby = await self.get_lobby(self.room_id)
         self.room_group_name = f'lobby_{self.room_id}'
         self.user = self.scope['user']
+
+        # Set self.host and self.guest from the lobby
+        self.host = await self.get_lobby_host()
+        self.guest = await self.get_lobby_guest()
 
         # Check if the user is authenticated
         if isinstance(self.user, AnonymousUser):
@@ -76,22 +111,36 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
-        
+
         if await self.is_user_host():
             self.game_manager_channel = self.channel_name
         else:
             # For guests, the game manager channel should have been set via 'set_game_manager'
             pass
+
         # Add the user as the guest if applicable and broadcast updated state
-        
         if await self.add_guest_if_applicable():
+            # Update self.guest since a new guest has been added
+            self.guest = self.lobby.guest
             await self.broadcast_lobby_state()  # Broadcast if guest is added
-        
+
         # Always send the initial state of the lobby to the connecting user
         await self.send_initial_state()  # Send the initial state to connecting user only
 
         # Ensure the state is broadcast to all members regardless of guest addition
         await self.broadcast_lobby_state()
+
+    @database_sync_to_async
+    def get_lobby(self, room_id):
+        return Lobby.objects.select_related('host', 'guest').get(room_id=room_id)
+    
+    @database_sync_to_async
+    def get_lobby_host(self):
+        return self.lobby.host
+
+    @database_sync_to_async
+    def get_lobby_guest(self):
+        return self.lobby.guest
 
     async def disconnect(self, close_code):
         # Remove the user from the group
@@ -182,10 +231,8 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         async with self.game_lock:
             if await self.is_user_host_id(user_id):
                 self.left_paddle_speed = speed
-                logger.debug(f"Host paddle speed set: {self.left_paddle_speed} (Event from user {user_id})")
             else:
                 self.right_paddle_speed = speed
-                logger.debug(f"Guest paddle speed set: {self.right_paddle_speed} (Event from user {user_id})")
                 
     async def game_loop(self):
         while self.game_in_progress:
@@ -195,20 +242,19 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     def update_paddle_position(self, paddle, speed):
         if paddle == "left":
             self.left_paddle_y = max(0, min(self.left_paddle_y + speed, 500 - 60))
-            logger.debug(f"Updated left paddle position to {self.left_paddle_y}")
         elif paddle == "right":
             self.right_paddle_y = max(0, min(self.right_paddle_y + speed, 500 - 60))
-            logger.debug(f"Updated right paddle position to {self.right_paddle_y}")
-
+            
     async def game_tick(self):
         async with self.game_lock:
-            logger.debug(f"Tick - Left speed: {self.left_paddle_speed}, Right speed: {self.right_paddle_speed}")
-            
+
+            # Update paddle positions
             self.update_paddle_position("left", self.left_paddle_speed)
             self.update_paddle_position("right", self.right_paddle_speed)
 
-            self.ball_x += self.ball_direction_x * 5
-            self.ball_y += self.ball_direction_y * 5
+            # Update ball position
+            self.ball_x += self.ball_direction_x * self.ball_speed
+            self.ball_y += self.ball_direction_y * self.ball_speed
 
             # Handle collisions with top/bottom walls
             if self.ball_y <= 0 or self.ball_y >= 500:
@@ -221,15 +267,22 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
                 self.ball_direction_x *= -1
 
             # Scoring logic
+            scoring_player = None
             if self.ball_x <= 0:
                 self.right_score += 1
+                scoring_player = 'right'
                 await self.reset_ball()
             elif self.ball_x >= 1000:
                 self.left_score += 1
+                scoring_player = 'left'
                 await self.reset_ball()
 
-            logger.debug(f"Final paddle positions - Left: {self.left_paddle_y}, Right: {self.right_paddle_y}")
+            # **Add this block to check for round completion**
+            if self.left_score >= self.round_score_limit or self.right_score >= self.round_score_limit:
+                await self.complete_round()
+                return  # Exit the game tick to prevent further processing until the next loop
 
+            # Send game state to clients
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -244,7 +297,123 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
                     "right_speed": self.right_paddle_speed,
                 }
             )
+        
+        
+                
+    async def complete_round(self):
+        print("Round completed")
+        # Determine round winner
+        if self.left_score > self.right_score:
+            round_winner = self.game.player1.username
+        elif self.right_score > self.left_score:
+            round_winner = self.game.player2.username
+        else:
+            round_winner = "Tie"
+
+        # Record round details
+        round_data = {
+            'round_number': self.current_round,
+            'start_time': self.round_start_time.isoformat(),
+            'end_time': timezone.now().isoformat(),
+            'score_player1': self.left_score,
+            'score_player2': self.right_score,
+            'winner': round_winner
+        }
+
+        await self.add_round_to_game(round_data)
+
+        # Notify clients about round completion
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "round_completed",
+                "round_data": round_data
+            }
+        )
+
+        # Increment current_round after notifying clients
+        self.current_round += 1
+
+        # Check if the game should end
+        if self.current_round > self.max_rounds:
+            await self.end_game()
+            return  # Exit the game tick to prevent further processing until the next loop
+
+        # Reset scores for next round
+        self.left_score = 0
+        self.right_score = 0
+        self.round_start_time = timezone.now()  # Reset round start time
+
+        
+    async def round_completed(self, event):
+        # This method is called when a 'round_completed' event is received
+        await self.send_json({
+            "type": "round_completed",
+            "round_data": event["round_data"]
+        })
+
+    async def game_ended(self, event):
+        # This method is called when a 'game_ended' event is received
+        await self.send_json({
+            "type": "game_ended",
+            "winner": event["winner"]
+        })
             
+    async def add_round_to_game(self, round_data):
+        self.rounds.append(round_data)
+        await database_sync_to_async(self._save_rounds_to_game)()
+
+    def _save_rounds_to_game(self):
+        self.game.rounds = self.rounds
+        self.game.save()   
+        
+    async def end_game(self):
+        print("Game ended")
+        self.game_in_progress = False
+
+        # Determine game winner based on rounds won
+        player1_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player1.username)
+        player2_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player2.username)
+
+        if player1_round_wins > player2_round_wins:
+            winner = self.game.player1
+        elif player2_round_wins > player1_round_wins:
+            winner = self.game.player2
+        else:
+            winner = None  # Tie
+
+        await self.finalize_game(winner)
+
+        # Notify players that the game has ended
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "game_ended",
+                "winner": winner.username if winner else "Tie"
+            }
+        )
+
+        # Give some time for messages to be sent
+        await asyncio.sleep(0.1)
+
+        # Cancel the game loop task
+        if hasattr(self, 'game_loop_task'):
+            self.game_loop_task.cancel()
+            
+    @database_sync_to_async
+    def get_player_usernames(self):
+        player1_username = self.game.player1.username
+        player2_username = self.game.player2.username
+        return player1_username, player2_username
+            
+    @database_sync_to_async
+    def finalize_game(self, winner):
+        self.game.end_time = timezone.now()
+        self.game.duration = (self.game.end_time - self.game.start_time).total_seconds()
+        self.game.winner = winner
+        self.game.is_completed = True
+        self.game.save()
+
     async def reset_ball(self):
         # Reset ball position to the center
         self.ball_x = 500
@@ -358,6 +527,8 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         lobby = Lobby.objects.get(room_id=self.room_id)
         lobby.guest = self.user
         lobby.save()
+        self.lobby = lobby  # Update self.lobby to reflect changes
+        self.guest = lobby.guest
 
     @database_sync_to_async
     def is_user_host(self):
@@ -367,9 +538,8 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     
     @database_sync_to_async
     def is_user_host_id(self, user_id):
-        # Accurately checks if the provided user_id belongs to the host
         lobby = Lobby.objects.get(room_id=self.room_id)
-        return user_id == lobby.host.id
+        return user_id == lobby.host_id  # Use host_id to avoid fetching the host object
 
     @database_sync_to_async
     def delete_lobby(self):
