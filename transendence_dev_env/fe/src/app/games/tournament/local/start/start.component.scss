@@ -519,4 +519,32 @@
       }
     }
   }
+
+  .leave-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .leave-btn {
+    position: relative;
+    overflow: hidden;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .leave-btn .fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition: width 1.5s linear; /* Controls the fill animation duration */
+  }
   

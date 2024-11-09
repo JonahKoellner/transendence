@@ -127,6 +127,10 @@ export class StartComponent implements OnInit {
   gameReady: boolean = false;
   hostname: string = '';
   host: UserProfile | null = null;
+
+  leavingPlayer1 = false;
+  leavingPlayer2 = false;
+  private holdTimeout: any;
   constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver, private profileService: ProfileService, private gameService: GameService ) { }
 
   ngOnInit(): void {
@@ -867,6 +871,31 @@ export class StartComponent implements OnInit {
       }
       // Toggle the paused state
       this.isPaused = !this.isPaused;
+    }
+  }
+
+  startHold(player: string) {
+    this.cancelHold(player); // Ensure no existing timer is running
+    this[player === 'player1' ? 'leavingPlayer1' : 'leavingPlayer2'] = true;
+    
+    // Start the hold timer (1.5 seconds)
+    this.holdTimeout = setTimeout(() => this.triggerLeave(player), 1500);
+  }
+
+  cancelHold(player: string) {
+    clearTimeout(this.holdTimeout);
+    this.holdTimeout = null;
+    this[player === 'player1' ? 'leavingPlayer1' : 'leavingPlayer2'] = false;
+  }
+
+  triggerLeave(player: string) {
+    // Trigger leave action after hold completes
+    if (player === 'player1') {
+      alert(`${this.match?.player1} has left the game`);
+      this.leavingPlayer1 = false;
+    } else if (player === 'player2') {
+      alert(`${this.match?.player2} has left the game`);
+      this.leavingPlayer2 = false;
     }
   }
 }

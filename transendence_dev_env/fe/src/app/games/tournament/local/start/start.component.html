@@ -188,8 +188,6 @@
 </div>
 <div #gameCanvasContainer></div>
 
-<!-- Next Match Modal -->
-<!-- Next Match Modal -->
 <ng-template #nextMatchModal let-modal>
   <div class="modal-header">
     <h4 class="modal-title">Next Match</h4>
@@ -218,6 +216,33 @@
         </label>
       </div>
 
+    </div>
+
+    <!-- Leave Buttons with Fill Animation -->
+    <div class="leave-buttons">
+      <!-- Player 1 Leave Button -->
+      <button
+        *ngIf="match.player1_type === 'Player'"
+        class="leave-btn"
+        [class.leaving]="leavingPlayer1"
+        (mousedown)="startHold('player1')"
+        (mouseup)="cancelHold('player1')"
+        (mouseleave)="cancelHold('player1')">
+        {{ match.player1 }} Leave
+        <div class="fill" [style.width]="leavingPlayer1 ? '100%' : '0'"></div>
+      </button>
+      
+      <!-- Player 2 Leave Button -->
+      <button
+        *ngIf="match.player2_type === 'Player'"
+        class="leave-btn"
+        [class.leaving]="leavingPlayer2"
+        (mousedown)="startHold('player2')"
+        (mouseup)="cancelHold('player2')"
+        (mouseleave)="cancelHold('player2')">
+        {{ match.player2 }} Leave
+        <div class="fill" [style.width]="leavingPlayer2 ? '100%' : '0'"></div>
+      </button>
     </div>
   </div>
   <div class="modal-footer">
