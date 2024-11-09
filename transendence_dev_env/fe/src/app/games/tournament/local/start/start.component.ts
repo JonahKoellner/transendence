@@ -125,9 +125,10 @@ export class StartComponent implements OnInit {
   
   gameRunning: boolean = false;
   gameReady: boolean = false;
+  gameCancelled = false;
   hostname: string = '';
   host: UserProfile | null = null;
-
+  private isComponentActive = true;
   leavingPlayer1 = false;
   leavingPlayer2 = false;
   private holdTimeout: any;
@@ -439,53 +440,73 @@ export class StartComponent implements OnInit {
   async simulateMatch(match: Match, stage: Stage): Promise<void> {
     this.match = match;
     this.gameRunning = true;
+    this.gameCancelled = false; // Reset the flag for each match
     match.created_at = new Date();
     match.status = 'ongoing';
     match.player1_score = 0;
     match.player2_score = 0;
 
     try {
-        // Switch player and bot positions if player is initially player2 and bot is player1
-        if (match.player1_type === 'Bot' && match.player2_type === 'Player') {
-            // Swap players so the player is always on the left as player1
-            [match.player1, match.player2] = [match.player2, match.player1];
-            [match.player1_type, match.player2_type] = [match.player2_type, match.player1_type];
-            [match.player1_score, match.player2_score] = [match.player2_score, match.player1_score];
+      // Ensure player is on the left if it's a Player vs. Bot match
+      if (match.player1_type === 'Bot' && match.player2_type === 'Player') {
+        [match.player1, match.player2] = [match.player2, match.player1];
+        [match.player1_type, match.player2_type] = [match.player2_type, match.player1_type];
+        [match.player1_score, match.player2_score] = [match.player2_score, match.player1_score];
+      }
+
+      // Auto-simulate for Bot vs. Bot matches
+      if (match.player1_type === 'Bot' && match.player2_type === 'Bot') {
+        this.autoSimulateMatch(match);
+      } else {
+        // Show next match modal for any match with a player
+        if (match.player1_type === 'Player' || match.player2_type === 'Player') {
+          if (!this.isComponentActive) return;
+          await this.showNextMatchModal();
+          if (!this.isComponentActive) return;
         }
 
-        // Handle Bot vs. Bot automatically
-        if (match.player1_type === 'Bot' && match.player2_type === 'Bot') {
-            this.autoSimulateMatch(match);
-        } else {
-            // Show the next match modal for any match involving a player
-            if (match.player1_type === 'Player' || match.player2_type === 'Player') {
-                await this.showNextMatchModal();
-            }
+        match.start_time = new Date();
 
-            match.start_time = new Date();
-
-            // Case 1: Player vs. Bot (player is player1, bot is player2)
-            if (match.player1_type === 'Player' && match.player2_type === 'Bot') {
-                await this.loadPveGameCanvas(match, stage);
-            }
-            // Case 2: Player vs. Player
-            else if (match.player1_type === 'Player' && match.player2_type === 'Player') {
-                await this.loadPvpGameCanvas(match, stage);
-            }
+        // Load the appropriate game canvas
+        if (match.player1_type === 'Player' && match.player2_type === 'Bot') {
+          await this.loadPveGameCanvas(match, stage);
+        } else if (match.player1_type === 'Player' && match.player2_type === 'Player') {
+          await this.loadPvpGameCanvas(match, stage);
         }
+      }
 
-        // Mark the match as completed with duration
+      // Finalize match details
+      if (!this.gameCancelled) {
         match.end_time = new Date();
         match.duration = match.end_time.getTime() - match.start_time.getTime();
         match.status = 'completed';
+      }
     } catch (error) {
-        console.error("Error during match simulation:", error);
-        match.status = 'failed';
+      console.error("Error during match simulation:", error);
+      match.status = 'failed';
     } finally {
-        this.gameRunning = false;
-        if (match.player1_type === 'Player' || match.player2_type === 'Player') {
-            await this.showMatchResultModal();
-        }
+      this.gameRunning = false;
+      if (!this.gameCancelled && (match.player1_type === 'Player' || match.player2_type === 'Player')) {
+        if (!this.isComponentActive) return;
+        await this.showMatchResultModal();
+      }
+    }
+  }
+
+  // Warn user on navigation during an active game
+  @HostListener('window:beforeunload', ['$event'])
+  handleBeforeUnload(event: Event): string | void {
+    if (this.gameRunning) {
+      event.preventDefault(); // Prevent the unload
+      return (event as BeforeUnloadEvent).returnValue = ''; // Display the warning message
+    }
+  }
+  // Cleanup on component destruction to handle active game state
+  ngOnDestroy(): void {
+    this.isComponentActive = false;
+    if (this.gameRunning) {
+      this.gameCancelled = true;
+      this.gameRunning = false;
     }
   }
 
@@ -898,4 +919,5 @@ export class StartComponent implements OnInit {
       this.leavingPlayer2 = false;
     }
   }
+
 }
