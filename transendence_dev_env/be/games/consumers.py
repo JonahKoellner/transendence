@@ -29,7 +29,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     async def start_game(self):
         if self.game_in_progress:
             return  # Prevent starting a new game if one is already in progress
-
+        await self.update_host_and_guest()
         # Initialize game state variables
         self.game_in_progress = True
         self.left_paddle_y = 250
@@ -71,8 +71,15 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         # Start the game loop
         self.game_loop_task = asyncio.create_task(self.game_loop())
         
+    async def update_host_and_guest(self):
+        self.lobby = await self.get_lobby(self.room_id)
+        self.host = await self.get_lobby_host()
+        self.guest = await self.get_lobby_guest()
+            
     @database_sync_to_async
     def create_new_game_instance(self):
+        logger.debug(f"Creating new game instance for players: {self.host} and {self.guest}")
+        logger.debug(f"Game mode: {Game.ONLINE_PVP}")
         self.game = Game.objects.create(
             player1=self.host,
             player2=self.guest,

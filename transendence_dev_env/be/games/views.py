@@ -89,6 +89,7 @@ class GameViewSet(viewsets.ModelViewSet):
         else:
             # Regular PvP or PvE game
             serializer.save(player1=self.request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
         instance = self.get_object()
