@@ -1,6 +1,7 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Lobby, Game
+from django.contrib.auth.models import User 
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
@@ -431,10 +432,45 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.game.status = status
         self.game.save()
         
+    async def calculate_xp_gain(self, game, player, is_winner=False):
+        # Set a default duration to handle None values
+        game_duration = game.duration if game.duration is not None else 0
+
+        # Base XP values
+        base_xp = 50  # Base XP for winning a game
+        level_bonus = 1.5 * await self.get_player_level(player)  # Use async method to get player level
+
+        # Calculate duration-based XP, with diminishing returns
+        if game_duration < 300:  # Short game
+            duration_xp = game_duration * 0.5  # 0.5 XP per second for shorter games
+        elif game_duration < 1200:  # Medium game
+            duration_xp = game_duration * 0.3  # 0.3 XP per second for medium length games
+        else:  # Long game
+            duration_xp = min(400 + (game_duration - 1200) * 0.1, 600)  # Cap XP for long games
+
+        # Score difference multiplier for higher XP based on performance
+        score_difference = abs(game.score_player1 - game.score_player2)
+        performance_multiplier = 1 + min(score_difference / 100, 0.5)  # Up to +50% XP based on score gap
+
+        # Game mode multiplier: more challenging modes award more XP
+        if game.game_mode == Game.PVE:
+            mode_multiplier = 0.7 if not is_winner else 1.0  # PvE easier, give less XP if lost
+        elif game.game_mode == Game.LOCAL_PVP:
+            mode_multiplier = 1.0 if not is_winner else 1.1  # Balanced mode, slight bonus for win
+        else:
+            mode_multiplier = 1.1 if not is_winner else 1.3  # Online PvP, higher reward for higher challenge
+
+        # Apply base, duration, level, performance, and mode multipliers
+        xp_gain = (base_xp + duration_xp + level_bonus) * performance_multiplier * mode_multiplier
+
+        # Additional XP for winning, varies by game mode
+        if is_winner:
+            xp_gain += 50 if game.game_mode == Game.PVE else 75  # Higher bonus for PvP games
+
+        return int(xp_gain)
+        
     async def end_game(self):
-        print("Game ended")
         logger.info(f"Game data: {self.game}")
-        logger.info(f"Self: {self}")
         self.game_in_progress = False
         # Determine game winner based on rounds won
         try:
@@ -450,17 +486,21 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             logger.error(f"Error determining game winner in end_game: {e}")
             player1_round_wins = 0
             player2_round_wins = 0
-
+            
         if player1_round_wins > player2_round_wins:
-            winner = self.game.player1
+            winner, loser = self.game.player1, self.game.player2
         elif player2_round_wins > player1_round_wins:
-            winner = self.game.player2
+            winner, loser = self.game.player2, self.game.player1
         else:
-            winner = None  # Tie
+            winner, loser = None, None  # Tie
 
         logger.info(f"Game winner: {winner}")
 
-        await self.finalize_game(winner, Game.FINISHED)
+        # Calculate XP gain
+        winner_xp = await self.calculate_xp_gain(self.game, winner, is_winner=True) if winner else 0
+        loser_xp = max(10, await self.calculate_xp_gain(self.game, loser, is_winner=False) // 4) if loser else 0
+
+        await self.finalize_game(winner, Game.FINISHED, winner_xp, loser_xp)
 
         # Notify players that the game has ended
         await self.channel_layer.group_send(
@@ -477,7 +517,12 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         # Cancel the game loop task
         if hasattr(self, 'game_loop_task'):
             self.game_loop_task.cancel()
-            
+         
+
+    @database_sync_to_async
+    def get_player_level(self, player):
+        return player.profile.level   
+    
     @database_sync_to_async
     def get_player_usernames(self):
         player1_username = self.game.player1.username
@@ -485,13 +530,21 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         return player1_username, player2_username
             
     @database_sync_to_async
-    def finalize_game(self, winner, status):
+    def finalize_game(self, winner, status, winner_xp, loser_xp):
         self.game.end_time = timezone.now()
         self.game.duration = (self.game.end_time - self.game.start_time).total_seconds()
         self.game.winner = winner
         self.game.is_completed = True
         self.game.status = status
+        
+        # Save the game instance
         self.game.save()
+
+        # Apply XP to profiles if winner and loser are actual User instances
+        if isinstance(winner, User):
+            winner.profile.add_xp(winner_xp)
+        if isinstance(self.game.player2, User) and self.game.player2 != winner:
+            self.game.player2.profile.add_xp(loser_xp)
 
     async def reset_ball(self):
         # Reset ball position to the center
