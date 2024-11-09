@@ -426,10 +426,21 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         
     async def end_game(self):
         print("Game ended")
+        logger.info(f"Game data: {self.game}")
+        logger.info(f"Self: {self}")
         self.game_in_progress = False
         # Determine game winner based on rounds won
-        player1_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player1.username)
-        player2_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player2.username)
+        try:
+            logger.debug(f"Player 1: {self.game.player1}, Player 2: {self.game.player2}")
+            player1_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player1)
+            player2_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player2)
+            logger.info(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}")
+            logger.info(f"Round data: {self.rounds}")
+        except Exception as e:
+            # ERROR 2024-11-09 17:58:43,417 consumers Error determining game winner: 'NoneType' object has no attribute 'username'
+            logger.error(f"Error determining game winner in end_game: {e}")
+            player1_round_wins = 0
+            player2_round_wins = 0
 
         if player1_round_wins > player2_round_wins:
             winner = self.game.player1
@@ -437,6 +448,8 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             winner = self.game.player2
         else:
             winner = None  # Tie
+
+        logger.info(f"Game winner: {winner}")
 
         await self.finalize_game(winner, Game.FINISHED)
 
