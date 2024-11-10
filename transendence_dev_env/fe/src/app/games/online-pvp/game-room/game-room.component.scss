@@ -5,7 +5,7 @@
     color: #e0e0e0;
   
     h2 {
-      color: #4CAF50;
+      color: #61BA50;
       font-size: 2rem;
       margin-bottom: 1.5rem;
       font-weight: bold;
@@ -24,7 +24,7 @@
       gap: 1rem;
   
       .player-info {
-        background-color: #1e1e1e;
+        background-color: #121414;
         padding: 1.5rem;
         border-radius: 8px;
         width: 45%;
@@ -38,13 +38,13 @@
         }
   
         strong {
-          color: #4CAF50;
+          color: #61BA50;
         }
       }
     }
   
     button {
-      background-color: #4CAF50;
+      background-color: #61BA50;
       color: #fff;
       padding: 0.75rem 1.5rem;
       border: none;
@@ -68,7 +68,7 @@
       p {
         font-size: 1.2rem;
         font-weight: bold;
-        color: #4CAF50;
+        color: #61BA50;
       }
     }
   
@@ -78,9 +78,9 @@
   
     .game-display {
       canvas {
-        border: 1px solid #4CAF50;
+        border: 1px solid #61BA50;
         border-radius: 8px;
-        background-color: #1e1e1e;
+        background-color: #121414;
       }
     }
   

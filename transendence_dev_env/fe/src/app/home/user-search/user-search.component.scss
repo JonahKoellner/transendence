@@ -3,12 +3,12 @@
   max-width: 800px;
   margin: auto;
   text-align: center;
-  background-color: #1e1e1e;
+  background-color: #121414;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 
   h2 {
-    color: #4CAF50;
+    color: #61BA50;
     font-size: 1.8rem;
     font-weight: bold;
     margin-bottom: 1rem;
@@ -23,8 +23,8 @@
       flex-grow: 1;
       padding: 0.75rem;
       border-radius: 4px;
-      border: 1px solid #4CAF50;
-      background-color: #2e2e2e;
+      border: 1px solid #61BA50;
+      background-color: #232627;
       color: #e0e0e0;
       transition: border-color 0.3s, background-color 0.3s;
 
@@ -33,7 +33,7 @@
       }
 
       &:focus {
-        border-color: #4CAF50;
+        border-color: #61BA50;
         background-color: #3a3a3a;
       }
     }
@@ -42,7 +42,7 @@
       padding: 0.75rem 1.5rem;
       border-radius: 4px;
       border: none;
-      background-color: #4CAF50;
+      background-color: #61BA50;
       color: #fff;
       font-size: 1rem;
       cursor: pointer;
@@ -76,7 +76,7 @@
 }
 
 .user-card {
-  background-color: #2e2e2e;
+  background-color: #232627;
   color: #e0e0e0;
   padding: 1rem;
   border-radius: 8px;
@@ -104,7 +104,7 @@
     text-align: left;
 
     h4 {
-      color: #4CAF50;
+      color: #61BA50;
       font-size: 1.1rem;
       margin: 0;
       font-weight: bold;
@@ -122,7 +122,7 @@
     .btn-add {
       padding: 0.5rem 1rem;
       border-radius: 4px;
-      background-color: #4CAF50;
+      background-color: #61BA50;
       color: white;
       font-size: 0.85rem;
       cursor: pointer;
@@ -134,7 +134,7 @@
     }
 
     .btn-profile {
-      color: #4CAF50;
+      color: #61BA50;
       text-decoration: underline;
       font-size: 0.85rem;
       transition: color 0.3s;

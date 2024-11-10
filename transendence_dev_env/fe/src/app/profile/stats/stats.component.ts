@@ -48,7 +48,7 @@ export class StatsComponent implements OnInit {
         labels: ['Wins', 'Losses'],
         datasets: [{
           data: [data.win_rate ?? 0, 100 - (data.win_rate ?? 0)],
-          backgroundColor: ['#4caf50', '#f44336']
+          backgroundColor: ['#61BA50', '#f44336']
         }]
       }
     });

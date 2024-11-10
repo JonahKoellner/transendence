@@ -1,50 +1,56 @@
 <div class="notifications-icon" (click)="toggleNotifications()">
-  <i class="fas fa-bell">ICON</i>
-  <span *ngIf="unreadCount > 0" class="badge badge-danger">{{ unreadCount }}</span>
+  <i class="fas fa-bell"></i>
+  <span *ngIf="unreadCount > 0" class="badge">{{ unreadCount }}</span>
 </div>
 
-<div class="notifications-container card" *ngIf="showNotifications">
-  <div class="card-header d-flex justify-content-between">
-    <h5 class="mb-0">Notifications</h5>
-    <button class="btn btn-sm btn-secondary" (click)="markAllAsRead()">Mark All as Read</button>
+<!-- Notifications Dropdown Panel -->
+<div class="notifications-dropdown" *ngIf="showNotifications">
+  <div class="notifications-header">
+    <h5>Notifications</h5>
+    <div class="filters">
+      <select [(ngModel)]="selectedType" (change)="filterNotifications()">
+        <option value="">All Types</option>
+        <option *ngFor="let type of notificationTypes" [value]="type">{{ type | titlecase }}</option>
+      </select>
+      <select [(ngModel)]="selectedReadStatus" (change)="filterNotifications()">
+        <option value="unread">Unread</option>
+        <option value="read">Read</option>
+        <option value="">All</option>
+      </select>
+    </div>
   </div>
-
-  <ul class="list-group list-group-flush">
-    <li
-      *ngFor="let notification of notifications"
-      [ngClass]="getPriorityClass(notification.priority)"
-      class="list-group-item notification-item"
-      (click)="handleNotification(notification)"
-    >
-      <i
-        [ngClass]="{
-          'fa fa-user-plus': notification.notification_type === 'friend_request',
-          'fa fa-gamepad': notification.notification_type === 'game_invite',
-          'fa fa-envelope': notification.notification_type === 'new_message'
-        }"
-        class="notification-icon"
-      ></i>
-      <div class="notification-content">
-        <span *ngIf="notification.sender?.username; else noUsername">
-          {{ notification.sender.username }} {{ getNotificationText(notification.notification_type) }}
-        </span>
-        <ng-template #noUsername>
-          <span>
-            {{ notification.sender }} {{ getNotificationText(notification.notification_type) }}
-          </span>
-        </ng-template>
-        <small class="text-muted">{{ notification.timestamp | date: 'short' }}</small>
-      </div>
-      <button
-        *ngIf="!notification.is_read"
-        class="btn btn-sm btn-outline-warning mark-read-btn"
-        (click)="markAsRead(notification); $event.stopPropagation();"
+  <div class="notifications-body">
+    <ul>
+      <li
+        *ngFor="let notification of filteredNotifications"
+        [ngClass]="{ unread: !notification.is_read }"
+        (click)="handleNotification(notification)"
       >
-        Mark as Read
-      </button>
-    </li>
-  </ul>
+        <div class="notification-icon">
+          <i [ngClass]="getIconClass(notification.notification_type)"></i>
+        </div>
+        <div class="notification-content">
+          <p>
+            <strong *ngIf="notification.sender?.username">{{ notification.sender.username }}</strong>
+            {{ getNotificationText(notification.notification_type) }}
+          </p>
+          <small>{{ notification.timestamp | date: 'short' }}</small>
+        </div>
+        <button
+          *ngIf="!notification.is_read"
+          class="mark-read-btn"
+          (click)="markAsRead(notification); $event.stopPropagation();"
+        >
+          Mark as Read
+        </button>
+      </li>
+    </ul>
+  </div>
+  <div class="notifications-footer">
+    <button (click)="markAllAsRead()">Mark All as Read</button>
+  </div>
 </div>
+
 
 
 <!-- Friend Request Dialog -->

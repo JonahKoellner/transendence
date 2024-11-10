@@ -3,13 +3,13 @@
     margin: 2rem auto;
     max-width: 500px;
     padding: 2rem;
-    background-color: #1e1e1e;
+    background-color: #121414;
     border-radius: 8px;
     border: 1px solid #444;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   
     h2 {
-      color: #4CAF50;
+      color: #61BA50;
       font-size: 2rem;
       margin-bottom: 1.5rem;
       font-weight: bold;
@@ -19,7 +19,7 @@
       width: 80%;
       padding: 0.75rem;
       font-size: 1rem;
-      border: 1px solid #4CAF50;
+      border: 1px solid #61BA50;
       border-radius: 4px;
       background-color: #333;
       color: #e0e0e0;
@@ -32,13 +32,13 @@
       }
   
       &:focus {
-        border-color: #4CAF50;
+        border-color: #61BA50;
         box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
       }
     }
   
     button {
-      background-color: #4CAF50;
+      background-color: #61BA50;
       color: #fff;
       padding: 0.75rem 2rem;
       border: none;

@@ -10,16 +10,16 @@
 .game-title {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #4CAF50;
+  color: #61BA50;
   text-align: center;
 }
 
 // Card styling for dark theme
 .card {
-  background-color: #2e2e2e; // Dark background
+  background-color: #232627; // Dark background
   padding: 1.5rem;
   border-radius: 8px;
-  border: 1px solid #4CAF50; // Green border for contrast
+  border: 1px solid #61BA50; // Green border for contrast
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   width: 100%;
   color: #e0e0e0; // Light text color
@@ -27,7 +27,7 @@
 
 .settings-header, .game-header, .result-header, .logs-header {
   text-align: center;
-  color: #4CAF50; // Green accent color
+  color: #61BA50; // Green accent color
   margin-bottom: 1rem;
   font-weight: bold;
 }
@@ -42,7 +42,7 @@
   background-color: #333; // Darker gray for item backgrounds
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid #4CAF50; // Green border
+  border: 1px solid #61BA50; // Green border
   color: #e0e0e0; // Light text color
 }
 
@@ -54,7 +54,7 @@
 
 // Button styling for dark theme
 .start-game-btn, .play-again-btn {
-  background-color: #4CAF50;
+  background-color: #61BA50;
   color: #fff;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -83,13 +83,13 @@
 
 .move-time {
   font-weight: bold;
-  color: #4CAF50;
+  color: #61BA50;
 }
 
 // Input styling for dark theme
 input[type="number"], input[type="text"] {
   background-color: #333;
-  border: 1px solid #4CAF50;
+  border: 1px solid #61BA50;
   color: #e0e0e0;
   border-radius: 4px;
   padding: 0.5rem;
@@ -102,7 +102,7 @@ input[type="number"], input[type="text"] {
   }
 
   &:focus {
-    border-color: #4CAF50;
+    border-color: #61BA50;
     box-shadow: 0 0 4px rgba(76, 175, 80, 0.3);
   }
 }

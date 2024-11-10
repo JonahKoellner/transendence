@@ -6,7 +6,7 @@
     max-width: 800px;
     margin: auto;
     padding: 2rem;
-    background-color: #1e1e1e;
+    background-color: #121414;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 
@@ -16,7 +16,7 @@
         h2 {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #4CAF50;
+            color: #61BA50;
             margin-bottom: 0.5rem;
         }
 
@@ -26,7 +26,7 @@
             color: #777;
 
             &.completed {
-                color: #4CAF50;
+                color: #61BA50;
             }
             &.in-progress {
                 color: #ffc107;
@@ -45,16 +45,16 @@
         width: 100%;
 
         .info-section, .winner-section {
-            background: #2e2e2e;
+            background: #232627;
             padding: 1.5rem;
             border-radius: 8px;
-            border: 1px solid #4CAF50;
+            border: 1px solid #61BA50;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             flex: 1;
             min-width: 260px;
 
             h3 {
-                color: #4CAF50;
+                color: #61BA50;
                 font-weight: bold;
                 font-size: 1.3rem;
                 margin-bottom: 1rem;
@@ -83,14 +83,14 @@
 
         h3 {
             text-align: center;
-            color: #4CAF50;
+            color: #61BA50;
             font-size: 1.5rem;
             font-weight: bold;
             margin-bottom: 1rem;
         }
 
         .round-card {
-            background: #1e1e1e;
+            background: #121414;
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1.5rem;
@@ -99,7 +99,7 @@
 
             h4 {
                 font-size: 1.2rem;
-                color: #4CAF50;
+                color: #61BA50;
                 font-weight: bold;
                 margin-bottom: 0.5rem;
             }
@@ -115,10 +115,10 @@
             }
 
             .match-card {
-                background: #2e2e2e;
+                background: #232627;
                 padding: 1rem;
                 border-radius: 5px;
-                border: 1px solid #4CAF50;
+                border: 1px solid #61BA50;
                 margin: 0.75rem 0;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 
@@ -135,7 +135,7 @@
 
                         .name {
                             font-weight: bold;
-                            color: #4CAF50;
+                            color: #61BA50;
                         }
 
                         .type {
@@ -145,7 +145,7 @@
 
                         .score {
                             font-size: 0.9rem;
-                            color: #4CAF50;
+                            color: #61BA50;
                         }
                     }
 

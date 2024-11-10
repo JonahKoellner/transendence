@@ -21,7 +21,20 @@ export class NotificationsComponent implements OnInit {
   currentNotification: Notification | null = null;
   selectedFriendId: number | null = null;
   selectedFriendUsername: string | null = null;
-
+  notificationTypes = [
+    'friend_request',
+    'friend_request_accepted',
+    'friend_request_rejected',
+    'game_invite',
+    'arena_invite',
+    'tournament',
+    'new_message',
+    'system_alert',
+    'level_up',
+  ];
+  selectedType = '';
+  filteredNotifications: Notification[] = [];
+  selectedReadStatus = 'unread';
   constructor(
     private notificationService: NotificationService,
     private userService: ProfileService,
@@ -35,6 +48,7 @@ export class NotificationsComponent implements OnInit {
         this.notifications = notifications;
         console.log(notifications);
         this.updateUnreadCount();
+        this.filterNotifications();
       },
       (error) => console.error(error)
     );
@@ -142,6 +156,23 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
+  getIconClass(notificationType: string): string {
+    switch (notificationType) {
+      case 'friend_request':
+        return 'fas fa-user-friends';
+      case 'game_invite':
+        return 'fas fa-gamepad';
+      case 'new_message':
+        return 'fas fa-envelope';
+      case 'system_alert':
+        return 'fas fa-exclamation-circle';
+      case 'level_up':
+        return 'fas fa-level-up-alt';
+      default:
+        return 'fas fa-bell';
+    }
+  }
+
   getPriorityClass(priority: string): string {
     switch (priority) {
       case 'high':
@@ -153,5 +184,19 @@ export class NotificationsComponent implements OnInit {
       default:
         return '';
     }
+  }
+  filterNotifications() {
+    this.filteredNotifications = this.notifications.filter((notification) => {
+      const matchesType = this.selectedType
+        ? notification.notification_type === this.selectedType
+        : true;
+      const matchesReadStatus =
+        this.selectedReadStatus === 'unread'
+          ? !notification.is_read
+          : this.selectedReadStatus === 'read'
+          ? notification.is_read
+          : true;
+      return matchesType && matchesReadStatus;
+    });
   }
 }

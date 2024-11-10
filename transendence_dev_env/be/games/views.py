@@ -318,7 +318,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         performance_multiplier = 1.0
         consistency_bonus = 0.0
         opponent_factor = 1.0
-
+        rounds_played = 0
         # Calculate progression-based multipliers and bonuses
         if tournament.type == TournamentType.SINGLE_ELIMINATION:
             rounds_played = tournament.rounds.filter(matches__player1=player.username).count() \
@@ -408,18 +408,28 @@ class TournamentViewSet(viewsets.ModelViewSet):
         """
         Determines the player's ranking within a Round Robin tournament group.
         """
-        # Assuming each player has a score attribute that accumulates their points or wins in the tournament
-        scores = {p['username']: 0 for p in tournament.all_participants}
-        for match in Match.objects.filter(rounds__tournaments=tournament):
-            if match.outcome == MatchOutcome.FINISHED:
-                if match.winner == player.username:
-                    scores[player.username] += 1
-        # Sort players by score and return rank for this player
+        # Assuming each participant is represented by their username
+        participants = tournament.all_participants  # List of usernames
+        scores = {username: 0 for username in participants}
+
+        # Fetch all finished matches in the tournament
+        matches = Match.objects.filter(rounds__tournaments=tournament, outcome=MatchOutcome.FINISHED)
+
+        # Update scores based on match results
+        for match in matches:
+            if match.winner in scores:
+                scores[match.winner] += 1
+
+        # Sort players by score in descending order
         sorted_players = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+
+        # Find the rank of the current player
         for rank, (username, _) in enumerate(sorted_players, start=1):
             if username == player.username:
                 return rank
-        return len(sorted_players)  # Default to last if not found
+
+        # If player not found, return the length of sorted_players
+        return len(sorted_players)
 
     def create(self, request, *args, **kwargs):
         """

@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: #1e1e1e;
+  background-color: #121414;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -13,7 +13,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  background-color: #4CAF50;
+  background-color: #61BA50;
   color: #ffffff;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
@@ -44,7 +44,7 @@
   padding: 1rem;
   overflow-y: auto;
   max-height: 400px;
-  background-color: #2e2e2e;
+  background-color: #232627;
 }
 
 .message {
@@ -69,7 +69,7 @@
   // Styles for own messages
   &.own-message .message-bubble {
     background-color: #3f3f3f;
-    color: #1e1e1e;
+    color: #121414;
     text-align: right;
     border: 1px solid #388E3C; /* Darker green */
     box-shadow: 0px 4px 8px rgba(56, 142, 60, 0.2); /* Adjusted shadow color */
@@ -90,7 +90,7 @@
     .sender {
       font-weight: bold;
       display: block;
-      color: #4CAF50;
+      color: #61BA50;
       margin-bottom: 0.25rem;
     }
 
@@ -111,16 +111,16 @@
 .send-message {
   display: flex;
   padding: 1rem;
-  background-color: #1e1e1e;
-  border-top: 1px solid #4CAF50;
+  background-color: #121414;
+  border-top: 1px solid #61BA50;
 
   textarea {
     flex-grow: 1;
     padding: 0.5rem;
     font-size: 1rem;
-    border: 1px solid #4CAF50;
+    border: 1px solid #61BA50;
     border-radius: 4px;
-    background-color: #2e2e2e;
+    background-color: #232627;
     color: #e0e0e0;
     resize: none; /* Prevent resizing */
     height: 40px; /* Fixed height */
@@ -130,7 +130,7 @@
     transition: background-color 0.3s, border 0.3s;
 
     &:focus {
-      border-color: #4CAF50;
+      border-color: #61BA50;
       background-color: #3a3a3a;
     }
   }
@@ -140,7 +140,7 @@
     padding: 0.5rem 1rem;
     font-size: 1rem;
     border-radius: 4px;
-    background-color: #4CAF50;
+    background-color: #61BA50;
     color: #fff;
     border: none;
     cursor: pointer;
@@ -168,7 +168,7 @@
     width: 40px;
     height: 40px;
     border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #4CAF50;
+    border-top-color: #61BA50;
     border-radius: 50%;
     animation: spin 1s infinite linear;
   }

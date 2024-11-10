@@ -1,10 +1,12 @@
 .navbar {
+  position: relative;
+  z-index: 100;
   padding: 10px 20px;
   border-bottom: 1px solid #343a40;
 
   .navbar-brand {
     font-weight: bold;
-    color: #4CAF50 !important;
+    color: #61BA50 !important;
     font-size: 1.5rem;
   }
 
@@ -15,7 +17,7 @@
     transition: color 0.3s ease;
 
     &:hover {
-      color: #4CAF50 !important;
+      color: #61BA50 !important;
     }
   }
 }

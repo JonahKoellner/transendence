@@ -5,7 +5,7 @@
   text-align: center;
 
   h2 {
-    color: #4CAF50;
+    color: #61BA50;
     font-size: 1.8rem;
     font-weight: bold;
     margin-bottom: 1rem;
@@ -17,7 +17,7 @@
   }
 
   .nav-tabs .nav-link {
-    color: #4CAF50;
+    color: #61BA50;
     font-weight: bold;
     border: none;
     transition: color 0.3s;
@@ -25,7 +25,7 @@
 
   .nav-tabs .nav-link.active {
     color: #fff;
-    background-color: #4CAF50;
+    background-color: #61BA50;
   }
 }
 
@@ -35,7 +35,7 @@
 }
 
 .friend-card {
-  background-color: #1e1e1e;
+  background-color: #121414;
   color: #e0e0e0;
   padding: 1rem;
   border-radius: 8px;
@@ -48,7 +48,7 @@
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-    background-color: #2e2e2e;
+    background-color: #232627;
   }
 
   .avatar {
@@ -63,7 +63,7 @@
     text-align: left;
 
     h5 {
-      color: #4CAF50;
+      color: #61BA50;
       font-size: 1rem;
       margin: 0;
     }
@@ -94,26 +94,26 @@
   }
 
   .btn-remove {
-    background-color: #ff6b6b;
+    background-color: #8C0000;
   }
 
   .btn-block {
-    background-color: #ff5722;
+    background-color: #700000;
   }
 
   .btn-chat {
-    background-color: #4CAF50;
+    background-color: #61BA50;
   }
 
   .btn-profile {
-    color: #4CAF50;
+    color: #61BA50;
     background: none;
     border: none;
     text-decoration: underline;
   }
 
   .btn-accept {
-    background-color: #4CAF50;
+    background-color: #61BA50;
   }
 
   .btn-reject {
@@ -121,7 +121,7 @@
   }
 
   .btn-unblock {
-    background-color: #4CAF50;
+    background-color: #61BA50;
   }
 
   .btn-remove:hover,
@@ -140,10 +140,10 @@
   left: 100px;
   width: 600px;
   max-width: 90%;
-  background-color: #1e1e1e;
+  background-color: #121414;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  border: 1px solid #4CAF50;
+  border: 1px solid #61BA50;
   z-index: 1000; // Ensure it overlays other elements
   cursor: move;
   transition: transform 0.3s ease;
@@ -155,7 +155,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  background-color: #4CAF50;
+  background-color: #61BA50;
   color: #ffffff;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
