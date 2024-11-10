@@ -162,7 +162,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
     this.checkGameCompletion();
   }
 
-  private getCurrentRound(): Round {
+  getCurrentRound(): Round {
     return this.currentGame!.rounds[this.currentGame!.rounds.length - 1];
   }
 
@@ -224,6 +224,10 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
         this.currentGame = { ...this.currentGame, ...updatedGame };
       });
     }
+  }
+
+  get isReady(): boolean {
+    return this.currentGame !== null && this.gameInProgress;
   }
 
   calculateRoundDuration(round: Round): string {

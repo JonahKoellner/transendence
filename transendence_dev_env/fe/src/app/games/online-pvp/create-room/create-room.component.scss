@@ -1,35 +1,231 @@
-.create-room {
+.game-room {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+  color: #e0e0e0;
+
+  header {
     text-align: center;
     margin-bottom: 2rem;
-  
+
     h2 {
-      color: #61BA50;
-      font-size: 2rem;
-      margin-bottom: 1rem;
+      color: #61ba50;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
       font-weight: bold;
-    }
-  
-    button {
-      background-color: #61BA50;
-      color: #fff;
-      padding: 0.75rem 2rem;
-      border: none;
-      border-radius: 20px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.3s;
-  
-      &:hover {
-        background-color: #45A049;
-        transform: translateY(-5px);
-      }
-    }
-  
-    p {
-      margin-top: 1rem;
-      font-size: 1.2rem;
-      color: #adb5bd;
     }
   }
-  
+
+  .settings {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .game-settings {
+      background-color: #1a1a1a;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 2px solid #444;
+      transition: border-color 0.3s, box-shadow 0.3s;
+
+      .settings-header {
+        text-align: center;
+        margin-bottom: 1rem;
+
+        h3 {
+          color: #61ba50;
+          font-size: 1.5rem;
+          margin: 0;
+          font-weight: bold;
+        }
+      }
+
+      .settings-body {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem;
+
+        .setting-item {
+          width: 48%;
+
+          h4 {
+            color: #61ba50;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+          }
+
+          .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #61ba50;
+            border-radius: 4px;
+            background-color: #333;
+            color: #e0e0e0;
+            outline: none;
+            transition: border-color 0.3s;
+
+            &::placeholder {
+              color: #bbb;
+            }
+
+            &:focus {
+              border-color: #61ba50;
+              box-shadow: 0 0 4px rgba(97, 186, 80, 0.3);
+            }
+          }
+        }
+      }
+    }
+
+    .actions {
+      text-align: center;
+
+      .start-game-btn {
+        background-color: #61ba50;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        margin-top: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+          margin-right: 0.5rem;
+          width: 24px;
+          height: 24px;
+        }
+
+        &:hover {
+          background-color: #45a049;
+          transform: translateY(-3px);
+        }
+      }
+    }
+  }
+
+  .room-info {
+    .room-details {
+      background-color: #1a1a1a;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 2px solid #444;
+      text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+
+      h3 {
+        color: #61ba50;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: bold;
+      }
+
+      p {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+
+        strong {
+          color: #61ba50;
+        }
+      }
+
+      .copy-link-btn {
+        background-color: #61ba50;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+          margin-right: 0.5rem;
+          width: 24px;
+          height: 24px;
+        }
+
+        &:hover {
+          background-color: #45a049;
+          transform: translateY(-3px);
+        }
+      }
+    }
+  }
+
+  .logs {
+    background-color: #232627;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid #61ba50;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    color: #e0e0e0;
+
+    .logs-header {
+      text-align: center;
+      color: #61ba50;
+      margin-bottom: 1rem;
+      font-weight: bold;
+
+      h4 {
+        margin: 0;
+      }
+    }
+
+    .log-list,
+    .previous-games {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .log-item,
+    .prev-game-item {
+      background-color: #333;
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      border: 1px solid #61ba50;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .settings {
+      .game-settings {
+        width: 100%;
+      }
+
+      .settings-body {
+        flex-direction: column;
+      }
+
+      .setting-item {
+        width: 100%;
+      }
+
+      .actions {
+        .start-game-btn {
+          width: 100%;
+        }
+      }
+    }
+
+    .room-info {
+      .room-details {
+        width: 100%;
+      }
+    }
+  }
+}

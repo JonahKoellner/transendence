@@ -1,38 +1,107 @@
 <div class="game-room">
-  <h2>Game Room</h2>
-  <p><strong>Room ID:</strong> {{ roomId }}</p>
+  <header>
+    <h2>Pong Online</h2>
+    <p (click)="copyLinkToClipboard()">{{ roomId }}</p>
+    <button *ngIf="!gameInProgress" (click)="openInviteDialog()">Invite Friend</button>
+  </header>
 
-  <div class="players">
-    <div class="player-info">
+  <section class="players" *ngIf="!gameInProgress">
+    <div class="player-info" [ngClass]="{'ready': isHostReady, 'not-ready': !isHostReady}">
+      <div class="status-icon">
+        <svg *ngIf="isHostReady" viewBox="0 0 24 24">
+          <!-- Checkmark Icon -->
+          <path fill="#61BA50" d="M9 16.17L4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <svg *ngIf="!isHostReady" viewBox="0 0 24 24">
+          <path fill="#ff6b6b" d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2zm2 2v2.83L10.17 8 8 10.17V13h8v-2.83L13.83 8 16 5.83V4H8z"/>
+        </svg>
+      </div>
       <p><strong>Host:</strong> {{ host }}</p>
       <p>Status: {{ isHostReady ? 'Ready' : 'Not Ready' }}</p>
     </div>
-    <div class="player-info">
-      <p><strong>Guest:</strong> {{ guest || 'Waiting for guest...' }}</p>
+
+    <div class="player-info" [ngClass]="{'ready': isGuestReady, 'not-ready': !isGuestReady}">
+      <div class="status-icon">
+        <svg *ngIf="isGuestReady" viewBox="0 0 24 24">
+          <!-- Checkmark Icon -->
+          <path fill="#61BA50" d="M9 16.17L4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <svg *ngIf="!isGuestReady" viewBox="0 0 24 24">
+          <path fill="#ff6b6b" d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2zm2 2v2.83L10.17 8 8 10.17V13h8v-2.83L13.83 8 16 5.83V4H8z"/>
+        </svg>
+      </div>
+      <p><strong>Guest:</strong> {{ guest || 'Waiting for guest' }}</p>
       <p>Status: {{ isGuestReady ? 'Ready' : 'Not Ready' }}</p>
     </div>
-  </div>
+  </section>
 
-  
-  <div class="settings">
+  <section class="settings">
     <div class="setting-item">
-      <label>Max Rounds: {{roomData?.max_rounds}}</label>
+      <h4>Max Rounds</h4>
+      <p>{{ roomData?.max_rounds }}</p>
     </div>
     <div class="setting-item">
-      <label>Round Score Limit: {{roomData?.round_score_limit}}</label>
+      <h4>Round Score Limit</h4>
+      <p>{{ roomData?.round_score_limit }}</p>
     </div>
-  </div>
+  </section>
 
-  <button *ngIf="isHost && allReady && !gameInProgress" (click)="startGame()">Start Game</button>
-  <button (click)="toggleReady()">Toggle Ready</button>
+  <section class="actions" *ngIf="!gameInProgress">
+    <button *ngIf="isHost && allReady && !gameInProgress" (click)="startGame()">
+      <svg viewBox="0 0 24 24">
+        <!-- Play Icon -->
+        <path fill="#fff" d="M8 5v14l11-7z"/>
+      </svg>
+      Start Game
+    </button>
+    <button
+    (click)="toggleReady()"
+    [ngClass]="{'ready': isReady, 'not-ready': !isReady}"
+    [attr.aria-label]="isReady ? 'Click to unready' : 'Click to ready'"
+  >
+    <ng-container *ngIf="!isReady; else readyIcon">
+      <!-- Unready Icon (Gear) -->
+      <svg viewBox="0 0 24 24" role="img" aria-label="Not Ready Icon">
+        <path fill="#fff" d="M19.14,12.94c0.04-0.31,0.06-0.63,0.06-0.94s-0.02-0.63-0.06-0.94l2.03-1.58
+          c0.18-0.14,0.23-0.4,0.12-0.61l-1.92-3.32c-0.11-0.21-0.36-0.3-0.58-0.22l-2.39,0.96
+          c-0.5-0.38-1.03-0.7-1.62-0.94L14.5,2.81c-0.05-0.22-0.24-0.38-0.47-0.38h-3.06
+          c-0.23,0-0.42,0.16-0.47,0.38L10.2,5.35c-0.59,0.24-1.12,0.56-1.62,0.94L6.19,5.32
+          c-0.22-0.09-0.47,0.01-0.58,0.22L3.69,8.86c-0.11,0.21-0.06,0.47,0.12,0.61l2.03,1.58
+          c-0.04,0.31-0.06,0.63-0.06,0.94s0.02,0.63,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.4-0.12,0.61
+          l1.92,3.32c0.11,0.21,0.36,0.3,0.58,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.77,2.53
+          c0.05,0.22,0.24,0.38,0.47,0.38h3.06c0.23,0,0.42-0.16,0.47-0.38l0.77-2.53
+          c0.59-0.24,1.12-0.56,1.62-0.94l2.39,0.96c0.22,0.09,0.47-0.01,0.58-0.22l1.92-3.32
+          c0.11-0.21,0.06-0.47-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5
+          s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
+      </svg>
+    </ng-container>
+    <ng-template #readyIcon>
+      <!-- Ready Icon (Rocket) -->
+      <svg viewBox="0 0 24 24" role="img" aria-label="Ready Icon">
+        <path fill="#fff" d="M2.81,14.13l4.64-4.64c-0.2-1.28,0.14-2.64,1.03-3.53
+          c1.38-1.38,3.45-1.65,5.07-0.76l1.41-1.41c0.78-0.78,2.05-0.78,2.83,0
+          c0.78,0.78,0.78,2.05,0,2.83l-1.41,1.41c0.89,1.62,0.62,3.69-0.76,5.07
+          c-0.89,0.89-2.25,1.23-3.53,1.03l-4.64,4.64c-0.39,0.39-1.02,0.39-1.41,0
+          l-2.83-2.83C2.42,15.15,2.42,14.52,2.81,14.13z"/>
+      </svg>
+    </ng-template>
+    {{ isReady ? 'Unready' : 'Ready' }}
+  </button>
+  </section>
 
-  <p *ngIf="allReady && !gameInProgress">
+  <p *ngIf="allReady && !gameInProgress" class="waiting-message">
     Both players are ready. Waiting for host to start the game...
   </p>
 
-  <div class="game-view">
-    <p><strong>Score:</strong> {{ leftScore }} - {{ rightScore }}</p>
+  <p *ngIf="!gameInProgress && winner">
+    <strong>{{ winner }} won!</strong>
+  </p>
+
+  <section class="game-view" *ngIf="gameInProgress">
+    <p class="score">
+      <strong>{{ host }}:</strong> {{ leftScore }} - <strong>{{ guest }}:</strong> {{ rightScore }}
+    </p>
     <app-game-display [gameState]="gameState"></app-game-display>
-  </div>
+  </section>
 
 </div>

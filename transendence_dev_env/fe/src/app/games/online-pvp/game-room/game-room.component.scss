@@ -1,92 +1,196 @@
 .game-room {
-    padding: 2rem;
-    max-width: 1000px;
-    margin: auto;
-    color: #e0e0e0;
-  
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+  color: #e0e0e0;
+
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+
     h2 {
       color: #61BA50;
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
       font-weight: bold;
-      text-align: center;
     }
-  
+
     p {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
+      color: #adb5bd;
+      cursor: pointer;
     }
-  
-    .players {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-      gap: 1rem;
-  
-      .player-info {
-        background-color: #121414;
-        padding: 1.5rem;
-        border-radius: 8px;
-        width: 45%;
-        text-align: center;
-        border: 1px solid #444;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  
-        p {
-          margin: 0.5rem 0;
-          font-size: 1rem;
-        }
-  
-        strong {
-          color: #61BA50;
+  }
+
+  .players {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .player-info {
+      background-color: #1a1a1a;
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 45%;
+      text-align: center;
+      border: 2px solid #444;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+
+      &.ready {
+        border-color: #61BA50;
+        box-shadow: 0 0 15px rgba(97, 186, 80, 0.5);
+      }
+
+      &.not-ready {
+        border-color: #DD0000;
+        box-shadow: 0 0 15px rgba(187, 0, 0, 0.5);
+      }
+
+      .status-icon {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        background-color: #1a1a1a;
+        border-radius: 50%;
+        padding: 0.5rem;
+        border: 2px solid #444;
+
+        svg {
+          width: 30px;
+          height: 30px;
         }
       }
+
+      p {
+        margin: 0.5rem 0;
+        font-size: 1.1rem;
+      }
+
+      strong {
+        color: #61BA50;
+      }
     }
-  
+  }
+
+  .settings {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+
+    .setting-item {
+      background-color: #1a1a1a;
+      padding: 1rem;
+      border-radius: 8px;
+      width: 200px;
+      text-align: center;
+      border: 2px solid #444;
+
+      h4 {
+        color: #61BA50;
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+      }
+
+      p {
+        color: #e0e0e0;
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  .actions {
+    text-align: center;
+    margin-bottom: 2rem;
+
     button {
-      background-color: #61BA50;
+      background-color: #61BA50; // Default green background
       color: #fff;
       padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 20px;
-      font-size: 1rem;
+      border-radius: 30px;
+      font-size: 1.1rem;
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s, transform 0.3s;
       margin: 0.5rem;
-  
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        margin-right: 0.5rem;
+        width: 24px;
+        height: 24px;
+      }
+
       &:hover {
-        background-color: #45A049;
-        transform: translateY(-5px);
+        transform: translateY(-3px);
       }
-    }
-  
-    .game-view {
-      margin: 2rem 0;
-      text-align: center;
-  
-      p {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #61BA50;
+
+      &.ready {
+        background-color: #8C0000; // Red background when ready
+        border: 2px solid #8C0000;
+
+        &:hover {
+          background-color: #700000; // Darker red on hover
+        }
       }
-    }
-  
-    .game-view app-game-display {
-      margin-top: 1rem;
-    }
-  
-    .game-display {
-      canvas {
-        border: 1px solid #61BA50;
-        border-radius: 8px;
-        background-color: #121414;
+
+      &.not-ready {
+        background-color: #61BA50; // Green background when not ready
+        border: 2px solid #61BA50;
+
+        &:hover {
+          background-color: #45A049; // Darker green on hover
+        }
       }
-    }
-  
-    p {
-      color: #adb5bd;
-      font-size: 1rem;
     }
   }
-  
+
+  .waiting-message {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #ffeb3b;
+    margin-bottom: 2rem;
+  }
+
+  .game-view {
+    margin: 2rem 0;
+    text-align: center;
+
+    .score {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #61BA50;
+      margin-bottom: 1rem;
+    }
+
+    app-game-display {
+      margin-top: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .players {
+      flex-direction: column;
+      align-items: center;
+
+      .player-info {
+        width: 100%;
+      }
+    }
+
+    .settings {
+      flex-direction: column;
+      align-items: center;
+
+      .setting-item {
+        width: 100%;
+      }
+    }
+  }
+}

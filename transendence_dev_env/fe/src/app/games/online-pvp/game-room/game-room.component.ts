@@ -26,11 +26,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   public msgFromServer: any;
   roomData: any;
 
+  winner: string = '';
+
   constructor(
     private route: ActivatedRoute,
     private lobbyService: GameLobbyService,
     private userProfileService: ProfileService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit() {
@@ -79,7 +81,29 @@ export class GameRoomComponent implements OnInit, OnDestroy {
             }
           } else if (msg.type === 'game_ended') {
             this.gameInProgress = false;
-            alert('Game over!');
+            this.isHostReady = false;
+            this.isGuestReady = false;
+            this.allReady = false;
+            this.gameState = {};
+            this.leftScore = 0;
+            this.rightScore = 0;
+            if (msg.winner) this.winner = msg.winner;
+            this.lobbyService.setReadyStatus(this.roomId, false, this.userProfile!.id).subscribe(
+              () => {
+                this.lobbyService.sendMessage({
+                  action: 'set_ready',
+                  room_id: this.roomId,
+                  user_id: this.userProfile?.id,
+                  is_ready: false
+                });
+              },
+              (error) => {
+                console.error('Error setting ready status:', error);
+                this.router.navigate(['/games/online-pvp/rooms']);
+              }
+            );
+            console.log('Game over!');
+            console.log('msg:', msg);
           } else if (msg.type === 'round_completed') {
             console.log('Round completed!');
           }
@@ -131,6 +155,11 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.lobbyService.joinRoom(this.roomId).subscribe();
   }
 
+  get isReady(): boolean {
+    return this.isHost ? this.isHostReady : this.isGuestReady;
+  }
+
+
   startGame() {
     if (this.userProfile?.username === this.host) {
       this.lobbyService.sendMessage({
@@ -138,6 +167,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         room_id: this.roomId
       });
     }
+  }
+
+  copyLinkToClipboard(): void {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Link copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
   }
 
   toggleReady() {
@@ -205,5 +243,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       }
       this.lobbyService.disconnect(); // Ensure disconnection on page leave
     }
-
+    openInviteDialog()
+    {
+      console.log('Invite dialog opened');
+    }
 }

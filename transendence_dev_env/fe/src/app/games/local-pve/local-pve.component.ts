@@ -161,7 +161,7 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     this.checkGameCompletion();
   }
 
-  private getCurrentRound(): Round {
+  getCurrentRound(): Round {
     return this.currentGame!.rounds[this.currentGame!.rounds.length - 1];
   }
 

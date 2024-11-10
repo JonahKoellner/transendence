@@ -1,20 +1,45 @@
-<div class="create-room">
-  <h2>Create Room</h2>
-  <div class="game-settings card">
-    <div class="settings-header">
-      <h3>Game Settings</h3>
-    </div>
-    <div class="settings-body">
-      <div class="setting-item">
-        <label>Max Rounds:</label>
-        <input type="number" [(ngModel)]="settings.maxRounds" min="1" class="form-control" placeholder="Enter max rounds">
+<div class="game-room">
+  <header>
+    <h2>Create Room</h2>
+  </header>
+
+  <section class="settings" *ngIf="!roomId">
+    <div class="game-settings card">
+      <div class="settings-header">
+        <h3>Game Settings</h3>
       </div>
-      <div class="setting-item">
-        <label>Round Score Limit:</label>
-        <input type="number" [(ngModel)]="settings.roundScoreLimit" min="1" class="form-control" placeholder="Enter score limit">
+      <div class="settings-body">
+        <div class="setting-item">
+          <h4>Max Rounds</h4>
+          <input
+            type="number"
+            [(ngModel)]="settings.maxRounds"
+            min="1"
+            class="form-control"
+            placeholder="Enter max rounds"
+          />
+        </div>
+        <div class="setting-item">
+          <h4>Round Score Limit</h4>
+          <input
+            type="number"
+            [(ngModel)]="settings.roundScoreLimit"
+            min="1"
+            class="form-control"
+            placeholder="Enter score limit"
+          />
+        </div>
       </div>
     </div>
-  </div>
-  <button (click)="createRoom()">Create Room</button>
-  <p *ngIf="roomId">Room ID: {{ roomId }}</p>
+    <div class="actions">
+      <button class="start-game-btn" (click)="createRoom()">
+        <svg viewBox="0 0 24 24">
+          <!-- Play Icon -->
+          <path fill="#fff" d="M8 5v14l11-7z" />
+        </svg>
+        Create Room
+      </button>
+    </div>
+  </section>
+
 </div>

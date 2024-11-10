@@ -1,89 +1,116 @@
-<div class="game-container">
-  <h1>Pong 1vAI Game</h1>
+<div class="game-room">
+  <header>
+    <h2>Local AI</h2>
+  </header>
 
   <!-- Game Settings -->
-  <div *ngIf="!gameInProgress && !currentGame" class="game-settings card">
-    <div class="header">
-      <h3>Game Settings</h3>
+  <section class="settings" *ngIf="!gameInProgress && !currentGame">
+    <div class="setting-item">
+      <h4>Max Rounds</h4>
+      <input
+        type="number"
+        [(ngModel)]="settings.maxRounds"
+        min="1"
+        class="form-control"
+        placeholder="Enter max rounds"
+      />
     </div>
-    <div class="body">
-      <div class="setting-item">
-        <label for="maxRounds">Max Rounds:</label>
-        <input type="number" id="maxRounds" [(ngModel)]="settings.maxRounds" min="1" placeholder="Enter max rounds">
-      </div>
-      <div class="setting-item">
-        <label for="roundScoreLimit">Round Score Limit:</label>
-        <input type="number" id="roundScoreLimit" [(ngModel)]="settings.roundScoreLimit" min="1" placeholder="Enter score limit">
-      </div>
-      <button class="button" (click)="startNewGame()">Start New Game</button>
+    <div class="setting-item">
+      <h4>Round Score Limit</h4>
+      <input
+        type="number"
+        [(ngModel)]="settings.roundScoreLimit"
+        min="1"
+        class="form-control"
+        placeholder="Enter score limit"
+      />
     </div>
-  </div>
+    <div class="player-info">
+      <div class="player-name">
+        <h4>
+          <p>{{displayNameHost}} vs AI</p>
+        </h4>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="start-game-btn" (click)="startNewGame()">
+        <svg viewBox="0 0 24 24">
+          <!-- Play Icon -->
+          <path fill="#fff" d="M8 5v14l11-7z" />
+        </svg>
+        Start Game
+      </button>
+    </div>
+  </section>
 
-  <!-- Game in Progress -->
-  <div *ngIf="gameInProgress && currentGame" class="game-info card">
-    <div class="header">
-      <h3>Game in Progress</h3>
+  <!-- Game Progress and Controls -->
+  <section class="game-view" *ngIf="gameInProgress && currentGame">
+    <p class="score">
+      {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
+      <strong>{{ displayNameHost }}:</strong> {{ currentGame.score_player1 }} -
+      <strong>AI</strong> {{ currentGame.score_player2 }}
+    </p>
+    <app-game-canvas
+      [gameSettings]="settings"
+      (onScore)="updateScore($event)"
+    ></app-game-canvas>
+    <div class="timers">
+      <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
+      <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
     </div>
-    <div class="body game-details">
-      <div class="info-section">
-        <p><strong>Mode:</strong> {{ currentGame.game_mode }}</p>
-        <p><strong>{{ displayNameHost }} vs AI</strong></p>
-      </div>
-      <div class="timers">
-        <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
-        <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
-      </div>
-      <div class="scores">
-        <p><strong>Current Round:</strong> {{ currentGame.rounds.length }} of {{ settings.maxRounds }}</p>
-        <p><strong>Score:</strong> {{ displayNameHost }} ({{ currentGame.score_player1 }}/{{ settings.maxRounds }}) - AI ({{ currentGame.score_player2 }}/{{ settings.maxRounds }})</p>
-      </div>
-      <app-game-canvas [gameSettings]="settings" (onScore)="updateScore($event)"></app-game-canvas>
-    </div>
-  </div>
+  </section>
 
   <!-- Game Results -->
-  <div *ngIf="!gameInProgress && currentGame && currentGame.is_completed" class="game-result card">
-    <div class="header">
+  <section
+    class="game-result"
+    *ngIf="!gameInProgress && currentGame && currentGame.is_completed"
+  >
+    <div class="result-header">
       <h3>Game Over</h3>
     </div>
-    <div class="body">
-      <p><strong>Winner:</strong> {{ currentGame.winner?.username || "AI" }}</p>
-      <p><strong>Game Duration:</strong> {{ currentGame.duration | number:'1.2-2' }} seconds</p>
+    <div class="result-body">
+      <p><strong>Winner:</strong> {{ currentGame.winner?.username || 'AI' }}</p>
+      <p>
+        <strong>Game Duration:</strong>
+        {{ currentGame.duration | number: '1.2-2' }} seconds
+      </p>
 
       <h4>Rounds Summary</h4>
-      <ul class="list">
-        <li *ngFor="let round of currentGame.rounds" class="list-item summary-item">
-          <span>Round {{ round.round_number }}</span>
-          <span>Winner: {{ round.winner || 'In Progress' }}</span>
-          <span>Duration: {{ calculateRoundDuration(round) }}</span>
+      <ul class="summary-list">
+        <li *ngFor="let round of currentGame.rounds" class="summary-item">
+          <p>
+            Round {{ round.round_number }} - Winner:
+            {{ round.winner || 'In Progress' }} - Duration:
+            {{ calculateRoundDuration(round) }}
+          </p>
         </li>
       </ul>
 
       <h4>Moves Log</h4>
-      <ul class="list">
-        <li *ngFor="let move of currentGame.moves_log" class="list-item move-item">
-          <span class="move-time">{{ move.time }}</span>
-          <span>{{ move.player }}: {{ move.action }}</span>
+      <ul class="moves-log">
+        <li *ngFor="let move of currentGame.moves_log" class="move-item">
+          <span class="move-time">{{ move.time | date: 'shortTime' }}</span> -
+          {{ move.player }}: {{ move.action }}
         </li>
       </ul>
 
-      <button class="button" (click)="startNewGame()">Play Again</button>
+      <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
     </div>
-  </div>
+  </section>
 
   <!-- Game Logs -->
-  <div class="logs card">
-    <div class="header logs-header">
+  <section class="logs" *ngIf="logs.length || previousGames.length">
+    <div class="logs-header">
       <h4>Logs</h4>
     </div>
-    <ul class="list">
-      <li *ngFor="let log of logs" class="list-item log-item">{{ log }}</li>
+    <ul class="log-list">
+      <li *ngFor="let log of logs" class="log-item">{{ log }}</li>
     </ul>
-    <div class="header previous-games-header">
-      <h4>Previous Games</h4>
-    </div>
-    <ul class="list">
-      <li *ngFor="let prevLog of previousGames" class="list-item prev-game-item">{{ prevLog }}</li>
+    <h4>Previous Games</h4>
+    <ul class="previous-games">
+      <li *ngFor="let prevLog of previousGames" class="prev-game-item">{{
+        prevLog
+      }}</li>
     </ul>
-  </div>
+  </section>
 </div>
