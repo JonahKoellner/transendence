@@ -45,6 +45,10 @@ export class ProfileService {
     return this.http.get<UserProfile>(`${this.apiUrl}${userId}/`, { withCredentials: true });
   }
 
+  getProfileColorByProfileId(userId: number): any {
+    return this.http.get<any>(`${this.apiUrl}profile_color/${userId}/`, { withCredentials: true });
+  }
+
   getCurrentUserId(): number {
     return 1;
   }

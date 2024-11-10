@@ -6,7 +6,7 @@
 
 <div *ngIf="!isLoading && user" class="user-details">
   <!-- Profile Information -->
-  <div class="profile-card">
+  <div class="profile-card" [ngStyle]="profileBackgroundStyle">
     <div class="online-status">
       <span class="badge" [ngClass]="user.is_online ? 'badge-success' : 'badge-secondary'">
         {{ user.is_online ? 'Online' : 'Offline' }}
@@ -18,25 +18,12 @@
       alt="Avatar"
       class="avatar"
     />
+    <div class="level-info">
+      <h4>{{ user.level }}</h4>
+    </div>
     <h3>{{ user.profile?.display_name || user.display_name || user.username }}</h3>
     <p><strong>Email:</strong> {{ user.email }}</p>
 
-    <div class="level-info">
-      <h4>Level {{ user.level }}</h4>
-      <p>XP: {{ user.xp }} / {{ user.xp_for_next_level }}</p>
-      <div class="progress">
-        <div
-          class="progress-bar"
-          role="progressbar"
-          [style.width.%]="getXpProgress()"
-          [attr.aria-valuenow]="getXpProgress()"
-          aria-valuemin="0"
-          aria-valuemax="100"
-        >
-          {{ getXpProgress() | number: '1.0-0' }}%
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Tabs for History and Ranking -->

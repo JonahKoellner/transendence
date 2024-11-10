@@ -2,7 +2,9 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 import pyotp
+from django.db.models import Avg, Max
 from .utils import create_notification
+from django.apps import apps
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     otp_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -87,6 +89,101 @@ class Profile(models.Model):
 
         # Calculate XP using combined linear and exponential growth components
         return int(base_xp + (linear_growth * self.level) + (base_xp * (exponential_growth_rate ** self.level)))
+    
+    def calculate_profile_color(self):
+        """
+        Calculate a dynamic profile color based on the user's stats.
+        Returns a hex color code.
+        """
+
+        # Fetch stats dynamically from other users to avoid hardcoded maximums
+        max_level = Profile.objects.aggregate(Max('level'))['level__max'] or 1
+        avg_game_count = Profile.objects.annotate(game_count=models.Count('user__games_as_player1') + models.Count('user__games_as_player2')).aggregate(Avg('game_count'))['game_count__avg'] or 1
+        avg_tournament_count = Profile.objects.annotate(tournament_count=models.Count('user__hosted_tournaments')).aggregate(Avg('tournament_count'))['tournament_count__avg'] or 1
+
+        # Calculate hue based on relative level position
+        hue = (self.level / max_level) * 360
+
+        # Calculate win rate and map to saturation
+        win_rate = self.get_win_rate()  # Custom method to calculate win rate
+        saturation = win_rate * 100  # Saturation as a percentage
+
+        # Calculate lightness based on game and tournament participation relative to averages
+        game_count = self.get_total_games_played()
+        tournament_count = self.get_total_tournaments_participated()
+
+        # Lightness calculation with participation effect
+        lightness = 50 + min(game_count / avg_game_count, 1.0) * 25 + min(tournament_count / avg_tournament_count, 1.0) * 25
+        lightness = min(lightness, 100)  # Ensure lightness does not exceed 100%
+
+        # Highlight boost for high tournament wins or top ranks
+        if self.is_top_tournament_rank():
+            hue = (hue + 30) % 360  # Special hue shift for top players
+
+        # Convert HSL to RGB for web usage
+        rgb = self.hsl_to_rgb(hue, saturation, lightness)
+        hex_color = '#%02x%02x%02x' % rgb
+        return hex_color
+
+    def get_win_rate(self):
+        """Calculate the win rate of the user across games and tournaments."""
+        total_games = self.get_total_games_played()
+        total_wins = self.get_total_wins()
+        return total_wins / total_games if total_games > 0 else 0
+
+    def get_total_games_played(self):
+        """Return the total number of games the user has played."""
+        Game = apps.get_model('games', 'Game')  # Dynamically load Game model
+        return Game.objects.filter(models.Q(player1=self.user) | models.Q(player2=self.user)).count()
+
+    def get_total_tournaments_participated(self):
+        """Return the total number of tournaments the user has participated in."""
+        Tournament = apps.get_model('games', 'Tournament')  # Dynamically load Tournament model
+        return Tournament.objects.filter(host=self.user).count()
+
+    def get_total_wins(self):
+        """Calculate total wins across all games and tournaments."""
+        Game = apps.get_model('games', 'Game')
+        Tournament = apps.get_model('games', 'Tournament')
+        game_wins = Game.objects.filter(winner=self.user).count()
+        tournament_wins = Tournament.objects.filter(final_winner=self.user.username).count()
+        return game_wins + tournament_wins
+
+    def is_top_tournament_rank(self):
+        """Check if the user has a top rank in tournaments based on wins or placement."""
+        Tournament = apps.get_model('games', 'Tournament')
+        top_players = Tournament.objects.values('host').annotate(total_wins=models.Count('final_winner')).order_by('-total_wins')[:5]
+        return any(player['host'] == self.user.id for player in top_players)
+
+    def hsl_to_rgb(self, h, s, l):
+        """Convert HSL color space to RGB."""
+        h = h / 360.0
+        s = s / 100.0
+        l = l / 100.0
+
+        if s == 0:
+            r = g = b = l  # Achromatic
+        else:
+            def hue_to_rgb(p, q, t):
+                if t < 0:
+                    t += 1
+                if t > 1:
+                    t -= 1
+                if t < 1/6:
+                    return p + (q - p) * 6 * t
+                if t < 1/2:
+                    return q
+                if t < 2/3:
+                    return p + (q - p) * (2/3 - t) * 6
+                return p
+
+            q = l * (1 + s) if l < 0.5 else l + s - l * s
+            p = 2 * l - q
+            r = hue_to_rgb(p, q, h + 1/3)
+            g = hue_to_rgb(p, q, h)
+            b = hue_to_rgb(p, q, h - 1/3)
+
+        return (int(r * 255), int(g * 255), int(b * 255))
     
 class Notification(models.Model):
     NOTIFICATION_TYPES = (

@@ -12,7 +12,7 @@ from django.db.models import Avg, Max, Min, Count, Sum, Q, F, Case, When, Intege
 import calendar
 from django.contrib.auth.models import User 
 from accounts.serializers import UserProfileSerializer
-from .models import Tournament, Match, Round, Game, Lobby
+from .models import Tournament, Match, Round, Game, Lobby, Stage, TournamentType, MatchOutcome
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
@@ -300,6 +300,126 @@ class TournamentViewSet(viewsets.ModelViewSet):
     """
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
+    
+    def calculate_tournament_xp(self, tournament, player):
+        """
+        Calculate advanced XP for a player based on their performance, progression, tournament type,
+        and the type of opponents they faced (bot or player).
+        """
+        # Base XP values
+        base_xp_participation = 10  # Basic XP for entering
+        base_xp_win = 50            # Base XP for each match won
+        round_bonus_xp = 100         # XP bonus for advancing each round in Single Elimination
+        final_bonus_xp = 1000        # Large bonus for winning the tournament
+
+        # Type-specific and progression multipliers
+        type_multiplier = 1.0
+        progression_multiplier = 1.0
+        performance_multiplier = 1.0
+        consistency_bonus = 0.0
+        opponent_factor = 1.0
+
+        # Calculate progression-based multipliers and bonuses
+        if tournament.type == TournamentType.SINGLE_ELIMINATION:
+            rounds_played = tournament.rounds.filter(matches__player1=player.username).count() \
+                        + tournament.rounds.filter(matches__player2=player.username).count()
+            total_rounds = tournament.rounds.count()
+            progression_multiplier = 1 + (rounds_played / total_rounds) * 0.7  # Bonus up to +70%
+
+            for round in tournament.rounds.all():
+                if round.matches.filter(winner=player.username).exists():
+                    stage = round.stage
+                    if stage == Stage.QUARTER_FINALS:
+                        progression_multiplier += 0.1
+                    elif stage == Stage.SEMI_FINALS:
+                        progression_multiplier += 0.2
+                    elif stage == Stage.GRAND_FINALS:
+                        progression_multiplier += 0.5
+
+            type_multiplier = 1.3
+
+        elif tournament.type == TournamentType.ROUND_ROBIN:
+            total_matches = tournament.rounds.filter(matches__player1=player.username).count() \
+                            + tournament.rounds.filter(matches__player2=player.username).count()
+            total_wins = tournament.rounds.filter(matches__winner=player.username).count()
+            
+            win_ratio = total_wins / max(1, total_matches)
+            if win_ratio > 0.8:
+                consistency_bonus = 200
+            elif win_ratio > 0.5:
+                consistency_bonus = 100
+
+            group_rank = self.get_round_robin_rank(tournament, player)
+            if group_rank == 1:
+                performance_multiplier = 1.5
+            elif group_rank == 2:
+                performance_multiplier = 1.2
+            elif group_rank == 3:
+                performance_multiplier = 1.1
+
+            type_multiplier = 1.1
+
+        # Opponent type factor: more XP for winning against players than bots
+        total_wins = 0
+        bot_wins = 0
+        for match in tournament.rounds.filter(matches__winner=player.username):
+            total_wins += 1
+            if match.player1_type == 'Bot' or match.player2_type == 'Bot':
+                bot_wins += 1
+
+        bot_win_ratio = bot_wins / max(1, total_wins)
+        opponent_factor = 0.8 + (1 - bot_win_ratio) * 0.2  # Higher XP if fewer wins are against bots
+
+        # Tournament size multiplier
+        participant_count = len(tournament.all_participants)
+        size_multiplier = 1 + (participant_count / 100)
+
+        # Duration-based XP, with diminishing returns for longer tournaments
+        if tournament.duration:
+            if tournament.duration < 3600:
+                duration_xp = tournament.duration * 0.1
+            elif tournament.duration < 14400:
+                duration_xp = tournament.duration * 0.05
+            else:
+                duration_xp = min(600, 400 + (tournament.duration - 14400) * 0.01)
+        else:
+            duration_xp = 0
+
+        # Final XP calculation
+        xp_gain = (
+            base_xp_participation +                    # Base XP for joining
+            base_xp_win * total_wins +                 # XP for each win
+            round_bonus_xp * rounds_played +           # Bonus for advancing rounds
+            consistency_bonus +                        # Consistency bonus
+            (final_bonus_xp if tournament.final_winner == player.username else 0) +  # Bonus for winning tournament
+            duration_xp                                # Duration-based XP
+        )
+
+        # Apply all calculated multipliers
+        xp_gain *= type_multiplier
+        xp_gain *= progression_multiplier
+        xp_gain *= performance_multiplier
+        xp_gain *= size_multiplier
+        xp_gain *= opponent_factor  # Apply the opponent factor at the end
+
+        return int(xp_gain)
+
+    def get_round_robin_rank(self, tournament, player):
+        """
+        Determines the player's ranking within a Round Robin tournament group.
+        """
+        # Assuming each player has a score attribute that accumulates their points or wins in the tournament
+        scores = {p['username']: 0 for p in tournament.all_participants}
+        for match in Match.objects.filter(rounds__tournaments=tournament):
+            if match.outcome == MatchOutcome.FINISHED:
+                if match.winner == player.username:
+                    scores[player.username] += 1
+        # Sort players by score and return rank for this player
+        sorted_players = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        for rank, (username, _) in enumerate(sorted_players, start=1):
+            if username == player.username:
+                return rank
+        return len(sorted_players)  # Default to last if not found
 
     def create(self, request, *args, **kwargs):
         """
@@ -330,7 +450,20 @@ class TournamentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return Response(serializer.data)
+
+        if serializer.validated_data.get("status") == "completed":
+            # Update tournament end time and calculate duration
+            instance.end_time = timezone.now()
+            instance.duration = (instance.end_time - instance.start_time).total_seconds() if instance.start_time else None
+            instance.save()
+
+            # Calculate and add XP to the host
+            host = instance.host
+            xp_gain = self.calculate_tournament_xp(instance, host)
+            host.profile.add_xp(xp_gain)  # Assumes profile has an `add_xp` method to handle XP addition
+            host.profile.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         """

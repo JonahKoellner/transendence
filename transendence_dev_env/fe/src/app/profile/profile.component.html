@@ -14,15 +14,15 @@
               Account Page
           </a>
           <div class="profile-info">
-              <p><strong>ID:</strong> {{ userProfile.id }}</p>
+              <!-- <p><strong>ID:</strong> {{ userProfile.id }}</p> -->
               <p><strong>Username:</strong> {{ userProfile.username }}</p>
               <p><strong>Email:</strong> {{ userProfile.email }}</p>
           </div>
 
           <!-- Level, XP, and Progress Bar -->
           <div class="level-info">
-              <h3>Level {{ userProfile.level }}</h3>
-              <p>XP: {{ userProfile.xp }} / {{ userProfile.xp_for_next_level }}</p>
+              <h3>{{ userProfile.level }}</h3>
+              <p>{{ userProfile.xp }} / {{ userProfile.xp_for_next_level }} XP</p>
               <div class="progress">
                   <div class="progress-bar" 
                        role="progressbar" 
@@ -30,7 +30,7 @@
                        [attr.aria-valuenow]="getXpProgress()" 
                        aria-valuemin="0" 
                        aria-valuemax="100">
-                      {{ getXpProgress() | number: '1.0-0' }}%
+                      <!-- {{ getXpProgress() | number: '1.0-0' }}% -->
                   </div>
               </div>
           </div>

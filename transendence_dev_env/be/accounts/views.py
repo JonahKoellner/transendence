@@ -247,6 +247,16 @@ class UserViewSet(viewsets.ModelViewSet):
         users = User.objects.filter(username__icontains=query).exclude(id=request.user.id)
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path=r'profile_color/(?P<user_id>\d+)')
+    def profile_color(self, request, user_id=None):
+        """
+        Endpoint to retrieve the user's profile color based on calculated stats by user_id.
+        """
+        user = get_object_or_404(User, id=user_id)  # Fetch user by ID
+        profile = user.profile
+        color = profile.calculate_profile_color()
+        return Response({'profile_color': color}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='friend-requests')
     def friend_requests(self, request):

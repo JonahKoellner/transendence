@@ -16,9 +16,11 @@ export class UserDetailsComponent implements OnInit {
   user: UserProfile | null = null;
   errorMessage: string = '';
   isLoading = true;
-
+  profileColor: any;
   gameHistory: Game[] = [];
   tournamentHistory: Tournament[] = [];
+
+  profileBackgroundStyle: any;
 
   activeTab: 'history' | 'ranking' = 'history';
   activeHistoryTab: 'games' | 'tournaments' = 'games';
@@ -85,7 +87,37 @@ export class UserDetailsComponent implements OnInit {
     );
   }
 
+  hexToRgba(hex: string, alpha: number): string {
+    let c: any;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+      c = hex.substring(1).split('');
+      if(c.length == 3){
+        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+      }
+      c = '0x' + c.join('');
+      return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+    }
+    return hex; // Return the original hex if it's invalid
+  }
+
   private loadUserStats(userId: number) {
+
+    this.profileService.getProfileColorByProfileId(userId).subscribe(
+      (data:any) => { 
+        this.profileColor = data.profile_color; // e.g., "#d4cfcb"
+        // Compute the gradient background
+        this.profileBackgroundStyle = {
+          'background': `linear-gradient(
+            to bottom,
+            rgba(30, 30, 30, 1) 0%,
+            rgba(30, 30, 30, 0.8) 50%,
+            ${this.hexToRgba(this.profileColor, 0.5)} 100%
+          )`,
+          'filter': 'brightness(0.9)',
+        };
+       },
+      (error:any) => { console.warn('Error loading profile color:', error); }
+    );
     // Load game history
     this.gameService.getGamesByUser(userId).subscribe(
       (games) => { this.gameHistory = games; this.filteredGameHistory = games; },
