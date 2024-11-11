@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
+import { NotificationService } from 'src/app/notifications/notification.service';
 
 interface Notification {
   id: number;
@@ -24,17 +25,11 @@ export class GameInviteDialogComponent {
   @Input() notification!: Notification;
   @Output() close = new EventEmitter<string>();
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private notificationService: NotificationService) { }
 
   onAccept(): void {
-    // Navigate to the game using game_id from notification.data
-    if (this.notification.data && this.notification.data.game_id) {
-      this.router.navigate(['/game', this.notification.data.game_id]);
-      this.close.emit('accepted');
-    } else {
-      console.error('Game ID not found in notification data.');
-      this.close.emit('error');
-    }
+    this.close.emit('accepted');
+    this.router.navigate(['/games/online-pvp/game-room', this.notification.data.room_id]);
   }
 
   onDecline(): void {

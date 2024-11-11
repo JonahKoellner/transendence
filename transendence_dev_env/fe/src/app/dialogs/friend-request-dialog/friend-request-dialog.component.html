@@ -1,9 +1,25 @@
-<div class="dialog-overlay">
-  <div class="dialog-content shadow-lg rounded">
-    <h3 class="h5 mb-3">Friend Request</h3>
-    <p><strong>{{ notification.sender.username }}</strong> has sent you a friend request.</p>
-    <div class="dialog-actions d-flex justify-content-end mt-4">
-      <button class="btn btn-outline-secondary mr-2" (click)="onDecline()">Decline</button>
+<div class="dialog-overlay friend-request-dialog">
+  <div class="dialog-content">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h3 class="modal-title">Friend Request</h3>
+      <button class="close-button" (click)="onDecline()" aria-label="Close Friend Request Dialog">
+        <!-- SVG for Close Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Modal Body -->
+    <div class="modal-body friend-request">
+      <p><strong>{{ notification.sender.username }}</strong> has sent you a friend request.</p>
+    </div>
+    
+    <!-- Dialog Actions -->
+    <div class="dialog-actions">
+      <button class="btn btn-outline-secondary" (click)="onDecline()">Decline</button>
       <button class="btn btn-primary" (click)="onAccept()">Accept</button>
     </div>
   </div>

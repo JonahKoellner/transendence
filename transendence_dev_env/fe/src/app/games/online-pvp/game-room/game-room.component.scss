@@ -1,3 +1,209 @@
+.modal-content {
+  background-color: rgba(0, 0, 0, 0.8); /* Increased opacity for a darker overlay */
+  z-index: 1050; /* Ensures it overlays other elements */
+  backdrop-filter: blur(5px); /* Adds a subtle blur effect */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #1a1a1a; /* Replaced var(--header-bg) */
+  border-bottom: 2px solid #444; /* Replaced var(--border-color) */
+
+  .modal-title {
+    color: #61BA50; /* Replaced var(--primary-color) */
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: transform 0.2s, color 0.2s;
+
+    &:hover {
+      transform: rotate(90deg);
+      svg path {
+        fill: #ffeb3b; /* Replaced var(--accent-color) */
+      }
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    svg path {
+      fill: #e0e0e0; /* Replaced var(--text-color) */
+      transition: fill 0.2s;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem 2rem;
+  background-color: #121212; /* Replaced var(--modal-bg) */
+  flex: 1;
+  overflow-y: auto;
+
+  .no-items {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #ffeb3b; /* Replaced var(--accent-color) */
+    margin-top: 2rem;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .friends-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    .friend-card {
+      display: flex;
+      align-items: center;
+      background-color: #121212; /* Replaced var(--modal-bg) */
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      transition: background-color 0.3s;
+
+      &:hover {
+        background-color: #333; /* Replaced var(--friend-card-hover) */
+      }
+
+      .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 1rem;
+        border: 2px solid #444; /* Replaced var(--border-color) */
+      }
+
+      .friend-info {
+        flex: 1;
+
+        .display-name {
+          color: #61BA50; /* Replaced var(--primary-color) */
+          margin: 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+        }
+
+        .username {
+          color: #adb5bd;
+          margin: 0.25rem 0 0 0;
+          font-size: 0.9rem;
+        }
+      }
+
+      .actions {
+        .btn-invite-friend {
+          background-color: #61BA50; /* Replaced var(--button-bg) */
+          color: #fff;
+          padding: 0.5rem 1rem;
+          border: none;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          transition: background-color 0.3s;
+
+          &:hover:not(:disabled) {
+            background-color: #45A049; /* Replaced var(--button-hover-bg) */
+          }
+
+          &:disabled {
+            background-color: #555; /* Replaced var(--disabled-bg) */
+            cursor: not-allowed;
+          }
+
+          .invite-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 0.5rem;
+            fill: #fff;
+          }
+
+          span {
+            display: inline-block;
+          }
+        }
+      }
+    }
+  }
+}
+
+.modal-footer {
+  padding: 1rem 2rem;
+  background-color: #1a1a1a; /* Replaced var(--header-bg) */
+  border-top: 2px solid #444; /* Replaced var(--border-color) */
+  text-align: right;
+
+  .btn-secondary {
+    background-color: #444;
+    color: #e0e0e0; /* Replaced var(--text-color) */
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #555;
+    }
+  }
+}
+
+/* Responsive Modal */
+@media (max-width: 600px) {
+  .modal-content {
+    width: 95%;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+
+    .friends-list {
+      .friend-card {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .avatar {
+          margin-bottom: 0.5rem;
+        }
+
+        .actions {
+          width: 100%;
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
 .game-room {
   padding: 2rem;
   max-width: 1000px;
@@ -15,10 +221,45 @@
       font-weight: bold;
     }
 
-    p {
-      font-size: 1.2rem;
-      color: #adb5bd;
-      cursor: pointer;
+    .header-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+
+      p {
+        font-size: 1.2rem;
+        color: #adb5bd;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      /* Invite Friends Button */
+      .btn-invite {
+        color: #61BA50;
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0.5rem;
+
+        svg {
+          fill: #61BA50;
+          margin-right: 0.5rem;
+          width: 24px;
+          height: 24px;
+        }
+
+        &:hover {
+          background-color: #333;
+          transform: translateY(-3px);
+        }
+      }
     }
   }
 
@@ -67,10 +308,10 @@
       p {
         margin: 0.5rem 0;
         font-size: 1.1rem;
-      }
 
-      strong {
-        color: #61BA50;
+        strong {
+          color: #61BA50;
+        }
       }
     }
   }
@@ -171,26 +412,6 @@
 
     app-game-display {
       margin-top: 1rem;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .players {
-      flex-direction: column;
-      align-items: center;
-
-      .player-info {
-        width: 100%;
-      }
-    }
-
-    .settings {
-      flex-direction: column;
-      align-items: center;
-
-      .setting-item {
-        width: 100%;
-      }
     }
   }
 }

@@ -1,11 +1,26 @@
-<div class="dialog-overlay">
-    <div class="dialog-content">
-      <h3>Game Invite</h3>
-      <p>{{ notification.sender.username }} has invited you to a game.</p>
-      <div class="dialog-actions">
-        <button (click)="onDecline()">Decline</button>
-        <button (click)="onAccept()">Accept</button>
-      </div>
+<div class="dialog-overlay game-invite-dialog">
+  <div class="dialog-content">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h3 class="modal-title">Game Invite</h3>
+      <button class="close-button" (click)="onDecline()" aria-label="Close Game Invite Dialog">
+        <!-- SVG for Close Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Modal Body -->
+    <div class="modal-body game-invite">
+      <p><strong>{{ notification.sender.username }}</strong> has invited you to a game.</p>
+    </div>
+    
+    <!-- Dialog Actions -->
+    <div class="dialog-actions">
+      <button class="btn btn-outline-secondary" (click)="onDecline()">Decline</button>
+      <button class="btn btn-primary" (click)="onAccept()">Accept</button>
     </div>
   </div>
-  
+</div>

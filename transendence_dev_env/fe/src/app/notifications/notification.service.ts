@@ -1,8 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { WebsocketService } from '../services/websocket.service';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AuthService } from '../auth.service';
+
+export interface SendGameInvitePayload {
+  receiver_id: number;
+  room_id: string;
+}
+
+export interface AcceptGameInviteResponse {
+  status: string;
+  message?: string;
+}
 
 export interface User {
   id: number;
@@ -83,5 +93,9 @@ export class NotificationService {
       const currentNotifications = this.notifications$.value;
       this.notifications$.next([notification, ...currentNotifications]);
     });
+  }
+
+  sendGameInvite(payload: SendGameInvitePayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}send-game-invite/`, payload, { withCredentials: true });
   }
 }

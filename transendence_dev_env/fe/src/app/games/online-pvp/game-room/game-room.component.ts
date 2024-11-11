@@ -1,8 +1,11 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, TemplateRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameLobbyService } from 'src/app/services/game-lobby.service';
 import { Subscription } from 'rxjs';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
+import { NotificationService, SendGameInvitePayload } from 'src/app/notifications/notification.service';
+import { FriendService } from 'src/app/friend.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-game-room',
@@ -25,14 +28,17 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   public msgFromServer: any;
   roomData: any;
-
+  friends: UserProfile[] = [];
   winner: string = '';
-
+  inviteFriendOpen: boolean = false;
   constructor(
     private route: ActivatedRoute,
     private lobbyService: GameLobbyService,
     private userProfileService: ProfileService,
     private router: Router,
+    private notificationService: NotificationService,
+    private friendService: FriendService,
+    public modalService: NgbModal
   ) {}
 
   ngOnInit() {
@@ -41,7 +47,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       next: (data) => {
         console.log('Joined room:', data);
         this.lobbyService.connect(this.roomId);
-
+        this.loadFriends();
         this.messageSubscription = this.lobbyService.messages$.subscribe(msg => {
           this.msgFromServer = msg;
           if (msg.type === 'initial_state') {
@@ -243,8 +249,33 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       }
       this.lobbyService.disconnect(); // Ensure disconnection on page leave
     }
-    openInviteDialog()
+
+    inviteFriend(friend_id: number)
     {
-      console.log('Invite dialog opened');
+      console.log('Game invite sent');
+      let gameInvitePayload: SendGameInvitePayload = {
+        room_id: this.roomId,
+        receiver_id: friend_id
+      };
+      this.notificationService.sendGameInvite(gameInvitePayload).subscribe(
+        () => {
+          console.log('Game invite sent successfully');
+        }
+      );
+    }
+
+    loadFriends(): void {
+      this.friendService.getFriends().subscribe(
+        (data) => {
+          this.friends = data;
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
+    }
+
+    openInviteModal(inviteContent: TemplateRef<any>) {
+      this.modalService.open(inviteContent, { size: 'lg', centered: true });
     }
 }

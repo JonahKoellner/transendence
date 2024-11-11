@@ -93,7 +93,4 @@ export class ChatService {
     const currentMessages = this.messages$.value;
     this.messages$.next([...currentMessages, message]);
   }
-  navigateToGame(game_id: any) {
-    this.router.navigate(['/game', game_id]);
-  }
 }

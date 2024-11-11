@@ -57,7 +57,7 @@ export class NotificationsComponent implements OnInit {
   toggleNotifications(): void {
     this.showNotifications = !this.showNotifications;
     if (this.showNotifications) {
-      this.markAllAsRead();
+      // this.markAllAsRead();
     }
   }
 
@@ -112,8 +112,8 @@ export class NotificationsComponent implements OnInit {
 
   onCloseGameInviteDialog(result: string): void {
     this.showGameInviteDialog = false;
-    if (result === 'accepted' && this.currentNotification?.data?.game_id) {
-      this.chatService.navigateToGame(this.currentNotification.data.game_id);
+    if (result === 'accepted' && this.currentNotification) {
+      this.markAsRead(this.currentNotification);
     }
     if (this.currentNotification) {
       this.markAsRead(this.currentNotification);
@@ -148,7 +148,7 @@ export class NotificationsComponent implements OnInit {
       case 'new_message':
         return 'sent you a new message.'
       case 'level_up':
-        return 'congratulated you on leveling up!';
+        return 'you leveled up!';
       case 'system_alert':
         return 'sent you a system alert.';
       default:

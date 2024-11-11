@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, User, Notification, ChatMessage, FriendRequest
 from django.db import transaction
+from games.models import Lobby
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -138,13 +139,28 @@ class UserMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
+
 class NotificationSerializer(serializers.ModelSerializer):
     sender = UserMinimalSerializer(read_only=True)
     receiver = UserMinimalSerializer(read_only=True)
-    
+    room_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Notification
-        fields = ['id', 'sender', 'receiver', 'notification_type', 'priority', 'timestamp', 'is_read', 'data']
+        fields = [
+            'id',
+            'sender',
+            'receiver',
+            'notification_type',
+            'priority',
+            'timestamp',
+            'is_read',
+            'data',
+            'room_id'
+        ]
+
+    def get_room_id(self, obj):
+        return obj.data.get('room_id', None)
     
 class ChatMessageSerializer(serializers.ModelSerializer):
     sender = UserProfileSerializer(read_only=True)
@@ -158,3 +174,18 @@ class FriendRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FriendRequest
         fields = ['id', 'sender', 'receiver', 'status', 'timestamp']
+        
+        
+class SendGameInviteSerializer(serializers.Serializer):
+    receiver_id = serializers.IntegerField()
+    room_id = serializers.CharField()
+
+    def validate_receiver_id(self, value):
+        if not User.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Receiver user does not exist.")
+        return value
+
+    def validate_room_id(self, value):
+        if not Lobby.objects.filter(room_id=value).exists():
+            raise serializers.ValidationError("Lobby with the given room_id does not exist.")
+        return value

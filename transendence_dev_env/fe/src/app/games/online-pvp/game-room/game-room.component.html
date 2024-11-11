@@ -1,10 +1,22 @@
 <div class="game-room">
   <header>
     <h2>Pong Online</h2>
-    <p (click)="copyLinkToClipboard()">{{ roomId }}</p>
-    <button *ngIf="!gameInProgress" (click)="openInviteDialog()">Invite Friend</button>
+    <div class="header-actions">
+      <p (click)="copyLinkToClipboard()">{{ roomId }}</p>
+      <!-- Invite Button (Visible only to host) -->
+      <button
+      *ngIf="isHost"
+      class="btn btn-invite"
+      (click)="openInviteModal(inviteModal)"
+      aria-label="Invite Friends"
+    >
+      <svg viewBox="0 0 24 24">
+        <!-- Invite Icon (e.g., Plus Icon) -->
+        <path fill="#fff" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+      </svg>
+    </button>
+    </div>
   </header>
-
   <section class="players" *ngIf="!gameInProgress">
     <div class="player-info" [ngClass]="{'ready': isHostReady, 'not-ready': !isHostReady}">
       <div class="status-icon">
@@ -104,4 +116,80 @@
     <app-game-display [gameState]="gameState"></app-game-display>
   </section>
 
+    <!-- Invite Friends Modal Template -->
+    <ng-template #inviteModal>
+      <!-- Dialog Overlay -->
+      <div class="modal-overlay" (click)="modalService.dismissAll()" tabindex="-1" aria-hidden="true"></div>
+    
+      <!-- Dialog Content -->
+      <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inviteFriendsTitle"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title" id="inviteFriendsTitle">Invite Friends</h4>
+          <button
+            type="button"
+            class="close-button"
+            aria-label="Close Invite Friends Modal"
+            (click)="modalService.dismissAll()"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                d="M18.3 5.71a1 1 0 00-1.42-1.42L12 9.17 7.12 4.29a1 1 0 10-1.42 1.42L10.83 12l-5.14 5.29a1 1 0 101.42 1.42L12 14.83l4.88 4.88a1 1 0 001.42-1.42L13.17 12l5.13-5.29z"
+              />
+            </svg>
+          </button>
+        </div>
+    
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <!-- No Friends Message -->
+          <div *ngIf="friends.length === 0" class="no-items">
+            <p>You have no friends to invite.</p>
+          </div>
+    
+          <!-- Friends List -->
+          <ul *ngIf="friends.length > 0" class="friends-list">
+            <li *ngFor="let friend of friends" class="friend-card">
+              <!-- Friend Avatar -->
+              <img
+                [src]="friend.avatar || 'assets/default_avatar.png'"
+                alt="{{ friend.username }}"
+                class="avatar"
+              />
+    
+              <!-- Friend Information -->
+              <div class="friend-info">
+                <h5 class="display-name">{{ friend.display_name || friend.username }}</h5>
+                <p class="username">Username: {{ friend.username }}</p>
+              </div>
+    
+              <!-- Invite Action -->
+              <div class="actions">
+                <button class="btn-invite-friend" (click)="inviteFriend(friend.id)">
+                  <svg viewBox="0 0 24 24" class="invite-icon">
+                    <path fill="currentColor" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                  </svg>
+                  <span>Invite</span>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+    
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="modalService.dismissAll()">Close</button>
+        </div>
+      </div>
+    </ng-template>
+    
 </div>
