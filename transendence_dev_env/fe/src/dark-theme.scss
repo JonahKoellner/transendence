@@ -1,9 +1,9 @@
 
-$background-color: #121212;
+$background-color: #0E0F10;
 $primary-color: #bb86fc;
 $secondary-color: #03dac6;
 $text-color: #e0e0e0;
-$surface-color: #121414;
+$surface-color: #0E0F10;
 $error-color: #cf6679;
 
 body, .dark-theme {
@@ -35,7 +35,7 @@ input, select, textarea {
   background-color: $surface-color;
   color: $text-color;
   border: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 table, th, td {

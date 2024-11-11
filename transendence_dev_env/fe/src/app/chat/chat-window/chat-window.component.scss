@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: #121414;
+  background-color: #0E0F10;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -69,7 +69,7 @@
   // Styles for own messages
   &.own-message .message-bubble {
     background-color: #3f3f3f;
-    color: #121414;
+    color: #0E0F10;
     text-align: right;
     border: 1px solid #388E3C; /* Darker green */
     box-shadow: 0px 4px 8px rgba(56, 142, 60, 0.2); /* Adjusted shadow color */
@@ -111,7 +111,7 @@
 .send-message {
   display: flex;
   padding: 1rem;
-  background-color: #121414;
+  background-color: #0E0F10;
   border-top: 1px solid #61BA50;
 
   textarea {
