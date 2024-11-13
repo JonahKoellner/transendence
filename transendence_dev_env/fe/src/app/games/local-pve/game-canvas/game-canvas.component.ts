@@ -1,3 +1,4 @@
+// game-canvas.component.ts
 import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input } from '@angular/core';
 import { GameSettings } from '../local-pve.component';
 
@@ -42,14 +43,43 @@ export class GameCanvasComponent {
   leftScore!: number;
   rightScore!: number;
 
-  // AI target Y-coordinate
+  // AI parameters
   aiTargetY: number = this.canvasHeight / 2;
+  aiMoveSpeed: number = 5; // Default value, will be set based on difficulty
+  predictionRandomness: number = 10; // Default value, will be set based on difficulty
+  aiUpdateInterval: number = 1000; // Default update interval in ms
 
   ngAfterViewInit() {
     this.context = this.canvas.nativeElement.getContext('2d');
+    this.setAIParameters(); // Set AI parameters based on difficulty
     this.resetRound();
     this.startGame();
-    this.aiIntervalID = window.setInterval(() => this.updateAI(), 1000); // AI updates once per second
+    this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval); // AI updates based on interval
+  }
+
+  // Method to set AI parameters based on selected difficulty
+  setAIParameters() {
+    switch (this.gameSettings.difficulty) {
+      case 'Easy':
+        this.aiMoveSpeed = 3;
+        this.predictionRandomness = 20;
+        this.aiUpdateInterval = 1200; // AI updates less frequently
+        break;
+      case 'Medium':
+        this.aiMoveSpeed = 5;
+        this.predictionRandomness = 10;
+        this.aiUpdateInterval = 1000; // Default interval
+        break;
+      case 'Hard':
+        this.aiMoveSpeed = 7;
+        this.predictionRandomness = 5;
+        this.aiUpdateInterval = 800; // AI updates more frequently
+        break;
+      default:
+        this.aiMoveSpeed = 5;
+        this.predictionRandomness = 10;
+        this.aiUpdateInterval = 1000;
+    }
   }
 
   resetRound() {
@@ -257,8 +287,8 @@ export class GameCanvasComponent {
       this.canvasWidth - this.paddleWidth
     );
 
-    // Add some randomness to simulate human-like behavior
-    predictedY += (Math.random() - 0.5) * 20; // Random offset between -10 and +10 pixels
+    // Add randomness based on difficulty to simulate human-like behavior
+    predictedY += (Math.random() - 0.5) * this.predictionRandomness; // Random offset
 
     // Clamp predictedY to ensure it stays within the canvas
     predictedY = Math.max(this.ballRadius, Math.min(this.canvasHeight - this.ballRadius, predictedY));
@@ -269,12 +299,10 @@ export class GameCanvasComponent {
 
   moveAI() {
     // AI paddle moves towards aiTargetY at a fixed speed
-    const aiMoveSpeed = 5; // Adjust as needed for difficulty
-
     if (this.rightPaddleY < this.aiTargetY - 10) {
-      this.rightPaddleSpeed = aiMoveSpeed;
+      this.rightPaddleSpeed = this.aiMoveSpeed;
     } else if (this.rightPaddleY > this.aiTargetY + 10) {
-      this.rightPaddleSpeed = -aiMoveSpeed;
+      this.rightPaddleSpeed = -this.aiMoveSpeed;
     } else {
       this.rightPaddleSpeed = 0;
     }

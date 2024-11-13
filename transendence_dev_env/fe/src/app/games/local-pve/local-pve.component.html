@@ -25,6 +25,14 @@
         placeholder="Enter score limit"
       />
     </div>
+    <div class="setting-item">
+      <h4>Difficulty</h4>
+      <select [(ngModel)]="settings.difficulty" class="form-control">
+        <option value="Easy">Easy</option>
+        <option value="Medium">Medium</option>
+        <option value="Hard">Hard</option>
+      </select>
+    </div>
     <div class="player-info">
       <div class="player-name">
         <h4>
@@ -99,7 +107,7 @@
   </section>
 
   <!-- Game Logs -->
-  <section class="logs" *ngIf="logs.length || previousGames.length">
+  <!-- <section class="logs" *ngIf="logs.length || previousGames.length">
     <div class="logs-header">
       <h4>Logs</h4>
     </div>
@@ -112,5 +120,5 @@
         prevLog
       }}</li>
     </ul>
-  </section>
+  </section> -->
 </div>

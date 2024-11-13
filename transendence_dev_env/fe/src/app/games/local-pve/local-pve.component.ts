@@ -6,6 +6,7 @@ import { GameCanvasComponent } from './game-canvas/game-canvas.component';
 export interface GameSettings {
   maxRounds: number;
   roundScoreLimit: number;
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
 }
 
 @Component({
@@ -28,7 +29,8 @@ export class LocalPveComponent implements OnInit, OnDestroy {
 
   settings: GameSettings = {
     maxRounds: 3,
-    roundScoreLimit: 3
+    roundScoreLimit: 3,
+    difficulty: 'Medium', // Default difficulty
   };
 
   constructor(private gameService: GameService, private profileService: ProfileService) {}

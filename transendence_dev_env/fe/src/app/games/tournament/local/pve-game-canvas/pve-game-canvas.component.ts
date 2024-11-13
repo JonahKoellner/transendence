@@ -15,7 +15,7 @@ export class PveGameCanvasComponent {
   readonly canvasHeight = 500;
   readonly ballRadius = 15;
   readonly paddleWidth = 10;
-  readonly paddleHeight = 60;
+  readonly paddleHeight = 30;
   readonly dashCount = 41;
   readonly dashWidth = 10;
 
