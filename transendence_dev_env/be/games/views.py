@@ -758,7 +758,6 @@ class StatsViewSet(viewsets.ViewSet):
         rank_by_games_played = users_with_game_counts.filter(games_played__gte=total_games_played).count()
 
         # Rank by Tournament Wins
-        # Corrected the comparison to use 'username' instead of 'id'
         rank_by_tournament_wins = User.objects.annotate(
             tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__final_winner=F('username')))
         ).filter(tournament_wins__gte=total_tournaments_won).count()
@@ -786,7 +785,7 @@ class StatsViewSet(viewsets.ViewSet):
             "rank_by_tournament_wins": rank_by_tournament_wins,
         }
 
-        serializer = UserStatsSerializer(data)
+        serializer = UserStatsSerializer(instance=data)  # Use instance instead of data
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='global-stats')

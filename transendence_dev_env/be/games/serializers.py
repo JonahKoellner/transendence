@@ -142,8 +142,8 @@ class LeaderboardEntrySerializer(serializers.Serializer):
 
 class UserStatsSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
-    username = serializers.CharField(source='user.username')
-    display_name = serializers.CharField(source='display_name')
+    username = serializers.CharField(max_length=150)
+    display_name = serializers.CharField(max_length=255)
     level = serializers.IntegerField()
     xp = serializers.IntegerField()
     total_games_played = serializers.IntegerField()

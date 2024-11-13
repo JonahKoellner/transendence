@@ -1,63 +1,97 @@
-<div class="profile-page">
-  <!-- Loading Spinner -->
-  <div class="loading" *ngIf="isLoading">
-      <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-      </div>
-  </div>
+<!-- src/app/profile/profile.component.html -->
 
-  <div *ngIf="!isLoading && userProfile">
+<div class="profile-page">
+  
+    <!-- Loading Spinner -->
+    <div class="loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading your profile...</p>
+    </div>
+    
+    <!-- Profile Content -->
+    <div *ngIf="!isLoading && userProfile" class="profile-content">
+      
       <!-- Profile Card -->
       <div class="profile-card">
-          <h2>Your Profile</h2>
-          <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
-              Account Page
-          </a>
-          <div class="profile-info">
-              <!-- <p><strong>ID:</strong> {{ userProfile.id }}</p> -->
-              <p><strong>Username:</strong> {{ userProfile.username }}</p>
-              <p><strong>Email:</strong> {{ userProfile.email }}</p>
+        <div class="profile-header">
+          <!-- Avatar -->
+          <img 
+            *ngIf="userProfile.avatar" 
+            [src]="userProfile.avatar" 
+            alt="User Avatar" 
+            class="avatar" 
+          />
+          
+          <!-- User Info -->
+          <div class="user-info">
+            <h2>Your Profile</h2>
+            <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
+              Go to Account Page
+            </a>
+            <p><strong>Username:</strong> {{ userProfile.username }}</p>
+            <p><strong>Email:</strong> {{ userProfile.email }}</p>
           </div>
-
-          <!-- Level, XP, and Progress Bar -->
-          <div class="level-info">
-              <h3>{{ userProfile.level }}</h3>
-              <p>{{ userProfile.xp }} / {{ userProfile.xp_for_next_level }} XP</p>
-              <div class="progress">
-                  <div class="progress-bar" 
-                       role="progressbar" 
-                       [style.width.%]="getXpProgress()" 
-                       [attr.aria-valuenow]="getXpProgress()" 
-                       aria-valuemin="0" 
-                       aria-valuemax="100">
-                      <!-- {{ getXpProgress() | number: '1.0-0' }}% -->
-                  </div>
-              </div>
+        </div>
+        
+        <!-- Level and XP -->
+        <div class="level-section">
+          <h3>Level {{ userProfile.level }}</h3>
+          <p>{{ userProfile.xp }} / {{ userProfile.xp_for_next_level }} XP</p>
+          <div class="progress-bar-container">
+            <div 
+              class="progress-bar" 
+              role="progressbar" 
+              [style.width.%]="getXpProgress()" 
+              [attr.aria-valuenow]="getXpProgress()" 
+              aria-valuemin="0" 
+              aria-valuemax="100">
+              <span class="progress-text">{{ getXpProgress() | number: '1.0-0' }}%</span>
+            </div>
           </div>
-
-          <!-- Profile Update Form -->
-          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-              <label>
-                  Display Name:
-                  <input type="text" formControlName="display_name" class="form-input" />
-              </label>
-
-              <div class="avatar-section">
-                  <label>Avatar:</label>
-                  <img [src]="avatarPreview || userProfile.avatar" alt="Avatar" class="avatar-preview" />
-                  <input type="file" (change)="onFileChange($event)" />
-              </div>
-
-              <button type="submit" class="update-btn">Update Profile</button>
-          </form>
+        </div>
+        
+        <!-- Profile Update Form -->
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="update-form">
+          <div class="form-group">
+            <label for="displayName">Display Name:</label>
+            <input 
+              id="displayName" 
+              type="text" 
+              formControlName="display_name" 
+              class="form-input" 
+              placeholder="Enter your display name" 
+            />
+          </div>
+          
+          <div class="form-group avatar-section">
+            <label for="avatarUpload">Avatar:</label>
+            <div class="avatar-preview-container">
+              <img 
+                [src]="avatarPreview || userProfile.avatar" 
+                alt="Avatar Preview" 
+                class="avatar-preview" 
+              />
+              <input 
+                id="avatarUpload" 
+                type="file" 
+                (change)="onFileChange($event)" 
+                accept="image/*" 
+              />
+            </div>
+          </div>
+          
+          <button type="submit" class="update-btn" [disabled]="profileForm.invalid ">
+            Update Profile
+          </button>
+        </form>
       </div>
-
-      <!-- Include stats component -->
-      <!-- <app-stats></app-stats> -->
-  </div>
-
-  <!-- Error Message -->
-  <div *ngIf="!isLoading && !userProfile" class="alert alert-danger">
+      
+    </div>
+    
+    <!-- Error Message -->
+    <div *ngIf="!isLoading && !userProfile" class="alert-error">
       <p>No profile data available.</p>
+    </div>
+    
   </div>
-</div>
+  

@@ -18,10 +18,10 @@ export class UserDetailsComponent implements OnInit {
   profileColor: any;
   gameHistory: Game[] = [];
   tournamentHistory: Tournament[] = [];
-
+  userStats: any;
   profileBackgroundStyle: any;
 
-  activeTab: 'history' | 'test' = 'history';
+  activeTab: 'history' | 'stats' = 'history';
   activeHistoryTab: 'games' | 'tournaments' = 'games';
 
   gameSearchName: string = '';
@@ -109,6 +109,13 @@ export class UserDetailsComponent implements OnInit {
       (tournaments) => { this.tournamentHistory = tournaments; this.filteredTournamentHistory = tournaments; },
       (error) => { console.warn('Error loading tournament history:', error); }
     );
+
+    this.gameService.getUserStats(userId).subscribe(
+      (data) => {
+        this.userStats = data;},
+      (error) => { console.warn('Error loading user stats:', error); }
+    );
+
   
     // Set isLoading to false after all requests are complete
     this.isLoading = false;
