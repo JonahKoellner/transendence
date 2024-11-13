@@ -50,6 +50,11 @@
         [ngClass]="{'active-tab': activeTab === 'stats'}">
         Stats
       </button>
+      <button 
+      (click)="activeTab = 'graphs'" 
+      [ngClass]="{'active-tab': activeTab === 'graphs'}">
+      Graphs
+    </button>
     </div>
     
     <!-- Tab Content -->

@@ -1,6 +1,7 @@
 // user-details.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Game, GameService } from 'src/app/games/game.service';
 import { Tournament } from 'src/app/games/tournament/local/start/start.component';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
@@ -21,7 +22,7 @@ export class UserDetailsComponent implements OnInit {
   userStats: any;
   profileBackgroundStyle: any;
 
-  activeTab: 'history' | 'stats' = 'history';
+  activeTab: 'history' | 'stats' | 'graphs' = 'history';
   activeHistoryTab: 'games' | 'tournaments' = 'games';
 
   gameSearchName: string = '';
@@ -67,24 +68,29 @@ export class UserDetailsComponent implements OnInit {
     );
   }
 
-  hexToRgba(hex: string, alpha: number): string {
-    let c: any;
-    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
-      c = hex.substring(1).split('');
-      if(c.length == 3){
-        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-      }
-      c = '0x' + c.join('');
-      return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+  private hexToRgba(hex: string, alpha: number): string {
+    let r = 0, g = 0, b = 0;
+    if (hex.length == 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length == 7) {
+      r = parseInt(hex[1] + hex[2], 16);
+      g = parseInt(hex[3] + hex[4], 16);
+      b = parseInt(hex[5] + hex[6], 16);
     }
-    return hex; // Return the original hex if it's invalid
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   private loadUserStats(userId: number) {
-
-    this.profileService.getProfileColorByProfileId(userId).subscribe(
-      (data:any) => { 
-        this.profileColor = data.profile_color; // e.g., "#d4cfcb"
+    forkJoin({
+      profileColor: this.profileService.getProfileColorByProfileId(userId),
+      games: this.gameService.getGamesByUser(userId),
+      tournaments: this.gameService.getTournamentsByUser(userId),
+      userStats: this.gameService.getUserStats(userId)
+    }).subscribe(
+      ({ profileColor, games, tournaments, userStats }) => {
+        this.profileColor = profileColor; // e.g., "#d4cfcb"
         // Compute the gradient background
         this.profileBackgroundStyle = {
           'background': `linear-gradient(
@@ -95,30 +101,22 @@ export class UserDetailsComponent implements OnInit {
           )`,
           'filter': 'brightness(0.9)',
         };
-       },
-      (error:any) => { console.warn('Error loading profile color:', error); }
-    );
-    // Load game history
-    this.gameService.getGamesByUser(userId).subscribe(
-      (games) => { this.gameHistory = games; this.filteredGameHistory = games; },
-      (error) => { console.warn('Error loading game history:', error); }
-    );
-  
-    // Load tournament history
-    this.gameService.getTournamentsByUser(userId).subscribe(
-      (tournaments) => { this.tournamentHistory = tournaments; this.filteredTournamentHistory = tournaments; },
-      (error) => { console.warn('Error loading tournament history:', error); }
-    );
 
-    this.gameService.getUserStats(userId).subscribe(
-      (data) => {
-        this.userStats = data;},
-      (error) => { console.warn('Error loading user stats:', error); }
-    );
+        this.gameHistory = games;
+        this.filteredGameHistory = games;
 
-  
-    // Set isLoading to false after all requests are complete
-    this.isLoading = false;
+        this.tournamentHistory = tournaments;
+        this.filteredTournamentHistory = tournaments;
+
+        this.userStats = userStats;
+
+        this.isLoading = false;
+      },
+      (error: any) => {
+        console.warn('Error loading user stats:', error);
+        this.isLoading = false;
+      }
+    );
   }
   getXpProgress(): number {
     if (!this.user) return 0;
