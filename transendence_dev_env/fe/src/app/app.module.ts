@@ -26,7 +26,6 @@ import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
 import { CommonModule } from '@angular/common';
 import { GameDetailsComponent } from './games/game-details/game-details.component';
 import { UserDetailsComponent } from './profile/user-details/user-details.component';
-import { StatsComponent } from './profile/stats/stats.component';
 import { NgChartsModule } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
 import { GameCanvasComponent } from './games/local-pve/game-canvas/game-canvas.component';
@@ -44,6 +43,7 @@ import { GameRoomComponent } from './games/online-pvp/game-room/game-room.compon
 import { GameDisplayComponent } from './games/online-pvp/game-display/game-display.component';
 import { AboutComponent } from './home/about/about.component';
 import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.component';
+import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -66,7 +66,6 @@ import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.com
     OnlinePvpComponent,
     GameDetailsComponent,
     UserDetailsComponent,
-    StatsComponent,
     GameCanvasComponent,
     GameCanvasComponentPVP,
     DurationPipe,
@@ -80,7 +79,8 @@ import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.com
     GameRoomComponent,
     GameDisplayComponent,
     AboutComponent,
-    GameRoomsComponent
+    GameRoomsComponent,
+    LeaderboardComponent
   ],
   imports: [
     BrowserModule,

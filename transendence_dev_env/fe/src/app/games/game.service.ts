@@ -40,26 +40,65 @@ export interface Game {
   player2_name_pvp_local?: string;
 }
 
-export interface UserStats {
-  pve_games: number;
-  pvp_games: number;
-  win_rate: number;
-  average_duration: number;
-  scores?: number[];
-  avg_rounds_per_game: number;
-  avg_score_per_round: number;
-  monthly_performance: { [month: string]: { games: number; win_rate: number } };
-  current_win_streak: number;
-  max_win_streak: number;
-  first_move_win_rate: number;
-  performance_by_time: { [hour: string]: { games: number; win_rate: number } };
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: number;
+  username: string;
+  display_name: string;
+  value: number;
 }
+
+export interface UserStats {
+  user_id: number;
+  username: string;
+  display_name: string;
+  level: number;
+  xp: number;
+  total_games_played: number;
+  total_games_pve: number;
+  total_games_pvp_local: number;
+  total_games_pvp_online: number;
+  total_games_won: number;
+  total_games_lost: number;
+  average_game_duration: number;
+  total_tournaments_participated: number;
+  total_tournaments_won: number;
+  average_tournament_duration: number;
+  
+  // Ranking Fields
+  rank_by_xp: number;
+  rank_by_wins: number;
+  rank_by_games_played: number;
+  rank_by_tournament_wins: number;
+}
+
+export interface GlobalStats {
+  total_users: number;
+  total_games: number;
+  total_pve_games: number;
+  total_pvp_local_games: number;
+  total_pvp_online_games: number;
+  total_tournaments: number;
+  completed_tournaments: number;
+  average_games_per_user: number;
+  average_tournaments_per_user: number;
+  average_game_duration: number;
+  average_tournament_duration: number;
+  
+  // Leaderboards
+  leaderboard_xp: LeaderboardEntry[];
+  leaderboard_most_wins: LeaderboardEntry[];
+  leaderboard_most_games: LeaderboardEntry[];
+  leaderboard_most_tournament_wins: LeaderboardEntry[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
   private apiUrl = 'http://localhost:8000/games/games/';
   private tournamentApiUrl = 'http://localhost:8000/games/tournaments/';
+  private statsApiUrl = 'http://localhost:8000/games/stats/';
   constructor(private http: HttpClient) {}
 
   // Headers with authorization token
@@ -129,14 +168,6 @@ export class GameService {
       })
     );
   }
-  userGameStatistics(): Observable<UserStats> {
-    return this.http.get<UserStats>(`${this.apiUrl}user-stats/`, { headers: this.getHeaders() }).pipe(
-      catchError((error) => {
-        console.error('Error fetching user game statistics:', error);
-        return of();
-      })
-    );
-  }
   createTournament(tournamentData: Tournament): Observable<Tournament> {
     return this.http.post<Tournament>(this.tournamentApiUrl, tournamentData, { headers: this.getHeaders() }).pipe(
       catchError((error) => {
@@ -200,6 +231,30 @@ export class GameService {
         catchError((error) => {
           console.error(`Error fetching tournaments for participant ${participantName}:`, error);
           return of([]);
+        })
+      );
+    }
+
+    getUserStats(userId: number): Observable<UserStats> {
+      const url = `${this.statsApiUrl}${userId}/user-stats/`;
+      return this.http.get<UserStats>(url, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error(`Error fetching stats for user ${userId}:`, error);
+          return of({} as UserStats);
+        })
+      );
+    }
+  
+    /**
+     * Fetch global statistics.
+     * @returns Observable of GlobalStats.
+     */
+    getGlobalStats(): Observable<GlobalStats> {
+      const url = `${this.statsApiUrl}global-stats/`;
+      return this.http.get<GlobalStats>(url, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error('Error fetching global stats:', error);
+          return of({} as GlobalStats);
         })
       );
     }

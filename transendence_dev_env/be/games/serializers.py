@@ -131,3 +131,53 @@ class TournamentSerializer(serializers.ModelSerializer):
             instance.rounds.set(new_rounds)
 
         return instance
+    
+    
+class LeaderboardEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+    username = serializers.CharField()
+    display_name = serializers.CharField()
+    value = serializers.FloatField()
+
+class UserStatsSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    username = serializers.CharField(source='user.username')
+    display_name = serializers.CharField(source='display_name')
+    level = serializers.IntegerField()
+    xp = serializers.IntegerField()
+    total_games_played = serializers.IntegerField()
+    total_games_pve = serializers.IntegerField()
+    total_games_pvp_local = serializers.IntegerField()
+    total_games_pvp_online = serializers.IntegerField()
+    total_games_won = serializers.IntegerField()
+    total_games_lost = serializers.IntegerField()
+    average_game_duration = serializers.FloatField()
+    total_tournaments_participated = serializers.IntegerField()
+    total_tournaments_won = serializers.IntegerField()
+    average_tournament_duration = serializers.FloatField()
+    
+    # Ranking Fields
+    rank_by_xp = serializers.IntegerField()
+    rank_by_wins = serializers.IntegerField()
+    rank_by_games_played = serializers.IntegerField()
+    rank_by_tournament_wins = serializers.IntegerField()
+
+class GlobalStatsSerializer(serializers.Serializer):
+    total_users = serializers.IntegerField()
+    total_games = serializers.IntegerField()
+    total_pve_games = serializers.IntegerField()
+    total_pvp_local_games = serializers.IntegerField()
+    total_pvp_online_games = serializers.IntegerField()
+    total_tournaments = serializers.IntegerField()
+    completed_tournaments = serializers.IntegerField()
+    average_games_per_user = serializers.FloatField()
+    average_tournaments_per_user = serializers.FloatField()
+    average_game_duration = serializers.FloatField()
+    average_tournament_duration = serializers.FloatField()
+    
+    # Leaderboards
+    leaderboard_xp = LeaderboardEntrySerializer(many=True)
+    leaderboard_most_wins = LeaderboardEntrySerializer(many=True)
+    leaderboard_most_games = LeaderboardEntrySerializer(many=True)
+    leaderboard_most_tournament_wins = LeaderboardEntrySerializer(many=True)

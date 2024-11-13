@@ -1,0 +1,168 @@
+<!-- src/app/leaderboard/leaderboard.component.html -->
+
+<div class="leaderboard-container">
+  <h1>Leaderboards & Global Statistics</h1>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading data...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading && !error" class="content">
+
+    <!-- Global Statistics Section -->
+    <div *ngIf="globalStats" class="global-stats">
+      <h2>Global Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <strong>Total Users:</strong>
+          <span>{{ globalStats.total_users }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Total Games:</strong>
+          <span>{{ globalStats.total_games }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Total PvE Games:</strong>
+          <span>{{ globalStats.total_pve_games }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Total Local PvP Games:</strong>
+          <span>{{ globalStats.total_pvp_local_games }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Total Online PvP Games:</strong>
+          <span>{{ globalStats.total_pvp_online_games }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Total Tournaments:</strong>
+          <span>{{ globalStats.total_tournaments }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Completed Tournaments:</strong>
+          <span>{{ globalStats.completed_tournaments }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Average Games per User:</strong>
+          <span>{{ globalStats.average_games_per_user }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Average Tournaments per User:</strong>
+          <span>{{ globalStats.average_tournaments_per_user }}</span>
+        </div>
+        <div class="stat-item">
+          <strong>Average Game Duration:</strong>
+          <span>{{ globalStats.average_game_duration }} seconds</span>
+        </div>
+        <div class="stat-item">
+          <strong>Average Tournament Duration:</strong>
+          <span>{{ globalStats.average_tournament_duration }} seconds</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboards Section -->
+    <div class="leaderboards-section">
+
+      <!-- Top XP Leaderboard -->
+      <div *ngIf="leaderboardXP.length" class="leaderboard">
+        <h2>Top XP</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Display Name</th>
+              <th>Username</th>
+              <th>XP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of leaderboardXP">
+              <td>{{ entry.rank }}</td>
+              <td>{{ entry.display_name }}</td>
+              <td>{{ entry.username }}</td>
+              <td>{{ entry.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Most Wins Leaderboard -->
+      <div *ngIf="leaderboardMostWins.length" class="leaderboard">
+        <h2>Most Wins</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Display Name</th>
+              <th>Username</th>
+              <th>Wins</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of leaderboardMostWins">
+              <td>{{ entry.rank }}</td>
+              <td>{{ entry.display_name }}</td>
+              <td>{{ entry.username }}</td>
+              <td>{{ entry.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Most Games Played Leaderboard -->
+      <div *ngIf="leaderboardMostGames.length" class="leaderboard">
+        <h2>Most Games Played</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Display Name</th>
+              <th>Username</th>
+              <th>Games Played</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of leaderboardMostGames">
+              <td>{{ entry.rank }}</td>
+              <td>{{ entry.display_name }}</td>
+              <td>{{ entry.username }}</td>
+              <td>{{ entry.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Most Tournament Wins Leaderboard -->
+      <div *ngIf="leaderboardMostTournamentWins.length" class="leaderboard">
+        <h2>Most Tournament Wins</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Display Name</th>
+              <th>Username</th>
+              <th>Tournament Wins</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of leaderboardMostTournamentWins">
+              <td>{{ entry.rank }}</td>
+              <td>{{ entry.display_name }}</td>
+              <td>{{ entry.username }}</td>
+              <td>{{ entry.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
