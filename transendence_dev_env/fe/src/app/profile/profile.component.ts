@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { ProfileService, UserProfile } from '../profile.service';
 import { Game, GameService } from '../games/game.service';
 import { Tournament } from '../games/tournament/local/start/start.component';
-import { GameStats, StatsAnalyticsService, TournamentStats } from '../services/stats-analytics.service';
 
 @Component({
   selector: 'app-profile',
@@ -17,7 +16,7 @@ export class ProfileComponent implements OnInit {
   isLoading = true;
   userProfile!: UserProfile;
 
-  constructor(private profileService: ProfileService, private fb: FormBuilder, private gameService: GameService, private statsAnalyticsService: StatsAnalyticsService) {}
+  constructor(private profileService: ProfileService, private fb: FormBuilder, private gameService: GameService) {}
 
   ngOnInit() {
     this.profileForm = this.fb.group({

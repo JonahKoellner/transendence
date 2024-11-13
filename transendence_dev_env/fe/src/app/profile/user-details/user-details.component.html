@@ -26,10 +26,9 @@
 
   </div>
 
-  <!-- Tabs for History and Ranking -->
   <div class="tab-controls">
     <button (click)="activeTab = 'history'" [ngClass]="{'active-tab': activeTab === 'history'}">History</button>
-    <button (click)="activeTab = 'ranking'" [ngClass]="{'active-tab': activeTab === 'ranking'}">Ranking</button>
+    <button (click)="activeTab = 'test'" [ngClass]="{'active-tab': activeTab === 'test'}">test</button>
   </div>
 
   <!-- History Tab Content -->
@@ -93,25 +92,6 @@
           <p class="tournament-type">{{ tournament.type }} | {{ tournament.status }}</p>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Ranking Tab Content -->
-  <div *ngIf="activeTab === 'ranking'" class="tab-content leaderboard">
-    <div class="ranking-section">
-      <h4>Game Stats</h4>
-      <ul>
-        <li><strong>Total Wins:</strong> {{ gameStats.total_wins }} (Rank: {{ gameStats.win_rank }})</li>
-        <li><strong>Total Games Played:</strong> {{ gameStats.total_games_played }} (Rank: {{ gameStats.game_rank }})</li>
-        <li><strong>Average Score:</strong> {{ gameStats.avg_score | number: '1.1-1' }} (Rank: {{ gameStats.avg_score_rank }})</li>
-      </ul>
-    </div>
-    <div class="ranking-section">
-      <h4>Tournament Stats</h4>
-      <ul>
-        <li><strong>Total Tournaments Won:</strong> {{ tournamentStats.total_tournaments_won }} (Rank: {{ tournamentStats.win_rank }})</li>
-        <li><strong>Total Tournaments Participated:</strong> {{ tournamentStats.total_tournaments_participated }} (Rank: {{ tournamentStats.participation_rank }})</li>
-      </ul>
     </div>
   </div>
 

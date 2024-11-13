@@ -1,14 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import GameViewSet, TournamentViewSet, TournamentStatisticsViewSet,GameLeaderboardSet, TournamentLeaderboardViewSet, LobbyViewSet
+from .views import GameViewSet, TournamentViewSet, LobbyViewSet
 
 router = DefaultRouter()
 router.register(r'games', GameViewSet, basename='game')
 router.register(r'tournaments', TournamentViewSet, basename='tournament')
-router.register(r'tournament-statistics', TournamentStatisticsViewSet, basename='tournament-statistics')
-router.register(r'game-leaderboard', GameLeaderboardSet, basename='game-leaderboard')
-router.register(r'tournament-leaderboard', TournamentLeaderboardViewSet, basename='tournament-leaderboard')
-
 lobby_create = LobbyViewSet.as_view({'post': 'create_room'})
 lobby_join = LobbyViewSet.as_view({'post': 'join_room'})
 lobby_ready = LobbyViewSet.as_view({'post': 'set_ready'})

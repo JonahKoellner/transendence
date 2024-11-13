@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { Game, GameService } from 'src/app/games/game.service';
 import { Tournament } from 'src/app/games/tournament/local/start/start.component';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
-import { GameStats, StatsAnalyticsService, TournamentStats } from 'src/app/services/stats-analytics.service';
 
 @Component({
   selector: 'app-user-details',
@@ -22,26 +21,8 @@ export class UserDetailsComponent implements OnInit {
 
   profileBackgroundStyle: any;
 
-  activeTab: 'history' | 'ranking' = 'history';
+  activeTab: 'history' | 'test' = 'history';
   activeHistoryTab: 'games' | 'tournaments' = 'games';
-
-  gameStats: GameStats = {
-    username: '',
-    total_wins: 0,
-    total_games_played: 0,
-    avg_score: 0,
-    win_rank: 0,
-    game_rank: 0,
-    avg_score_rank: 0
-  };
-  
-  tournamentStats: TournamentStats = {
-    username: '',
-    total_tournaments_won: 0,
-    total_tournaments_participated: 0,
-    win_rank: 0,
-    participation_rank: 0
-  };
 
   gameSearchName: string = '';
   gameStartDate: string | null = null;
@@ -61,7 +42,6 @@ export class UserDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private profileService: ProfileService,
     private gameService: GameService,
-    private statsAnalyticsService: StatsAnalyticsService
   ) {}
 
   ngOnInit(): void {
@@ -128,18 +108,6 @@ export class UserDetailsComponent implements OnInit {
     this.gameService.getTournamentsByUser(userId).subscribe(
       (tournaments) => { this.tournamentHistory = tournaments; this.filteredTournamentHistory = tournaments; },
       (error) => { console.warn('Error loading tournament history:', error); }
-    );
-  
-    // Load leaderboard game stats
-    this.statsAnalyticsService.getGameLeaderboardByUser(userId).subscribe(
-      (gameStats) => { this.gameStats = gameStats; },
-      (error) => { console.warn('Error loading game leaderboard stats:', error); }
-    );
-  
-    // Load leaderboard tournament stats
-    this.statsAnalyticsService.getTournamentLeaderboardByUser(userId).subscribe(
-      (tournamentStats) => { this.tournamentStats = tournamentStats; },
-      (error) => { console.warn('Error loading tournament leaderboard stats:', error); }
     );
   
     // Set isLoading to false after all requests are complete
