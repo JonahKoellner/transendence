@@ -92,6 +92,8 @@ export interface GlobalStats {
   leaderboard_most_tournament_wins: LeaderboardEntry[];
 }
 
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -255,6 +257,16 @@ export class GameService {
         catchError((error) => {
           console.error('Error fetching global stats:', error);
           return of({} as GlobalStats);
+        })
+      );
+    }
+
+    getGameStats(gameId: string): Observable<any> {
+      const url = `${this.statsApiUrl}detailed-stats/${gameId}/`;
+      return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error('Error fetching global stats:', error);
+          return of({} as any);
         })
       );
     }

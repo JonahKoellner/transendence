@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions, status
-from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer
+from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer,GameStatsSerializer
+from django.db.models.functions import ExtractMonth
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -899,3 +900,122 @@ class StatsViewSet(viewsets.ViewSet):
         }
         serializer = GlobalStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class GameStatsViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def retrieve(self, request, pk=None):
+        """
+        Retrieve detailed statistics for a specific game by its ID.
+        """
+        try:
+            # Retrieve the specific game
+            game = Game.objects.get(pk=pk)
+        except Game.DoesNotExist:
+            return Response({"error": "Game not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+
+        # Ensure the user is associated with the game
+        if not (game.player1 == user or game.player2 == user):
+            return Response({"error": "You do not have permission to view these stats."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Filter games related to the user
+        user_games = Game.objects.filter(Q(player1=user) | Q(player2=user))
+
+        # Chart 1: Total Games (PvE, Local PvP, Online PvP)
+        pve_games = user_games.filter(game_mode=Game.PVE).count()
+        local_pvp_games = user_games.filter(game_mode=Game.LOCAL_PVP).count()
+        online_pvp_games = user_games.filter(game_mode=Game.ONLINE_PVP).count()
+        total_games = {
+            'PvE': pve_games,
+            'Local PvP': local_pvp_games,
+            'Online PvP': online_pvp_games
+        }
+
+        # Chart 2: Win Rate
+        wins = user_games.filter(winner=user).count()
+        total_played = user_games.filter(status=Game.FINISHED).count()
+        win_rate = {
+            'Wins': wins,
+            'Losses': total_played - wins
+        }
+
+        # Chart 3: Average Duration of Games
+        average_duration = user_games.filter(duration__isnull=False).aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0
+
+        # Chart 4: Games Over Time (per month for the current year)
+        current_year = timezone.now().year
+        games_over_time_qs = user_games.filter(start_time__year=current_year) \
+            .annotate(month=ExtractMonth('start_time')) \
+            .values('month') \
+            .annotate(count=Count('id')) \
+            .order_by('month')
+
+        games_over_time = [{'month': entry['month'], 'count': entry['count']} for entry in games_over_time_qs]
+
+        # Chart 5: Average Score per Game Mode
+        average_score_per_mode_qs = user_games.values('game_mode') \
+            .annotate(avg_score_player1=Avg('score_player1'), avg_score_player2=Avg('score_player2')) \
+            .order_by('game_mode')
+        average_score_per_mode = {}
+        for entry in average_score_per_mode_qs:
+            game_mode = entry['game_mode']
+            avg_score_player1 = entry['avg_score_player1'] or 0
+            avg_score_player2 = entry['avg_score_player2'] or 0
+            # Calculate overall average if player2 exists
+            if user_games.filter(game_mode=game_mode, player2__isnull=False).exists():
+                avg_score = (avg_score_player1 + avg_score_player2) / 2
+            else:
+                avg_score = avg_score_player1
+            average_score_per_mode[self.get_game_mode_label(game_mode)] = round(avg_score, 2)
+
+        # Chart 6: Win Rate per Game Mode
+        win_rate_per_mode_qs = user_games.filter(winner=user) \
+            .values('game_mode') \
+            .annotate(wins=Count('id')) \
+            .order_by('game_mode')
+        win_rate_per_mode = {}
+        for entry in win_rate_per_mode_qs:
+            game_mode = entry['game_mode']
+            wins_in_mode = entry['wins']
+            total_in_mode = user_games.filter(game_mode=game_mode, status=Game.FINISHED).count()
+            rate = (wins_in_mode / total_in_mode * 100) if total_in_mode > 0 else 0
+            win_rate_per_mode[self.get_game_mode_label(game_mode)] = round(rate, 2)
+
+        # Chart 7: Scores Distribution
+        scores_distribution = {
+            'player1_scores': list(user_games.values_list('score_player1', flat=True)),
+            'player2_scores': list(user_games.values_list('score_player2', flat=True)),
+        }
+
+        # Chart 8: Win Distribution per Game Mode
+        win_distribution_qs = user_games.filter(winner=user) \
+            .values('game_mode') \
+            .annotate(count=Count('id'))
+        win_distribution_per_mode = {self.get_game_mode_label(entry['game_mode']): entry['count'] for entry in win_distribution_qs}
+
+        # Prepare the data
+        stats_data = {
+            'total_games': total_games,
+            'win_rate': win_rate,
+            'average_duration': average_duration,
+            'games_over_time': games_over_time,
+            'average_score_per_mode': average_score_per_mode,
+            'win_rate_per_mode': win_rate_per_mode,
+            'scores_distribution': scores_distribution,
+            'win_distribution_per_mode': win_distribution_per_mode,
+        }
+
+        serializer = GameStatsSerializer(data=stats_data)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_game_mode_label(self, game_mode_key):
+        game_mode_labels = {
+            Game.PVE: 'PvE',
+            Game.LOCAL_PVP: 'Local PvP',
+            Game.ONLINE_PVP: 'Online PvP'
+        }
+        return game_mode_labels.get(game_mode_key, game_mode_key)

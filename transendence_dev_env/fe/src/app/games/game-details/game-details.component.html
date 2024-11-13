@@ -93,7 +93,49 @@
     <p class="error-message">❌ {{ errorMessage }}</p>
   </ng-template>
   
-  statistics
+  <div class="charts-grid" *ngIf="gameStats">
+    <div class="chart-container">
+      <div class="chart-title">Total Games Played (PvE vs. PvP)</div>
+      <canvas #totalGamesChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Win Rate</div>
+      <canvas #winRateChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Average Game Duration</div>
+      <canvas #averageDurationChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Score Distribution</div>
+      <canvas #scoresDistributionChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Games Over Time</div>
+      <canvas #gamesOverTimeChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Average Score per Game Mode</div>
+      <canvas #averageScorePerModeChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Win Rate per Game Mode</div>
+      <canvas #winRatePerModeChart></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Win Distribution per Mode</div>
+      <canvas #winDistributionPerModeChart></canvas>
+    </div>
+  </div>
+  
+  
   
 
 </div>
