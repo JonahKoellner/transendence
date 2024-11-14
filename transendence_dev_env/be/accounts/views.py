@@ -632,7 +632,7 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         # Optionally, create a notification for the receiver about the new message
         create_notification(sender=request.user, receiver=receiver, notification_type='new_message', data={'message': message_text})
 
-        return Response(ChatMessageSerializer(message).data, status=status.HTTP_201_CREATED)
+        return Response(ChatMessageSerializer(message, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     # Action to retrieve chat history between two users
     @action(detail=False, methods=['get'], url_path='history')

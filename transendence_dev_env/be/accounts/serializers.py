@@ -5,6 +5,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, User, Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
 from django.db import transaction
 from games.models import Lobby
+
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -61,20 +64,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
         
     def get_friends(self, obj):
-        """
-        Returns a list of friends serialized using UserDetailSerializer.
-        """
-        friends_profiles = obj.profile.friends.all()
-        friends_users = [profile.user for profile in friends_profiles]
-        return UserDetailSerializer(friends_users, many=True).data
-    
+        friends_users = [profile.user for profile in obj.profile.friends.all()]
+        return UserDetailSerializer(friends_users, many=True, context=self.context).data  # Passed context
+
     def get_blocked_users(self, obj):
-        """
-        Returns a list of blocked users serialized using UserDetailSerializer.
-        """
         blocked_profiles = obj.profile.blocked_users.all()
         blocked_users = [profile.user for profile in blocked_profiles]
-        return UserDetailSerializer(blocked_users, many=True).data
+        return UserDetailSerializer(blocked_users, many=True, context=self.context).data
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
@@ -140,9 +136,19 @@ class UserDetailSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
     def get_xp_for_next_level(self, obj):
         """Get the XP required to reach the next level."""
         return obj.profile.xp_for_next_level()
+    
+    def get_friends(self, obj):
+        friends_users = obj.friends.all()
+        return UserDetailSerializer(friends_users, many=True, context=self.context).data
+
+    def get_blocked_users(self, obj):
+        blocked_profiles = obj.profile.blocked_users.all()
+        blocked_users = [profile.user for profile in blocked_profiles]
+        return UserDetailSerializer(blocked_users, many=True).data
     
     def get_achievements(self, obj):
         """
@@ -207,6 +213,27 @@ class SendGameInviteSerializer(serializers.Serializer):
             raise serializers.ValidationError("Lobby with the given room_id does not exist.")
         return value
     
+class FriendSerializer(serializers.ModelSerializer):
+    display_name = serializers.CharField(source='profile.display_name', required=False)
+    avatar = serializers.ImageField(source='profile.avatar', required=False)
+    is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
+    xp = serializers.IntegerField(source='profile.xp', read_only=True)
+    level = serializers.IntegerField(source='profile.level', read_only=True)
+    xp_for_next_level = serializers.SerializerMethodField()
+    achievements = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'display_name', 'avatar', 'is_online', 'xp', 'level', 'xp_for_next_level', 'achievements']
+        
+    def get_xp_for_next_level(self, obj):
+        return obj.profile.xp_for_next_level()
+    
+    def get_achievements(self, obj):
+        user_achievements = obj.user_achievements.all().select_related('achievement')
+        achievements = [ua.achievement for ua in user_achievements]
+        return AchievementSerializer(achievements, many=True, context=self.context).data
+    
 class AchievementSerializer(serializers.ModelSerializer):
     is_earned = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
@@ -216,18 +243,40 @@ class AchievementSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'points', 'is_earned', 'progress']
 
     def get_is_earned(self, obj):
-        user = self.context['request'].user
-        return UserAchievement.objects.filter(user=user, achievement=obj).exists()
+        request = self.context.get('request', None)
+        if request and hasattr(request, 'user'):
+            user = request.user
+            return UserAchievement.objects.filter(user=user, achievement=obj).exists()
+        return False  # Default value if request is missing
 
     def get_progress(self, obj):
-        user = self.context['request'].user
-        profile = user.profile
-        if obj.criteria_type == 'stat':
-            user_stat_value = getattr(profile, obj.criteria_key, 0)
-            progress = user_stat_value / obj.criteria_value
-            return min(progress, 1.0)
-        elif obj.criteria_type == 'action':
-            is_earned = UserAchievement.objects.filter(user=user, achievement=obj).exists()
-            return 1.0 if is_earned else 0.0
-        else:
-            return 0.0
+        request = self.context.get('request', None)
+        if request and hasattr(request, 'user'):
+            user = request.user
+            profile = user.profile
+            if obj.criteria_type == 'stat':
+                user_stat_value = getattr(profile, obj.criteria_key, 0)
+                
+                # If user_stat_value is callable (method), call it to get the value
+                if callable(user_stat_value):
+                    try:
+                        user_stat_value = user_stat_value()
+                    except Exception as e:
+                        return 0.0
+
+                # Ensure that user_stat_value is a numeric type
+                if not isinstance(user_stat_value, (int, float)):
+                    return 0.0
+
+                if obj.criteria_value:
+                    try:
+                        progress = user_stat_value / obj.criteria_value
+                        return min(progress, 1.0)
+                    except ZeroDivisionError:
+                        return 0.0
+                    except TypeError as e:
+                        return 0.0
+            elif obj.criteria_type == 'action':
+                is_earned = UserAchievement.objects.filter(user=user, achievement=obj).exists()
+                return 1.0 if is_earned else 0.0
+        return 0.0  # Default value if request is missing

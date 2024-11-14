@@ -71,10 +71,6 @@ class Profile(models.Model):
     
     def get_friends(self):
         return self.friends.all()
-    
-    def xp_for_next_level(self):
-        """ Calculate XP needed for the next level using exponential growth. """
-        return int(100 * (1.1 ** self.level))  # Example: exponential growth in XP requirements
 
     def add_xp(self, xp_amount):
         """

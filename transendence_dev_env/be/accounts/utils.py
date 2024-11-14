@@ -56,7 +56,7 @@ def create_notification(sender, receiver, notification_type, data=None, priority
     )
 
 def check_achievements(user, context=None):
-    logger.log(10, f'Checking achievements for user {user}')
+    logger.debug(f'Checking achievements for user {user}')
     from .models import Achievement, UserAchievement
     profile = user.profile
     if context is None:
@@ -71,9 +71,21 @@ def check_achievements(user, context=None):
     for achievement in achievements_to_check:
         if achievement.criteria_type == 'stat':
             user_stat_value = getattr(profile, achievement.criteria_key, None)
-            if user_stat_value is not None and user_stat_value >= achievement.criteria_value:
-                
-                award_achievement(user, achievement)
+            logger.debug(f'Achievement: {achievement.name}, Criteria Key: {achievement.criteria_key}, User Stat Value: {user_stat_value}, Type: {type(user_stat_value)}')
+            
+            if callable(user_stat_value):
+                try:
+                    user_stat_value = user_stat_value()
+                    logger.debug(f'Callable Criteria Key: {achievement.criteria_key}, Result: {user_stat_value}, Type: {type(user_stat_value)}')
+                except Exception as e:
+                    logger.error(f'Error calling {achievement.criteria_key}: {e}')
+                    continue  # Skip awarding this achievement due to error
+            
+            if isinstance(user_stat_value, (int, float)) and achievement.criteria_value:
+                if user_stat_value >= achievement.criteria_value:
+                    award_achievement(user, achievement)
+            else:
+                logger.error(f'Invalid user_stat_value for {achievement.criteria_key}: {user_stat_value} (Type: {type(user_stat_value)})')
         elif achievement.criteria_type == 'action':
             # Add profile fields to context
             context.update({
