@@ -1,6 +1,6 @@
 import { AfterViewChecked, AfterViewInit, Component,OnInit,Renderer2, ViewChild  } from '@angular/core';
 import { AuthService } from './auth.service';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { NotificationsComponent } from './notifications/notifications/notifications.component';
 
 @Component({
@@ -9,11 +9,13 @@ import { NotificationsComponent } from './notifications/notifications/notificati
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit{
+  otpVerified: boolean = false;
   title = 'MyApp';
   isDarkTheme = true;
 
   constructor(
     private authService: AuthService,
+    private router: Router,
     private renderer: Renderer2
   ) {
     this.authService.initializeWebSocket();
@@ -35,6 +37,14 @@ export class AppComponent implements OnInit{
           const [name, value] = cookie.split('=');
           console.log(`${name.trim()}: ${decodeURIComponent(value)}`);
       });
+
+      this.otpVerified = localStorage.getItem('otp_verified') === 'true';
+
+      this.router.events.subscribe(event => {
+        if (event instanceof NavigationEnd) {
+          this.otpVerified = localStorage.getItem('otp_verified') === 'true';;
+        }
+      })
   }
 
   logout(): void {
