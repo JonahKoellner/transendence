@@ -17,6 +17,7 @@ export class UserSearchComponent {
   constructor(private userService: ProfileService, private friendService: FriendService) { }
 
   searchUsers(): void {
+    console.log('Searching for users:', this.searchQuery);
     if (this.searchQuery.trim() === '') {
       this.users = [];
       return;

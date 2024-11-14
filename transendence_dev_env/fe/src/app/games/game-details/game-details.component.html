@@ -95,48 +95,46 @@
   
   <div class="charts-grid" *ngIf="gameStats">
     <div class="chart-container">
-      <div class="chart-title">Total Games Played (PvE vs. PvP)</div>
-      <canvas #totalGamesChart></canvas>
+      <div class="chart-title">Game Mode</div>
+      <canvas #gameModeChart></canvas>
     </div>
-
+  
     <div class="chart-container">
-      <div class="chart-title">Win Rate</div>
-      <canvas #winRateChart></canvas>
+      <div class="chart-title">Game Duration</div>
+      <canvas #gameDurationChart></canvas>
     </div>
-
+  
     <div class="chart-container">
-      <div class="chart-title">Average Game Duration</div>
-      <canvas #averageDurationChart></canvas>
+      <div class="chart-title">Win/Loss Status</div>
+      <canvas #winLossChart></canvas>
     </div>
-
+  
+    <div class="chart-container">
+      <div class="chart-title">Rounds Information</div>
+      <canvas #roundsChart></canvas>
+    </div>
+  
+    <div class="chart-container">
+      <div class="chart-title">Moves Log</div>
+      <canvas #movesLogChart></canvas>
+    </div>
+  
     <div class="chart-container">
       <div class="chart-title">Score Distribution</div>
-      <canvas #scoresDistributionChart></canvas>
+      <canvas #scoreDistributionChart></canvas>
     </div>
-
+  
     <div class="chart-container">
-      <div class="chart-title">Games Over Time</div>
-      <canvas #gamesOverTimeChart></canvas>
+      <div class="chart-title">Game Status</div>
+      <canvas #gameStatusChart></canvas>
     </div>
-
+  
     <div class="chart-container">
-      <div class="chart-title">Average Score per Game Mode</div>
-      <canvas #averageScorePerModeChart></canvas>
-    </div>
-
-    <div class="chart-container">
-      <div class="chart-title">Win Rate per Game Mode</div>
-      <canvas #winRatePerModeChart></canvas>
-    </div>
-
-    <div class="chart-container">
-      <div class="chart-title">Win Distribution per Mode</div>
-      <canvas #winDistributionPerModeChart></canvas>
+      <div class="chart-title">Winner Information</div>
+      <canvas #winnerChart></canvas>
     </div>
   </div>
   
   
+  </div>
   
-
-</div>
-

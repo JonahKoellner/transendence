@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, AfterViewChecked, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Game, GameService } from '../game.service';
 import { Chart } from 'chart.js';
@@ -8,23 +8,21 @@ import { Chart } from 'chart.js';
   templateUrl: './game-details.component.html',
   styleUrls: ['./game-details.component.scss']
 })
-export class GameDetailsComponent implements OnInit, AfterViewChecked {
-  @ViewChild('totalGamesChart') totalGamesChart!: ElementRef;
-  @ViewChild('winRateChart') winRateChart!: ElementRef;
-  @ViewChild('averageDurationChart') averageDurationChart!: ElementRef;
-  @ViewChild('gamesOverTimeChart') gamesOverTimeChart!: ElementRef;
-  @ViewChild('averageScorePerModeChart') averageScorePerModeChart!: ElementRef;
-  @ViewChild('winRatePerModeChart') winRatePerModeChart!: ElementRef;
-  @ViewChild('scoresDistributionChart') scoresDistributionChart!: ElementRef;
-  @ViewChild('winDistributionPerModeChart') winDistributionPerModeChart!: ElementRef;
+export class GameDetailsComponent implements OnInit, AfterViewInit {
+  @ViewChild('gameModeChart') gameModeChart!: ElementRef;
+  @ViewChild('gameDurationChart') gameDurationChart!: ElementRef;
+  @ViewChild('winLossChart') winLossChart!: ElementRef;
+  @ViewChild('roundsChart') roundsChart!: ElementRef;
+  @ViewChild('movesLogChart') movesLogChart!: ElementRef;
+  @ViewChild('scoreDistributionChart') scoreDistributionChart!: ElementRef;
+  @ViewChild('gameStatusChart') gameStatusChart!: ElementRef;
+  @ViewChild('winnerChart') winnerChart!: ElementRef;
 
   gameId: string = '';
   game: Game | null = null;
   errorMessage: string = '';
   isLoading = true;
   gameStats!: any;
-
-  private chartsInitialized = false; // Flag to prevent multiple initializations
 
   constructor(
     private route: ActivatedRoute, 
@@ -45,13 +43,8 @@ export class GameDetailsComponent implements OnInit, AfterViewChecked {
     });
   }
 
-
-  ngAfterViewChecked(): void {
-    // Initialize charts once the view is updated with gameStats and charts are not initialized yet
-    if (this.gameStats && !this.chartsInitialized) {
-      this.initCharts();
-      this.chartsInitialized = true;
-    }
+  ngAfterViewInit(): void {
+    // Charts will be initialized after data is loaded
   }
 
   loadGameDetails(gameId: string): void {
@@ -75,8 +68,8 @@ export class GameDetailsComponent implements OnInit, AfterViewChecked {
         this.gameStats = data;
         console.log('Game Stats:', this.gameStats);
         this.cdr.detectChanges(); // Ensure view is updated
+        this.initCharts();
         this.isLoading = false;
-        // Charts will be initialized in ngAfterViewChecked
       },
       error: (error) => {
         console.error("Error fetching game stats:", error);
@@ -91,289 +84,140 @@ export class GameDetailsComponent implements OnInit, AfterViewChecked {
       console.error("Game stats are null.");
       return;
     }
-
-    // Initialize Total Games Chart
-    if (this.totalGamesChart && this.totalGamesChart.nativeElement) {
-      const ctxTotalGames = this.totalGamesChart.nativeElement.getContext('2d');
-      if (ctxTotalGames) {
-        new Chart(ctxTotalGames, {
-          type: 'doughnut',
-          data: {
-            labels: ['PvE', 'Local PvP', 'Online PvP'],
-            datasets: [{
-              data: [
-                this.gameStats.total_games.PvE, 
-                this.gameStats.total_games['Local PvP'], 
-                this.gameStats.total_games['Online PvP']
-              ],
-              backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for totalGamesChart.");
-      }
-    } else {
-      console.error("totalGamesChart ViewChild is undefined.");
+  
+    // Chart 1: Game Mode
+    const ctxGameMode = this.gameModeChart.nativeElement.getContext('2d');
+    if (ctxGameMode) {
+      new Chart(ctxGameMode, {
+        type: 'pie',
+        data: {
+          labels: [this.gameStats.game_mode],
+          datasets: [{
+            data: [1],
+            backgroundColor: ['#42a5f5']
+          }]
+        },
+        options: { responsive: true }
+      });
     }
-
-    // Initialize Win Rate Chart
-    if (this.winRateChart && this.winRateChart.nativeElement) {
-      const ctxWinRate = this.winRateChart.nativeElement.getContext('2d');
-      if (ctxWinRate) {
-        new Chart(ctxWinRate, {
-          type: 'doughnut',
-          data: {
-            labels: ['Wins', 'Losses'],
-            datasets: [{
-              data: [this.gameStats.win_rate.Wins, this.gameStats.win_rate.Losses],
-              backgroundColor: ['#61BA50', '#f44336']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for winRateChart.");
-      }
-    } else {
-      console.error("winRateChart ViewChild is undefined.");
+  
+    // Chart 2: Game Duration
+    const ctxGameDuration = this.gameDurationChart.nativeElement.getContext('2d');
+    if (ctxGameDuration) {
+      new Chart(ctxGameDuration, {
+        type: 'bar',
+        data: {
+          labels: ['Game Duration (seconds)'],
+          datasets: [{
+            label: 'Duration',
+            data: [this.gameStats.game_duration],
+            backgroundColor: ['#ff9f40']
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
     }
-
-    // Initialize Average Duration Chart
-    if (this.averageDurationChart && this.averageDurationChart.nativeElement) {
-      const ctxAverageDuration = this.averageDurationChart.nativeElement.getContext('2d');
-      if (ctxAverageDuration) {
-        new Chart(ctxAverageDuration, {
-          type: 'bar',
-          data: {
-            labels: ['Average Duration (seconds)'],
-            datasets: [{
-              label: 'Average Duration',
-              data: [this.gameStats.average_duration],
-              backgroundColor: ['#ff9f40']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for averageDurationChart.");
-      }
-    } else {
-      console.error("averageDurationChart ViewChild is undefined.");
+  
+    // Chart 3: Win/Loss Status
+    const ctxWinLoss = this.winLossChart.nativeElement.getContext('2d');
+    if (ctxWinLoss) {
+      new Chart(ctxWinLoss, {
+        type: 'pie',
+        data: {
+          labels: ['Winner', 'Status'],
+          datasets: [{
+            data: [this.gameStats.win_loss_status.Winner === 'None' ? 0 : 1, 1],
+            backgroundColor: ['#61BA50', '#f44336']
+          }]
+        },
+        options: { responsive: true }
+      });
     }
-
-    // Initialize Games Over Time Chart
-    if (this.gamesOverTimeChart && this.gamesOverTimeChart.nativeElement) {
-      const ctxGamesOverTime = this.gamesOverTimeChart.nativeElement.getContext('2d');
-      if (ctxGamesOverTime) {
-        const months = this.gameStats.games_over_time.map((entry: { month: number; }) => this.getMonthName(entry.month));
-        const counts = this.gameStats.games_over_time.map((entry: { count: any; }) => entry.count);
-        new Chart(ctxGamesOverTime, {
-          type: 'line',
-          data: {
-            labels: months,
-            datasets: [{
-              label: 'Games Played',
-              data: counts,
-              fill: false,
-              borderColor: '#36a2eb',
-              tension: 0.1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for gamesOverTimeChart.");
-      }
-    } else {
-      console.error("gamesOverTimeChart ViewChild is undefined.");
+  
+    // Chart 4: Rounds Information
+    const ctxRounds = this.roundsChart.nativeElement.getContext('2d');
+    if (ctxRounds && this.gameStats.rounds_info.length > 0) {
+      const labels = this.gameStats.rounds_info.map((round: any) => `Round ${round.round_number}`);
+      const scoresPlayer1 = this.gameStats.rounds_info.map((round: any) => round.score_player1);
+      const scoresPlayer2 = this.gameStats.rounds_info.map((round: any) => round.score_player2);
+  
+      new Chart(ctxRounds, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Player 1 Score', data: scoresPlayer1, backgroundColor: '#42a5f5' },
+            { label: 'Player 2 Score', data: scoresPlayer2, backgroundColor: '#66bb6a' }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
     }
-
-    // Initialize Average Score per Game Mode Chart
-    if (this.averageScorePerModeChart && this.averageScorePerModeChart.nativeElement) {
-      const ctxAverageScorePerMode = this.averageScorePerModeChart.nativeElement.getContext('2d');
-      if (ctxAverageScorePerMode) {
-        const avgScoreLabels = Object.keys(this.gameStats.average_score_per_mode);
-        const avgScoreData = Object.values(this.gameStats.average_score_per_mode);
-        new Chart(ctxAverageScorePerMode, {
-          type: 'bar',
-          data: {
-            labels: avgScoreLabels,
-            datasets: [{
-              label: 'Average Score',
-              data: avgScoreData,
-              backgroundColor: '#4bc0c0'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            scales: {
-              x: {
-                beginAtZero: true
-              }
-            }
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for averageScorePerModeChart.");
-      }
-    } else {
-      console.error("averageScorePerModeChart ViewChild is undefined.");
+  
+    // Chart 5: Moves Log
+    const ctxMovesLog = this.movesLogChart.nativeElement.getContext('2d');
+    if (ctxMovesLog && this.gameStats.moves_log.length > 0) {
+      const times = this.gameStats.moves_log.map((move: any) => move.time);
+      const actions = this.gameStats.moves_log.map((move: any) => move.action);
+      const players = this.gameStats.moves_log.map((move: any) => move.player);
+  
+      new Chart(ctxMovesLog, {
+        type: 'line',
+        data: {
+          labels: times,
+          datasets: [{
+            label: 'Moves Log',
+            data: actions.map(() => 1),
+            backgroundColor: players.map((player: any) => player === this.game?.player1.username ? '#42a5f5' : '#66bb6a')
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
     }
-
-    // Initialize Win Rate per Game Mode Chart
-    if (this.winRatePerModeChart && this.winRatePerModeChart.nativeElement) {
-      const ctxWinRatePerMode = this.winRatePerModeChart.nativeElement.getContext('2d');
-      if (ctxWinRatePerMode) {
-        const winRateModeLabels = Object.keys(this.gameStats.win_rate_per_mode);
-        const winRateModeData = Object.values(this.gameStats.win_rate_per_mode);
-        new Chart(ctxWinRatePerMode, {
-          type: 'bar',
-          data: {
-            labels: winRateModeLabels,
-            datasets: [{
-              label: 'Win Rate (%)',
-              data: winRateModeData,
-              backgroundColor: '#9966FF'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            scales: {
-              x: {
-                beginAtZero: true,
-                max: 100,
-                ticks: {
-                  callback: function(tickValue: string | number) {
-                    return tickValue + '%';
-                  }
-                }
-              }
-            }
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for winRatePerModeChart.");
-      }
-    } else {
-      console.error("winRatePerModeChart ViewChild is undefined.");
+  
+    // Chart 6: Score Distribution
+    const ctxScoreDistribution = this.scoreDistributionChart.nativeElement.getContext('2d');
+    if (ctxScoreDistribution) {
+      new Chart(ctxScoreDistribution, {
+        type: 'doughnut',
+        data: {
+          labels: ['Player 1', 'Player 2'],
+          datasets: [{
+            data: [this.gameStats.score_distribution['Player 1'], this.gameStats.score_distribution['Player 2']],
+            backgroundColor: ['#36a2eb', '#ff6384']
+          }]
+        },
+        options: { responsive: true }
+      });
     }
-
-    // Initialize Scores Distribution Chart
-    if (this.scoresDistributionChart && this.scoresDistributionChart.nativeElement) {
-      const ctxScoresDistribution = this.scoresDistributionChart.nativeElement.getContext('2d');
-      if (ctxScoresDistribution) {
-        new Chart(ctxScoresDistribution, {
-          type: 'scatter',
-          data: {
-            datasets: [
-              {
-                label: 'Player 1 Scores',
-                data: this.gameStats.scores_distribution.player1_scores.map((score: any) => ({ x: 1, y: score })),
-                backgroundColor: '#36a2eb'
-              },
-              {
-                label: 'Player 2 Scores',
-                data: this.gameStats.scores_distribution.player2_scores.map((score: any) => ({ x: 2, y: score })),
-                backgroundColor: '#ff6384'
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                ticks: {
-                  callback: function(tickValue: string | number) {
-                    const value = Number(tickValue);
-                    return value === 1 ? 'Player 1' : 'Player 2';
-                  },
-                  stepSize: 1,
-                  minRotation: 0.5,
-                  maxTicksLimit: 2
-                },
-                title: {
-                  display: true,
-                  text: 'Player'
-                }
-              },
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Score'
-                }
-              }
-            }
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for scoresDistributionChart.");
-      }
-    } else {
-      console.error("scoresDistributionChart ViewChild is undefined.");
+  
+    // Chart 7: Game Status
+    const ctxGameStatus = this.gameStatusChart.nativeElement.getContext('2d');
+    if (ctxGameStatus) {
+      new Chart(ctxGameStatus, {
+        type: 'doughnut',
+        data: {
+          labels: [this.gameStats.game_status],
+          datasets: [{ data: [1], backgroundColor: ['#ffcd56'] }]
+        },
+        options: { responsive: true }
+      });
     }
-
-    // Initialize Win Distribution per Game Mode Chart
-    if (this.winDistributionPerModeChart && this.winDistributionPerModeChart.nativeElement) {
-      const ctxWinDistributionPerMode = this.winDistributionPerModeChart.nativeElement.getContext('2d');
-      if (ctxWinDistributionPerMode) {
-        const winDistributionLabels = Object.keys(this.gameStats.win_distribution_per_mode);
-        const winDistributionData = Object.values(this.gameStats.win_distribution_per_mode);
-        new Chart(ctxWinDistributionPerMode, {
-          type: 'bar',
-          data: {
-            labels: winDistributionLabels,
-            datasets: [{
-              label: 'Wins',
-              data: winDistributionData,
-              backgroundColor: '#ffcd56'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            scales: {
-              x: {
-                beginAtZero: true,
-              }
-            }
-          }
-        });
-      } else {
-        console.error("Cannot acquire context for winDistributionPerModeChart.");
-      }
-    } else {
-      console.error("winDistributionPerModeChart ViewChild is undefined.");
+  
+    // Chart 8: Winner Information
+    const ctxWinner = this.winnerChart.nativeElement.getContext('2d');
+    if (ctxWinner) {
+      new Chart(ctxWinner, {
+        type: 'pie',
+        data: {
+          labels: ['Winner', 'Is Completed'],
+          datasets: [{
+            data: [this.gameStats.winner_info.is_completed ? 1 : 0, 1],
+            backgroundColor: ['#4bc0c0', '#ff6384']
+          }]
+        },
+        options: { responsive: true }
+      });
     }
   }
 

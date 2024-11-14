@@ -184,26 +184,11 @@ class GlobalStatsSerializer(serializers.Serializer):
     
     
 class GameStatsSerializer(serializers.Serializer):
-    # Chart 1: Total Games (PvE, Local PvP, Online PvP)
-    total_games = serializers.DictField()
-
-    # Chart 2: Win Rate
-    win_rate = serializers.DictField()
-
-    # Chart 3: Average Duration of Games
-    average_duration = serializers.FloatField()
-
-    # Chart 4: Games Over Time (e.g., per month)
-    games_over_time = serializers.ListField()
-
-    # Chart 5: Average Score per Game Mode
-    average_score_per_mode = serializers.DictField()
-
-    # Chart 6: Win Rate per Game Mode
-    win_rate_per_mode = serializers.DictField()
-
-    # Chart 7: Scores Distribution
-    scores_distribution = serializers.DictField()
-
-    # Chart 8: Win Distribution per Game Mode
-    win_distribution_per_mode = serializers.DictField()
+    game_mode = serializers.CharField()
+    game_duration = serializers.FloatField()
+    win_loss_status = serializers.DictField()
+    rounds_info = serializers.ListField(child=serializers.DictField(), required=False)
+    moves_log = serializers.ListField(child=serializers.DictField(), required=False)
+    score_distribution = serializers.DictField()
+    game_status = serializers.CharField()
+    winner_info = serializers.DictField()

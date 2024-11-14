@@ -55,6 +55,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   toggleNotifications(): void {
+    console.log('Toggling notifications');
     this.showNotifications = !this.showNotifications;
     if (this.showNotifications) {
       // this.markAllAsRead();
