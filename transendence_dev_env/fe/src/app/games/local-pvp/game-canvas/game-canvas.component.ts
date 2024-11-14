@@ -223,6 +223,7 @@ export class GameCanvasComponentPVP {
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(e: any) {
+    e.preventDefault();
     if (e.code === 'KeyW') {
       this.leftPaddleSpeed = -10;
     }
@@ -239,6 +240,7 @@ export class GameCanvasComponentPVP {
 
   @HostListener('window:keyup', ['$event'])
   onKeyUp(e: any) {
+    e.preventDefault();
     if (e.code === 'KeyW') {
       this.leftPaddleSpeed = 0;
     }

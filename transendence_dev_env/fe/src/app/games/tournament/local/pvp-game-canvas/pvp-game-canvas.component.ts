@@ -192,6 +192,7 @@ export class PvpGameCanvasComponent {
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(e: any) {
+    e.preventDefault();
     if (e.code === 'KeyW') this.leftPaddleSpeed = -10;
     if (e.code === 'KeyS') this.leftPaddleSpeed = 10;
     if (e.code === 'ArrowUp') this.rightPaddleSpeed = -10;
@@ -200,6 +201,7 @@ export class PvpGameCanvasComponent {
 
   @HostListener('window:keyup', ['$event'])
   onKeyUp(e: any) {
+    e.preventDefault();
     if (e.code === 'KeyW' || e.code === 'KeyS') this.leftPaddleSpeed = 0;
     if (e.code === 'ArrowUp' || e.code === 'ArrowDown') this.rightPaddleSpeed = 0;
   }
