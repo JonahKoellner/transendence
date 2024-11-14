@@ -77,9 +77,9 @@ def update_tournament_stats_and_check_achievements(sender, instance, created, **
         for username in instance.players_only or []:
             try:
                 user = User.objects.get(username=username)
-                profile = user.profile
-                profile.tournaments_participated = F('tournaments_participated') + 1
-                profile.save()
+                Profile.objects.filter(user=user).update(tournaments_participated=F('tournaments_participated') + 1)
+                # Reload the profile to get the updated value
+                user.profile.refresh_from_db()
                 check_achievements(user)
             except User.DoesNotExist:
                 continue  # Skip if user not found
@@ -87,9 +87,9 @@ def update_tournament_stats_and_check_achievements(sender, instance, created, **
         # Update winner's stats
         try:
             winner_user = User.objects.get(username=instance.final_winner)
-            profile = winner_user.profile
-            profile.tournaments_won = F('tournaments_won') + 1
-            profile.save()
+            Profile.objects.filter(user=winner_user).update(tournaments_won=F('tournaments_won') + 1)
+            # Reload the profile to get the updated value
+            winner_user.profile.refresh_from_db()
             check_achievements(winner_user)
         except User.DoesNotExist:
             pass
