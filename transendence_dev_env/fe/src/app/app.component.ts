@@ -12,7 +12,8 @@ export class AppComponent implements OnInit{
   otpVerified: boolean = false;
   title = 'MyApp';
   isDarkTheme = true;
-
+  isCollapsed = true;
+  
   constructor(
     private authService: AuthService,
     private router: Router,

@@ -104,6 +104,8 @@ export class StartComponent implements OnInit {
   match: Match | null = null;
   player1Ready: boolean = false;
   player2Ready: boolean = false;
+  replacePlayer1: boolean = false;
+  replacePlayer2: boolean = false;
   createdTournamentFromServer: Tournament | null = null;
   isPaused: boolean = false;
   private currentGameComponentRef: ComponentRef<PveGameCanvasComponent | PvpGameCanvasComponent> | null = null;
@@ -912,12 +914,22 @@ export class StartComponent implements OnInit {
   triggerLeave(player: string) {
     // Trigger leave action after hold completes
     if (player === 'player1') {
-      alert(`${this.match?.player1} has left the game`);
+      this.slots[0]
       this.leavingPlayer1 = false;
+      this.replacePlayer1 = true;
+      if (this.match) {
+        this.match.player1_type = 'Bot';
+      }
+      alert(`${this.match?.player1} has left the game ${this.slots[0].name}, ${this.slots[1].name}, ${this.slots[2].name} ${this.match?.player1_type}`);
+
     } else if (player === 'player2') {
-      alert(`${this.match?.player2} has left the game`);
       this.leavingPlayer2 = false;
+      this.replacePlayer2 = true;
+      if (this.match) {
+        this.match.player2_type = 'Bot';
+      }
+      alert(`${this.match?.player2} has left the game ${this.slots} ${this.match?.player2_type}`);
+
     }
   }
-
 }
