@@ -1,0 +1,418 @@
+[
+    {
+      "model": "accounts.achievement",
+      "pk": 1,
+      "fields": {
+        "name": "First Game",
+        "description": "Play your first game.",
+        "points": 10,
+        "criteria_type": "stat",
+        "criteria_key": "games_played",
+        "criteria_value": 1
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 2,
+      "fields": {
+        "name": "Gamer",
+        "description": "Play 10 games.",
+        "points": 20,
+        "criteria_type": "stat",
+        "criteria_key": "games_played",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 3,
+      "fields": {
+        "name": "Veteran",
+        "description": "Play 100 games.",
+        "points": 50,
+        "criteria_type": "stat",
+        "criteria_key": "games_played",
+        "criteria_value": 100
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 4,
+      "fields": {
+        "name": "First Win",
+        "description": "Win your first game.",
+        "points": 15,
+        "criteria_type": "stat",
+        "criteria_key": "games_won",
+        "criteria_value": 1
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 5,
+      "fields": {
+        "name": "Winner",
+        "description": "Win 10 games.",
+        "points": 30,
+        "criteria_type": "stat",
+        "criteria_key": "games_won",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 6,
+      "fields": {
+        "name": "Champion",
+        "description": "Win 100 games.",
+        "points": 100,
+        "criteria_type": "stat",
+        "criteria_key": "games_won",
+        "criteria_value": 100
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 7,
+      "fields": {
+        "name": "First Loss",
+        "description": "Lose your first game.",
+        "points": 5,
+        "criteria_type": "stat",
+        "criteria_key": "games_lost",
+        "criteria_value": 1
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 8,
+      "fields": {
+        "name": "Perseverance",
+        "description": "Lose 10 games.",
+        "points": 10,
+        "criteria_type": "stat",
+        "criteria_key": "games_lost",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 9,
+      "fields": {
+        "name": "Never Give Up",
+        "description": "Lose 100 games.",
+        "points": 25,
+        "criteria_type": "stat",
+        "criteria_key": "games_lost",
+        "criteria_value": 100
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 10,
+      "fields": {
+        "name": "Friendly",
+        "description": "Add a friend.",
+        "points": 10,
+        "criteria_type": "stat",
+        "criteria_key": "friends_count",
+        "criteria_value": 1
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 11,
+      "fields": {
+        "name": "Social Butterfly",
+        "description": "Have 10 friends.",
+        "points": 25,
+        "criteria_type": "stat",
+        "criteria_key": "friends_count",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 12,
+      "fields": {
+        "name": "Blocker",
+        "description": "Block a user.",
+        "points": 5,
+        "criteria_type": "action",
+        "criteria_expression": "blocked_user == True"
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 13,
+      "fields": {
+        "name": "Privacy Protector",
+        "description": "Block 10 users.",
+        "points": 15,
+        "criteria_type": "stat",
+        "criteria_key": "blocked_users_count",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 14,
+      "fields": {
+        "name": "Identity Shift",
+        "description": "Change your display name.",
+        "points": 5,
+        "criteria_type": "action",
+        "criteria_expression": "display_name_changed == True"
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 15,
+      "fields": {
+        "name": "First Tournament",
+        "description": "Participate in your first tournament.",
+        "points": 20,
+        "criteria_type": "stat",
+        "criteria_key": "tournaments_participated",
+        "criteria_value": 1
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 16,
+      "fields": {
+        "name": "Competitor",
+        "description": "Participate in 5 tournaments.",
+        "points": 40,
+        "criteria_type": "stat",
+        "criteria_key": "tournaments_participated",
+        "criteria_value": 5
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 17,
+      "fields": {
+        "name": "Tournament Master",
+        "description": "Participate in 10 tournaments.",
+        "points": 60,
+        "criteria_type": "stat",
+        "criteria_key": "tournaments_participated",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 18,
+      "fields": {
+        "name": "First Victory",
+        "description": "Win your first tournament.",
+        "points": 50,
+        "criteria_type": "stat",
+        "criteria_key": "tournaments_won",
+        "criteria_value": 1
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 19,
+      "fields": {
+        "name": "Champion's Glory",
+        "description": "Win 5 tournaments.",
+        "points": 100,
+        "criteria_type": "stat",
+        "criteria_key": "tournaments_won",
+        "criteria_value": 5
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 20,
+      "fields": {
+        "name": "Legend",
+        "description": "Win 10 tournaments.",
+        "points": 200,
+        "criteria_type": "stat",
+        "criteria_key": "tournaments_won",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 21,
+      "fields": {
+        "name": "Time Well Spent",
+        "description": "Spend 10 minutes in games.",
+        "points": 10,
+        "criteria_type": "stat",
+        "criteria_key": "minutes_played",
+        "criteria_value": 10
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 22,
+      "fields": {
+        "name": "Dedicated Gamer",
+        "description": "Spend 100 minutes in games.",
+        "points": 30,
+        "criteria_type": "stat",
+        "criteria_key": "minutes_played",
+        "criteria_value": 100
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 23,
+      "fields": {
+        "name": "Marathoner",
+        "description": "Spend 1000 minutes in games.",
+        "points": 70,
+        "criteria_type": "stat",
+        "criteria_key": "minutes_played",
+        "criteria_value": 1000
+      }
+    },
+    {
+      "model": "accounts.achievement",
+      "pk": 24,
+      "fields": {
+        "name": "Consistent Player",
+        "description": "Log in for 7 consecutive days.",
+        "points": 50,
+        "criteria_type": "stat",
+        "criteria_key": "login_streak",
+        "criteria_value": 7
+      }
+    },
+    {
+        "model": "accounts.achievement",
+        "pk": 25,
+        "fields": {
+          "name": "Level Up",
+          "description": "Reach level 5.",
+          "points": 20,
+          "criteria_type": "stat",
+          "criteria_key": "level",
+          "criteria_value": 5
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 26,
+        "fields": {
+          "name": "Veteran Player",
+          "description": "Reach level 10.",
+          "points": 50,
+          "criteria_type": "stat",
+          "criteria_key": "level",
+          "criteria_value": 10
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 27,
+        "fields": {
+          "name": "XP Collector",
+          "description": "Accumulate 1000 XP.",
+          "points": 30,
+          "criteria_type": "stat",
+          "criteria_key": "xp",
+          "criteria_value": 1000
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 28,
+        "fields": {
+          "name": "First Message",
+          "description": "Send your first message.",
+          "points": 5,
+          "criteria_type": "stat",
+          "criteria_key": "messages_sent",
+          "criteria_value": 1
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 29,
+        "fields": {
+          "name": "Chatty",
+          "description": "Send 50 messages.",
+          "points": 20,
+          "criteria_type": "stat",
+          "criteria_key": "messages_sent",
+          "criteria_value": 50
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 30,
+        "fields": {
+          "name": "Friendship",
+          "description": "Have 5 friends.",
+          "points": 15,
+          "criteria_type": "stat",
+          "criteria_key": "friends_count",
+          "criteria_value": 5
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 31,
+        "fields": {
+          "name": "Social Network",
+          "description": "Have 20 friends.",
+          "points": 50,
+          "criteria_type": "stat",
+          "criteria_key": "friends_count",
+          "criteria_value": 20
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 32,
+        "fields": {
+          "name": "Playing with Friends",
+          "description": "Play a game with a friend.",
+          "points": 15,
+          "criteria_type": "stat",
+          "criteria_key": "games_with_friends",
+          "criteria_value": 1
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 33,
+        "fields": {
+          "name": "Friendly Gamer",
+          "description": "Play 10 games with friends.",
+          "points": 30,
+          "criteria_type": "stat",
+          "criteria_key": "games_with_friends",
+          "criteria_value": 10
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 34,
+        "fields": {
+          "name": "Marathon Runner",
+          "description": "Play a game lasting over 60 minutes.",
+          "points": 25,
+          "criteria_type": "action",
+          "criteria_expression": "game_duration >= 60"
+        }
+      },
+      {
+        "model": "accounts.achievement",
+        "pk": 35,
+        "fields": {
+          "name": "Speedster",
+          "description": "Win a game in under 5 minutes.",
+          "points": 25,
+          "criteria_type": "action",
+          "criteria_expression": "game_duration <= 5 and game_won == True"
+        }
+      }
+    ]

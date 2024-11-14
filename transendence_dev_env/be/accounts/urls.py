@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import RegisterView, LoginView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet
+from .views import RegisterView, LoginView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet, AchievementListView
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -14,5 +14,6 @@ urlpatterns = [
     path('enable-2fa/', Enable2FAView.as_view(), name='enable-2fa'),
     path('disable-2fa/', Disable2FAView.as_view(), name='disable-2fa'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('achievements/', AchievementListView.as_view(), name='achievement-list'),
     path('', include(router.urls)),
 ]

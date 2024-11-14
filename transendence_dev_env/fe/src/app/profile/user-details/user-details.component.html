@@ -21,17 +21,22 @@
       </div>
       
       <!-- Avatar -->
-      <img
-        *ngIf="user.profile?.avatar || user.avatar"
-        [src]="user.profile?.avatar || user.avatar"
-        alt="User Avatar"
-        class="avatar"
-      />
-      
-      <!-- Level Info -->
-      <div class="level-info">
-        <h4>{{ user.level }}</h4>
-      </div>
+      <div class="avatar-container">
+        <img
+          *ngIf="user.profile?.avatar || user.avatar"
+          [src]="user.profile?.avatar || user.avatar"
+          alt="User Avatar"
+          class="avatar"
+          [ngClass]="{
+            'online': user.is_online === true,
+            'offline': user.is_online === false,
+            'unknown': user.is_online === null || user.is_online === undefined
+          }"
+        />
+        <!-- Level Badge -->
+        <div class="level-badge">
+          {{ user.level }}
+        </div>
       
       <!-- Display Name and Email -->
       <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
@@ -55,6 +60,11 @@
       [ngClass]="{'active-tab': activeTab === 'graphs'}">
       Graphs
     </button>
+    <button 
+    (click)="activeTab = 'achievements'" 
+    [ngClass]="{'active-tab': activeTab === 'achievements'}">
+    Achivements
+  </button>
     </div>
     
     <!-- Tab Content -->
@@ -174,6 +184,36 @@
         </div>
       </div>
       
+    </div>
+        
+    <div *ngIf="activeTab === 'achievements'" class="tab-content achievements-tab">
+      <div class="achievements-container">
+        <h2>achievements</h2>
+        <div class="achievements-grid">
+          <div
+            *ngFor="let achievement of achievements"
+            [ngClass]="{
+              'achievement-card': true,
+              'earned': userAchievementIds.has(achievement.id),
+              'not-earned': !userAchievementIds.has(achievement.id)
+            }"
+          >
+            <div class="achievement-icon">
+              <!-- Use Bootstrap Icons -->
+              <i
+                class="bi"
+                [ngClass]="getAchievementIconClass(achievement)"
+                aria-hidden="true"
+              ></i>
+            </div>
+            <div class="achievement-details">
+              <h3>{{ achievement.name }}</h3>
+              <p>{{ achievement.description }}</p>
+              <p class="achievement-points">Points: {{ achievement.points }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div *ngIf="activeTab === 'stats'" class="tab-content stats-tab">

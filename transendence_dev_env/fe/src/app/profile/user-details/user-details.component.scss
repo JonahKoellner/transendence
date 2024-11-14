@@ -30,16 +30,13 @@
   .user-details {
     max-width: 1000px;
     margin: auto;
-    background-color: #0E0F10;
     padding: 2rem;
     border-radius: 10px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     position: relative;
 
     /* Profile Card */
     .profile-card {
       position: relative;
-      background-color: #232627;
       padding: 2rem;
       border-radius: 10px;
       text-align: center;
@@ -51,28 +48,11 @@
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
       }
 
-      /* Online Status */
-      .online-status {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-
-        .badge {
-          padding: 0.4rem 0.8rem;
-          border-radius: 12px;
-          font-size: 0.8rem;
-          font-weight: bold;
-          text-transform: uppercase;
-          color: #fff;
-
-          &.badge-success {
-            background-color: #28a745;
-          }
-
-          &.badge-secondary {
-            background-color: #6c757d;
-          }
-        }
+      /* Avatar Container */
+      .avatar-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1rem;
       }
 
       /* Avatar */
@@ -80,26 +60,41 @@
         width: 120px;
         height: 120px;
         border-radius: 50%;
-        margin: 1rem auto;
-        border: 4px solid #61BA50;
+        border: 4px solid; /* Border color will be set by classes */
         object-fit: cover;
         transition: transform 0.3s, box-shadow 0.3s;
-
-        &:hover {
-          transform: scale(1.05);
-          box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
-        }
       }
 
-      /* Level Info */
-      .level-info {
+      .avatar:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
+      }
+
+      /* Online Status Border Colors */
+      .avatar.online {
+        border-color: #28a745; /* Green for online */
+      }
+
+      .avatar.offline {
+        border-color: #dc3545; /* Red for offline */
+      }
+
+      .avatar.unknown {
+        border-color: #6c757d; /* Grey for unknown */
+      }
+
+      /* Level Badge */
+      .level-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
         background-color: #61BA50;
-        color: #1b1b1b;
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        margin-bottom: 1rem;
+        color: #fff;
+        padding: 0.4rem 0.6rem;
+        border-radius: 50%;
+        font-weight: bold;
         font-size: 1rem;
+        border: 2px solid #fff;
       }
 
       /* Display Name */
@@ -115,7 +110,6 @@
         color: #cccccc;
       }
     }
-
     /* Tab Controls */
     .tab-controls {
       display: flex;
@@ -510,4 +504,85 @@
       }
     }
   }
+  .achievements-container {
+    padding: 2rem;
+  }
+
+  .achievements-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+
+  .achievement-card {
+    width: 180px;
+    background-color: #232627;
+    border: 2px solid #61BA50;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: center;
+    position: relative;
+    padding: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(97, 186, 80, 0.3);
+    }
+  }
+
+  .earned {
+    border-color: #61BA50;
+    background-color: #1b1b1b;
+  }
+
+  .not-earned {
+    border-color: #555;
+    background-color: #1f1f1f;
+    filter: grayscale(100%);
+  }
+
+  .achievement-icon {
+    font-size: 3rem;
+    color: #61BA50;
+    margin-bottom: 0.5rem;
+  }
+
+  .not-earned .achievement-icon {
+    color: #777;
+  }
+
+  .achievement-details {
+    color: #e0e0e0;
+  }
+
+  .achievement-details h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  .achievement-details p {
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
+  }
+
+  .achievement-points {
+    font-weight: bold;
+    color: #61BA50;
+  }
+
+  .not-earned::after {
+    content: 'Locked';
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
 }
+

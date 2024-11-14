@@ -31,6 +31,7 @@ export class NotificationsComponent implements OnInit {
     'new_message',
     'system_alert',
     'level_up',
+    "achievement_unlocked"
   ];
   selectedType = '';
   filteredNotifications: Notification[] = [];
@@ -152,6 +153,8 @@ export class NotificationsComponent implements OnInit {
         return 'you leveled up!';
       case 'system_alert':
         return 'sent you a system alert.';
+      case 'achievement_unlocked':
+        return 'unlocked an achievement!';
       default:
         return 'has an update.';
     }
@@ -169,6 +172,8 @@ export class NotificationsComponent implements OnInit {
         return 'fas fa-exclamation-circle';
       case 'level_up':
         return 'fas fa-level-up-alt';
+      case 'achievement_unlocked':
+        return 'fas fa-trophy';
       default:
         return 'fas fa-bell';
     }

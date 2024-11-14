@@ -5,6 +5,7 @@ import pyotp
 from django.db.models import Avg, Max
 from .utils import create_notification
 from django.apps import apps
+from django.utils import timezone
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     otp_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -20,6 +21,29 @@ class Profile(models.Model):
     
     xp = models.IntegerField(default=0)
     level = models.IntegerField(default=1)
+    
+    # Stats tracking for achievements
+    games_played = models.IntegerField(default=0)
+    games_won = models.IntegerField(default=0)
+    games_lost = models.IntegerField(default=0)
+    tournaments_participated = models.IntegerField(default=0)
+    tournaments_won = models.IntegerField(default=0)
+    minutes_played = models.FloatField(default=0.0)
+    friends_count = models.IntegerField(default=0)
+    blocked_users_count = models.IntegerField(default=0)
+    display_name_changed = models.BooleanField(default=False)
+    login_streak = models.IntegerField(default=0)
+    last_login_date = models.DateField(null=True, blank=True)
+    messages_sent = models.IntegerField(default=0)
+    games_with_friends = models.IntegerField(default=0)
+    
+    def save(self, *args, **kwargs):
+        if self.pk:
+            original = Profile.objects.get(pk=self.pk)
+            if original.display_name != self.display_name:
+                self.display_name_changed = True
+        super().save(*args, **kwargs)
+
     
     # Generate a new OTP secret and provisioning URI for QR code
     def generate_otp(self):
@@ -196,6 +220,7 @@ class Notification(models.Model):
         ('new_message', 'New Message'),
         ('system_alert', 'System Alert'),
         ('level_up', 'Level Up'),
+        ('achievement_unlocked', 'Achievement Unlocked'),
     )
     PRIORITY_LEVELS = (
         ('low', 'Low'),
@@ -246,3 +271,40 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver} ({self.status})"
+    
+
+class Achievement(models.Model):
+    """
+    Represents an achievement that can be earned by users.
+    """
+    # Basic information
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField()
+    points = models.IntegerField(default=0)  # Points awarded for earning the achievement
+
+    # Criteria types and expressions
+    CRITERIA_TYPES = (
+        ('stat', 'Stat-based'),
+        ('action', 'Action-based'),
+    )
+    criteria_type = models.CharField(max_length=20, choices=CRITERIA_TYPES)
+    criteria_key = models.CharField(max_length=50, blank=True, null=True)
+    criteria_value = models.IntegerField(null=True, blank=True)
+    criteria_expression = models.CharField(max_length=255, blank=True, null=True)  # For complex criteria
+
+    def __str__(self):
+        return self.name
+
+class UserAchievement(models.Model):
+    """
+    Represents the achievements earned by a user.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='user_achievements')
+    date_earned = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'achievement')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.achievement.name}"

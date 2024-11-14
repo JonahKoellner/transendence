@@ -13,7 +13,7 @@ from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
     TokenSerializer, UserProfileSerializer, NotificationSerializer,
     UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
-    FriendRequestSerializer, SendGameInviteSerializer
+    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer,
 )
 from .utils import create_notification, update_profile_with_transaction
 from django.http import JsonResponse
@@ -23,7 +23,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from .models import Notification, ChatMessage, FriendRequest
+from .models import Notification, ChatMessage, FriendRequest, Achievement
 from django.db import models
 from django.db.models import Q
 import be.settings as besettings
@@ -239,7 +239,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             # Use the transaction-safe method
             update_profile_with_transaction(user, serializer.validated_data.get('profile', {}))
-            return Response({"message": "Profile updated successfully", "user": serializer.data}, status=status.HTTP_200_OK)
+            return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], url_path='search')
@@ -649,3 +649,11 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AchievementListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        achievements = Achievement.objects.all()
+        serializer = AchievementSerializer(achievements, many=True, context={'request': request})
+        return Response(serializer.data)

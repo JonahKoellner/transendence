@@ -7,6 +7,14 @@ export interface Profile {
   avatar: string; // URL to the avatar image
   is_2fa_enabled: boolean;
 }
+export interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  points: number;
+  is_earned?: boolean; // Indicates if the user has earned this achievement
+  progress?: number;   // A value between 0 and 1 representing progress
+}
 
 export interface UserProfile {
   id: number;
@@ -19,6 +27,7 @@ export interface UserProfile {
   xp: number;          // Current XP
   level: number;       // Current level
   xp_for_next_level: number;  // XP required to reach the next level
+  achievements?: Achievement[];
 }
 
 
@@ -27,6 +36,7 @@ export interface UserProfile {
 })
 export class ProfileService {
   private apiUrl = 'http://localhost:8000/accounts/users/';
+  private base = 'http://localhost:8000/accounts/';
   constructor(private http: HttpClient) {}
 
   getProfile(): Observable<UserProfile> {
@@ -48,9 +58,7 @@ export class ProfileService {
   getProfileColorByProfileId(userId: number): any {
     return this.http.get<any>(`${this.apiUrl}profile_color/${userId}/`, { withCredentials: true });
   }
-
-  getCurrentUserId(): number {
-    return 1;
-  }
-  
+  getAchievements(): Observable<any> {
+    return this.http.get<any>(`${this.base}achievements/`, { withCredentials: true });
+  }  
 }

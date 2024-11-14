@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Game, GameService } from 'src/app/games/game.service';
 import { Tournament } from 'src/app/games/tournament/local/start/start.component';
-import { ProfileService, UserProfile } from 'src/app/profile.service';
+import { Achievement, ProfileService, UserProfile } from 'src/app/profile.service';
 
 @Component({
   selector: 'app-user-details',
@@ -21,8 +21,9 @@ export class UserDetailsComponent implements OnInit {
   tournamentHistory: Tournament[] = [];
   userStats: any;
   profileBackgroundStyle: any;
-
-  activeTab: 'history' | 'stats' | 'graphs' = 'history';
+  achievements: any;
+  userAchievementIds: Set<number> = new Set<number>();
+  activeTab: 'history' | 'stats' | 'graphs' | 'achievements'= 'history';
   activeHistoryTab: 'games' | 'tournaments' = 'games';
 
   gameSearchName: string = '';
@@ -68,17 +69,32 @@ export class UserDetailsComponent implements OnInit {
     );
   }
 
-  private hexToRgba(hex: string, alpha: number): string {
-    let r = 0, g = 0, b = 0;
-    if (hex.length == 4) {
-      r = parseInt(hex[1] + hex[1], 16);
-      g = parseInt(hex[2] + hex[2], 16);
-      b = parseInt(hex[3] + hex[3], 16);
-    } else if (hex.length == 7) {
-      r = parseInt(hex[1] + hex[2], 16);
-      g = parseInt(hex[3] + hex[4], 16);
-      b = parseInt(hex[5] + hex[6], 16);
+  private hexToRgba(hex: any, alpha: number): string {
+    if (typeof hex !== 'string') {
+      console.error(`hexToRgba: Expected a string but received ${typeof hex}:`, hex);
+      return `rgba(0, 0, 0, ${alpha})`; // Fallback to black with the given alpha
     }
+  
+    let r = 0, g = 0, b = 0;
+  
+    // Normalize the hex string: remove '#' and trim whitespace
+    hex = hex.replace(/^#/, '').trim();
+  
+    if (hex.length === 3) {
+      // Expand shorthand form (e.g., 'f3d') to full form ('ff33dd')
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
+    } else {
+      console.error(`Invalid hex color format: '${hex}'. Expected 3 or 6 characters.`);
+      return `rgba(0, 0, 0, ${alpha})`; // Fallback to black with the given alpha
+    }
+  
+    console.log(`Converted Hex: #${hex} to RGBA: rgba(${r}, ${g}, ${b}, ${alpha})`);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
@@ -87,9 +103,10 @@ export class UserDetailsComponent implements OnInit {
       profileColor: this.profileService.getProfileColorByProfileId(userId),
       games: this.gameService.getGamesByUser(userId),
       tournaments: this.gameService.getTournamentsByUser(userId),
-      userStats: this.gameService.getUserStats(userId)
+      userStats: this.gameService.getUserStats(userId),
+      achievements: this.profileService.getAchievements()
     }).subscribe(
-      ({ profileColor, games, tournaments, userStats }) => {
+      ({ profileColor, games, tournaments, userStats, achievements }) => {
         this.profileColor = profileColor; // e.g., "#d4cfcb"
         // Compute the gradient background
         this.profileBackgroundStyle = {
@@ -97,7 +114,7 @@ export class UserDetailsComponent implements OnInit {
             to bottom,
             rgba(30, 30, 30, 1) 0%,
             rgba(30, 30, 30, 0.8) 50%,
-            ${this.hexToRgba(this.profileColor, 0.5)} 100%
+            ${this.hexToRgba(this.profileColor.profile_color, 0.5)} 100%
           )`,
           'filter': 'brightness(0.9)',
         };
@@ -109,8 +126,12 @@ export class UserDetailsComponent implements OnInit {
         this.filteredTournamentHistory = tournaments;
 
         this.userStats = userStats;
-
+        this.achievements = achievements;
+        if (this.user && this.user.achievements) {
+          this.userAchievementIds = new Set(this.user.achievements.map(a => a.id));
+        }
         this.isLoading = false;
+
       },
       (error: any) => {
         console.warn('Error loading user stats:', error);
@@ -154,5 +175,19 @@ export class UserDetailsComponent implements OnInit {
         ? new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
         : new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
     );
+  }
+  getAchievementIconClass(achievement: Achievement): string {
+    // Map achievement names or IDs to Bootstrap icon classes
+    switch (achievement.name) {
+      case 'First Win':
+        return 'bi-trophy-fill';
+      case 'Top Scorer':
+        return 'bi-star-fill';
+      case 'Blocker':
+        return 'bi-shield-lock-fill';
+      // Add cases for other achievements
+      default:
+        return 'bi-award-fill'; // Default icon
+    }
   }
 }

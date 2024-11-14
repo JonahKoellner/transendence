@@ -28,7 +28,8 @@ export class ChatWindowComponent implements OnInit {
   loadChatHistory(): void {
     this.chatService.getChatHistory(this.friendId).subscribe((messages) => {
       this.messages = messages;
-      this.scrollToBottom();
+      if (messages.length > 0)
+        this.scrollToBottom();
       this.isLoading = false;
     });
   }
@@ -47,7 +48,8 @@ export class ChatWindowComponent implements OnInit {
       ) {
         if (message.notification_type !== 'new_message') return;  // Ignore other notifications
         console.log("Pusing message")
-        this.scrollToBottom();
+        if (this.messages.length > 0)
+          this.scrollToBottom();
         this.messages.push(message);  // Add the new message to the chat
       }
     });
@@ -60,7 +62,8 @@ export class ChatWindowComponent implements OnInit {
       this.chatService.sendMessageViaRest(this.newMessage, this.friendId).subscribe(
         (response) => {
           console.log("Response")
-          this.scrollToBottom();
+          if (this.messages.length > 0)
+            this.scrollToBottom();
           this.messages.push(response);  // Add the new message to the chat
         },
         (error) => {

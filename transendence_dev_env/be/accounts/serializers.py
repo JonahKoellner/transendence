@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Profile, User, Notification, ChatMessage, FriendRequest
+from .models import Profile, User, Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
 from django.db import transaction
 from games.models import Lobby
 class RegisterSerializer(serializers.ModelSerializer):
@@ -51,13 +51,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     xp = serializers.IntegerField(source='profile.xp', read_only=True)
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
-    
+    achievements = serializers.SerializerMethodField()
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'display_name', 'avatar', 'friends',
             'blocked_users', 'is_online', 'is_2fa_enabled', 'has_logged_in',
-            'xp', 'level', 'xp_for_next_level'
+            'xp', 'level', 'xp_for_next_level', 'achievements'
         ]
         
     def get_friends(self, obj):
@@ -91,6 +91,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_xp_for_next_level(self, obj):
         """Get the XP required to reach the next level."""
         return obj.profile.xp_for_next_level()
+    
+    def get_achievements(self, obj):
+        """
+        Returns a list of the user's achievements serialized using AchievementSerializer.
+        """
+        user_achievements = obj.user_achievements.all().select_related('achievement')
+        achievements = [ua.achievement for ua in user_achievements]
+        return AchievementSerializer(achievements, many=True, context=self.context).data
 
 class TokenSerializer(serializers.Serializer):
     refresh = serializers.CharField()
@@ -104,9 +112,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
     xp = serializers.IntegerField(source='profile.xp', read_only=True)
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
+    achievements = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level']
+        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level', 'achievements']
     
     
     def update(self, instance, validated_data):
@@ -134,6 +143,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_xp_for_next_level(self, obj):
         """Get the XP required to reach the next level."""
         return obj.profile.xp_for_next_level()
+    
+    def get_achievements(self, obj):
+        """
+        Returns a list of the user's achievements serialized using AchievementSerializer.
+        """
+        user_achievements = obj.user_achievements.all().select_related('achievement')
+        achievements = [ua.achievement for ua in user_achievements]
+        return AchievementSerializer(achievements, many=True, context=self.context).data
     
 class UserMinimalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -189,3 +206,28 @@ class SendGameInviteSerializer(serializers.Serializer):
         if not Lobby.objects.filter(room_id=value).exists():
             raise serializers.ValidationError("Lobby with the given room_id does not exist.")
         return value
+    
+class AchievementSerializer(serializers.ModelSerializer):
+    is_earned = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Achievement
+        fields = ['id', 'name', 'description', 'points', 'is_earned', 'progress']
+
+    def get_is_earned(self, obj):
+        user = self.context['request'].user
+        return UserAchievement.objects.filter(user=user, achievement=obj).exists()
+
+    def get_progress(self, obj):
+        user = self.context['request'].user
+        profile = user.profile
+        if obj.criteria_type == 'stat':
+            user_stat_value = getattr(profile, obj.criteria_key, 0)
+            progress = user_stat_value / obj.criteria_value
+            return min(progress, 1.0)
+        elif obj.criteria_type == 'action':
+            is_earned = UserAchievement.objects.filter(user=user, achievement=obj).exists()
+            return 1.0 if is_earned else 0.0
+        else:
+            return 0.0

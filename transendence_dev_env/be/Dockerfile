@@ -24,4 +24,4 @@ RUN pip install daphne
 EXPOSE 8000
 
 # Start Django with migrations
-CMD ["python", "manage.py", "migrate", "&&", "daphne", "-b", "0.0.0.0", "-p", "8000", "be.asgi:application"]
+CMD ["python", "manage.py", "makemigrations", "accounts", "&&", "python", "manage.py", "makemigrations", "games", "&&",  "python", "manage.py", "migrate", "&&",  "python", "manage.py", "loaddata","achievements.json", "&&", "daphne", "-b", "0.0.0.0", "-p", "8000", "be.asgi:application"]
