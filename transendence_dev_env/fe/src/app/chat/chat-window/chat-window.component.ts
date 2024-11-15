@@ -29,8 +29,14 @@ export class ChatWindowComponent implements OnInit {
     this.chatService.getChatHistory(this.friendId).subscribe((messages) => {
       this.messages = messages;
       if (messages.length > 0)
+      {
         this.scrollToBottom();
+      }
       this.isLoading = false;
+      (error: any) => {
+        console.error(error);
+        this.isLoading = false;
+      }
     });
   }
 
