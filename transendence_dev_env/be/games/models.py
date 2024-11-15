@@ -111,7 +111,8 @@ class Lobby(models.Model):
         self.save()
 
     def get_lobby_state(self):
-        return {
+        """Return the lobby state with serialized image URLs."""
+        state = {
             "is_host_ready": self.is_host_ready,
             "is_guest_ready": self.is_guest_ready,
             "all_ready": self.all_ready(),
@@ -122,9 +123,15 @@ class Lobby(models.Model):
             "created_at": self.created_at.isoformat(),
             "max_rounds": self.max_rounds,
             "round_score_limit": self.round_score_limit,
-            "room_id": self.room_id
-            # Avoid including entire model instances
+            "room_id": self.room_id,
+            "host_paddle_color": self.host.profile.paddleskin_color,
+            "host_paddle_image": self.host.profile.paddleskin_image.url if self.host.profile.paddleskin_image else None,
+            "guest_paddle_color": self.guest.profile.paddleskin_color if self.guest else None,
+            "guest_paddle_image": self.guest.profile.paddleskin_image.url if self.guest and self.guest.profile.paddleskin_image else None,
         }
+        
+        return state
+
     def has_guest_joined(self):
         """Returns True if the guest has joined the lobby."""
         return self.guest is not None

@@ -7,6 +7,19 @@ import { NotificationService, SendGameInvitePayload } from 'src/app/notification
 import { FriendService } from 'src/app/friend.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
+interface GameSettings {
+  paddleskin_color_left?: string;
+  paddleskin_image_left?: string;
+  paddleskin_color_right?: string;
+  paddleskin_image_right?: string;
+  ballskin_color?: string;
+  ballskin_image?: string;
+  gamebackground_color?: string;
+  gamebackground_wallpaper?: string;
+}
+
+
+
 @Component({
   selector: 'app-game-room',
   templateUrl: './game-room.component.html',
@@ -23,6 +36,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   gameState: any = {};
   leftScore: number = 0;
   rightScore: number = 0;
+  guestId: number = 0;
   isHost: boolean = false;
   private messageSubscription!: Subscription;
   userProfile: UserProfile | null = null;
@@ -30,6 +44,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   roomData: any;
   friends: UserProfile[] = [];
   winner: string = '';
+  gameSettings: GameSettings = {};
   inviteFriendOpen: boolean = false;
   constructor(
     private route: ActivatedRoute,
@@ -53,6 +68,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           if (msg.type === 'initial_state') {
             this.host = msg.host;
             this.guest = msg.guest;
+            this.guestId = msg.guestId;
             this.isHostReady = msg.isHostReady;
             this.isGuestReady = msg.isGuestReady;
             this.allReady = msg.allReady;
@@ -62,6 +78,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
             this.allReady = msg.allReady;
             this.host = msg.host;
             this.guest = msg.guest;
+            this.guestId = msg.guestId;
           } else if (msg.type === 'game_state') {
             this.gameState = msg;
             this.leftScore = msg.leftScore;
@@ -167,6 +184,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
 
   startGame() {
+    this.gameSettings = {
+      paddleskin_color_left: this.userProfile?.paddleskin_color,
+      paddleskin_image_left: this.userProfile?.paddleskin_image,
+      paddleskin_image_right: '',
+      paddleskin_color_right: '',
+      ballskin_color: this.userProfile?.ballskin_color,
+      ballskin_image: this.userProfile?.ballskin_image,
+      gamebackground_color: this.userProfile?.gamebackground_color,
+      gamebackground_wallpaper: this.userProfile?.gamebackground_wallpaper,
+    };
     if (this.userProfile?.username === this.host) {
       this.lobbyService.sendMessage({
         action: 'start_game',
