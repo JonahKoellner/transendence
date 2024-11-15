@@ -6,6 +6,7 @@ from .models import Profile, User, Notification, ChatMessage, FriendRequest, Ach
 from django.db import transaction
 from games.models import Lobby
 import re
+from .utils import check_achievements
 
 def validate_hex_color(value):
     if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', value):
@@ -58,6 +59,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
     achievements = serializers.SerializerMethodField()
+    
+    avatar_to_delete = serializers.BooleanField(write_only=True, required=False)
+    paddleskin_image_to_delete = serializers.BooleanField(write_only=True, required=False)
+    ballskin_image_to_delete = serializers.BooleanField(write_only=True, required=False)
+    gamebackground_wallpaper_to_delete = serializers.BooleanField(write_only=True, required=False)
+    
     paddleskin_color = serializers.CharField(
         source='profile.paddleskin_color', 
         required=False, 
@@ -96,7 +103,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'xp', 'level', 'xp_for_next_level', 'achievements',
             'paddleskin_color', 'paddleskin_image',
             'ballskin_color', 'ballskin_image',
-            'gamebackground_color', 'gamebackground_wallpaper'
+            'gamebackground_color', 'gamebackground_wallpaper',
+            'avatar_to_delete',
+            'paddleskin_image_to_delete',
+            'ballskin_image_to_delete',
+            'gamebackground_wallpaper_to_delete',
         ]
         
     def get_friends(self, obj):
@@ -107,18 +118,60 @@ class UserProfileSerializer(serializers.ModelSerializer):
         blocked_profiles = obj.profile.blocked_users.all()
         blocked_users = [profile.user for profile in blocked_profiles]
         return UserDetailSerializer(blocked_users, many=True, context=self.context).data
-
+    
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
 
-        # Use atomic transaction to ensure all or nothing
-        with transaction.atomic():
-            for attr, value in profile_data.items():
-                setattr(instance.profile, attr, value)
-            instance.profile.save()  # Commit all profile changes
-            instance.save()  # Save the user instance
+        # Extract deletion flags
+        avatar_to_delete = validated_data.pop('avatar_to_delete', False)
+        paddleskin_image_to_delete = validated_data.pop('paddleskin_image_to_delete', False)
+        ballskin_image_to_delete = validated_data.pop('ballskin_image_to_delete', False)
+        gamebackground_wallpaper_to_delete = validated_data.pop('gamebackground_wallpaper_to_delete', False)
 
+        profile = instance.profile
+
+        # Handle avatar deletion
+        if avatar_to_delete and profile.avatar:
+            profile.avatar.delete(save=False)
+            profile.avatar = None
+
+        # Handle paddleskin image deletion
+        if paddleskin_image_to_delete and profile.paddleskin_image:
+            profile.paddleskin_image.delete(save=False)
+            profile.paddleskin_image = None
+
+        # Handle ballskin image deletion
+        if ballskin_image_to_delete and profile.ballskin_image:
+            profile.ballskin_image.delete(save=False)
+            profile.ballskin_image = None
+
+        # Handle game background wallpaper deletion
+        if gamebackground_wallpaper_to_delete and profile.gamebackground_wallpaper:
+            profile.gamebackground_wallpaper.delete(save=False)
+            profile.gamebackground_wallpaper = None
+
+        # Update other profile fields within a transaction
+        with transaction.atomic():
+            # Update profile fields
+            for attr, value in profile_data.items():
+                setattr(profile, attr, value)
+            
+            # Check if display name has changed
+            if 'display_name' in profile_data and profile_data['display_name'] != profile.display_name:
+                profile.display_name_changed = True
+            
+            profile.save()
+            
+            # After saving the profile, check for achievements
+            check_achievements(instance)
+
+        # Update User fields if any (e.g., email)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
         return instance
+
 
     def get_xp_for_next_level(self, obj):
         """Get the XP required to reach the next level."""

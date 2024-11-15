@@ -1,12 +1,18 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
-import { ProfileService } from 'src/app/profile.service';
+import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { GameCanvasComponentPVP } from './game-canvas/game-canvas.component';
 
 
 export interface GameSettings {
   maxRounds: number;
   roundScoreLimit: number;
+  paddleskin_color?: string;
+  paddleskin_image?: string;
+  ballskin_color?: string;
+  ballskin_image?: string;
+  gamebackground_color?: string;
+  gamebackground_wallpaper?: string;
 }
 
 @Component({
@@ -21,6 +27,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   previousGames: string[] = [];
   gameElapsedTime: string = '0 seconds';
   roundElapsedTime: string = '0 seconds';
+  hostProfile: UserProfile | null = null;
 
   player1Name: string = 'Player 1';
   player2Name: string = 'Player 2';
@@ -38,7 +45,14 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.profileService.getProfile().subscribe(
       profile => {
+        this.hostProfile = profile;
         this.player1Name = profile.display_name || profile.username;
+        this.settings.paddleskin_color = profile.paddleskin_color;
+        this.settings.paddleskin_image = profile.paddleskin_image;
+        this.settings.ballskin_color = profile.ballskin_color;
+        this.settings.ballskin_image = profile.ballskin_image;
+        this.settings.gamebackground_color = profile.gamebackground_color;
+        this.settings.gamebackground_wallpaper = profile.gamebackground_wallpaper;
       },
       error => {
         console.error('Failed to load profile:', error);
@@ -55,7 +69,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
 
     const newGame: Game = {
       game_mode: 'local_pvp',
-      player1: { id: 1, username: this.player1Name },
+      player1: { id: this.hostProfile!.id, username: this.hostProfile!.username },
       player2: { id: 0, username: this.player2Name },
       start_time: new Date().toISOString(),
       score_player1: 0,

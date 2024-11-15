@@ -7,6 +7,12 @@ export interface GameSettings {
   maxRounds: number;
   roundScoreLimit: number;
   difficulty?: 'Easy' | 'Medium' | 'Hard';
+  paddleskin_color?: string;
+  paddleskin_image?: string;
+  ballskin_color?: string;
+  ballskin_image?: string;
+  gamebackground_color?: string;
+  gamebackground_wallpaper?: string;
 }
 
 @Component({
@@ -39,6 +45,12 @@ export class LocalPveComponent implements OnInit, OnDestroy {
     this.profileService.getProfile().subscribe(
       profile => {
         this.hostProfile = profile;
+        this.settings.paddleskin_color = profile.paddleskin_color;
+        this.settings.paddleskin_image = profile.paddleskin_image;
+        this.settings.ballskin_color = profile.ballskin_color;
+        this.settings.ballskin_image = profile.ballskin_image;
+        this.settings.gamebackground_color = profile.gamebackground_color;
+        this.settings.gamebackground_wallpaper = profile.gamebackground_wallpaper;
         console.log('Profile loaded:', profile);
       },
       error => {

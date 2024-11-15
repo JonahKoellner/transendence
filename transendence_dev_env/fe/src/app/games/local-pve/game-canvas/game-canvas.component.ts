@@ -1,5 +1,5 @@
 // game-canvas.component.ts
-import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input } from '@angular/core';
+import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input, AfterViewInit } from '@angular/core';
 import { GameSettings } from '../local-pve.component';
 
 @Component({
@@ -7,7 +7,7 @@ import { GameSettings } from '../local-pve.component';
   templateUrl: './game-canvas.component.html',
   styleUrls: ['./game-canvas.component.scss']
 })
-export class GameCanvasComponent {
+export class GameCanvasComponent implements AfterViewInit {
   @ViewChild('GameCanvas', { read: ElementRef, static: false }) canvas!: ElementRef;
   context!: CanvasRenderingContext2D;
 
@@ -49,12 +49,84 @@ export class GameCanvasComponent {
   predictionRandomness: number = 10; // Default value, will be set based on difficulty
   aiUpdateInterval: number = 1000; // Default update interval in ms
 
+  // **Image Properties**
+  leftPaddleImage: HTMLImageElement | null = null;
+  ballImage: HTMLImageElement | null = null;
+  backgroundImage: HTMLImageElement | null = null;
+
   ngAfterViewInit() {
-    this.context = this.canvas.nativeElement.getContext('2d');
-    this.setAIParameters(); // Set AI parameters based on difficulty
-    this.resetRound();
-    this.startGame();
-    this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval); // AI updates based on interval
+    this.context = this.canvas.nativeElement.getContext('2d')!;
+    this.loadImages().then(() => {
+      this.setAIParameters(); // Set AI parameters based on difficulty
+      this.resetRound();
+      this.startGame();
+      this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval); // AI updates based on interval
+    }).catch(error => {
+      console.error('Error loading images:', error);
+      // Proceed with default settings if images fail to load
+      this.setAIParameters();
+      this.resetRound();
+      this.startGame();
+      this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval);
+    });
+  }
+
+  /**
+   * Loads images based on the game settings.
+   * @returns Promise that resolves when all images are loaded or skipped if not provided.
+   */
+  loadImages(): Promise<void> {
+    const promises: Promise<void>[] = [];
+
+    // Load Left Paddle Image
+    if (this.gameSettings.paddleskin_image) {
+      promises.push(new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image!;
+        img.onload = () => {
+          this.leftPaddleImage = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load paddleskin image. Falling back to color.');
+          resolve(); // Resolve to continue without rejecting
+        };
+      }));
+    }
+
+    // Load Ball Image
+    if (this.gameSettings.ballskin_image) {
+      promises.push(new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.ballskin_image!;
+        img.onload = () => {
+          this.ballImage = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load ballskin image. Falling back to color.');
+          resolve();
+        };
+      }));
+    }
+
+    // Load Background Image
+    if (this.gameSettings.gamebackground_wallpaper) {
+      promises.push(new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.gamebackground_wallpaper!;
+        img.onload = () => {
+          this.backgroundImage = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load game background wallpaper. Falling back to color.');
+          resolve();
+        };
+      }));
+    }
+
+    return Promise.all(promises).then(() => {});
   }
 
   // Method to set AI parameters based on selected difficulty
@@ -114,9 +186,26 @@ export class GameCanvasComponent {
     this.ballSpeed = 5;
   }
 
+  /**
+   * Draws the game background.
+   * Priority:
+   * 1. Background Image
+   * 2. Background Color
+   * 3. Default Black
+   */
   drawBackground() {
-    this.context.fillStyle = 'black';
-    this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    if (this.backgroundImage) {
+      // Draw the background image scaled to the canvas size
+      this.context.drawImage(this.backgroundImage, 0, 0, this.canvasWidth, this.canvasHeight);
+    } else if (this.gameSettings.gamebackground_color) {
+      // Use the specified background color
+      this.context.fillStyle = this.gameSettings.gamebackground_color!;
+      this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    } else {
+      // Default to black background
+      this.context.fillStyle = 'black';
+      this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    }
   }
 
   drawCenter() {
@@ -137,17 +226,85 @@ export class GameCanvasComponent {
     this.context.fillText(this.rightScore.toString(), 3 * (this.canvasWidth / 4), this.canvasHeight / 2);
   }
 
+  /**
+   * Draws the game ball.
+   * Priority:
+   * 1. Ball Image (maintaining aspect ratio)
+   * 2. Ball Color
+   * 3. Default White
+   */
   drawBall(x: number, y: number) {
-    this.context.fillStyle = 'white';
-    this.context.beginPath();
-    this.context.arc(x, y, this.ballRadius, 0, 2 * Math.PI);
-    this.context.closePath();
-    this.context.fill();
+    if (this.ballImage) {
+      // Calculate image dimensions to maintain aspect ratio
+      const imgWidth = this.ballImage.width;
+      const imgHeight = this.ballImage.height;
+      
+      // Desired dimensions based on ball size
+      const desiredWidth = this.ballRadius * 2;
+      const desiredHeight = this.ballRadius * 2;
+      
+      // Calculate scaling factor to fit image within ball dimensions
+      const scale = Math.min(desiredWidth / imgWidth, desiredHeight / imgHeight);
+      const drawWidth = imgWidth * scale;
+      const drawHeight = imgHeight * scale;
+
+      // Calculate position to center the image within the ball area
+      const drawX = x - drawWidth / 2;
+      const drawY = y - drawHeight / 2;
+
+      // Draw the ball image centered at (x, y)
+      this.context.drawImage(
+        this.ballImage,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
+    } else {
+      // Use the specified ball color or default to white
+      const ballColor = this.gameSettings.ballskin_color || 'white';
+      this.context.fillStyle = ballColor;
+      this.context.beginPath();
+      this.context.arc(x, y, this.ballRadius, 0, 2 * Math.PI);
+      this.context.closePath();
+      this.context.fill();
+    }
   }
 
+  /**
+   * Draws the game paddles.
+   * Priority for Left Paddle (Player):
+   * 1. Paddle Image (maintaining aspect ratio)
+   * 2. Paddle Color
+   * 3. Default White
+   * 
+   * Right Paddle (AI) remains white by default.
+   */
   drawPaddle(x: number, y: number) {
-    this.context.fillStyle = 'white';
-    this.context.fillRect(x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
+    if (x === 0) { // Left Paddle (Player)
+      if (this.leftPaddleImage) {
+        // Draw the paddle image stretched to match the paddle dimensions
+        const drawX = x;
+        const drawY = y - this.paddleHeight / 2;
+  
+        // Stretch the image to fit the paddle dimensions
+        this.context.drawImage(
+          this.leftPaddleImage,
+          drawX,
+          drawY,
+          this.paddleWidth,
+          this.paddleHeight
+        );
+      } else {
+        // Use the specified paddle color or default to white
+        const paddleColor = this.gameSettings.paddleskin_color || 'white';
+        this.context.fillStyle = paddleColor;
+        this.context.fillRect(x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
+      }
+    } else { // Right Paddle (AI) - Keep Default Styling
+      this.context.fillStyle = 'white';
+      this.context.fillRect(x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
+    }
   }
 
   enforcePaddleBounds() {

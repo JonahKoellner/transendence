@@ -68,7 +68,7 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
         this.gameStats = data;
         console.log('Game Stats:', this.gameStats);
         this.cdr.detectChanges(); // Ensure view is updated
-        this.initCharts();
+        // this.initCharts();
         this.isLoading = false;
       },
       error: (error) => {

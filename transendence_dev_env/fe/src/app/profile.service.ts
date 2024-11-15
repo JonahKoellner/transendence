@@ -49,8 +49,9 @@ export class ProfileService {
     return this.http.get<UserProfile>(this.apiUrl, { withCredentials: true });
   }
 
-  updateProfile(data: FormData): Observable<any> {
-    return this.http.put(this.apiUrl, data, { withCredentials: true });
+  updateProfile(data: FormData, userId: number): Observable<any> {
+    const url = `${this.apiUrl}${userId}/`;
+    return this.http.put(url, data, { withCredentials: true });
   }
   searchUsers(query: string): Observable<UserProfile[]> {
     const params = new HttpParams().set('q', query);

@@ -1,5 +1,3 @@
-// src/app/profile/profile.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProfileService, UserProfile } from '../profile.service';
@@ -39,15 +37,19 @@ export class ProfileComponent implements OnInit {
     this.profileForm = this.fb.group({
       display_name: ['', [Validators.maxLength(255)]],
       avatar: [null],
+      avatar_to_delete: [false], // New flag for deletion
       
       paddleskin_color: ['#FF0000', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
       paddleskin_image: [null],
+      paddleskin_image_to_delete: [false], // New flag for deletion
       
       ballskin_color: ['#0000FF', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
       ballskin_image: [null],
+      ballskin_image_to_delete: [false], // New flag for deletion
       
       gamebackground_color: ['#FFFFFF', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
       gamebackground_wallpaper: [null],
+      gamebackground_wallpaper_to_delete: [false], // New flag for deletion
     });
   }
 
@@ -67,7 +69,7 @@ export class ProfileComponent implements OnInit {
         });
 
         // Set image previews
-        this.avatarPreview = data.avatar || 'assets/default_avatar.png';
+        this.avatarPreview = data.avatar || null;
         this.paddleskinImagePreview = data.paddleskin_image || null;
         this.ballskinImagePreview = data.ballskin_image || null;
         this.gamebackgroundImagePreview = data.gamebackground_wallpaper || null;
@@ -78,9 +80,9 @@ export class ProfileComponent implements OnInit {
         this.gamebackgroundOption = data.gamebackground_wallpaper ? 'image' : 'color';
 
         // Disable color inputs if image is selected
-        this.togglePaddleskinOption(this.paddleskinOption);
-        this.toggleBallskinOption(this.ballskinOption);
-        this.toggleGamebackgroundOption(this.gamebackgroundOption);
+        this.togglePaddleskinOption(this.paddleskinOption, false);
+        this.toggleBallskinOption(this.ballskinOption, false);
+        this.toggleGamebackgroundOption(this.gamebackgroundOption, false);
 
         this.isLoading = false;
       },
@@ -98,6 +100,7 @@ export class ProfileComponent implements OnInit {
       const file = input.files[0];
       this.profileForm.patchValue({
         avatar: file,
+        avatar_to_delete: false, // Reset deletion flag if uploading new image
       });
       this.profileForm.get('avatar')?.updateValueAndValidity();
 
@@ -110,37 +113,53 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  // Delete Avatar
+  deleteAvatar() {
+    this.profileForm.patchValue({
+      avatar: null,
+      avatar_to_delete: true, // Flag for deletion
+    });
+    this.avatarPreview = null;
+    this.userProfile.avatar = ""; // Update UI immediately
+  }
+
   // Handle Paddle Skin Option Change
-  onPaddleskinOptionChange(option: 'color' | 'image') {
+  togglePaddleskinOption(option: 'color' | 'image', emitEvent: boolean = true) {
     this.paddleskinOption = option;
     if (option === 'image') {
       this.profileForm.get('paddleskin_color')?.disable();
+      this.profileForm.get('paddleskin_color')?.setValue('#FF0000'); // Reset to default or keep existing
     } else {
       this.profileForm.get('paddleskin_image')?.reset();
+      this.profileForm.get('paddleskin_image_to_delete')?.setValue(false); // Reset deletion flag
       this.profileForm.get('paddleskin_color')?.enable();
       this.paddleskinImagePreview = null;
     }
   }
 
   // Handle Ball Skin Option Change
-  onBallskinOptionChange(option: 'color' | 'image') {
+  toggleBallskinOption(option: 'color' | 'image', emitEvent: boolean = true) {
     this.ballskinOption = option;
     if (option === 'image') {
       this.profileForm.get('ballskin_color')?.disable();
+      this.profileForm.get('ballskin_color')?.setValue('#0000FF'); // Reset to default or keep existing
     } else {
       this.profileForm.get('ballskin_image')?.reset();
+      this.profileForm.get('ballskin_image_to_delete')?.setValue(false); // Reset deletion flag
       this.profileForm.get('ballskin_color')?.enable();
       this.ballskinImagePreview = null;
     }
   }
 
   // Handle Game Background Option Change
-  onGamebackgroundOptionChange(option: 'color' | 'image') {
+  toggleGamebackgroundOption(option: 'color' | 'image', emitEvent: boolean = true) {
     this.gamebackgroundOption = option;
     if (option === 'image') {
       this.profileForm.get('gamebackground_color')?.disable();
+      this.profileForm.get('gamebackground_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
     } else {
       this.profileForm.get('gamebackground_wallpaper')?.reset();
+      this.profileForm.get('gamebackground_wallpaper_to_delete')?.setValue(false); // Reset deletion flag
       this.profileForm.get('gamebackground_color')?.enable();
       this.gamebackgroundImagePreview = null;
     }
@@ -153,6 +172,7 @@ export class ProfileComponent implements OnInit {
       const file = input.files[0];
       this.profileForm.patchValue({
         paddleskin_image: file,
+        paddleskin_image_to_delete: false, // Reset deletion flag if uploading new image
       });
       this.profileForm.get('paddleskin_image')?.updateValueAndValidity();
 
@@ -165,6 +185,16 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  // Delete Paddle Skin Image
+  deletePaddleskinImage() {
+    this.profileForm.patchValue({
+      paddleskin_image: null,
+      paddleskin_image_to_delete: true, // Flag for deletion
+    });
+    this.paddleskinImagePreview = null;
+    this.userProfile.paddleskin_image = ""; // Update UI immediately
+  }
+
   // Handle Ball Skin Image Change
   onBallskinImageChange(event: { target: any }) {
     const input = event.target as HTMLInputElement;
@@ -172,6 +202,7 @@ export class ProfileComponent implements OnInit {
       const file = input.files[0];
       this.profileForm.patchValue({
         ballskin_image: file,
+        ballskin_image_to_delete: false, // Reset deletion flag if uploading new image
       });
       this.profileForm.get('ballskin_image')?.updateValueAndValidity();
 
@@ -184,6 +215,16 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  // Delete Ball Skin Image
+  deleteBallskinImage() {
+    this.profileForm.patchValue({
+      ballskin_image: null,
+      ballskin_image_to_delete: true, // Flag for deletion
+    });
+    this.ballskinImagePreview = null;
+    this.userProfile.ballskin_image = ""; // Update UI immediately
+  }
+
   // Handle Game Background Image Change
   onGamebackgroundImageChange(event: { target: any }) {
     const input = event.target as HTMLInputElement;
@@ -191,6 +232,7 @@ export class ProfileComponent implements OnInit {
       const file = input.files[0];
       this.profileForm.patchValue({
         gamebackground_wallpaper: file,
+        gamebackground_wallpaper_to_delete: false, // Reset deletion flag if uploading new image
       });
       this.profileForm.get('gamebackground_wallpaper')?.updateValueAndValidity();
 
@@ -201,6 +243,16 @@ export class ProfileComponent implements OnInit {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  // Delete Game Background Image
+  deleteGamebackgroundImage() {
+    this.profileForm.patchValue({
+      gamebackground_wallpaper: null,
+      gamebackground_wallpaper_to_delete: true, // Flag for deletion
+    });
+    this.gamebackgroundImagePreview = null;
+    this.userProfile.gamebackground_wallpaper = ""; // Update UI immediately
   }
 
   onSubmit() {
@@ -217,33 +269,69 @@ export class ProfileComponent implements OnInit {
     if (this.profileForm.get('avatar')?.value) {
       formData.append('avatar', this.profileForm.get('avatar')!.value);
     }
+    if (this.profileForm.get('avatar_to_delete')?.value) {
+      formData.append('avatar_to_delete', 'true');
+    }
 
     // Paddle Skin
     if (this.paddleskinOption === 'color') {
       formData.append('paddleskin_color', this.profileForm.get('paddleskin_color')!.value);
-    } else if (this.paddleskinOption === 'image' && this.profileForm.get('paddleskin_image')?.value) {
-      formData.append('paddleskin_image', this.profileForm.get('paddleskin_image')!.value);
+      if (this.profileForm.get('paddleskin_image_to_delete')?.value) {
+        formData.append('paddleskin_image_to_delete', 'true');
+      }
+    } else if (this.paddleskinOption === 'image') {
+      if (this.profileForm.get('paddleskin_image')?.value) {
+        formData.append('paddleskin_image', this.profileForm.get('paddleskin_image')!.value);
+      }
+      if (this.profileForm.get('paddleskin_image_to_delete')?.value) {
+        formData.append('paddleskin_image_to_delete', 'true');
+      }
     }
 
     // Ball Skin
     if (this.ballskinOption === 'color') {
       formData.append('ballskin_color', this.profileForm.get('ballskin_color')!.value);
-    } else if (this.ballskinOption === 'image' && this.profileForm.get('ballskin_image')?.value) {
-      formData.append('ballskin_image', this.profileForm.get('ballskin_image')!.value);
+      if (this.profileForm.get('ballskin_image_to_delete')?.value) {
+        formData.append('ballskin_image_to_delete', 'true');
+      }
+    } else if (this.ballskinOption === 'image') {
+      if (this.profileForm.get('ballskin_image')?.value) {
+        formData.append('ballskin_image', this.profileForm.get('ballskin_image')!.value);
+      }
+      if (this.profileForm.get('ballskin_image_to_delete')?.value) {
+        formData.append('ballskin_image_to_delete', 'true');
+      }
     }
 
     // Game Background
     if (this.gamebackgroundOption === 'color') {
       formData.append('gamebackground_color', this.profileForm.get('gamebackground_color')!.value);
-    } else if (this.gamebackgroundOption === 'image' && this.profileForm.get('gamebackground_wallpaper')?.value) {
-      formData.append('gamebackground_wallpaper', this.profileForm.get('gamebackground_wallpaper')!.value);
+      if (this.profileForm.get('gamebackground_wallpaper_to_delete')?.value) {
+        formData.append('gamebackground_wallpaper_to_delete', 'true');
+      }
+    } else if (this.gamebackgroundOption === 'image') {
+      if (this.profileForm.get('gamebackground_wallpaper')?.value) {
+        formData.append('gamebackground_wallpaper', this.profileForm.get('gamebackground_wallpaper')!.value);
+      }
+      if (this.profileForm.get('gamebackground_wallpaper_to_delete')?.value) {
+        formData.append('gamebackground_wallpaper_to_delete', 'true');
+      }
     }
-
-    this.profileService.updateProfile(formData).subscribe(
+    formData.append("username", this.userProfile.username);
+    this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
         alert('Profile updated successfully');
         // Reload the profile to reflect changes
         this.loadProfile();
+
+        // Reset deletion flags
+        this.profileForm.patchValue({
+          avatar_to_delete: false,
+          paddleskin_image_to_delete: false,
+          ballskin_image_to_delete: false,
+          gamebackground_wallpaper_to_delete: false,
+        });
+
         this.isUpdating = false;
       },
       (error: HttpErrorResponse) => {
@@ -259,36 +347,4 @@ export class ProfileComponent implements OnInit {
     return Math.min((this.userProfile.xp / this.userProfile.xp_for_next_level) * 100, 100);
   }
 
-  togglePaddleskinOption(option: 'color' | 'image') {
-    this.paddleskinOption = option;
-    if (option === 'image') {
-      this.profileForm.get('paddleskin_color')?.disable();
-    } else {
-      this.profileForm.get('paddleskin_image')?.reset();
-      this.profileForm.get('paddleskin_color')?.enable();
-      this.paddleskinImagePreview = null;
-    }
-  }
-
-  toggleBallskinOption(option: 'color' | 'image') {
-    this.ballskinOption = option;
-    if (option === 'image') {
-      this.profileForm.get('ballskin_color')?.disable();
-    } else {
-      this.profileForm.get('ballskin_image')?.reset();
-      this.profileForm.get('ballskin_color')?.enable();
-      this.ballskinImagePreview = null;
-    }
-  }
-
-  toggleGamebackgroundOption(option: 'color' | 'image') {
-    this.gamebackgroundOption = option;
-    if (option === 'image') {
-      this.profileForm.get('gamebackground_color')?.disable();
-    } else {
-      this.profileForm.get('gamebackground_wallpaper')?.reset();
-      this.profileForm.get('gamebackground_color')?.enable();
-      this.gamebackgroundImagePreview = null;
-    }
-  }
 }

@@ -15,12 +15,14 @@
     <div class="profile-card">
       <div class="profile-header">
         <!-- Avatar -->
-        <img 
-          *ngIf="userProfile.avatar" 
-          [src]="avatarPreview || userProfile.avatar" 
-          alt="User Avatar" 
-          class="avatar" 
-        />
+        <div class="avatar-container">
+          <img 
+            *ngIf="userProfile.avatar" 
+            [src]="avatarPreview || userProfile.avatar" 
+            alt="User Avatar" 
+            class="avatar" 
+          />
+        </div>
         
         <!-- User Info -->
         <div class="user-info">
@@ -74,6 +76,9 @@
               alt="Avatar Preview" 
               class="avatar-preview" 
             />
+            <button class="delete-icon" *ngIf="avatarPreview || userProfile.avatar" (click)="deleteAvatar()" type="button">
+              <i class="fas fa-times"></i>
+            </button>
             <input 
               id="avatarUpload" 
               type="file" 
@@ -111,17 +116,22 @@
           
           <!-- Paddle Skin Image Upload -->
           <div *ngIf="paddleskinOption === 'image'" class="image-upload">
+            <div class="image-preview-container">
+              <img 
+                *ngIf="paddleskinImagePreview || userProfile.paddleskin_image" 
+                [src]="paddleskinImagePreview || userProfile.paddleskin_image" 
+                alt="Paddle Skin Preview" 
+                class="image-preview" 
+              />
+              <button class="delete-icon" *ngIf="paddleskinImagePreview || userProfile.paddleskin_image" (click)="deletePaddleskinImage()" type="button">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
             <input 
               type="file" 
               (change)="onPaddleskinImageChange($event)" 
               accept="image/*" 
               class="file-input"
-            />
-            <img 
-              *ngIf="paddleskinImagePreview" 
-              [src]="paddleskinImagePreview" 
-              alt="Paddle Skin Preview" 
-              class="image-preview" 
             />
           </div>
         </div>
@@ -154,17 +164,22 @@
           
           <!-- Ball Skin Image Upload -->
           <div *ngIf="ballskinOption === 'image'" class="image-upload">
+            <div class="image-preview-container">
+              <img 
+                *ngIf="ballskinImagePreview || userProfile.ballskin_image" 
+                [src]="ballskinImagePreview || userProfile.ballskin_image" 
+                alt="Ball Skin Preview" 
+                class="image-preview" 
+              />
+              <button class="delete-icon" *ngIf="ballskinImagePreview || userProfile.ballskin_image" (click)="deleteBallskinImage()" type="button">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
             <input 
               type="file" 
               (change)="onBallskinImageChange($event)" 
               accept="image/*" 
               class="file-input"
-            />
-            <img 
-              *ngIf="ballskinImagePreview" 
-              [src]="ballskinImagePreview" 
-              alt="Ball Skin Preview" 
-              class="image-preview" 
             />
           </div>
         </div>
@@ -197,17 +212,22 @@
           
           <!-- Game Background Image Upload -->
           <div *ngIf="gamebackgroundOption === 'image'" class="image-upload">
+            <div class="image-preview-container">
+              <img 
+                *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" 
+                [src]="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" 
+                alt="Game Background Preview" 
+                class="image-preview" 
+              />
+              <button class="delete-icon" *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" (click)="deleteGamebackgroundImage()" type="button">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
             <input 
               type="file" 
               (change)="onGamebackgroundImageChange($event)" 
               accept="image/*" 
               class="file-input"
-            />
-            <img 
-              *ngIf="gamebackgroundImagePreview" 
-              [src]="gamebackgroundImagePreview" 
-              alt="Game Background Preview" 
-              class="image-preview" 
             />
           </div>
         </div>

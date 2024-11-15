@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input } from '@angular/core';
+import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input, AfterViewInit } from '@angular/core';
 import { GameSettings } from '../local-pvp.component';
 
 @Component({
@@ -6,45 +6,112 @@ import { GameSettings } from '../local-pvp.component';
   templateUrl: './game-canvas.component.html',
   styleUrls: ['./game-canvas.component.scss']
 })
-export class GameCanvasComponentPVP {
+export class GameCanvasComponentPVP implements AfterViewInit {
   @ViewChild('GameCanvas', {read: ElementRef, static: false}) canvas!: ElementRef;
   context!: CanvasRenderingContext2D;
 
-  @Input()  gameSettings!: GameSettings;
+  @Input() gameSettings!: GameSettings;
   @Output() onScore = new EventEmitter<"player1" | "player2">();
-
-  updateScore(player: "player1" | "player2") {
-    this.onScore.emit(player);
-  }
 
   // Game controller data
   readonly canvasWidth = 1000;
   readonly canvasHeight = 500;
   readonly ballRadius = 15;
   readonly paddleWidth = 10;
-  readonly paddleHeight = 30;
+  readonly paddleHeight = 60;  // Updated to match other component's paddle height
   readonly dashCount = 41;
   readonly dashWidth = 10;
   readonly scoreToWin = 5;
 
-  round:              number = 0;
-  intervalID!:        number;
-  leftPaddleSpeed!:   number;
-  rightPaddleSpeed!:  number;
-  leftPaddleY!:       number;
-  rightPaddleY!:      number;
-  ballX!:             number;
-  ballY!:             number;
-  ballDirectionX!:    number;
-  ballDirectionY!:    number;
-  ballSpeed!:         number;
-  leftScore!:         number;
-  rightScore!:        number;
+  round: number = 0;
+  intervalID!: number;
+  leftPaddleSpeed!: number;
+  rightPaddleSpeed!: number;
+  leftPaddleY!: number;
+  rightPaddleY!: number;
+  ballX!: number;
+  ballY!: number;
+  ballDirectionX!: number;
+  ballDirectionY!: number;
+  ballSpeed!: number;
+  leftScore!: number;
+  rightScore!: number;
+
+  // **Image Properties**
+  leftPaddleImage: HTMLImageElement | null = null;
+  rightPaddleImage: HTMLImageElement | null = null;
+  ballImage: HTMLImageElement | null = null;
+  backgroundImage: HTMLImageElement | null = null;
 
   ngAfterViewInit() {
-    this.context = this.canvas.nativeElement.getContext('2d');
-    this.resetRound();
-    this.startGame();
+    this.context = this.canvas.nativeElement.getContext('2d')!;
+    this.loadImages().then(() => {
+      this.resetRound();
+      this.startGame();
+    }).catch(error => {
+      console.error('Error loading images:', error);
+      this.resetRound();
+      this.startGame();
+    });
+  }
+
+  loadImages(): Promise<void> {
+    const promises: Promise<void>[] = [];
+  
+    // Load Left Paddle Image
+    if (this.gameSettings.paddleskin_image) {
+      promises.push(new Promise((resolve) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image || ''; // Fallback empty string
+        img.onload = () => {
+          this.leftPaddleImage = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load left paddle image. Falling back to color.');
+          resolve();
+        };
+      }));
+    }
+  
+    // Load Ball Image
+    if (this.gameSettings.ballskin_image) {
+      promises.push(new Promise((resolve) => {
+        const img = new Image();
+        img.src = this.gameSettings.ballskin_image || ''; // Fallback empty string
+        img.onload = () => {
+          this.ballImage = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load ball image. Falling back to color.');
+          resolve();
+        };
+      }));
+    }
+  
+    // Load Background Image
+    if (this.gameSettings.gamebackground_wallpaper) {
+      promises.push(new Promise((resolve) => {
+        const img = new Image();
+        img.src = this.gameSettings.gamebackground_wallpaper || ''; // Fallback empty string
+        img.onload = () => {
+          this.backgroundImage = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load background image. Falling back to color.');
+          resolve();
+        };
+      }));
+    }
+  
+    return Promise.all(promises).then(() => {});
+  }
+  
+
+  updateScore(player: "player1" | "player2") {
+    this.onScore.emit(player);
   }
 
   resetRound() {
@@ -53,17 +120,14 @@ export class GameCanvasComponentPVP {
     this.rightPaddleSpeed = 0;
     this.leftPaddleY = this.canvasHeight / 2;
     this.rightPaddleY = this.canvasHeight / 2;
-    this.ballX = this.canvasWidth / 2;
-    this.ballY = this.canvasHeight / 2;
-    this.ballDirectionX = 1;
-    this.ballDirectionY = 0;
-    this.ballSpeed = 5;
+    this.resetBall();
     this.leftScore = 0;
     this.rightScore = 0;
     if (this.round >= this.gameSettings.maxRounds
-      &&(this.leftScore >= this.gameSettings.roundScoreLimit
-      ||this.rightScore >= this.gameSettings.roundScoreLimit))
+      && (this.leftScore >= this.gameSettings.roundScoreLimit
+      || this.rightScore >= this.gameSettings.roundScoreLimit)) {
       this.endGame();
+    }
   }
 
   startGame() {
@@ -73,23 +137,28 @@ export class GameCanvasComponentPVP {
   resetBall() {
     this.ballX = this.canvasWidth / 2;
     this.ballY = this.canvasHeight / 2;
-    this.ballDirectionX = 1;
-    this.ballDirectionY = 0;
+    this.ballDirectionX = Math.random() < 0.5 ? -1 : 1;
+    this.ballDirectionY = (Math.random() * 2 - 1) * 0.5;
     this.ballSpeed = 5;
   }
+
   drawBackground() {
-    this.context.fillStyle = 'black';
-    this.context.fillRect(0, 0, 1000, 500);
+    if (this.backgroundImage) {
+      this.context.drawImage(this.backgroundImage, 0, 0, this.canvasWidth, this.canvasHeight);
+    } else {
+      this.context.fillStyle = 'black';
+      this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    }
   }
 
-  drawCenter () {
+  drawCenter() {
     this.context.fillStyle = 'white';
     for (let i = 0; i < this.dashCount; i++) {
-      if (i % 2 == 0)
+      if (i % 2 === 0)
         this.context.fillRect(this.canvasWidth / 2 - this.dashWidth / 2,
-         i * this.canvasHeight / this.dashCount,
-         this.dashWidth,
-         this.canvasHeight / this.dashCount);
+          i * this.canvasHeight / this.dashCount,
+          this.dashWidth,
+          this.canvasHeight / this.dashCount);
     }
   }
 
@@ -101,99 +170,69 @@ export class GameCanvasComponentPVP {
   }
 
   drawBall(x: number, y: number) {
-    this.context.fillStyle = 'white';
-    this.context.beginPath();
-    this.context.arc(x, y, this.ballRadius, 0, 2 * Math.PI);
-    this.context.closePath();
-    this.context.fill();
+    if (this.ballImage) {
+      this.context.drawImage(this.ballImage, x - this.ballRadius, y - this.ballRadius, this.ballRadius * 2, this.ballRadius * 2);
+    } else {
+      this.context.fillStyle = 'white';
+      this.context.beginPath();
+      this.context.arc(x, y, this.ballRadius, 0, 2 * Math.PI);
+      this.context.closePath();
+      this.context.fill();
+    }
   }
 
   drawPaddle(x: number, y: number) {
-    this.context.fillStyle = 'white';
-    this.context.fillRect(x, y, this.paddleWidth, -this.paddleHeight);
-    this.context.fillRect(x, y, this.paddleWidth, this.paddleHeight);
+    const paddleImage = x === 0 ? this.leftPaddleImage : this.rightPaddleImage;
+    if (paddleImage) {
+      this.context.drawImage(paddleImage, x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
+    } else {
+      this.context.fillStyle = 'white';
+      this.context.fillRect(x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
+    }
   }
 
   enforcePaddleBounds() {
-    this.leftPaddleY += this.leftPaddleSpeed;
-    this.rightPaddleY += this.rightPaddleSpeed;
-    if (this.leftPaddleY - this.paddleHeight < 0)
-      this.leftPaddleY = this.paddleHeight;
-    else if (this.leftPaddleY + this.paddleHeight > this.canvasHeight)
-      this.leftPaddleY = this.canvasHeight - this.paddleHeight;
-    if (this.rightPaddleY - this.paddleHeight < 0)
-      this.rightPaddleY = this.paddleHeight;
-    else if (this.rightPaddleY + this.paddleHeight > this.canvasHeight)
-      this.rightPaddleY = this.canvasHeight - this.paddleHeight;
+    this.leftPaddleY = Math.min(Math.max(this.paddleHeight / 2, this.leftPaddleY), this.canvasHeight - this.paddleHeight / 2);
+    this.rightPaddleY = Math.min(Math.max(this.paddleHeight / 2, this.rightPaddleY), this.canvasHeight - this.paddleHeight / 2);
   }
 
-  checkRoofCollision()
-  {
-    if (this.ballY + (this.ballDirectionY * this.ballSpeed) - this.ballRadius <= 0)
+  checkRoofCollision() {
+    if (this.ballY + this.ballDirectionY * this.ballSpeed - this.ballRadius <= 0 || 
+        this.ballY + this.ballDirectionY * this.ballSpeed + this.ballRadius >= this.canvasHeight) {
       this.ballDirectionY *= -1;
-    else if (this.ballY + (this.ballDirectionY * this.ballSpeed) + this.ballRadius >= this.canvasHeight)
-      this.ballDirectionY *= -1;
+    }
   }
 
-  checkPaddleCollision()
-  {
-    var diffBallLeftPaddle = this.ballY - this.leftPaddleY;
-    var diffBallRightPaddle = this.ballY - this.rightPaddleY;
-
-    if (this.ballX + (this.ballDirectionX * this.ballSpeed) - this.ballRadius <= this.paddleWidth)
-      this.paddleCollision(diffBallLeftPaddle);
-    else if (this.ballX + (this.ballDirectionX * this.ballSpeed) + this.ballRadius >= this.canvasWidth - this.paddleWidth)
-      this.paddleCollision(diffBallRightPaddle);
+  checkPaddleCollision() {
+    if (this.ballX + this.ballDirectionX * this.ballSpeed - this.ballRadius <= this.paddleWidth) {
+      this.paddleCollision(this.ballY - this.leftPaddleY);
+    } else if (this.ballX + this.ballDirectionX * this.ballSpeed + this.ballRadius >= this.canvasWidth - this.paddleWidth) {
+      this.paddleCollision(this.ballY - this.rightPaddleY);
+    }
   }
 
   paddleCollision(ballPaddleDiff: number) {
-    if (ballPaddleDiff > -this.paddleHeight - this.ballRadius && ballPaddleDiff < this.paddleHeight + this.ballRadius){
-        this.ballDirectionX *= -1;
-        if (ballPaddleDiff < 0)
-          {
-            if (ballPaddleDiff <= (this.paddleHeight * -1 / 4))
-              this.ballDirectionY = -1.1;
-            else if (ballPaddleDiff <= (this.paddleHeight * -1 / 4) * 2)
-              this.ballDirectionY = -1.3;
-            else if (ballPaddleDiff <= (this.paddleHeight * -1 / 4) * 3)
-              this.ballDirectionY = -1.6;
-            else if (ballPaddleDiff <= this.paddleHeight * -1)
-              this.ballDirectionY = -1.9;
-          }
-        else if (ballPaddleDiff > 0)
-          {
-            if (ballPaddleDiff <= (this.paddleHeight / 4))
-              this.ballDirectionY = 1.1;
-            else if (ballPaddleDiff <= (this.paddleHeight / 4) * 2)
-              this.ballDirectionY = 1.3;
-            else if (ballPaddleDiff <= (this.paddleHeight / 4) * 3)
-              this.ballDirectionY = 1.6;
-            else if (ballPaddleDiff <= this.paddleHeight)
-              this.ballDirectionY = 1.9;
-          }
-        else
-          this.ballDirectionY = 0;
-        if (this.ballSpeed < 100)
-          this.ballSpeed *= 1.25;
-      }
+    if (Math.abs(ballPaddleDiff) <= this.paddleHeight / 2 + this.ballRadius) {
+      this.ballDirectionX *= -1;
+      this.ballDirectionY = ballPaddleDiff / (this.paddleHeight / 2);
+      if (this.ballSpeed < 100) this.ballSpeed *= 1.05;
+    }
   }
 
   checkScore() {
-
-    if (this.ballX - this.ballRadius < this.paddleWidth){
+    if (this.ballX - this.ballRadius < this.paddleWidth) {
       this.rightScore++;
       this.updateScore("player2");
       this.resetBall();
-    }
-    else if (this.ballX + this.ballRadius > this.canvasWidth - this.paddleWidth){
+    } else if (this.ballX + this.ballRadius > this.canvasWidth - this.paddleWidth) {
       this.leftScore++;
       this.updateScore("player1");
       this.resetBall();
     }
 
-    if (this.leftScore >= this.gameSettings.roundScoreLimit
-      ||this.rightScore >= this.gameSettings.roundScoreLimit)
+    if (this.leftScore >= this.gameSettings.roundScoreLimit || this.rightScore >= this.gameSettings.roundScoreLimit) {
       this.resetRound();
+    }
   }
 
   updateBallPos() {
@@ -206,7 +245,14 @@ export class GameCanvasComponentPVP {
     this.checkPaddleCollision();
     this.checkScore();
     this.updateBallPos();
+  
+    // Update paddle positions based on their speeds
+    this.leftPaddleY += this.leftPaddleSpeed;
+    this.rightPaddleY += this.rightPaddleSpeed;
+  
+    // Ensure paddles stay within bounds
     this.enforcePaddleBounds();
+  
     this.drawBackground();
     this.drawCenter();
     this.drawScore();

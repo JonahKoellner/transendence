@@ -232,14 +232,17 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request):
-        user = request.user
-        serializer = UserProfileSerializer(user, data=request.data, partial=True)
-        
+    def update(self, request, *args, **kwargs):
+        """
+        Override the update method to handle profile updates using the serializer.
+        """
+        user = self.get_object()  # Retrieves the user instance based on the URL
+        serializer = self.get_serializer(user, data=request.data, partial=False)  # Set partial=True if you want to allow partial updates
+
         if serializer.is_valid():
-            # Use the transaction-safe method
-            update_profile_with_transaction(user, serializer.validated_data.get('profile', {}))
+            serializer.save()  # This invokes the serializer's update method
             return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], url_path='search')
