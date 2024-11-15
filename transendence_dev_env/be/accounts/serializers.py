@@ -5,8 +5,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, User, Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
 from django.db import transaction
 from games.models import Lobby
+import re
 
-
+def validate_hex_color(value):
+    if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', value):
+        raise serializers.ValidationError(f'{value} is not a valid hex color code.')
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,12 +58,45 @@ class UserProfileSerializer(serializers.ModelSerializer):
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
     achievements = serializers.SerializerMethodField()
+    paddleskin_color = serializers.CharField(
+        source='profile.paddleskin_color', 
+        required=False, 
+        validators=[validate_hex_color],
+        allow_blank=True
+    )
+    paddleskin_image = serializers.ImageField(
+        source='profile.paddleskin_image', 
+        required=False
+    )
+    ballskin_color = serializers.CharField(
+        source='profile.ballskin_color', 
+        required=False, 
+        validators=[validate_hex_color],
+        allow_blank=True
+    )
+    ballskin_image = serializers.ImageField(
+        source='profile.ballskin_image', 
+        required=False
+    )
+    gamebackground_color = serializers.CharField(
+        source='profile.gamebackground_color', 
+        required=False, 
+        validators=[validate_hex_color],
+        allow_blank=True
+    )
+    gamebackground_wallpaper = serializers.ImageField(
+        source='profile.gamebackground_wallpaper', 
+        required=False
+    )
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'display_name', 'avatar', 'friends',
             'blocked_users', 'is_online', 'is_2fa_enabled', 'has_logged_in',
-            'xp', 'level', 'xp_for_next_level', 'achievements'
+            'xp', 'level', 'xp_for_next_level', 'achievements',
+            'paddleskin_color', 'paddleskin_image',
+            'ballskin_color', 'ballskin_image',
+            'gamebackground_color', 'gamebackground_wallpaper'
         ]
         
     def get_friends(self, obj):
@@ -109,9 +145,42 @@ class UserDetailSerializer(serializers.ModelSerializer):
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
     achievements = serializers.SerializerMethodField()
+    paddleskin_color = serializers.CharField(
+        source='profile.paddleskin_color', 
+        required=False, 
+        validators=[validate_hex_color],
+        allow_blank=True
+    )
+    paddleskin_image = serializers.ImageField(
+        source='profile.paddleskin_image', 
+        required=False
+    )
+    ballskin_color = serializers.CharField(
+        source='profile.ballskin_color', 
+        required=False, 
+        validators=[validate_hex_color],
+        allow_blank=True
+    )
+    ballskin_image = serializers.ImageField(
+        source='profile.ballskin_image', 
+        required=False
+    )
+    gamebackground_color = serializers.CharField(
+        source='profile.gamebackground_color', 
+        required=False, 
+        validators=[validate_hex_color],
+        allow_blank=True
+    )
+    gamebackground_wallpaper = serializers.ImageField(
+        source='profile.gamebackground_wallpaper', 
+        required=False
+    )
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level', 'achievements']
+        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level', 'achievements',
+            'paddleskin_color', 'paddleskin_image', 'achievements',
+            'ballskin_color', 'ballskin_image',
+            'gamebackground_color', 'gamebackground_wallpaper']
     
     
     def update(self, instance, validated_data):

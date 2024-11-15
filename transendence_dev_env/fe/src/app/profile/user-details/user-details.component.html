@@ -218,7 +218,7 @@
     
     <div *ngIf="activeTab === 'stats'" class="tab-content stats-tab">
       <div *ngIf="userStats" class="user-stats-display">
-        <h3>{{ userStats.display_name }}'s Statistics</h3>
+        <h3>{{ userStats.display_name || userStats.username  }}'s Statistics</h3>
         
         <div class="stats-grid">
           <div class="stat-item">

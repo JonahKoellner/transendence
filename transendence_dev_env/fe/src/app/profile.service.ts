@@ -28,6 +28,12 @@ export interface UserProfile {
   level: number;       // Current level
   xp_for_next_level: number;  // XP required to reach the next level
   achievements?: Achievement[];
+  paddleskin_color?: string;
+  paddleskin_image?: string;
+  ballskin_color?: string;
+  ballskin_image?: string;
+  gamebackground_color?: string;
+  gamebackground_wallpaper?: string;
 }
 
 

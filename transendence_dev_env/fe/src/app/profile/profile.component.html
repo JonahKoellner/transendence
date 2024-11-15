@@ -2,96 +2,228 @@
 
 <div class="profile-page">
   
-    <!-- Loading Spinner -->
-    <div class="loading" *ngIf="isLoading">
-      <div class="spinner"></div>
-      <p>Loading your profile...</p>
-    </div>
+  <!-- Loading Spinner -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your profile...</p>
+  </div>
+  
+  <!-- Profile Content -->
+  <div *ngIf="!isLoading && userProfile" class="profile-content">
     
-    <!-- Profile Content -->
-    <div *ngIf="!isLoading && userProfile" class="profile-content">
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <!-- Avatar -->
+        <img 
+          *ngIf="userProfile.avatar" 
+          [src]="avatarPreview || userProfile.avatar" 
+          alt="User Avatar" 
+          class="avatar" 
+        />
+        
+        <!-- User Info -->
+        <div class="user-info">
+          <h2>Your Profile</h2>
+          <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
+            Go to Account Page
+          </a>
+          <p><strong>Username:</strong> {{ userProfile.username }}</p>
+          <p><strong>Email:</strong> {{ userProfile.email }}</p>
+        </div>
+      </div>
       
-      <!-- Profile Card -->
-      <div class="profile-card">
-        <div class="profile-header">
-          <!-- Avatar -->
-          <img 
-            *ngIf="userProfile.avatar" 
-            [src]="userProfile.avatar" 
-            alt="User Avatar" 
-            class="avatar" 
+      <!-- Level and XP -->
+      <div class="level-section">
+        <h3>Level {{ userProfile.level }}</h3>
+        <p>{{ userProfile.xp }} / {{ userProfile.xp_for_next_level }} XP</p>
+        <div class="progress-bar-container">
+          <div 
+            class="progress-bar" 
+            role="progressbar" 
+            [style.width.%]="getXpProgress()" 
+            [attr.aria-valuenow]="getXpProgress()" 
+            aria-valuemin="0" 
+            aria-valuemax="100">
+            <span class="progress-text">{{ getXpProgress() | number: '1.0-0' }}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Profile Update Form -->
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="update-form">
+        
+        <!-- Display Name -->
+        <div class="form-group">
+          <label for="displayName">Display Name:</label>
+          <input 
+            id="displayName" 
+            type="text" 
+            formControlName="display_name" 
+            class="form-input" 
+            placeholder="Enter your display name" 
           />
-          
-          <!-- User Info -->
-          <div class="user-info">
-            <h2>Your Profile</h2>
-            <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
-              Go to Account Page
-            </a>
-            <p><strong>Username:</strong> {{ userProfile.username }}</p>
-            <p><strong>Email:</strong> {{ userProfile.email }}</p>
-          </div>
         </div>
         
-        <!-- Level and XP -->
-        <div class="level-section">
-          <h3>Level {{ userProfile.level }}</h3>
-          <p>{{ userProfile.xp }} / {{ userProfile.xp_for_next_level }} XP</p>
-          <div class="progress-bar-container">
-            <div 
-              class="progress-bar" 
-              role="progressbar" 
-              [style.width.%]="getXpProgress()" 
-              [attr.aria-valuenow]="getXpProgress()" 
-              aria-valuemin="0" 
-              aria-valuemax="100">
-              <span class="progress-text">{{ getXpProgress() | number: '1.0-0' }}%</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Profile Update Form -->
-        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="update-form">
-          <div class="form-group">
-            <label for="displayName">Display Name:</label>
+        <!-- Avatar Upload -->
+        <div class="form-group avatar-section">
+          <label for="avatarUpload">Avatar:</label>
+          <div class="avatar-preview-container">
+            <img 
+              [src]="avatarPreview || 'assets/default_avatar.png'" 
+              alt="Avatar Preview" 
+              class="avatar-preview" 
+            />
             <input 
-              id="displayName" 
-              type="text" 
-              formControlName="display_name" 
-              class="form-input" 
-              placeholder="Enter your display name" 
+              id="avatarUpload" 
+              type="file" 
+              (change)="onFileChange($event)" 
+              accept="image/*" 
+            />
+          </div>
+        </div>
+        
+        <!-- Paddle Skin Customization -->
+        <div class="form-group customization-section">
+          <label>Paddle Skin:</label>
+          <div class="toggle-options">
+            <button type="button" 
+                    [class.active]="paddleskinOption === 'color'"
+                    (click)="togglePaddleskinOption('color')">
+              <i class="fas fa-palette"></i> Color
+            </button>
+            <button type="button" 
+                    [class.active]="paddleskinOption === 'image'"
+                    (click)="togglePaddleskinOption('image')">
+              <i class="fas fa-images"></i> Image
+            </button>
+          </div>
+          
+          <!-- Paddle Skin Color Picker -->
+          <div *ngIf="paddleskinOption === 'color'" class="color-picker">
+            <input 
+              type="color" 
+              formControlName="paddleskin_color" 
+              id="paddleskin_color_picker"
+              class="form-input color-input"
             />
           </div>
           
-          <div class="form-group avatar-section">
-            <label for="avatarUpload">Avatar:</label>
-            <div class="avatar-preview-container">
-              <img 
-                [src]="avatarPreview || userProfile.avatar" 
-                alt="Avatar Preview" 
-                class="avatar-preview" 
-              />
-              <input 
-                id="avatarUpload" 
-                type="file" 
-                (change)="onFileChange($event)" 
-                accept="image/*" 
-              />
-            </div>
+          <!-- Paddle Skin Image Upload -->
+          <div *ngIf="paddleskinOption === 'image'" class="image-upload">
+            <input 
+              type="file" 
+              (change)="onPaddleskinImageChange($event)" 
+              accept="image/*" 
+              class="file-input"
+            />
+            <img 
+              *ngIf="paddleskinImagePreview" 
+              [src]="paddleskinImagePreview" 
+              alt="Paddle Skin Preview" 
+              class="image-preview" 
+            />
+          </div>
+        </div>
+        
+        <!-- Ball Skin Customization -->
+        <div class="form-group customization-section">
+          <label>Ball Skin:</label>
+          <div class="toggle-options">
+            <button type="button" 
+                    [class.active]="ballskinOption === 'color'"
+                    (click)="toggleBallskinOption('color')">
+              <i class="fas fa-palette"></i> Color
+            </button>
+            <button type="button" 
+                    [class.active]="ballskinOption === 'image'"
+                    (click)="toggleBallskinOption('image')">
+              <i class="fas fa-images"></i> Image
+            </button>
           </div>
           
-          <button type="submit" class="update-btn" [disabled]="profileForm.invalid ">
-            Update Profile
-          </button>
-        </form>
-      </div>
-      
-    </div>
-    
-    <!-- Error Message -->
-    <div *ngIf="!isLoading && !userProfile" class="alert-error">
-      <p>No profile data available.</p>
+          <!-- Ball Skin Color Picker -->
+          <div *ngIf="ballskinOption === 'color'" class="color-picker">
+            <input 
+              type="color" 
+              formControlName="ballskin_color" 
+              id="ballskin_color_picker"
+              class="form-input color-input"
+            />
+          </div>
+          
+          <!-- Ball Skin Image Upload -->
+          <div *ngIf="ballskinOption === 'image'" class="image-upload">
+            <input 
+              type="file" 
+              (change)="onBallskinImageChange($event)" 
+              accept="image/*" 
+              class="file-input"
+            />
+            <img 
+              *ngIf="ballskinImagePreview" 
+              [src]="ballskinImagePreview" 
+              alt="Ball Skin Preview" 
+              class="image-preview" 
+            />
+          </div>
+        </div>
+        
+        <!-- Game Background Customization -->
+        <div class="form-group customization-section">
+          <label>Game Background:</label>
+          <div class="toggle-options">
+            <button type="button" 
+                    [class.active]="gamebackgroundOption === 'color'"
+                    (click)="toggleGamebackgroundOption('color')">
+              <i class="fas fa-palette"></i> Color
+            </button>
+            <button type="button" 
+                    [class.active]="gamebackgroundOption === 'image'"
+                    (click)="toggleGamebackgroundOption('image')">
+              <i class="fas fa-images"></i> Image
+            </button>
+          </div>
+          
+          <!-- Game Background Color Picker -->
+          <div *ngIf="gamebackgroundOption === 'color'" class="color-picker">
+            <input 
+              type="color" 
+              formControlName="gamebackground_color" 
+              id="gamebackground_color_picker"
+              class="form-input color-input"
+            />
+          </div>
+          
+          <!-- Game Background Image Upload -->
+          <div *ngIf="gamebackgroundOption === 'image'" class="image-upload">
+            <input 
+              type="file" 
+              (change)="onGamebackgroundImageChange($event)" 
+              accept="image/*" 
+              class="file-input"
+            />
+            <img 
+              *ngIf="gamebackgroundImagePreview" 
+              [src]="gamebackgroundImagePreview" 
+              alt="Game Background Preview" 
+              class="image-preview" 
+            />
+          </div>
+        </div>
+        
+        <!-- Update Button -->
+        <button type="submit" class="update-btn" [disabled]="profileForm.invalid || isUpdating">
+          {{ isUpdating ? 'Updating...' : 'Update Profile' }}
+        </button>
+      </form>
     </div>
     
   </div>
   
+  <!-- Error Message -->
+  <div *ngIf="!isLoading && !userProfile" class="alert-error">
+    <p>No profile data available.</p>
+  </div>
+  
+</div>

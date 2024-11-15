@@ -6,6 +6,13 @@ from django.db.models import Avg, Max
 from .utils import create_notification
 from django.apps import apps
 from django.utils import timezone
+import re
+from django.core.exceptions import ValidationError
+
+def validate_hex_color(value):
+    if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', value):
+        raise ValidationError(f'{value} is not a valid hex color code.')
+    
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     otp_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -36,6 +43,51 @@ class Profile(models.Model):
     last_login_date = models.DateField(null=True, blank=True)
     messages_sent = models.IntegerField(default=0)
     games_with_friends = models.IntegerField(default=0)
+    
+    # **New Fields for Game Settings**
+    paddleskin_color = models.CharField(
+        max_length=7,  # e.g., '#FFFFFF'
+        blank=True,
+        null=True,
+        validators=[validate_hex_color],
+        help_text='Hex code for paddle color.'
+    )
+    paddleskin_image = models.ImageField(
+        upload_to='paddle_skins/',
+        blank=True,
+        null=True,
+        help_text='Image for paddle skin.'
+    )
+    
+    ballskin_color = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        validators=[validate_hex_color],
+        help_text='Hex code for ball color.'
+    )
+    ballskin_image = models.ImageField(
+        upload_to='ball_skins/',
+        blank=True,
+        null=True,
+        help_text='Image for ball skin.'
+    )
+    
+    gamebackground_color = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        validators=[validate_hex_color],
+        help_text='Hex code for game background color.'
+    )
+    gamebackground_wallpaper = models.ImageField(
+        upload_to='game_backgrounds/',
+        default='game_backgrounds/default_wallpaper.png',
+        blank=True,
+        null=True,
+        help_text='Image for game background wallpaper.'
+    )
+    
     
     def save(self, *args, **kwargs):
         if self.pk:
