@@ -144,8 +144,14 @@ export class GameCanvasComponentPVP implements AfterViewInit {
 
   drawBackground() {
     if (this.backgroundImage) {
+      // Draw the background image scaled to the canvas size
       this.context.drawImage(this.backgroundImage, 0, 0, this.canvasWidth, this.canvasHeight);
+    } else if (this.gameSettings.gamebackground_color) {
+      // Use the specified background color
+      this.context.fillStyle = this.gameSettings.gamebackground_color!;
+      this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
     } else {
+      // Default to black background
       this.context.fillStyle = 'black';
       this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
     }
@@ -171,9 +177,35 @@ export class GameCanvasComponentPVP implements AfterViewInit {
 
   drawBall(x: number, y: number) {
     if (this.ballImage) {
-      this.context.drawImage(this.ballImage, x - this.ballRadius, y - this.ballRadius, this.ballRadius * 2, this.ballRadius * 2);
+      // Calculate image dimensions to maintain aspect ratio
+      const imgWidth = this.ballImage.width;
+      const imgHeight = this.ballImage.height;
+      
+      // Desired dimensions based on ball size
+      const desiredWidth = this.ballRadius * 2;
+      const desiredHeight = this.ballRadius * 2;
+      
+      // Calculate scaling factor to fit image within ball dimensions
+      const scale = Math.min(desiredWidth / imgWidth, desiredHeight / imgHeight);
+      const drawWidth = imgWidth * scale;
+      const drawHeight = imgHeight * scale;
+
+      // Calculate position to center the image within the ball area
+      const drawX = x - drawWidth / 2;
+      const drawY = y - drawHeight / 2;
+
+      // Draw the ball image centered at (x, y)
+      this.context.drawImage(
+        this.ballImage,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
     } else {
-      this.context.fillStyle = 'white';
+      // Use the specified ball color or default to white
+      const ballColor = this.gameSettings.ballskin_color || 'white';
+      this.context.fillStyle = ballColor;
       this.context.beginPath();
       this.context.arc(x, y, this.ballRadius, 0, 2 * Math.PI);
       this.context.closePath();
@@ -182,10 +214,27 @@ export class GameCanvasComponentPVP implements AfterViewInit {
   }
 
   drawPaddle(x: number, y: number) {
-    const paddleImage = x === 0 ? this.leftPaddleImage : this.rightPaddleImage;
-    if (paddleImage) {
-      this.context.drawImage(paddleImage, x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
-    } else {
+    if (x === 0) { // Left Paddle (Player)
+      if (this.leftPaddleImage) {
+        // Draw the paddle image stretched to match the paddle dimensions
+        const drawX = x;
+        const drawY = y - this.paddleHeight / 2;
+  
+        // Stretch the image to fit the paddle dimensions
+        this.context.drawImage(
+          this.leftPaddleImage,
+          drawX,
+          drawY,
+          this.paddleWidth,
+          this.paddleHeight
+        );
+      } else {
+        // Use the specified paddle color or default to white
+        const paddleColor = this.gameSettings.paddleskin_color || 'white';
+        this.context.fillStyle = paddleColor;
+        this.context.fillRect(x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
+      }
+    } else { // Right Paddle (AI) - Keep Default Styling
       this.context.fillStyle = 'white';
       this.context.fillRect(x, y - this.paddleHeight / 2, this.paddleWidth, this.paddleHeight);
     }

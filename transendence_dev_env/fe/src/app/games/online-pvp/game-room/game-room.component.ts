@@ -84,6 +84,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
             this.leftScore = msg.leftScore;
             this.rightScore = msg.rightScore;
           } else if (msg.type === 'game_started') {
+            this.gameSettings = {
+              ballskin_color: this.userProfile?.ballskin_color,
+              ballskin_image: this.userProfile?.ballskin_image,
+              gamebackground_color: this.userProfile?.gamebackground_color,
+              gamebackground_wallpaper: this.userProfile?.gamebackground_wallpaper,
+              paddleskin_color_left: data.paddleskin_color_left,
+              paddleskin_image_left: "http://localhost:8000" + data.paddleskin_image_left,
+              paddleskin_color_right: data.paddleskin_color_right,
+              paddleskin_image_right: "http://localhost:8000" + data.paddleskin_image_right,
+            };
             this.gameInProgress = true;
           } else if (msg.type === 'alert') {
             // Check if the disconnecting user was the host or guest
@@ -144,6 +154,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
                 this.isHostReady = data.is_host_ready;
                 this.isGuestReady = data.is_guest_ready;
                 this.allReady = data.all_ready;
+                this.gameSettings.paddleskin_color_left = data.paddleskin_color_left;
+                this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_left;
+                this.gameSettings.paddleskin_color_right = data.paddleskin_color_right;
+                this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_right;
+                this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
+                this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
+                this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;
+                
+
                 this.userProfileService.getProfile().subscribe(
                   (profile) => {
                     this.userProfile = profile;
@@ -185,10 +204,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   startGame() {
     this.gameSettings = {
-      paddleskin_color_left: this.userProfile?.paddleskin_color,
-      paddleskin_image_left: this.userProfile?.paddleskin_image,
-      paddleskin_image_right: '',
-      paddleskin_color_right: '',
       ballskin_color: this.userProfile?.ballskin_color,
       ballskin_image: this.userProfile?.ballskin_image,
       gamebackground_color: this.userProfile?.gamebackground_color,

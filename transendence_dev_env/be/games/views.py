@@ -632,10 +632,20 @@ class LobbyViewSet(viewsets.ViewSet):
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=False, methods=['get'], url_path='status/(?P<room_id>[^/.]+)')
     def room_status(self, request, room_id=None):
         try:
             lobby = Lobby.objects.get(room_id=room_id)
+
+            # Host's profile
+            host_profile = lobby.host.profile
+            host_paddle_image = host_profile.paddleskin_image.url if host_profile.paddleskin_image else None
+            host_paddle_color = host_profile.paddleskin_color or "#FFFFFF"  # Default color
+
+            # Guest's profile (if guest exists)
+            guest_profile = lobby.guest.profile if lobby.guest else None
+            guest_paddle_image = guest_profile.paddleskin_image.url if guest_profile and guest_profile.paddleskin_image else None
+            guest_paddle_color = guest_profile.paddleskin_color or "#FFFFFF" if guest_profile else None
+
             return Response({
                 "room_id": room_id,
                 "is_active": lobby.is_active,
@@ -646,7 +656,11 @@ class LobbyViewSet(viewsets.ViewSet):
                 "all_ready": lobby.all_ready(),
                 "is_full": lobby.is_full(),
                 "max_rounds": lobby.max_rounds,
-                "round_score_limit": lobby.round_score_limit
+                "round_score_limit": lobby.round_score_limit,
+                "paddleskin_color_left": host_paddle_color,
+                "paddleskin_color_right": guest_paddle_color,
+                "paddleskin_image_left": host_paddle_image,
+                "paddleskin_image_right": guest_paddle_image,
             }, status=status.HTTP_200_OK)
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)

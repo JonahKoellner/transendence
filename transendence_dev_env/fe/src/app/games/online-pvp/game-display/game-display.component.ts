@@ -130,6 +130,7 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
    * Draws the entire game state on the canvas.
    */
   drawGame() {
+    console.log('Drawing game state:', this.gameSettings);
     // Draw background
     this.drawBackground();
 

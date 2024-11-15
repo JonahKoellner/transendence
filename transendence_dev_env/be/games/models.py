@@ -89,7 +89,11 @@ class Lobby(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     max_rounds = models.IntegerField(default=3)  # New field for max rounds
     round_score_limit = models.IntegerField(default=3)  # New field for round score limit
-
+    host_paddle_color = models.CharField(max_length=7, default="#FFFFFF")
+    guest_paddle_color = models.CharField(max_length=7, default="#FFFFFF")
+    host_paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)
+    guest_paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)
+    
     def is_full(self):
         return self.guest is not None
 
@@ -124,10 +128,6 @@ class Lobby(models.Model):
             "max_rounds": self.max_rounds,
             "round_score_limit": self.round_score_limit,
             "room_id": self.room_id,
-            "host_paddle_color": self.host.profile.paddleskin_color,
-            "host_paddle_image": self.host.profile.paddleskin_image.url if self.host.profile.paddleskin_image else None,
-            "guest_paddle_color": self.guest.profile.paddleskin_color if self.guest else None,
-            "guest_paddle_image": self.guest.profile.paddleskin_image.url if self.guest and self.guest.profile.paddleskin_image else None,
         }
         
         return state
