@@ -50,7 +50,8 @@ class Profile(models.Model):
         blank=True,
         null=True,
         validators=[validate_hex_color],
-        help_text='Hex code for paddle color.'
+        help_text='Hex code for paddle color.',
+        default='#FFFFFF'
     )
     paddleskin_image = models.ImageField(
         upload_to='paddle_skins/',
@@ -64,7 +65,8 @@ class Profile(models.Model):
         blank=True,
         null=True,
         validators=[validate_hex_color],
-        help_text='Hex code for ball color.'
+        help_text='Hex code for ball color.',
+        default='#FFFFFF'
     )
     ballskin_image = models.ImageField(
         upload_to='ball_skins/',
@@ -78,7 +80,8 @@ class Profile(models.Model):
         blank=True,
         null=True,
         validators=[validate_hex_color],
-        help_text='Hex code for game background color.'
+        help_text='Hex code for game background color.',
+        default='#000000'
     )
     gamebackground_wallpaper = models.ImageField(
         upload_to='game_backgrounds/',

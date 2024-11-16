@@ -44,6 +44,7 @@ import { GameDisplayComponent } from './games/online-pvp/game-display/game-displ
 import { AboutComponent } from './home/about/about.component';
 import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.component';
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
+import { ImageSelectorModalComponent } from './profile/image-selector-modal/image-selector-modal.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -80,7 +81,8 @@ import { LeaderboardComponent } from './leaderboard/leaderboard.component';
     GameDisplayComponent,
     AboutComponent,
     GameRoomsComponent,
-    LeaderboardComponent
+    LeaderboardComponent,
+    ImageSelectorModalComponent
   ],
   imports: [
     BrowserModule,

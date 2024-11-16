@@ -1,9 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProfileService, UserProfile } from '../profile.service';
-import { HttpErrorResponse } from '@angular/common/http';
-
-@Component({
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ImageSelectorModalComponent } from './image-selector-modal/image-selector-modal.component';
+interface ImageSelection {
+  type: 'preset' | 'upload';
+  data: File | string; // File object for uploads, string identifier/path for presets
+}@Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
@@ -23,9 +27,18 @@ export class ProfileComponent implements OnInit {
   ballskinOption: 'color' | 'image' = 'color';
   gamebackgroundOption: 'color' | 'image' = 'color';
 
+  selectedImages: {
+    avatar?: ImageSelection;
+    paddleskin?: ImageSelection;
+    ballskin?: ImageSelection;
+    gamebackground?: ImageSelection;
+  } = {};
+
   constructor(
     private profileService: ProfileService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private modalService: NgbModal,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
@@ -39,15 +52,15 @@ export class ProfileComponent implements OnInit {
       avatar: [null],
       avatar_to_delete: [false], // New flag for deletion
       
-      paddleskin_color: ['#FF0000', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
+      paddleskin_color: ['#FFFFFF', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
       paddleskin_image: [null],
       paddleskin_image_to_delete: [false], // New flag for deletion
       
-      ballskin_color: ['#0000FF', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
+      ballskin_color: ['#FFFFFF', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
       ballskin_image: [null],
       ballskin_image_to_delete: [false], // New flag for deletion
       
-      gamebackground_color: ['#FFFFFF', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
+      gamebackground_color: ['#000000', [Validators.pattern(/^#(?:[0-9a-fA-F]{3}){1,2}$/)]],
       gamebackground_wallpaper: [null],
       gamebackground_wallpaper_to_delete: [false], // New flag for deletion
     });
@@ -63,9 +76,9 @@ export class ProfileComponent implements OnInit {
         // Set form values
         this.profileForm.patchValue({
           display_name: data.display_name,
-          paddleskin_color: data.paddleskin_color || '#FF0000',
-          ballskin_color: data.ballskin_color || '#0000FF',
-          gamebackground_color: data.gamebackground_color || '#FFFFFF',
+          paddleskin_color: data.paddleskin_color || '#FFFFFF',
+          ballskin_color: data.ballskin_color || '#FFFFFF',
+          gamebackground_color: data.gamebackground_color || '#000000',
         });
 
         // Set image previews
@@ -259,20 +272,24 @@ export class ProfileComponent implements OnInit {
     if (this.profileForm.invalid) {
       return;
     }
-
+  
     this.isUpdating = true;
-
+  
     const formData = new FormData();
     formData.append('display_name', this.profileForm.get('display_name')!.value);
-
+  
     // Avatar
-    if (this.profileForm.get('avatar')?.value) {
-      formData.append('avatar', this.profileForm.get('avatar')!.value);
+    if (this.selectedImages.avatar) {
+      if (this.selectedImages.avatar.type === 'upload') {
+        formData.append('avatar', this.selectedImages.avatar.data as File);
+      } else if (this.selectedImages.avatar.type === 'preset') {
+        formData.append('avatar_preset', this.selectedImages.avatar.data as string);
+      }
     }
     if (this.profileForm.get('avatar_to_delete')?.value) {
       formData.append('avatar_to_delete', 'true');
     }
-
+  
     // Paddle Skin
     if (this.paddleskinOption === 'color') {
       formData.append('paddleskin_color', this.profileForm.get('paddleskin_color')!.value);
@@ -280,14 +297,18 @@ export class ProfileComponent implements OnInit {
         formData.append('paddleskin_image_to_delete', 'true');
       }
     } else if (this.paddleskinOption === 'image') {
-      if (this.profileForm.get('paddleskin_image')?.value) {
-        formData.append('paddleskin_image', this.profileForm.get('paddleskin_image')!.value);
+      if (this.selectedImages.paddleskin) {
+        if (this.selectedImages.paddleskin.type === 'upload') {
+          formData.append('paddleskin_image', this.selectedImages.paddleskin.data as File);
+        } else if (this.selectedImages.paddleskin.type === 'preset') {
+          formData.append('paddleskin_preset', this.selectedImages.paddleskin.data as string);
+        }
       }
       if (this.profileForm.get('paddleskin_image_to_delete')?.value) {
         formData.append('paddleskin_image_to_delete', 'true');
       }
     }
-
+  
     // Ball Skin
     if (this.ballskinOption === 'color') {
       formData.append('ballskin_color', this.profileForm.get('ballskin_color')!.value);
@@ -295,14 +316,18 @@ export class ProfileComponent implements OnInit {
         formData.append('ballskin_image_to_delete', 'true');
       }
     } else if (this.ballskinOption === 'image') {
-      if (this.profileForm.get('ballskin_image')?.value) {
-        formData.append('ballskin_image', this.profileForm.get('ballskin_image')!.value);
+      if (this.selectedImages.ballskin) {
+        if (this.selectedImages.ballskin.type === 'upload') {
+          formData.append('ballskin_image', this.selectedImages.ballskin.data as File);
+        } else if (this.selectedImages.ballskin.type === 'preset') {
+          formData.append('ballskin_preset', this.selectedImages.ballskin.data as string);
+        }
       }
       if (this.profileForm.get('ballskin_image_to_delete')?.value) {
         formData.append('ballskin_image_to_delete', 'true');
       }
     }
-
+  
     // Game Background
     if (this.gamebackgroundOption === 'color') {
       formData.append('gamebackground_color', this.profileForm.get('gamebackground_color')!.value);
@@ -310,20 +335,27 @@ export class ProfileComponent implements OnInit {
         formData.append('gamebackground_wallpaper_to_delete', 'true');
       }
     } else if (this.gamebackgroundOption === 'image') {
-      if (this.profileForm.get('gamebackground_wallpaper')?.value) {
-        formData.append('gamebackground_wallpaper', this.profileForm.get('gamebackground_wallpaper')!.value);
+      if (this.selectedImages.gamebackground) {
+        if (this.selectedImages.gamebackground.type === 'upload') {
+          formData.append('gamebackground_wallpaper', this.selectedImages.gamebackground.data as File);
+        } else if (this.selectedImages.gamebackground.type === 'preset') {
+          formData.append('gamebackground_preset', this.selectedImages.gamebackground.data as string);
+        }
       }
       if (this.profileForm.get('gamebackground_wallpaper_to_delete')?.value) {
         formData.append('gamebackground_wallpaper_to_delete', 'true');
       }
     }
+  
+    // Append username if required
     formData.append("username", this.userProfile.username);
+  
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
         alert('Profile updated successfully');
         // Reload the profile to reflect changes
         this.loadProfile();
-
+  
         // Reset deletion flags
         this.profileForm.patchValue({
           avatar_to_delete: false,
@@ -331,7 +363,10 @@ export class ProfileComponent implements OnInit {
           ballskin_image_to_delete: false,
           gamebackground_wallpaper_to_delete: false,
         });
-
+  
+        // Clear selectedImages
+        this.selectedImages = {};
+  
         this.isUpdating = false;
       },
       (error: HttpErrorResponse) => {
@@ -341,10 +376,131 @@ export class ProfileComponent implements OnInit {
       }
     );
   }
+  
 
   getXpProgress(): number {
     if (!this.userProfile) return 0;
     return Math.min((this.userProfile.xp / this.userProfile.xp_for_next_level) * 100, 100);
   }
+  openImageSelector(field: keyof typeof this.selectedImages) {
+    const modalRef = this.modalService.open(ImageSelectorModalComponent, { size: 'lg' });
+    
+    // Assuming presets are stored in assets/presets/
+    const presets = this.getPresetsForField(field);
+    
+    modalRef.componentInstance.presetImages = presets;
+    
+    modalRef.result.then((selection: ImageSelection) => {
+      if (selection) {
+        this.setImage(field, selection);
+      }
+    }, (reason) => {
+      // Handle dismissals if needed
+    });
+  }
 
+  getPresetsForField(field: keyof typeof this.selectedImages): string[] {
+    switch(field) {
+      case 'avatar':
+        return [
+          'assets/presets/a1.jpg',
+          'assets/presets/a2.png',
+          'assets/presets/a3.jpg',
+          'assets/presets/a4.jpg',
+        ];
+      case 'paddleskin':
+        return [
+          'assets/presets/paddleskin1.png',
+          'assets/presets/paddleskin2.png',
+          'assets/presets/paddleskin3.png'
+          // Add more paddle skin presets as needed
+        ];
+      case 'ballskin':
+        return [
+          'assets/presets/ballskin1.png',
+          'assets/presets/ballskin2.png',
+          'assets/presets/ballskin3.png'
+          // Add more ball skin presets as needed
+        ];
+      case 'gamebackground':
+        return [
+          'assets/presets/background1.png',
+          'assets/presets/background2.png',
+          'assets/presets/background3.png'
+          // Add more background presets as needed
+        ];
+      default:
+        return [];
+    }
+  }
+
+  // Method to set the selected image
+  setImage(field: keyof typeof this.selectedImages, selection: ImageSelection) {
+    if (selection.type === 'upload') {
+      // Directly set the image as File
+      this.selectedImages[field] = selection;
+      // Update preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        switch(field) {
+          case 'avatar':
+            this.avatarPreview = e.target.result;
+            break;
+          case 'paddleskin':
+            this.paddleskinImagePreview = e.target.result;
+            break;
+          case 'ballskin':
+            this.ballskinImagePreview = e.target.result;
+            break;
+          case 'gamebackground':
+            this.gamebackgroundImagePreview = e.target.result;
+            break;
+        }
+      };
+      reader.readAsDataURL(selection.data as File);
+    } else if (selection.type === 'preset') {
+      // Fetch the image as Blob
+      this.http.get(selection.data as string, { responseType: 'blob' }).subscribe(
+        (blob) => {
+          // Convert Blob to File
+          const file = new File([blob], this.getFileNameFromPath(selection.data as string), { type: blob.type });
+          // Set the image as 'upload' with File data
+          this.selectedImages[field] = {
+            type: 'upload',
+            data: file
+          };
+          // Update preview
+          const reader = new FileReader();
+          reader.onload = (e: any) => {
+            switch(field) {
+              case 'avatar':
+                this.avatarPreview = e.target.result;
+                break;
+              case 'paddleskin':
+                this.paddleskinImagePreview = e.target.result;
+                break;
+              case 'ballskin':
+                this.ballskinImagePreview = e.target.result;
+                break;
+              case 'gamebackground':
+                this.gamebackgroundImagePreview = e.target.result;
+                break;
+            }
+          };
+          reader.readAsDataURL(file);
+        },
+        (error) => {
+          console.error('Error fetching preset image:', error);
+          // Optionally, notify the user about the error
+          alert('Failed to load the selected preset image. Please try another one.');
+        }
+      );
+    }
+  }
+  
+  // Helper method to extract file name from path
+  getFileNameFromPath(path: string): string {
+    return path.substring(path.lastIndexOf('/') + 1);
+  }
+  
 }

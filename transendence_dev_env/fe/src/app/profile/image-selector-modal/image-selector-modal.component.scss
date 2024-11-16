@@ -1,0 +1,19 @@
+/* image-selector-modal.component.css */
+.preset-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .preset-image {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+  }
+  
+  .preset-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  

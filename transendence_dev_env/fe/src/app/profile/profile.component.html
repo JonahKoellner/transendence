@@ -18,7 +18,7 @@
         <div class="avatar-container">
           <img 
             *ngIf="userProfile.avatar" 
-            [src]="avatarPreview || userProfile.avatar" 
+            [src]="userProfile.avatar" 
             alt="User Avatar" 
             class="avatar" 
           />
@@ -54,7 +54,7 @@
       
       <!-- Profile Update Form -->
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="update-form">
-        
+  
         <!-- Display Name -->
         <div class="form-group">
           <label for="displayName">Display Name:</label>
@@ -69,23 +69,22 @@
         
         <!-- Avatar Upload -->
         <div class="form-group avatar-section">
-          <label for="avatarUpload">Avatar:</label>
+          <label for="avatar">Avatar:</label>
           <div class="avatar-preview-container">
-            <img 
-              [src]="avatarPreview || 'assets/default_avatar.png'" 
+            <img
+              *ngIf="avatarPreview || userProfile.avatar"
+              [src]="avatarPreview || userProfile.avatar || 'assets/default_avatar.png'" 
               alt="Avatar Preview" 
               class="avatar-preview" 
             />
             <button class="delete-icon" *ngIf="avatarPreview || userProfile.avatar" (click)="deleteAvatar()" type="button">
               <i class="fas fa-times"></i>
             </button>
-            <input 
-              id="avatarUpload" 
-              type="file" 
-              (change)="onFileChange($event)" 
-              accept="image/*" 
-            />
           </div>
+          <p *ngIf="!avatarPreview && !userProfile.avatar">No Avatar</p>
+          <button type="button" class="btn btn-custom" (click)="openImageSelector('avatar')">
+            {{ avatarPreview || userProfile.avatar ? 'Change Avatar' : 'Select Avatar' }}
+          </button>
         </div>
         
         <!-- Paddle Skin Customization -->
@@ -114,11 +113,11 @@
             />
           </div>
           
-          <!-- Paddle Skin Image Upload -->
+          <!-- Paddle Skin Image Selection -->
           <div *ngIf="paddleskinOption === 'image'" class="image-upload">
             <div class="image-preview-container">
               <img 
-                *ngIf="paddleskinImagePreview || userProfile.paddleskin_image" 
+                *ngIf="paddleskinImagePreview || userProfile.paddleskin_image"
                 [src]="paddleskinImagePreview || userProfile.paddleskin_image" 
                 alt="Paddle Skin Preview" 
                 class="image-preview" 
@@ -127,12 +126,9 @@
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            <input 
-              type="file" 
-              (change)="onPaddleskinImageChange($event)" 
-              accept="image/*" 
-              class="file-input"
-            />
+            <button type="button" class="btn btn-custom" (click)="openImageSelector('paddleskin')">
+              {{ paddleskinImagePreview || userProfile.paddleskin_image ? 'Change Paddle Skin' : 'Select Paddle Skin' }}
+            </button>
           </div>
         </div>
         
@@ -162,11 +158,11 @@
             />
           </div>
           
-          <!-- Ball Skin Image Upload -->
+          <!-- Ball Skin Image Selection -->
           <div *ngIf="ballskinOption === 'image'" class="image-upload">
             <div class="image-preview-container">
-              <img 
-                *ngIf="ballskinImagePreview || userProfile.ballskin_image" 
+              <img
+                *ngIf="ballskinImagePreview || userProfile.ballskin_image"
                 [src]="ballskinImagePreview || userProfile.ballskin_image" 
                 alt="Ball Skin Preview" 
                 class="image-preview" 
@@ -175,12 +171,9 @@
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            <input 
-              type="file" 
-              (change)="onBallskinImageChange($event)" 
-              accept="image/*" 
-              class="file-input"
-            />
+            <button type="button" class="btn btn-custom" (click)="openImageSelector('ballskin')">
+              {{ ballskinImagePreview || userProfile.ballskin_image ? 'Change Ball Skin' : 'Select Ball Skin' }}
+            </button>
           </div>
         </div>
         
@@ -210,11 +203,11 @@
             />
           </div>
           
-          <!-- Game Background Image Upload -->
+          <!-- Game Background Image Selection -->
           <div *ngIf="gamebackgroundOption === 'image'" class="image-upload">
             <div class="image-preview-container">
-              <img 
-                *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" 
+              <img
+                *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper"
                 [src]="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" 
                 alt="Game Background Preview" 
                 class="image-preview" 
@@ -223,17 +216,14 @@
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            <input 
-              type="file" 
-              (change)="onGamebackgroundImageChange($event)" 
-              accept="image/*" 
-              class="file-input"
-            />
+            <button type="button" class="btn btn-custom" (click)="openImageSelector('gamebackground')">
+              {{ gamebackgroundImagePreview || userProfile.gamebackground_wallpaper ? 'Change Background' : 'Select Background' }}
+            </button>
           </div>
         </div>
         
         <!-- Update Button -->
-        <button type="submit" class="update-btn" [disabled]="profileForm.invalid || isUpdating">
+        <button type="submit" class="update-btn btn btn-success" [disabled]="profileForm.invalid || isUpdating">
           {{ isUpdating ? 'Updating...' : 'Update Profile' }}
         </button>
       </form>
