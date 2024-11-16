@@ -407,26 +407,26 @@ export class ProfileComponent implements OnInit {
           'assets/presets/a2.png',
           'assets/presets/a3.jpg',
           'assets/presets/a4.jpg',
+          'assets/presets/a5.jpg'
         ];
       case 'paddleskin':
         return [
-          'assets/presets/paddleskin1.png',
-          'assets/presets/paddleskin2.png',
-          'assets/presets/paddleskin3.png'
+          'assets/presets/p1.jpg',
+          'assets/presets/p2.jpg',
+          'assets/presets/p3.png'
           // Add more paddle skin presets as needed
         ];
       case 'ballskin':
         return [
-          'assets/presets/ballskin1.png',
-          'assets/presets/ballskin2.png',
-          'assets/presets/ballskin3.png'
+          'assets/presets/b1.png',
+          'assets/presets/b2.jpg',
           // Add more ball skin presets as needed
         ];
       case 'gamebackground':
         return [
-          'assets/presets/background1.png',
-          'assets/presets/background2.png',
-          'assets/presets/background3.png'
+          'assets/presets/g1.jpg',
+          'assets/presets/g2.jpg',
+          'assets/presets/g3.png'
           // Add more background presets as needed
         ];
       default:

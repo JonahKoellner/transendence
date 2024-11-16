@@ -1,4 +1,5 @@
-<!-- src/app/profile/image-selector-modal/image-selector-modal.component.html -->
+
+
 <div class="modal-header">
     <h4 class="modal-title">Select Image</h4>
     <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
@@ -6,7 +7,7 @@
     </button>
   </div>
   <div class="modal-body">
-    <h5>Choose a Preset</h5>
+    <h5 class="section-title">Choose a Preset</h5>
     <div class="preset-images">
       <div class="preset-image" *ngFor="let preset of presetImages" (click)="selectPreset(preset)">
         <img [src]="preset" alt="Preset Image" class="img-thumbnail">
@@ -15,8 +16,13 @@
     
     <hr>
     
-    <h5>Or Upload from PC</h5>
-    <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+    <h5 class="section-title">Or Upload from PC</h5>
+    <div class="upload-section">
+      <label class="btn btn-custom">
+        <i class="fas fa-upload"></i> Upload Image
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
+      </label>
+    </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel')">Cancel</button>

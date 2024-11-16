@@ -1,19 +1,192 @@
-/* image-selector-modal.component.css */
-.preset-images {
+
+.modal-content {
+    background-color: rgba(0, 0, 0, 0.9); /* Darker background for better contrast */
+    z-index: 1050;
+    backdrop-filter: blur(5px);
+    color: #e0e0e0; /* Light text for readability */
+  }
+  
+  .modal-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background-color: #1a1a1a;
+    border-bottom: 2px solid #444;
+  
+    .modal-title {
+      color: #61BA50;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0;
+    }
+  
+    .close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: transform 0.2s, color 0.2s;
+  
+      &:hover {
+        transform: rotate(90deg);
+        color: #ffeb3b;
+      }
+  
+      span {
+        fill: #e0e0e0;
+        transition: fill 0.2s;
+      }
+    }
   }
   
-  .preset-image {
-    width: 100px;
-    height: 100px;
-    cursor: pointer;
+  .modal-body {
+    padding: 1.5rem 2rem;
+    background-color: #0E0F10;
+    flex: 1;
+    overflow-y: auto;
+  
+    .section-title {
+      color: #61BA50;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  
+    .preset-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+  
+      .preset-image {
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: border-color 0.3s, transform 0.3s;
+  
+        &:hover {
+          border-color: #61BA50;
+          transform: scale(1.05);
+        }
+  
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+      }
+    }
+  
+    .upload-section {
+      text-align: center;
+      margin-top: 1rem;
+  
+      .btn-custom {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #61BA50;
+        color: #ffffff;
+        padding: 0.6rem 1.5rem;
+        border: none;
+        border-radius: 30px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        position: relative;
+  
+        &:hover {
+          background-color: #45A049;
+          transform: translateY(-2px);
+        }
+  
+        &:active {
+          transform: translateY(0);
+        }
+  
+        i {
+          margin-right: 0.5rem;
+          font-size: 1.1rem;
+        }
+      }
+    }
   }
   
-  .preset-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .modal-footer {
+    padding: 1rem 2rem;
+    background-color: #1a1a1a;
+    border-top: 2px solid #444;
+    text-align: right;
+  
+    .btn-secondary {
+      background-color: #444;
+      color: #e0e0e0;
+      padding: 0.5rem 1.5rem;
+      border: none;
+      border-radius: 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+  
+      &:hover {
+        background-color: #555;
+      }
+    }
+  }
+  
+  /* Responsive Modal */
+  @media (max-width: 600px) {
+    .modal-content {
+      width: 95%;
+    }
+  
+    .modal-header,
+    .modal-footer {
+      padding: 1rem;
+    }
+  
+    .modal-title {
+      font-size: 1.2rem;
+    }
+  
+    .modal-body {
+      padding: 1rem;
+  
+      .preset-images {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.8rem;
+  
+        .preset-image {
+          border-radius: 6px;
+  
+          &:hover {
+            border-color: #61BA50;
+            transform: scale(1.03);
+          }
+        }
+      }
+  
+      .upload-section {
+        .btn-custom {
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+  
+          i {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  
+    .modal-footer {
+      .btn-secondary {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
   }
   
