@@ -95,20 +95,20 @@ export class AuthService {
         (response) => {
           console.log('Logout successful. Response:', response);
           this.clearAll();
-          this.router.navigate(['/login']);
           this.websocketService.disconnect();
+          window.location.href = '/login';
         },
         (error) => {
           console.error('Logout error:', error);
           this.clearAll();
-          this.router.navigate(['/login']);
           this.websocketService.disconnect();
+          window.location.href = '/login';
         }
       );
     } else {
       this.clearAll();
-      this.router.navigate(['/login']);
       this.websocketService.disconnect();
+      window.location.href = '/login';
     }
   }
 

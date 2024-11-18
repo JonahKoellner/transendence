@@ -35,11 +35,18 @@ export class LoginComponent implements OnInit{
         this.profileService.getProfile().subscribe(
           profile => {
             console.log('Profile in login:', profile);
-            if (!profile.is_2fa_enabled) {  // Check if 2FA is enabled
+            if (!profile.is_2fa_enabled && response.otp_uri) {  // Check if 2FA is enabled
               console.log('2FA not enabled');
               this.router.navigate(['/verify-otp', response.otp_uri]);
-            } else {
-              this.router.navigate(['/home']);  // Navigate to home
+            } 
+            if (profile.is_2fa_enabled && !response.otp_uri) {
+              console.log('2FA enabled');
+              window.location.href = '/home';
+            }
+            if (profile.is_2fa_enabled && response.otp_uri) {
+              console.log('2FA is enabled but server wants you to see the QR code');
+              // this.router.navigate(['/verify-otp', response.otp_uri]); change later WIP !TODO
+              window.location.href = '/home';
             }
           },
           error => {
