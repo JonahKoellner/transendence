@@ -83,23 +83,8 @@ export class ArenaComponent implements OnInit, OnDestroy {
       score_player2: 0
     };
 
-    this.gameService.createGame(newGame).subscribe({
-      next: (game: any) => {
-        if (this.logs.length) {
-          this.previousGames.push(...this.logs);
-          this.logs = [];
-        }
-        this.currentGame = game;
-        this.gameInProgress = true;
-        this.logs.push(
-          `New game started among ${this.player1Name}, ${this.player2Name}, ${this.player3Name}, and ${this.player4Name}`
-        );
-        this.startTimers();
-        this.startNewRound();
-      },
-      error: (error: any) => {
-        console.error('Failed to create game:', error);
-        this.logs.push('Error: Failed to start a new game. Please try again.');
+    this.gameService.createGame(newGame).subscribe()
+
         if (this.logs.length) {
           this.previousGames.push(...this.logs);
           this.logs = [];
@@ -111,8 +96,6 @@ export class ArenaComponent implements OnInit, OnDestroy {
         );
         this.startTimers();
         this.startNewRound();
-      },
-    });
     
   }
 

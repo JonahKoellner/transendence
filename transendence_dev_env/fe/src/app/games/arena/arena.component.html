@@ -1,10 +1,10 @@
 <div class="game-room">
     <header>
-      <h2>Arena Mode (4 Players)</h2>
+      <h2>Arena Mode</h2>
     </header>
   
     <!-- Controls Information -->
-    <section class="controls-info">
+    <section class="controls-info" *ngIf="!gameInProgress && !currentGame">
       <h4>Controls:</h4>
       <ul>
         <li><strong>Player 1 (Left Paddle):</strong> <code>W</code> (Up), <code>S</code> (Down)</li>
