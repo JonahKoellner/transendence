@@ -1,51 +1,70 @@
-import { AfterViewChecked, AfterViewInit, Component,OnInit,Renderer2, ViewChild  } from '@angular/core';
-import { AuthService } from './auth.service';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { NotificationsComponent } from './notifications/notifications/notifications.component';
+import { filter } from 'rxjs/operators';
+import { AuthService } from './auth.service';
+import { ProfileService } from './profile.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit{
-  otpVerified: boolean = false;
+
+export class AppComponent implements OnInit {
   title = 'MyApp';
   isDarkTheme = true;
   isCollapsed = true;
-  
+  isAuthenticated = false;
+  is2FaEnabled = false;
+  toldUser = false;
+
   constructor(
     private authService: AuthService,
     private router: Router,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private profileService: ProfileService
   ) {
     this.authService.initializeWebSocket();
     this.applyTheme();
   }
 
   ngOnInit(): void {
-      console.log("------ Local Storage ------");
-      for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key) {
-              console.log(`${key}: ${localStorage.getItem(key)}`);
+    // Subscribe to router events to detect navigation changes
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkAuthentication();
+    });
+
+    // Initial authentication check
+    this.checkAuthentication();
+  }
+
+  checkAuthentication(): void {
+    if (this.authService.isAuthenticated()) {
+      this.profileService.getProfile().subscribe(
+        profile => {
+          console.log("Profile main: ", profile);
+          this.is2FaEnabled = profile.is_2fa_enabled;
+
+          if (!this.is2FaEnabled && !this.toldUser) {
+            alert("Most features will be disabled. Please enable 2FA to use all features.");
+            this.toldUser = true;
+            this.logout();
+            
           }
-      }
-  
-      console.log("------ Cookies ------");
-      const cookies = document.cookie.split(';');
-      cookies.forEach(cookie => {
-          const [name, value] = cookie.split('=');
-          console.log(`${name.trim()}: ${decodeURIComponent(value)}`);
-      });
-
-      this.otpVerified = localStorage.getItem('otp_verified') === 'true';
-
-      this.router.events.subscribe(event => {
-        if (event instanceof NavigationEnd) {
-          this.otpVerified = localStorage.getItem('otp_verified') === 'true';;
+          this.isAuthenticated = true;
+        },
+        error => {
+          console.error('Failed to load profile:', error);
+          this.isAuthenticated = false;
+          this.router.navigate(['/login']);
         }
-      })
+      );
+    } else {
+      this.isAuthenticated = false;
+      this.router.navigate(['/login']);
+    }
   }
 
   logout(): void {

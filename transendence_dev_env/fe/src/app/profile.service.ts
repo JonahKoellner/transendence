@@ -34,6 +34,7 @@ export interface UserProfile {
   ballskin_image?: string;
   gamebackground_color?: string;
   gamebackground_wallpaper?: string;
+  is_2fa_enabled: boolean;
 }
 
 
