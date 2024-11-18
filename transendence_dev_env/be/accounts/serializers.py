@@ -50,7 +50,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     friends = serializers.SerializerMethodField()
     blocked_users = serializers.SerializerMethodField()
-    is_2fa_enabled  = serializers.BooleanField(source='profile.is_2fa_enabled')
+    is_2fa_enabled  = serializers.BooleanField(source='profile.is_2fa_enabled', read_only=True)
     has_logged_in = serializers.BooleanField(source='profile.has_logged_in')
     
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
@@ -109,7 +109,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'ballskin_image_to_delete',
             'gamebackground_wallpaper_to_delete',
         ]
-        
+        # read_only_fields = ['is_2fa_enabled']
+
     def get_friends(self, obj):
         friends_users = [profile.user for profile in obj.profile.friends.all()]
         return UserDetailSerializer(friends_users, many=True, context=self.context).data  # Passed context

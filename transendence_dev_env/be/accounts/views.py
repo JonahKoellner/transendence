@@ -237,7 +237,7 @@ class UserViewSet(viewsets.ModelViewSet):
         Override the update method to handle profile updates using the serializer.
         """
         user = self.get_object()  # Retrieves the user instance based on the URL
-        serializer = self.get_serializer(user, data=request.data, partial=False)  # Set partial=True if you want to allow partial updates
+        serializer = self.get_serializer(user, data=request.data, partial=True)  # Set partial=True if you want to allow partial updates
 
         if serializer.is_valid():
             serializer.save()  # This invokes the serializer's update method

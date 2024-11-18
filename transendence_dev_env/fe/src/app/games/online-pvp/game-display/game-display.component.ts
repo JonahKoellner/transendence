@@ -72,11 +72,17 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
 
     // Load left paddle image if provided
     if (this.gameSettings.paddleskin_image_left) {
-      this.paddleImageLeft = new Image();
-      this.paddleImageLeft.src = this.gameSettings.paddleskin_image_left;
-      promises.push(new Promise<void>((resolve, reject) => {
-        this.paddleImageLeft!.onload = () => resolve();
-        this.paddleImageLeft!.onerror = () => reject(new Error('Failed to load left paddle image'));
+      promises.push(new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image_left!;
+        img.onload = () => {
+          this.paddleImageLeft = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Left PaddleSkin Image. Falling back to colour.');
+          resolve();
+        }
       }));
     } else {
       this.paddleImageLeft = null;

@@ -20,7 +20,7 @@ class Profile(models.Model):
     has_logged_in = models.BooleanField(default=False)
 
     display_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    avatar = models.ImageField(upload_to='avatars/', default='avatars/default_avatar.png', blank=True, null=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     
     friends = models.ManyToManyField('self', symmetrical=False, related_name='friends_with', blank=True)
     blocked_users = models.ManyToManyField('self', symmetrical=False, related_name='blocked_by', blank=True)
@@ -85,7 +85,6 @@ class Profile(models.Model):
     )
     gamebackground_wallpaper = models.ImageField(
         upload_to='game_backgrounds/',
-        default='game_backgrounds/default_wallpaper.png',
         blank=True,
         null=True,
         help_text='Image for game background wallpaper.'
