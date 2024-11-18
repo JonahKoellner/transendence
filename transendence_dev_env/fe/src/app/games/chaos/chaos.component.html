@@ -1,0 +1,154 @@
+<div class="game-room">
+    <header>
+      <h2>Chaos Mode</h2>
+    </header>
+  
+    <!-- Game Settings -->
+    <section class="settings" *ngIf="!gameInProgress && !currentGame">
+      <div class="setting-item">
+        <h4>Max Rounds</h4>
+        <input
+          type="number"
+          [(ngModel)]="settings.maxRounds"
+          min="1"
+          class="form-control"
+          placeholder="Enter max rounds"
+        />
+      </div>
+      <div class="setting-item">
+        <h4>Round Score Limit</h4>
+        <input
+          type="number"
+          [(ngModel)]="settings.roundScoreLimit"
+          min="1"
+          class="form-control"
+          placeholder="Enter score limit"
+        />
+      </div>
+      <div class="setting-item">
+        <h4>Powerup Spawn rate</h4>
+        <input
+        type="number"
+        [(ngModel)]="settings.powerUpSpawnInterval"
+        min="1"
+        class="form-control"
+        placeholder="Spawn rate in seconds"
+        />
+      </div>
+      
+      <div class="setting-item">
+        <h4>Enemy Type</h4>
+        <select [(ngModel)]="settings.enemyType" class="form-control">
+          <option value="AI">AI</option>
+          <option value="PvP">PvP</option>
+        </select>
+      </div>
+      <div class="setting-item" *ngIf="settings.enemyType === 'AI'">
+        <h4>Difficulty</h4>
+        <select [(ngModel)]="settings.difficulty" class="form-control">
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </div>
+      
+      <div class="setting-item" *ngIf="settings.enemyType === 'PvP'">
+        <h4>Player 2</h4>
+        <input
+            type="text"
+            [(ngModel)]="player2Name"
+            class="form-control"
+            placeholder="Enter Player 2 Name"
+          />
+      </div>
+      <div class="player-info">
+        <div class="player-name">
+          <h4>
+            {{ displayNameHost }} vs
+            <span *ngIf="settings.enemyType === 'AI'">AI</span>
+            <span *ngIf="settings.enemyType === 'PvP'">{{ player2Name || 'Player 2' }}</span>
+          </h4>
+        </div>
+      </div>
+
+
+      <div class="actions">
+        <button class="start-game-btn" (click)="startNewGame()">
+          <svg viewBox="0 0 24 24">
+            <!-- Play Icon -->
+            <path fill="#fff" d="M8 5v14l11-7z" />
+          </svg>
+          Start Game
+        </button>
+      </div>
+    </section>
+  
+    <!-- Game Progress and Controls -->
+    <section class="game-view" *ngIf="gameInProgress && currentGame">
+      <p class="score">
+        {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
+        <strong>{{ displayNameHost }}:</strong> {{ currentGame.score_player1 }} -
+        <strong>AI</strong> {{ currentGame.score_player2 }}
+      </p>
+      <div #gameContainer class="game-container">
+        <app-game-canvas-chaos
+          [gameSettings]="settings"
+          (onScore)="updateScoreBot($event)"
+          *ngIf="settings.enemyType === 'AI'"
+        ></app-game-canvas-chaos>
+        <app-game-canvas-chaos-pvp
+          [gameSettings]="settings"
+          (onScore)="updateScorePvp($event)"
+          *ngIf="settings.enemyType === 'PvP'"
+        ></app-game-canvas-chaos-pvp>
+      </div>
+      <div class="fullscreen-controls">
+        <button (click)="toggleFullScreen(gameContainer)">
+          Toggle Fullscreen
+        </button>
+      </div>
+      <div class="timers">
+        <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
+        <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
+      </div>
+    </section>
+  
+    <!-- Game Results -->
+    <section
+      class="game-result"
+      *ngIf="!gameInProgress && currentGame && currentGame.is_completed"
+    >
+      <div class="result-header">
+        <h3>Game Over</h3>
+      </div>
+      <div class="result-body">
+        <p><strong>Winner:</strong> {{ currentGame.winner?.username || 'AI' }}</p>
+        <p>
+          <strong>Game Duration:</strong>
+          {{ currentGame.duration | number: '1.2-2' }} seconds
+        </p>
+  
+        <h4>Rounds Summary</h4>
+        <ul class="summary-list">
+          <li *ngFor="let round of currentGame.rounds" class="summary-item">
+            <p>
+              Round {{ round.round_number }} - Winner:
+              {{ round.winner || 'In Progress' }} - Duration:
+              {{ calculateRoundDuration(round) }}
+            </p>
+          </li>
+        </ul>
+  
+        <h4>Moves Log</h4>
+        <ul class="moves-log">
+          <li *ngFor="let move of currentGame.moves_log" class="move-item">
+            <span class="move-time">{{ move.time | date: 'shortTime' }}</span> -
+            {{ move.player }}: {{ move.action }}
+          </li>
+        </ul>
+  
+        <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
+      </div>
+    </section>
+  </div>
+  

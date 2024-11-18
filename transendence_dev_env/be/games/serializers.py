@@ -19,7 +19,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     def get_player2(self, obj):
         # Check for local PvP placeholder name first
-        if obj.game_mode == Game.LOCAL_PVP and obj.player2_name_pvp_local:
+        if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local:
             return {
                 "id": 0,  # Placeholder ID for non-existent users
                 "username": obj.player2_name_pvp_local

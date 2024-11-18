@@ -141,12 +141,16 @@ class Game(models.Model):
     PVE = 'pve'
     LOCAL_PVP = 'local_pvp'
     ONLINE_PVP = 'online_pvp'
+    CHAOS_PVE = 'chaos_pve'
+    CHAOS_PVP = 'chaos_pvp'
 
 
     GAME_MODES = [
         (PVE, 'Player vs AI'),
         (LOCAL_PVP, 'Local Player vs Local Player'),
-        (ONLINE_PVP, 'Online Player vs Online Player')
+        (ONLINE_PVP, 'Online Player vs Online Player'),
+        (CHAOS_PVE, 'Chaos Player vs AI'),
+        (CHAOS_PVP, 'Chaos Player vs Player')
     ]
     
     # Game States
@@ -202,7 +206,7 @@ class Game(models.Model):
 
     def is_against_ai(self):
         """ Check if the game is a PvE game against an AI. """
-        return self.player2 is None
+        return self.player2 is None and self.game_mode in [Game.PVE, Game.CHAOS_PVE]
 
     def __str__(self):
         return f"{self.player1.username} vs {self.player2_name_pvp_local or self.player2 or 'AI'} - {self.game_mode}"

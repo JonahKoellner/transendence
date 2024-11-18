@@ -45,6 +45,10 @@ import { AboutComponent } from './home/about/about.component';
 import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.component';
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 import { ImageSelectorModalComponent } from './profile/image-selector-modal/image-selector-modal.component';
+import { ArenaComponent } from './games/arena/arena.component';
+import { ChaosComponent } from './games/chaos/chaos.component';
+import { GameCanvasChaosComponent } from './games/chaos/game-canvas-chaos/game-canvas-chaos.component';
+import { GameCanvasChaosPvpComponent } from './games/chaos/game-canvas-chaos-pvp/game-canvas-chaos-pvp.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -82,7 +86,11 @@ import { ImageSelectorModalComponent } from './profile/image-selector-modal/imag
     AboutComponent,
     GameRoomsComponent,
     LeaderboardComponent,
-    ImageSelectorModalComponent
+    ImageSelectorModalComponent,
+    ArenaComponent,
+    ChaosComponent,
+    GameCanvasChaosComponent,
+    GameCanvasChaosPvpComponent
   ],
   imports: [
     BrowserModule,

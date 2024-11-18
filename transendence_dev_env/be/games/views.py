@@ -84,7 +84,7 @@ class GameViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
         game_mode = data.get('game_mode')
 
-        if game_mode == Game.LOCAL_PVP and data.get('player2', {}).get('id') == 0:
+        if game_mode == (Game.LOCAL_PVP or Game.CHAOS_PVP) and data.get('player2', {}).get('id') == 0:
             # Local PvP with placeholder name
             player2_name_pvp_local = data.get('player2', {}).get('username')
             serializer.save(player1=self.request.user, player2_name_pvp_local=player2_name_pvp_local)
@@ -95,22 +95,23 @@ class GameViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = self.get_object()
-        validated_data = serializer.validated_data
+        data = serializer.validated_data
         winner, loser = None, None
+        game_mode = data.get('game_mode')
         winner_xp, loser_xp = 0, 0
         
-        if validated_data.get('game_mode') == Game.LOCAL_PVP and validated_data.get('player2', {}).get('id') == 0:
+        if game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and data.get('player2', {}).get('id') == 0:
             # Update player2_name if provided in local PvP game mode
-            instance.player2_name_pvp_local = validated_data.get('player2', {}).get('username')
+            instance.player2_name_pvp_local = data.get('player2', {}).get('username')
 
 
-        if validated_data.get('is_completed', False):
+        if data.get('is_completed', False):
             # Calculate and set duration if not already set
             instance.duration = instance.duration or (timezone.now() - instance.start_time).total_seconds()
 
             # Determine winner and loser
-            score_player1 = validated_data.get('score_player1', instance.score_player1)
-            score_player2 = validated_data.get('score_player2', instance.score_player2)
+            score_player1 = data.get('score_player1', instance.score_player1)
+            score_player2 = data.get('score_player2', instance.score_player2)
 
             if instance.is_against_ai():  # PvE mode
                 if score_player1 > score_player2:
