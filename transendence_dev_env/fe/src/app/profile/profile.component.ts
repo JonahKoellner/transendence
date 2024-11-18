@@ -276,8 +276,14 @@ export class ProfileComponent implements OnInit {
     this.isUpdating = true;
   
     const formData = new FormData();
-    formData.append('display_name', this.profileForm.get('display_name')!.value);
-  
+    if (this.profileForm.get('display_name')!.value) {
+      console.log('display_name', this.profileForm.get('display_name')!.value);
+      formData.append('display_name', this.profileForm.get('display_name')!.value);
+    } else {
+      formData.delete('display_name');
+    }
+    
+
     // Avatar
     if (this.selectedImages.avatar) {
       if (this.selectedImages.avatar.type === 'upload') {
@@ -349,6 +355,7 @@ export class ProfileComponent implements OnInit {
   
     // Append username if required
     formData.append("username", this.userProfile.username);
+
   
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
