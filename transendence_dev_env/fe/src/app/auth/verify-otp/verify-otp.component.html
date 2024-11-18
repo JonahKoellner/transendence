@@ -7,15 +7,23 @@
       <img [src]="qrCodeImage" alt="QR Code" class="img-fluid rounded">
     </div>
 
-    <form (submit)="verifyOTP()" class="form-dark">
+    <form #otpForm="ngForm" (ngSubmit)="verifyOTP(otpForm)" class="form-dark">
+      <!-- OTP Code -->
       <div class="form-group">
         <label for="otp_code">OTP Code:</label>
-        <input id="otp_code" [(ngModel)]="otp_code" name="otp_code" required class="form-control bg-secondary text-light border-0">
+        <input id="otp_code" [(ngModel)]="otp_code" name="otp_code" required pattern="^\d{6}$"
+          class="form-control bg-secondary text-light border-0" #otpInput="ngModel">
+        <div *ngIf="otpInput.invalid && (otpInput.dirty || otpInput.touched)" class="text-danger">
+          <small *ngIf="otpInput.errors?.['required']">OTP Code is required.</small>
+          <small *ngIf="otpInput.errors?.['pattern']">OTP Code must be a 6-digit number.</small>
+        </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-block mt-3">Verify</button>
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-primary btn-block mt-3" [disabled]="otpForm.invalid">Verify</button>
     </form>
 
+    <!-- Error Message -->
     <div *ngIf="error" class="alert alert-danger mt-3 text-center">{{ error }}</div>
   </div>
 </div>

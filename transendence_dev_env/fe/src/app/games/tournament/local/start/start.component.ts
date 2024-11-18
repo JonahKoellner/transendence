@@ -883,6 +883,7 @@ export class StartComponent implements OnInit {
       this.togglePause();
     }
   }
+
   togglePause(): void {
     if (this.currentGameComponentRef) {
       if (this.isPaused) {

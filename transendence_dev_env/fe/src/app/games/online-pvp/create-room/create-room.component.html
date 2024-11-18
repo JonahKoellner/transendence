@@ -9,37 +9,48 @@
         <h3>Game Settings</h3>
       </div>
       <div class="settings-body">
+        <!-- Max Rounds -->
         <div class="setting-item">
           <h4>Max Rounds</h4>
-          <input
-            type="number"
-            [(ngModel)]="settings.maxRounds"
-            min="1"
-            class="form-control"
-            placeholder="Enter max rounds"
-          />
+          <input type="number" [(ngModel)]="settings.maxRounds" name="maxRounds" min="1" max="25" step="1"
+            pattern="^[0-9]+$" class="form-control" placeholder="Enter max rounds" #maxRoundsInput="ngModel" required />
+          <div *ngIf="maxRoundsInput.invalid && (maxRoundsInput.dirty || maxRoundsInput.touched)" class="text-danger">
+            <small *ngIf="maxRoundsInput.errors?.['required']">Max Rounds is required.</small>
+            <small *ngIf="maxRoundsInput.errors?.['min']">Minimum value is 1.</small>
+            <small *ngIf="maxRoundsInput.errors?.['max']">Maximum value is 25.</small>
+            <small *ngIf="maxRoundsInput.errors?.['pattern']">
+              Round Score Limit must be a whole number.
+            </small>
+          </div>
         </div>
+
+        <!-- Round Score Limit -->
         <div class="setting-item">
           <h4>Round Score Limit</h4>
-          <input
-            type="number"
-            [(ngModel)]="settings.roundScoreLimit"
-            min="1"
-            class="form-control"
-            placeholder="Enter score limit"
-          />
+          <input type="number" [(ngModel)]="settings.roundScoreLimit" name="roundScoreLimit" min="1" max="25" step="1"
+            pattern="^[0-9]+$" class="form-control" placeholder="Enter score limit" #roundScoreLimitInput="ngModel"
+            required />
+          <div *ngIf="roundScoreLimitInput.invalid && (roundScoreLimitInput.dirty || roundScoreLimitInput.touched)"
+            class="text-danger">
+            <small *ngIf="roundScoreLimitInput.errors?.['required']">Round Score Limit is required.</small>
+            <small *ngIf="roundScoreLimitInput.errors?.['min']">Minimum value is 1.</small>
+            <small *ngIf="roundScoreLimitInput.errors?.['max']">Maximum value is 25.</small>
+            <small *ngIf="roundScoreLimitInput.errors?.['pattern']">
+              Round Score Limit must be a whole number.
+            </small>
+          </div>
         </div>
       </div>
     </div>
+
     <div class="actions">
-      <button class="start-game-btn" (click)="createRoom()">
+      <button class="start-game-btn" (click)="createRoom()"
+        [disabled]="maxRoundsInput.invalid || roundScoreLimitInput.invalid">
         <svg viewBox="0 0 24 24">
-          <!-- Play Icon -->
           <path fill="#fff" d="M8 5v14l11-7z" />
         </svg>
         Create Room
       </button>
     </div>
   </section>
-
 </div>

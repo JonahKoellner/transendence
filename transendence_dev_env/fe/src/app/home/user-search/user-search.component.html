@@ -1,13 +1,8 @@
 <div class="user-search-container">
   <div class="search-bar">
-    <input
-      type="text"
-      [(ngModel)]="searchQuery"
-      placeholder="Enter username, email, or display name"
-    />
+    <input type="text" [(ngModel)]="searchQuery" placeholder="Enter username, email, or display name" />
     <button (click)="searchUsers()">Search</button>
   </div>
-
   <div class="search-results">
     <div *ngIf="isLoading" class="loading-spinner">
       <div class="spinner-border text-primary" role="status">
@@ -20,11 +15,7 @@
 
     <ul *ngIf="users.length > 0" class="user-list">
       <li *ngFor="let user of users" class="user-card">
-        <img
-          [src]="user.avatar || 'assets/default_avatar.png'"
-          alt="{{ user.username }}"
-          class="avatar"
-        />
+        <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" class="avatar" />
         <div class="user-info">
           <h4>{{ user.display_name || user.username }}</h4>
           <small>Username: {{ user.username }}</small>

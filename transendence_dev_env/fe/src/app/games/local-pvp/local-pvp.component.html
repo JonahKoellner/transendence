@@ -7,49 +7,55 @@
   <section class="settings" *ngIf="!gameInProgress && !currentGame">
     <div class="setting-item">
       <h4>Max Rounds</h4>
-      <input
-        type="number"
-        [(ngModel)]="settings.maxRounds"
-        min="1"
-        class="form-control"
-        placeholder="Enter max rounds"
-      />
+      <input type="number" [(ngModel)]="settings.maxRounds" name="maxRounds" min="1" max="25" step="1"
+        pattern="^[0-9]+$" class="form-control" placeholder="Enter max rounds" #maxRoundsInput="ngModel" required />
+      <div *ngIf="maxRoundsInput.invalid && (maxRoundsInput.dirty || maxRoundsInput.touched)" class="text-danger">
+        <small *ngIf="maxRoundsInput.errors?.['required']">Max Rounds is required.</small>
+        <small *ngIf="maxRoundsInput.errors?.['min']">Minimum value is 1.</small>
+        <small *ngIf="maxRoundsInput.errors?.['max']">Maximum value is 25.</small>
+        <small *ngIf="maxRoundsInput.errors?.['pattern']">
+          Round Score Limit must be a whole number.
+        </small>
+      </div>
     </div>
     <div class="setting-item">
       <h4>Round Score Limit</h4>
-      <input
-        type="number"
-        [(ngModel)]="settings.roundScoreLimit"
-        min="1"
-        class="form-control"
-        placeholder="Enter score limit"
-      />
+      <input type="number" [(ngModel)]="settings.roundScoreLimit" name="roundScoreLimit" min="1" max="25" step="1"
+        pattern="^[0-9]+$" class="form-control" placeholder="Enter score limit" #roundScoreLimitInput="ngModel"
+        required />
+      <div *ngIf="roundScoreLimitInput.invalid && (roundScoreLimitInput.dirty || roundScoreLimitInput.touched)"
+        class="text-danger">
+        <small *ngIf="roundScoreLimitInput.errors?.['required']">Round Score Limit is required.</small>
+        <small *ngIf="roundScoreLimitInput.errors?.['min']">Minimum value is 1.</small>
+        <small *ngIf="roundScoreLimitInput.errors?.['max']">Maximum value is 25.</small>
+        <small *ngIf="roundScoreLimitInput.errors?.['pattern']">
+          Round Score Limit must be a whole number.
+        </small>
+      </div>
     </div>
     <div class="player-info">
       <div class="player-name">
         <h4>Player 1</h4>
-        <input
-          type="text"
-          [(ngModel)]="player1Name"
-          class="form-control"
-          placeholder="Enter Player 1 Name"
-          disabled="true"
-        />
+        <input type="text" [(ngModel)]="player1Name" class="form-control" placeholder="Enter Player 1 Name"
+          disabled="true" />
       </div>
       <div class="player-name">
         <h4>Player 2</h4>
-        <input
-          type="text"
-          [(ngModel)]="player2Name"
-          class="form-control"
-          placeholder="Enter Player 2 Name"
-        />
+        <input type="text" [(ngModel)]="player2Name" name="player2Name" minlength="3" maxlength="25"
+          class="form-control" placeholder="Enter Player 2 Name" #player2NameInput="ngModel" required />
+        <div *ngIf="player2NameInput.invalid && (player2NameInput.dirty || player2NameInput.touched)"
+          class="text-danger">
+          <small *ngIf="player2NameInput.errors?.['required']">Player 2 Name is required.</small>
+          <small *ngIf="player2NameInput.errors?.['minlength']">Player 2 Name must be at least 3 characters
+            long.</small>
+          <small *ngIf="player2NameInput.errors?.['maxlength']">Player 2 Name cannot exceed 25 characters.</small>
+        </div>
       </div>
     </div>
     <div class="actions">
-      <button class="start-game-btn" (click)="startNewGame()">
+      <button class="start-game-btn" (click)="startNewGame()"
+        [disabled]="maxRoundsInput.invalid || roundScoreLimitInput.invalid || player2NameInput.invalid">
         <svg viewBox="0 0 24 24">
-          <!-- Play Icon -->
           <path fill="#fff" d="M8 5v14l11-7z" />
         </svg>
         Start Game
@@ -64,10 +70,7 @@
       <strong>{{ player1Name }}:</strong> {{ currentGame.score_player1 }} -
       <strong>{{ player2Name }}:</strong> {{ currentGame.score_player2 }}
     </p>
-    <app-game-canvas-pvp
-      [gameSettings]="settings"
-      (onScore)="updateScore($event)"
-    ></app-game-canvas-pvp>
+    <app-game-canvas-pvp [gameSettings]="settings" (onScore)="updateScore($event)"></app-game-canvas-pvp>
     <div class="timers">
       <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
       <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
@@ -75,10 +78,7 @@
   </section>
 
   <!-- Game Results -->
-  <section
-    class="game-result"
-    *ngIf="!gameInProgress && currentGame && currentGame.is_completed"
-  >
+  <section class="game-result" *ngIf="!gameInProgress && currentGame && currentGame.is_completed">
     <div class="result-header">
       <h3>Game Over</h3>
     </div>

@@ -1,154 +1,196 @@
 <div class="game-room">
-    <header>
-      <h2>Chaos Mode</h2>
-    </header>
-  
-    <!-- Game Settings -->
-    <section class="settings" *ngIf="!gameInProgress && !currentGame">
-      <div class="setting-item">
-        <h4>Max Rounds</h4>
-        <input
-          type="number"
-          [(ngModel)]="settings.maxRounds"
-          min="1"
-          class="form-control"
-          placeholder="Enter max rounds"
-        />
-      </div>
-      <div class="setting-item">
-        <h4>Round Score Limit</h4>
-        <input
-          type="number"
-          [(ngModel)]="settings.roundScoreLimit"
-          min="1"
-          class="form-control"
-          placeholder="Enter score limit"
-        />
-      </div>
-      <div class="setting-item">
-        <h4>Powerup Spawn rate</h4>
-        <input
-        type="number"
-        [(ngModel)]="settings.powerUpSpawnInterval"
-        min="1"
-        class="form-control"
-        placeholder="Spawn rate in seconds"
-        />
-      </div>
-      
-      <div class="setting-item">
-        <h4>Enemy Type</h4>
-        <select [(ngModel)]="settings.enemyType" class="form-control">
-          <option value="AI">AI</option>
-          <option value="PvP">PvP</option>
-        </select>
-      </div>
-      <div class="setting-item" *ngIf="settings.enemyType === 'AI'">
-        <h4>Difficulty</h4>
-        <select [(ngModel)]="settings.difficulty" class="form-control">
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
-        </select>
-      </div>
-      
-      <div class="setting-item" *ngIf="settings.enemyType === 'PvP'">
-        <h4>Player 2</h4>
-        <input
-            type="text"
-            [(ngModel)]="player2Name"
-            class="form-control"
-            placeholder="Enter Player 2 Name"
-          />
-      </div>
-      <div class="player-info">
-        <div class="player-name">
-          <h4>
-            {{ displayNameHost }} vs
-            <span *ngIf="settings.enemyType === 'AI'">AI</span>
-            <span *ngIf="settings.enemyType === 'PvP'">{{ player2Name || 'Player 2' }}</span>
-          </h4>
-        </div>
-      </div>
+  <header>
+    <h2>Chaos Mode</h2>
+  </header>
 
-
-      <div class="actions">
-        <button class="start-game-btn" (click)="startNewGame()">
-          <svg viewBox="0 0 24 24">
-            <!-- Play Icon -->
-            <path fill="#fff" d="M8 5v14l11-7z" />
-          </svg>
-          Start Game
-        </button>
+  <!-- Game Settings -->
+  <form class="settings" *ngIf="!gameInProgress && !currentGame" #chaosForm="ngForm" (ngSubmit)="startNewGame()">
+    <!-- Max Rounds -->
+    <div class="setting-item">
+      <h4>Max Rounds</h4>
+      <input type="number" [(ngModel)]="settings.maxRounds" name="maxRounds" min="1" max="25" required
+        pattern="^[0-9]+$" class="form-control" placeholder="Enter max rounds" #maxRoundsInput="ngModel" />
+      <div *ngIf="maxRoundsInput.invalid && (maxRoundsInput.dirty || maxRoundsInput.touched)" class="text-danger">
+        <small *ngIf="maxRoundsInput.errors?.['required']">Max Rounds is required.</small>
+        <small *ngIf="maxRoundsInput.errors?.['min']">Minimum value is 1.</small>
+        <small *ngIf="maxRoundsInput.errors?.['max']">Maximum value is 25.</small>
+        <small *ngIf="maxRoundsInput.errors?.['pattern']">
+          Round Score Limit must be a whole number.
+        </small>
       </div>
-    </section>
-  
-    <!-- Game Progress and Controls -->
-    <section class="game-view" *ngIf="gameInProgress && currentGame">
-      <p class="score">
-        {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
-        <strong>{{ displayNameHost }}:</strong> {{ currentGame.score_player1 }} -
-        <strong>AI</strong> {{ currentGame.score_player2 }}
+    </div>
+
+    <!-- Round Score Limit -->
+    <div class="setting-item">
+      <h4>Round Score Limit</h4>
+      <input type="number" [(ngModel)]="settings.roundScoreLimit" name="roundScoreLimit" min="1" max="25" required
+        pattern="^[0-9]+$" class="form-control" placeholder="Enter score limit" #roundScoreLimitInput="ngModel" />
+      <div *ngIf="
+          roundScoreLimitInput.invalid &&
+          (roundScoreLimitInput.dirty || roundScoreLimitInput.touched)
+        " class="text-danger">
+        <small *ngIf="roundScoreLimitInput.errors?.['required']">
+          Round Score Limit is required.
+        </small>
+        <small *ngIf="roundScoreLimitInput.errors?.['min']">Minimum value is 1.</small>
+        <small *ngIf="roundScoreLimitInput.errors?.['max']">Maximum value is 25.</small>
+        <small *ngIf="roundScoreLimitInput.errors?.['pattern']">
+          Round Score Limit must be a whole number.
+        </small>
+      </div>
+    </div>
+
+    <!-- Powerup Spawn Rate -->
+    <div class="setting-item">
+      <h4>Powerup Spawn Rate (seconds)</h4>
+      <input type="number" [(ngModel)]="settings.powerUpSpawnInterval" name="powerUpSpawnInterval" min="1" required
+        class="form-control" placeholder="Spawn rate in seconds" #powerUpSpawnIntervalInput="ngModel" />
+      <div *ngIf="
+          powerUpSpawnIntervalInput.invalid &&
+          (powerUpSpawnIntervalInput.dirty || powerUpSpawnIntervalInput.touched)
+        " class="text-danger">
+        <small *ngIf="powerUpSpawnIntervalInput.errors?.['required']">
+          Powerup Spawn Rate is required.
+        </small>
+        <small *ngIf="powerUpSpawnIntervalInput.errors?.['min']">Minimum value is 1.</small>
+      </div>
+    </div>
+
+    <!-- Enemy Type -->
+    <div class="setting-item">
+      <h4>Enemy Type</h4>
+      <select [(ngModel)]="settings.enemyType" name="enemyType" required class="form-control" #enemyTypeInput="ngModel">
+        <option value="AI">AI</option>
+        <option value="PvP">PvP</option>
+      </select>
+      <div *ngIf="enemyTypeInput.invalid && (enemyTypeInput.dirty || enemyTypeInput.touched)" class="text-danger">
+        <small>Enemy Type is required.</small>
+      </div>
+    </div>
+
+    <!-- Difficulty (Only for AI) -->
+    <div class="setting-item" *ngIf="settings.enemyType === 'AI'">
+      <h4>Difficulty</h4>
+      <select [(ngModel)]="settings.difficulty" name="difficulty" required class="form-control"
+        #difficultyInput="ngModel">
+        <option value="Easy">Easy</option>
+        <option value="Medium">Medium</option>
+        <option value="Hard">Hard</option>
+      </select>
+      <div *ngIf="difficultyInput.invalid && (difficultyInput.dirty || difficultyInput.touched)" class="text-danger">
+        <small>Difficulty is required.</small>
+      </div>
+    </div>
+
+    <!-- Player 2 Name (Only for PvP) -->
+    <div class="setting-item" *ngIf="settings.enemyType === 'PvP'">
+      <h4>Player 2 Name</h4>
+      <input type="text" [(ngModel)]="player2Name" name="player2Name" minlength="3" maxlength="25" required
+        class="form-control" placeholder="Enter Player 2 Name" #player2NameInput="ngModel" />
+      <div *ngIf="
+          player2NameInput.invalid && (player2NameInput.dirty || player2NameInput.touched)
+        " class="text-danger">
+        <small *ngIf="player2NameInput.errors?.['required']">Player 2 Name is required.</small>
+        <small *ngIf="player2NameInput.errors?.['minlength']">
+          Player 2 Name must be at least 3 characters long.
+        </small>
+        <small *ngIf="player2NameInput.errors?.['maxlength']">
+          Player 2 Name cannot exceed 25 characters.
+        </small>
+      </div>
+    </div>
+
+    <!-- Player Info Display -->
+    <div class="player-info">
+      <div class="player-name">
+        <h4>
+          {{ displayNameHost }} vs
+          <span *ngIf="settings.enemyType === 'AI'">AI</span>
+          <span *ngIf="settings.enemyType === 'PvP'">
+            {{ player2Name || 'Player 2' }}
+          </span>
+        </h4>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="start-game-btn" type="submit" [disabled]="chaosForm.invalid">
+        <svg viewBox="0 0 24 24">
+          <!-- Play Icon -->
+          <path fill="#fff" d="M8 5v14l11-7z" />
+        </svg>
+        Start Game
+      </button>
+    </div>
+  </form>
+
+  <!-- Game Progress and Controls -->
+  <section class="game-view" *ngIf="gameInProgress && currentGame">
+    <p class="score">
+      {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
+      <strong>{{ displayNameHost }}:</strong> {{ currentGame.score_player1 }} -
+      <strong>
+        <span *ngIf="settings.enemyType === 'AI'">AI</span>
+        <span *ngIf="settings.enemyType === 'PvP'">
+          {{ player2Name || 'Player 2' }}
+        </span>
+      </strong>
+      : {{ currentGame.score_player2 }}
+    </p>
+    <div #gameContainer class="game-container">
+      <!-- Game Canvas for AI -->
+      <app-game-canvas-chaos [gameSettings]="settings" (onScore)="updateScoreBot($event)"
+        *ngIf="settings.enemyType === 'AI'"></app-game-canvas-chaos>
+
+      <!-- Game Canvas for PvP -->
+      <app-game-canvas-chaos-pvp [gameSettings]="settings" (onScore)="updateScorePvp($event)"
+        *ngIf="settings.enemyType === 'PvP'"></app-game-canvas-chaos-pvp>
+    </div>
+    <div class="fullscreen-controls">
+      <button (click)="toggleFullScreen(gameContainer)">Toggle Fullscreen</button>
+    </div>
+    <div class="timers">
+      <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
+      <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
+    </div>
+  </section>
+
+  <!-- Game Results -->
+  <section class="game-result" *ngIf="!gameInProgress && currentGame && currentGame.is_completed">
+    <div class="result-header">
+      <h3>Game Over</h3>
+    </div>
+    <div class="result-body">
+      <p>
+        <strong>Winner:</strong>
+        {{ currentGame.winner?.username || (settings.enemyType === 'AI' ? 'AI' : player2Name) }}
       </p>
-      <div #gameContainer class="game-container">
-        <app-game-canvas-chaos
-          [gameSettings]="settings"
-          (onScore)="updateScoreBot($event)"
-          *ngIf="settings.enemyType === 'AI'"
-        ></app-game-canvas-chaos>
-        <app-game-canvas-chaos-pvp
-          [gameSettings]="settings"
-          (onScore)="updateScorePvp($event)"
-          *ngIf="settings.enemyType === 'PvP'"
-        ></app-game-canvas-chaos-pvp>
-      </div>
-      <div class="fullscreen-controls">
-        <button (click)="toggleFullScreen(gameContainer)">
-          Toggle Fullscreen
-        </button>
-      </div>
-      <div class="timers">
-        <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
-        <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
-      </div>
-    </section>
-  
-    <!-- Game Results -->
-    <section
-      class="game-result"
-      *ngIf="!gameInProgress && currentGame && currentGame.is_completed"
-    >
-      <div class="result-header">
-        <h3>Game Over</h3>
-      </div>
-      <div class="result-body">
-        <p><strong>Winner:</strong> {{ currentGame.winner?.username || 'AI' }}</p>
-        <p>
-          <strong>Game Duration:</strong>
-          {{ currentGame.duration | number: '1.2-2' }} seconds
-        </p>
-  
-        <h4>Rounds Summary</h4>
-        <ul class="summary-list">
-          <li *ngFor="let round of currentGame.rounds" class="summary-item">
-            <p>
-              Round {{ round.round_number }} - Winner:
-              {{ round.winner || 'In Progress' }} - Duration:
-              {{ calculateRoundDuration(round) }}
-            </p>
-          </li>
-        </ul>
-  
-        <h4>Moves Log</h4>
-        <ul class="moves-log">
-          <li *ngFor="let move of currentGame.moves_log" class="move-item">
-            <span class="move-time">{{ move.time | date: 'shortTime' }}</span> -
-            {{ move.player }}: {{ move.action }}
-          </li>
-        </ul>
-  
-        <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
-      </div>
-    </section>
-  </div>
-  
+      <p>
+        <strong>Game Duration:</strong>
+        {{ currentGame.duration | number: '1.2-2' }} seconds
+      </p>
+
+      <h4>Rounds Summary</h4>
+      <ul class="summary-list">
+        <li *ngFor="let round of currentGame.rounds" class="summary-item">
+          <p>
+            Round {{ round.round_number }} - Winner:
+            {{ round.winner || 'In Progress' }} - Duration:
+            {{ calculateRoundDuration(round) }}
+          </p>
+        </li>
+      </ul>
+
+      <h4>Moves Log</h4>
+      <ul class="moves-log">
+        <li *ngFor="let move of currentGame.moves_log" class="move-item">
+          <span class="move-time">{{ move.time | date: 'shortTime' }}</span> -
+          {{ move.player }}: {{ move.action }}
+        </li>
+      </ul>
+
+      <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
+    </div>
+  </section>
+</div>

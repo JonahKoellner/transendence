@@ -51,8 +51,6 @@ export class AuthService {
       tap((response: any) => {
         if (response.success) {
           localStorage.setItem('otp_verified', 'true');
-          localStorage.removeItem('otp_uri');  // Remove otp_uri after successful verification
-          this.router.navigate(['/home']);  // Redirect to home after successful OTP
         } else {
           console.error('OTP verification failed');
         }

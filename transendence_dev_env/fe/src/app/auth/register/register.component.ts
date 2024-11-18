@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { NgForm } from '@angular/forms';
 import { AuthService } from 'src/app/auth.service';
 
 @Component({
@@ -13,21 +14,24 @@ export class RegisterComponent {
   password: string = '';
   error: string = '';
 
-  
   constructor(private authService: AuthService, private router: Router) {}
 
-  ngOnInit()
-  {
+  ngOnInit() {
     // Check if the user is already logged in
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/home']);
     }
   }
 
-  register() {
+  register(form: NgForm) {
+    if (form.invalid) {
+      this.error = 'Please correct the errors in the form.';
+      return;
+    }
+
     this.authService.register(this.username, this.email, this.password).subscribe(
       () => {
-        this.router.navigate(['/login'], { queryParams: { username: this.username, password: this.password }});  // Redirect to login page after successful registration
+        this.router.navigate(['/login'], { queryParams: { username: this.username, password: this.password } });
       },
       (error) => {
         this.error = 'Registration failed';
