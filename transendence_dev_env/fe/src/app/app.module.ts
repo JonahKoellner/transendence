@@ -49,6 +49,7 @@ import { ArenaComponent } from './games/arena/arena.component';
 import { ChaosComponent } from './games/chaos/chaos.component';
 import { GameCanvasChaosComponent } from './games/chaos/game-canvas-chaos/game-canvas-chaos.component';
 import { GameCanvasChaosPvpComponent } from './games/chaos/game-canvas-chaos-pvp/game-canvas-chaos-pvp.component';
+import { GameCanvasComponentArena } from './games/arena/game-canvas/game-canvas.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -90,7 +91,8 @@ import { GameCanvasChaosPvpComponent } from './games/chaos/game-canvas-chaos-pvp
     ArenaComponent,
     ChaosComponent,
     GameCanvasChaosComponent,
-    GameCanvasChaosPvpComponent
+    GameCanvasChaosPvpComponent,
+    GameCanvasComponentArena
   ],
   imports: [
     BrowserModule,

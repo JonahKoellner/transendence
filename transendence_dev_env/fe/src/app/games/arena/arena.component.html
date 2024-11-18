@@ -1,1 +1,143 @@
-<p>arena works!</p>
+<div class="game-room">
+    <header>
+      <h2>Arena Mode (4 Players)</h2>
+    </header>
+  
+    <!-- Controls Information -->
+    <section class="controls-info">
+      <h4>Controls:</h4>
+      <ul>
+        <li><strong>Player 1 (Left Paddle):</strong> <code>W</code> (Up), <code>S</code> (Down)</li>
+        <li><strong>Player 2 (Right Paddle):</strong> <code>Arrow Up</code> (Up), <code>Arrow Down</code> (Down)</li>
+        <li><strong>Player 3 (Bottom Paddle):</strong> <code>N</code> (Left), <code>M</code> (Right)</li>
+        <li><strong>Player 4 (Top Paddle):</strong> Use the <strong>Mouse</strong> to move left and right</li>
+      </ul>
+      <p>Click on the game area to lock the mouse for smooth Player 4 controls.</p>
+    </section>
+  
+    <!-- Game Settings and Player Names -->
+    <section class="settings" *ngIf="!gameInProgress && !currentGame">
+      <div class="setting-item">
+        <h4>Max Rounds</h4>
+        <input
+          type="number"
+          [(ngModel)]="settings.maxRounds"
+          min="1"
+          class="form-control"
+          placeholder="Enter max rounds"
+        />
+      </div>
+      <div class="setting-item">
+        <h4>Round Score Limit</h4>
+        <input
+          type="number"
+          [(ngModel)]="settings.roundScoreLimit"
+          min="1"
+          class="form-control"
+          placeholder="Enter score limit"
+        />
+      </div>
+      <div class="player-info">
+        <div class="player-name">
+          <h4>Player 1</h4>
+          <input
+            type="text"
+            [(ngModel)]="player1Name"
+            class="form-control"
+            placeholder="Enter Player 1 Name"
+            disabled="true"
+          />
+        </div>
+        <div class="player-name">
+          <h4>Player 2</h4>
+          <input
+            type="text"
+            [(ngModel)]="player2Name"
+            class="form-control"
+            placeholder="Enter Player 2 Name"
+          />
+        </div>
+        <div class="player-name">
+          <h4>Player 3</h4>
+          <input
+            type="text"
+            [(ngModel)]="player3Name"
+            class="form-control"
+            placeholder="Enter Player 3 Name"
+          />
+        </div>
+        <div class="player-name">
+          <h4>Player 4</h4>
+          <input
+            type="text"
+            [(ngModel)]="player4Name"
+            class="form-control"
+            placeholder="Enter Player 4 Name"
+          />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="start-game-btn" (click)="startNewGame()">
+          <svg viewBox="0 0 24 24">
+            <!-- Play Icon -->
+            <path fill="#fff" d="M8 5v14l11-7z" />
+          </svg>
+          Start Game
+        </button>
+      </div>
+    </section>
+  
+    <!-- Game Progress and Controls -->
+    <section class="game-view" *ngIf="gameInProgress && currentGame">
+      <p class="score">
+        {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
+      </p>
+      <app-game-arena
+        [settings]="settings"
+        (onScore)="updateScore($event)"
+      ></app-game-arena>
+      <div class="timers">
+        <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
+        <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
+      </div>
+    </section>
+  
+    <!-- Game Results -->
+    <section
+      class="game-result"
+      *ngIf="!gameInProgress && currentGame && currentGame.is_completed"
+    >
+      <div class="result-header">
+        <h3>Game Over</h3>
+      </div>
+      <div class="result-body">
+        <p><strong>Winner:</strong> {{ currentGame.winner?.username || 'Tie' }}</p>
+        <p>
+          <strong>Game Duration:</strong>
+          {{ currentGame.duration | number: '1.2-2' }} seconds
+        </p>
+  
+        <h4>Rounds Summary</h4>
+        <ul class="summary-list">
+          <li *ngFor="let round of currentGame.rounds" class="summary-item">
+            <p>
+              Round {{ round.round_number }} - Winner:
+              {{ round.winner || 'In Progress' }} - Duration:
+              {{ calculateRoundDuration(round) }}
+            </p>
+          </li>
+        </ul>
+  
+        <h4>Moves Log</h4>
+        <ul class="moves-log">
+          <li *ngFor="let move of currentGame.moves_log" class="move-item">
+            <span class="move-time">{{ move.time | date: 'shortTime' }}</span> -
+            {{ move.player }}: {{ move.action }}
+          </li>
+        </ul>
+  
+        <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
+      </div>
+    </section>
+  </div>
+  

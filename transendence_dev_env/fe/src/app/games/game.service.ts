@@ -20,6 +20,12 @@ export interface Round {
   end_time?: string;
   score_player1: number;
   score_player2: number;
+  scores?: {
+    player1: number;
+    player2: number;
+    player3: number;
+    player4: number;
+  };
   winner: string;
 }
 
@@ -28,6 +34,8 @@ export interface Game {
   game_mode: string;
   player1: Player;
   player2:  Player;
+  player3?: Player;
+  player4?:  Player;
   start_time: string;
   end_time?: string;
   duration?: number;
@@ -38,6 +46,14 @@ export interface Game {
   moves_log: MoveLog[];
   rounds: Round[];
   player2_name_pvp_local?: string;
+  player3_name_pvp_local?: string;
+  player4_name_pvp_local?: string;
+  scores?: {
+    player1: number;
+    player2: number;
+    player3: number;
+    player4: number;
+  };
 }
 
 export interface LeaderboardEntry {
