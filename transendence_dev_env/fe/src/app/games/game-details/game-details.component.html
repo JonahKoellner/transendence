@@ -29,7 +29,7 @@
         }">
           {{ getGameStatus(game) }}
         </span>
-        <span *ngIf="game.is_completed" class="winner">🏆 Winner: {{ game.winner?.username || 'AI' }}</span>
+        <span *ngIf="game.is_completed" class="winner">🏆 Winner: {{ game.winner?.username || game.player2_name_pvp_local || 'AI' }}</span>
       </div>
     </section>
   

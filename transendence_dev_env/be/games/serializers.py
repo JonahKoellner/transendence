@@ -37,10 +37,23 @@ class GameSerializer(serializers.ModelSerializer):
         return None  # No player2 set
 
     def get_winner(self, obj):
-        return {
-            "id": obj.winner.id,
-            "username": obj.winner.username
-        } if obj.winner else None
+        if obj.winner:  # Winner is a real user
+            return {
+                "id": obj.winner.id,
+                "username": obj.winner.username
+            }
+        elif obj.is_against_ai() and obj.score_player1 < obj.score_player2:  # AI wins
+            return {
+                "id": 0,
+                "username": "AI"
+            }
+        elif obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local and obj.score_player1 < obj.score_player2:
+            # Player2 placeholder wins
+            return {
+                "id": 0,
+                "username": obj.player2_name_pvp_local
+            }
+        return None  # No winner set
         
 
 

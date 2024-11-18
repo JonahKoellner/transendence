@@ -97,13 +97,12 @@ class GameViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         data = serializer.validated_data
         winner, loser = None, None
-        game_mode = data.get('game_mode')
+        game_mode = data.get('game_mode', instance.game_mode)
         winner_xp, loser_xp = 0, 0
-        
-        if game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and data.get('player2', {}).get('id') == 0:
-            # Update player2_name if provided in local PvP game mode
-            instance.player2_name_pvp_local = data.get('player2', {}).get('username')
 
+        # Update player2_name if provided in local PvP or Chaos PvP mode
+        if game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and data.get('player2', {}).get('id') == 0:
+            instance.player2_name_pvp_local = data.get('player2', {}).get('username')
 
         if data.get('is_completed', False):
             # Calculate and set duration if not already set
@@ -117,30 +116,30 @@ class GameViewSet(viewsets.ModelViewSet):
                 if score_player1 > score_player2:
                     winner = instance.player1
                 else:
-                    loser = instance.player1  # Player loses to AI
-            else:  # PvP mode, including local PvP with a name placeholder for player2
-                if isinstance(instance.player2, User):  # player2 is an authenticated User
+                    winner = {"id": 0, "username": "AI"}  # AI is the winner
+            else:  # PvP mode (includes Local PvP)
+                if isinstance(instance.player2, User):  # player2 is a real user
                     if score_player1 > score_player2:
                         winner, loser = instance.player1, instance.player2
                     elif score_player2 > score_player1:
                         winner, loser = instance.player2, instance.player1
-                elif instance.game_mode == Game.LOCAL_PVP and isinstance(instance.player2, str):
-                    # Local PvP with a placeholder name for player2
+                elif instance.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and instance.player2_name_pvp_local:
+                    # Local PvP with placeholder player2 name
                     if score_player1 > score_player2:
                         winner = instance.player1
                     else:
-                        loser = instance.player1  # Player1 loses to a named player2
+                        winner = {"id": 0, "username": instance.player2_name_pvp_local}  # Named player2 as winner
 
             # Calculate XP gain for the winner and loser
-            if winner:
+            if isinstance(winner, User):
                 winner_xp = self.calculate_xp_gain(instance, winner, is_winner=True)
 
-            if loser:
+            if isinstance(loser, User):
                 # Loser gets a fraction of XP; ensure they get at least a minimum amount
                 loser_xp = max(10, self.calculate_xp_gain(instance, loser, is_winner=False) // 4)
 
             # Save game with end time, duration, and winner
-            serializer.save(end_time=timezone.now(), duration=instance.duration, winner=winner)
+            serializer.save(end_time=timezone.now(), duration=instance.duration, winner=winner if isinstance(winner, User) else None)
 
             # Apply XP to profiles if winner and loser are actual User instances
             if isinstance(winner, User):
