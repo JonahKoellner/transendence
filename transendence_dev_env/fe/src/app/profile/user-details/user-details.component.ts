@@ -130,6 +130,8 @@ export class UserDetailsComponent implements OnInit {
         if (this.user && this.user.achievements) {
           this.userAchievementIds = new Set(this.user.achievements.map(a => a.id));
         }
+        this.applyGameFilters();
+        this.applyTournamentFilters();
         this.isLoading = false;
 
       },
