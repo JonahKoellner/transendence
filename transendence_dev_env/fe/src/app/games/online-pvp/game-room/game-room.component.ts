@@ -84,16 +84,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
             this.leftScore = msg.leftScore;
             this.rightScore = msg.rightScore;
           } else if (msg.type === 'game_started') {
-            this.gameSettings = {
-              ballskin_color: this.userProfile?.ballskin_color,
-              ballskin_image: this.userProfile?.ballskin_image,
-              gamebackground_color: this.userProfile?.gamebackground_color,
-              gamebackground_wallpaper: this.userProfile?.gamebackground_wallpaper,
-              paddleskin_color_left: data.paddleskin_color_left,
-              paddleskin_image_left: "http://localhost:8000" + data.paddleskin_image_left,
-              paddleskin_color_right: data.paddleskin_color_right,
-              paddleskin_image_right: "http://localhost:8000" + data.paddleskin_image_right,
-            };
             this.gameInProgress = true;
           } else if (msg.type === 'alert') {
             // Check if the disconnecting user was the host or guest

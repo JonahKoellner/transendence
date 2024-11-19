@@ -69,9 +69,11 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
    */
   private loadImages(): Promise<void> {
     const promises: Promise<void>[] = [];
+    console.log(this.gameSettings);
 
     // Load left paddle image if provided
     if (this.gameSettings.paddleskin_image_left) {
+      console.log("Loading Left Paddle Skin " + this.gameSettings.paddleskin_image_left);
       promises.push(new Promise((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.paddleskin_image_left!;
@@ -90,11 +92,18 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
 
     // Load right paddle image if provided
     if (this.gameSettings.paddleskin_image_right) {
-      this.paddleImageRight = new Image();
-      this.paddleImageRight.src = this.gameSettings.paddleskin_image_right;
+      console.log("Loading Right Paddle Skin " + this.gameSettings.paddleskin_image_right);
       promises.push(new Promise<void>((resolve, reject) => {
-        this.paddleImageRight!.onload = () => resolve();
-        this.paddleImageRight!.onerror = () => reject(new Error('Failed to load right paddle image'));
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image_right!;
+        img.onload = () => {
+          this.paddleImageRight = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Right PaddleSkin Image. Falling back to colour.');
+          resolve();
+        }
       }));
     } else {
       this.paddleImageRight = null;
@@ -102,11 +111,18 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
 
     // Load ball image if provided
     if (this.gameSettings.ballskin_image) {
-      this.ballImage = new Image();
-      this.ballImage.src = this.gameSettings.ballskin_image;
+      console.log("Loading Ball Skin " + this.gameSettings.ballskin_image);
       promises.push(new Promise<void>((resolve, reject) => {
-        this.ballImage!.onload = () => resolve();
-        this.ballImage!.onerror = () => reject(new Error('Failed to load ball image'));
+        const img = new Image();
+        img.src = this.gameSettings.ballskin_image!;
+        img.onload = () => {
+          this.ballImage = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Ball Skin Image. Falling back to colour.');
+          resolve();
+        }
       }));
     } else {
       this.ballImage = null;
@@ -114,11 +130,18 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
 
     // Load background wallpaper if provided
     if (this.gameSettings.gamebackground_wallpaper) {
-      this.backgroundImage = new Image();
-      this.backgroundImage.src = this.gameSettings.gamebackground_wallpaper;
+      console.log("Loading Background Skin " + this.gameSettings.gamebackground_wallpaper);
       promises.push(new Promise<void>((resolve, reject) => {
-        this.backgroundImage!.onload = () => resolve();
-        this.backgroundImage!.onerror = () => reject(new Error('Failed to load background image'));
+        const img = new Image();
+        img.src = this.gameSettings.gamebackground_wallpaper!;
+        img.onload = () => {
+          this.backgroundImage = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Background Image. Falling back to colour.');
+          resolve();
+        }
       }));
     } else {
       this.backgroundImage = null;
@@ -154,7 +177,7 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
    * Draws the game background using an image or color.
    */
   private drawBackground() {
-    if (this.backgroundImage && this.imagesLoaded) {
+    if (this.backgroundImage) {
       // Draw the background image stretched to canvas size
       this.context.drawImage(this.backgroundImage, 0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
     } else if (this.gameSettings.gamebackground_color) {
@@ -201,13 +224,14 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
     const paddleWidth = 10;
     const paddleHeight = 60;
 
+    // console.log("Draw Paddle: " + (this.paddleImageLeft != null) + " " + this.imagesLoaded);
     if (side === 'left') {
-      if (this.paddleImageLeft && this.imagesLoaded) {
+      if (this.paddleImageLeft) {
         this.context.drawImage(this.paddleImageLeft, x, y, paddleWidth, paddleHeight);
         return;
       }
     } else if (side === 'right') {
-      if (this.paddleImageRight && this.imagesLoaded) {
+      if (this.paddleImageRight) {
         this.context.drawImage(this.paddleImageRight, x, y, paddleWidth, paddleHeight);
         return;
       }
