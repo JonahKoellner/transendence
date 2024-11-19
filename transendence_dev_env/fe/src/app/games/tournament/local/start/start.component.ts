@@ -467,6 +467,13 @@ export class StartComponent implements OnInit {
           if (!this.isComponentActive) return;
         }
 
+        // Incase of a player leaving we recheck to make the player 
+        if (match.player1_type === 'Bot' && match.player2_type === 'Player') {
+          [match.player1, match.player2] = [match.player2, match.player1];
+          [match.player1_type, match.player2_type] = [match.player2_type, match.player1_type];
+          [match.player1_score, match.player2_score] = [match.player2_score, match.player1_score];
+        }
+
         match.start_time = new Date();
 
         // Load the appropriate game canvas
@@ -474,6 +481,10 @@ export class StartComponent implements OnInit {
           await this.loadPveGameCanvas(match, stage);
         } else if (match.player1_type === 'Player' && match.player2_type === 'Player') {
           await this.loadPvpGameCanvas(match, stage);
+        }
+        // Autosimulate of both players are bots after real ones have left
+        if (match.player1_type === 'Bot' && match.player2_type === 'Bot') {
+          this.autoSimulateMatch(match);
         }
       }
 

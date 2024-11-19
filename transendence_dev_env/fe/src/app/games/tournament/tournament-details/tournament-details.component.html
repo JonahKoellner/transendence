@@ -1,66 +1,76 @@
 <div class="tournament-details" *ngIf="tournament">
-  <div class="tournament-header">
-      <h2>{{ tournament.name }}</h2>
-      <p class="status" [class.completed]="tournament.status === 'completed'">
-          Status: {{ tournament.status | titlecase }}
-      </p>
+    <div class="tournament-header">
+        <h2>{{ tournament.name }}</h2>
+        <p class="status" [class.completed]="tournament.status === 'completed'">
+            Status: {{ tournament.status | titlecase }}
+        </p>
+    </div>
+    
+    <div class="leave-section" *ngIf="playersLeaveRoundKeys.length > 0">
+      <h3>Players Who Left</h3>
+      <ul>
+          <li *ngFor="let player of playersLeaveRoundKeys">
+              {{ player }} left in Round {{ playersLeaveRound[player] }}
+          </li>
+      </ul>
   </div>
-
-  <div class="tournament-info">
-      <div class="info-section">
-          <h3>Details</h3>
-          <p><strong>Type:</strong> {{ tournament.type }}</p>
-          <p><strong>Host:</strong> {{ tournament.host }}</p>
-          <p><strong>Start Time:</strong> {{ tournament.start_time | date:'medium' }}</p>
-          <p><strong>End Time:</strong> {{ tournament.end_time | date:'medium' }}</p>
-          <p><strong>Duration:</strong> {{ tournament.duration | number }} ms</p>
-      </div>
-
-      <div class="winner-section" *ngIf="tournament.final_winner">
-          <h3>Winner</h3>
-          <p><strong>Name:</strong> {{ tournament.final_winner }}</p>
-          <p><strong>Type:</strong> {{ tournament.final_winner_type }}</p>
-          <p><strong>Tiebreaker:</strong> {{ tournament.tiebreaker_method }}</p>
-          <p *ngIf="tournament.winner_determination_method_message" class="winner-determination">
-              {{ tournament.winner_determination_method_message }}
-          </p>
-      </div>
-  </div>
-
-  <div class="rounds-section">
-      <h3>Rounds</h3>
-      <div *ngFor="let round of tournament.rounds" class="round-card">
-          <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
-          <p><strong>Start Time:</strong> {{ round.start_time | date:'medium' }}</p>
-          <p><strong>End Time:</strong> {{ round.end_time | date:'medium' }}</p>
-          <p><strong>Duration:</strong> {{ round.duration | number }} ms</p>
-
-          <div *ngFor="let match of round.matches" class="match-card">
-              <div class="players">
-                  <div class="player">
+  
+  
+    <div class="tournament-info">
+        <div class="info-section">
+            <h3>Details</h3>
+            <p><strong>Type:</strong> {{ tournament.type }}</p>
+            <p><strong>Host:</strong> {{ tournament.host }}</p>
+            <p><strong>Start Time:</strong> {{ tournament.start_time | date:'medium' }}</p>
+            <p><strong>End Time:</strong> {{ tournament.end_time | date:'medium' }}</p>
+            <p><strong>Duration:</strong> {{ tournament.duration | number }} ms</p>
+        </div>
+  
+        <div class="winner-section" *ngIf="tournament.final_winner">
+            <h3>Winner</h3>
+            <p><strong>Name:</strong> {{ tournament.final_winner }}</p>
+            <p><strong>Type:</strong> {{ tournament.final_winner_type }}</p>
+            <p><strong>Tiebreaker:</strong> {{ tournament.tiebreaker_method }}</p>
+            <p *ngIf="tournament.winner_determination_method_message" class="winner-determination">
+                {{ tournament.winner_determination_method_message }}
+            </p>
+        </div>
+    </div>
+  
+    <div class="rounds-section">
+        <h3>Rounds</h3>
+        <div *ngFor="let round of tournament.rounds" class="round-card">
+            <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
+            <p><strong>Start Time:</strong> {{ round.start_time | date:'medium' }}</p>
+            <p><strong>End Time:</strong> {{ round.end_time | date:'medium' }}</p>
+            <p><strong>Duration:</strong> {{ round.duration | number }} ms</p>
+  
+            <div *ngFor="let match of round.matches" class="match-card">
+                <div class="players">
+                  <div class="player" [class.player-left]="hasPlayerLeft(match.player1, round.round_number)">
                       <span class="name">{{ match.player1 }}</span>
                       <span class="type">({{ match.player1_type }})</span>
                       <span class="score">Score: {{ match.player1_score }}</span>
                   </div>
-                  <div class="vs">vs</div>
-                  <div class="player">
+                    <div class="vs">vs</div>
+                    <div class="player" [class.player-left]="hasPlayerLeft(match.player2, round.round_number)">
                       <span class="name">{{ match.player2 }}</span>
                       <span class="type">({{ match.player2_type }})</span>
                       <span class="score">Score: {{ match.player2_score }}</span>
                   </div>
-              </div>
-              <div class="match-result">
-                  <p>
-                      <strong>Winner:</strong> {{ match.winner }}
-                      <span *ngIf="match.tie_resolved" class="tie-note">(Tie resolved)</span>
-                  </p>
-                  <p><strong>Duration:</strong> {{ match.duration | number }} ms</p>
-              </div>
-          </div>
-      </div>
+                </div>
+                <div class="match-result">
+                    <p>
+                        <strong>Winner:</strong> {{ match.winner }}
+                        <span *ngIf="match.tie_resolved" class="tie-note">(Tie resolved)</span>
+                    </p>
+                    <p><strong>Duration:</strong> {{ match.duration | number }} ms</p>
+                </div>
+            </div>
+        </div>
+    </div>
   </div>
-</div>
-
-statistics
-
-<div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  
+  statistics
+  
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>

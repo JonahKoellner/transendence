@@ -46,7 +46,7 @@ export class ChatService {
         }),
         retryWhen(errors => errors.pipe(
             delay(5000),
-            tap(() => console.log(`Retrying to join room: ${roomName}`))
+            tap(() => {})
         ))
     ).subscribe({
         error: (err) => console.error('Error joining room:', err)

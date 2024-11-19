@@ -133,9 +133,14 @@
                         flex-direction: column;
                         text-align: center;
 
-                        .name {
+                        .player-present {
                             font-weight: bold;
                             color: #61BA50;
+                        }
+
+                        .player-left {
+                            color: orange;
+                            font-style: bold;
                         }
 
                         .type {
@@ -154,6 +159,10 @@
                         font-weight: bold;
                         color: #fff;
                     }
+                }
+                .player-left .name {
+                    color: red;
+                    font-weight: bold;
                 }
 
                 .match-result {
