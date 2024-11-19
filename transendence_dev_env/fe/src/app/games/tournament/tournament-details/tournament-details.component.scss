@@ -3,190 +3,231 @@
     flex-direction: column;
     align-items: center;
     gap: 2rem;
-    max-width: 800px;
+    max-width: 900px;
     margin: auto;
     padding: 2rem;
     background-color: #0E0F10;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-
+  
     .tournament-header {
-        text-align: center;
-        
-        h2 {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #61BA50;
-            margin-bottom: 0.5rem;
+      text-align: center;
+  
+      h2 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #61BA50;
+        margin-bottom: 0.5rem;
+      }
+  
+      .status {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #777;
+  
+        &.completed {
+          color: #61BA50;
         }
-
-        .status {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #777;
-
-            &.completed {
-                color: #61BA50;
-            }
-            &.in-progress {
-                color: #ffc107;
-            }
-            &.upcoming {
-                color: #ff5722;
-            }
+        &.ongoing {
+          color: #ffc107;
         }
+        &.pending {
+          color: #ff5722;
+        }
+      }
     }
-
+  
     .tournament-info {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 2rem;
-        width: 100%;
-
-        .info-section, .winner-section {
-            background: #232627;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #61BA50;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            flex: 1;
-            min-width: 260px;
-
-            h3 {
-                color: #61BA50;
-                font-weight: bold;
-                font-size: 1.3rem;
-                margin-bottom: 1rem;
-            }
-
-            p {
-                font-size: 1rem;
-                color: #adb5bd;
-                margin: 0.5rem 0;
-
-                strong {
-                    color: #e0e0e0;
-                }
-            }
-
-            .winner-determination {
-                font-style: italic;
-                color: #777;
-                font-size: 0.9rem;
-            }
-        }
-    }
-
-    .rounds-section {
-        width: 100%;
-
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 2rem;
+      width: 100%;
+  
+      .info-section,
+      .winner-section {
+        background: #1C1E20;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #61BA50;
+        flex: 1;
+        min-width: 260px;
+  
         h3 {
-            text-align: center;
-            color: #61BA50;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+          color: #61BA50;
+          font-weight: bold;
+          font-size: 1.4rem;
+          margin-bottom: 1rem;
         }
-
-        .round-card {
-            background: #0E0F10;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            border: 1px solid #333;
-
-            h4 {
-                font-size: 1.2rem;
-                color: #61BA50;
-                font-weight: bold;
-                margin-bottom: 0.5rem;
-            }
-
-            p {
-                font-size: 0.9rem;
-                color: #adb5bd;
-                margin: 0.2rem 0;
-
-                strong {
-                    color: #e0e0e0;
-                }
-            }
-
-            .match-card {
-                background: #232627;
-                padding: 1rem;
-                border-radius: 5px;
-                border: 1px solid #61BA50;
-                margin: 0.75rem 0;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-
-                .players {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    color: #e0e0e0;
-
-                    .player {
-                        display: flex;
-                        flex-direction: column;
-                        text-align: center;
-
-                        .player-present {
-                            font-weight: bold;
-                            color: #61BA50;
-                        }
-
-                        .player-left {
-                            color: orange;
-                            font-style: bold;
-                        }
-
-                        .type {
-                            color: #adb5bd;
-                            font-size: 0.85rem;
-                        }
-
-                        .score {
-                            font-size: 0.9rem;
-                            color: #61BA50;
-                        }
-                    }
-
-                    .vs {
-                        font-size: 1.1rem;
-                        font-weight: bold;
-                        color: #fff;
-                    }
-                }
-                .player-left .name {
-                    color: red;
-                    font-weight: bold;
-                }
-                  
-                .left-note {
-                    color: orange;
-                    font-style: italic;
-                    margin-left: 5px;
-                }
-
-                .match-result {
-                    font-size: 0.9rem;
-                    color: #adb5bd;
-                    margin-top: 0.5rem;
-
-                    .tie-note {
-                        font-style: italic;
-                        color: #ff5722;
-                    }
-                }
-            }
+  
+        p {
+          font-size: 1rem;
+          color: #adb5bd;
+          margin: 0.5rem 0;
+  
+          strong {
+            color: #e0e0e0;
+          }
         }
+  
+        .winner-determination {
+          font-style: italic;
+          color: #777;
+          font-size: 0.9rem;
+        }
+      }
     }
-}
-
-.error {
+  
+    .leave-section {
+      width: 100%;
+      background: #1C1E20;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ff5722;
+      margin-bottom: 1.5rem;
+  
+      h3 {
+        color: #ff5722;
+        font-weight: bold;
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+      }
+  
+      ul {
+        list-style-type: none;
+        padding: 0;
+  
+        li {
+          font-size: 1rem;
+          color: #e0e0e0;
+          margin: 0.5rem 0;
+  
+          .player-name {
+            font-weight: bold;
+            color: #ff5722;
+          }
+  
+          .left-round {
+            color: #adb5bd;
+            margin-left: 0.5rem;
+          }
+        }
+      }
+    }
+  
+    .rounds-section {
+      width: 100%;
+  
+      h3 {
+        text-align: center;
+        color: #61BA50;
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+      }
+  
+      .round-card {
+        background: #0E0F10;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #333;
+  
+        h4 {
+          font-size: 1.3rem;
+          color: #61BA50;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
+        }
+  
+        p {
+          font-size: 0.9rem;
+          color: #adb5bd;
+          margin: 0.2rem 0;
+  
+          strong {
+            color: #e0e0e0;
+          }
+        }
+  
+        .match-card {
+          background: #1C1E20;
+          padding: 1rem;
+          border-radius: 5px;
+          border: 1px solid #61BA50;
+          margin: 0.75rem 0;
+  
+          .players {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #e0e0e0;
+  
+            .player {
+              display: flex;
+              flex-direction: column;
+              text-align: center;
+  
+              .name {
+                font-weight: bold;
+                color: #61BA50;
+                font-size: 1.1rem;
+              }
+  
+              .type {
+                color: #adb5bd;
+                font-size: 0.9rem;
+              }
+  
+              .score {
+                font-size: 0.9rem;
+                color: #61BA50;
+              }
+  
+              &.player-left .name {
+                color: #ff5722;
+              }
+  
+              &.player-left .left-note {
+                color: #ff9800;
+                font-style: italic;
+                font-size: 0.85rem;
+                margin-top: 0.2rem;
+              }
+            }
+  
+            .vs {
+              font-size: 1.2rem;
+              font-weight: bold;
+              color: #fff;
+            }
+          }
+  
+          .match-result {
+            font-size: 0.9rem;
+            color: #adb5bd;
+            margin-top: 0.5rem;
+  
+            p {
+              margin: 0.2rem 0;
+  
+              strong {
+                color: #e0e0e0;
+              }
+  
+              .tie-note {
+                font-style: italic;
+                color: #ff5722;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .error {
     color: #FF5722;
     font-size: 1.1rem;
-}
+  }
+  
