@@ -12,8 +12,8 @@ export class TournamentDetailsComponent {
   tournament: Tournament | null = null;
   errorMessage: string = '';
   playerLeftMap: string[] = [];
-  playersLeaveRound: { [playerName: string]: number } = {};
-  playersLeaveRoundKeys: string[] = [];
+  playersLeaveInfo: { [playerName: string]: { round: number; matchIndex: number } } = {};
+  playersLeaveInfoKeys: string[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -60,41 +60,66 @@ export class TournamentDetailsComponent {
       error: (error) => this.errorMessage = 'Failed to load tournament details'
     });
   }
-
   processPlayerLeaveInfo(): void {
     if (!this.tournament) return;
 
     const playerTypes: { [playerName: string]: 'Player' | 'Bot' } = {};
 
+    // Initialize playerTypes with initial player types
+    const allParticipants = this.tournament.all_participants || [];
+    const playersOnly = this.tournament.players_only || [];
+
+    for (const participant of allParticipants) {
+      if (playersOnly.includes(participant)) {
+        playerTypes[participant] = 'Player';
+      } else {
+        playerTypes[participant] = 'Bot';
+      }
+    }
+
     // Process rounds in order
     for (const round of this.tournament.rounds) {
-      for (const match of round.matches) {
+      for (let matchIndex = 0; matchIndex < round.matches.length; matchIndex++) {
+        const match = round.matches[matchIndex];
+
         const players = [
           { name: match.player1, type: match.player1_type },
-          { name: match.player2, type: match.player2_type },
+          { name: match.player2, type: match.player2_type }
         ];
 
         for (const player of players) {
           const prevType = playerTypes[player.name];
+
           if (prevType && prevType === 'Player' && player.type === 'Bot') {
             // Player has changed from 'Player' to 'Bot', so they left
-            if (!this.playersLeaveRound[player.name]) {
-              this.playersLeaveRound[player.name] = round.round_number;
+            if (!this.playersLeaveInfo[player.name]) {
+              this.playersLeaveInfo[player.name] = {
+                round: round.round_number,
+                matchIndex: matchIndex
+              };
             }
           }
-          // Update the player's type
+          // Update the player's type for the next iteration
           playerTypes[player.name] = player.type;
         }
       }
     }
 
     // After processing, set the keys
-    this.playersLeaveRoundKeys = Object.keys(this.playersLeaveRound);
+    this.playersLeaveInfoKeys = Object.keys(this.playersLeaveInfo);
   }
 
   hasPlayerLeft(playerName: string, roundNumber: number): boolean {
-    const leftRound = this.playersLeaveRound[playerName];
-    return leftRound !== undefined && roundNumber >= leftRound;
+    const leaveInfo = this.playersLeaveInfo[playerName];
+    return leaveInfo !== undefined && roundNumber > leaveInfo.round;
   }
 
+  hasPlayerJustLeft(playerName: string, roundNumber: number, matchIndex: number): boolean {
+    const leaveInfo = this.playersLeaveInfo[playerName];
+    return (
+      leaveInfo !== undefined &&
+      leaveInfo.round === roundNumber &&
+      leaveInfo.matchIndex === matchIndex
+    );
+  }
 }
