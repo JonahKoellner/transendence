@@ -47,7 +47,8 @@ COPY . .
 
 ENV CHOKIDAR_USEPOLLING=true
 
-RUN npm run build --configuration=development
+# RUN npm run build --configuration=production
+RUN npm run build -- --configuration production
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine

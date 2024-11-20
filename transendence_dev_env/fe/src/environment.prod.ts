@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
-    apiUrl: 'http://<url>:8000',
-    wsUrl: 'ws://<url>:8000',
+    apiUrl: 'http://transendence.42.hn',
+    wsUrl: 'ws://transendence.42.hn/ws',
 };
