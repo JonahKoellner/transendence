@@ -55,6 +55,18 @@ RUN ng build --configuration production
 # Stage 2: Serve with nginx
 FROM nginx:alpine
 
+# Set environment variables for the domain name
+ARG DOMAIN=transendence.42.hn
+
+# Set up directories for the SSL certificate
+RUN mkdir -p /etc/nginx/ssl
+
+# Generate self-signed SSL certificate
+RUN apk add --no-cache openssl \
+    && openssl genpkey -algorithm RSA -out /etc/nginx/ssl/nginx.key \
+    && openssl req -new -x509 -key /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -days 365 -subj "/C=DE/ST=State/L=City/O=Company/OU=IT/CN=$DOMAIN"
+
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/fe /usr/share/nginx/html
 
