@@ -144,14 +144,23 @@ export class GameRoomComponent implements OnInit, OnDestroy {
                 this.isHostReady = data.is_host_ready;
                 this.isGuestReady = data.is_guest_ready;
                 this.allReady = data.all_ready;
-                this.gameSettings.paddleskin_color_left = data.paddleskin_color_left;
-                this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_left;
-                this.gameSettings.paddleskin_color_right = data.paddleskin_color_right;
-                this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_right;
+                if (this.isHost) {
+                  this.gameSettings.paddleskin_color_left = data.paddleskin_color_left;
+                  this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_left;
+                  this.gameSettings.paddleskin_color_right = data.paddleskin_color_right;
+                  this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_right;
+                }
+                else {
+                  this.gameSettings.paddleskin_color_left = data.paddleskin_color_right;
+                  this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_right;
+                  this.gameSettings.paddleskin_color_right = data.paddleskin_color_left;
+                  this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_left;
+                }
+
                 this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
                 this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
                 this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;
-                
+                this.gameSettings.gamebackground_wallpaper = this.userProfile?.gamebackground_wallpaper;
 
                 this.userProfileService.getProfile().subscribe(
                   (profile) => {
@@ -193,12 +202,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
 
   startGame() {
-    this.gameSettings = {
-      ballskin_color: this.userProfile?.ballskin_color,
-      ballskin_image: this.userProfile?.ballskin_image,
-      gamebackground_color: this.userProfile?.gamebackground_color,
-      gamebackground_wallpaper: this.userProfile?.gamebackground_wallpaper,
-    };
     if (this.userProfile?.username === this.host) {
       this.lobbyService.sendMessage({
         action: 'start_game',
