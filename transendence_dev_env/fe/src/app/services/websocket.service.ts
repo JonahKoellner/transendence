@@ -3,6 +3,7 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { delay, filter, retryWhen, tap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
+import { environment } from 'src/environment';
 
 interface Notification {
   id: number;
@@ -66,7 +67,8 @@ export class WebsocketService implements OnDestroy {
   // Create WebSocket instance
   private createWebSocket(token: string): WebSocketSubject<any> {
     return webSocket({
-      url: `ws://localhost:8000/ws/notifications/?token=${token}`,
+      // url: `ws://localhost:8000/ws/notifications/?token=${token}`,
+      url: environment.wsUrl + `/notifications/?token=${token}`,
       deserializer: msg => JSON.parse(msg.data),
       serializer: msg => JSON.stringify(msg)
     });

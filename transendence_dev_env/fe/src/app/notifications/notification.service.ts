@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AuthService } from '../auth.service';
+import { environment } from 'src/environment';
 
 export interface SendGameInvitePayload {
   receiver_id: number;
@@ -44,7 +45,8 @@ export interface Notification {
   providedIn: 'root'
 })
 export class NotificationService {
-  private apiUrl = 'http://localhost:8000/accounts/notifications/';
+  // private apiUrl = 'http://localhost:8000/accounts/notifications/';
+  private apiUrl = environment.apiUrl + '/accounts/notifications/';
   private notifications$ = new BehaviorSubject<Notification[]>([]);
 
   constructor(

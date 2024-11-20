@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environment';
 
 export interface Profile {
   display_name: string;
@@ -42,8 +43,10 @@ export interface UserProfile {
   providedIn: 'root',
 })
 export class ProfileService {
-  private apiUrl = 'http://localhost:8000/accounts/users/';
-  private base = 'http://localhost:8000/accounts/';
+  // private apiUrl = 'http://localhost:8000/accounts/users/';
+  private apiUrl = environment.apiUrl + '/accounts/users/';
+  // private base = 'http://localhost:8000/accounts/';
+  private base = environment.apiUrl + '/accounts/';
   constructor(private http: HttpClient) {}
 
   getProfile(): Observable<UserProfile> {

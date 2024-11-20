@@ -3,6 +3,7 @@ import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject, map, of, tap, filter, retryWhen, delay } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environment';
 
 export interface ChatMessage {
   sender: {
@@ -27,7 +28,8 @@ export interface ChatMessage {
   providedIn: 'root'
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:8000/accounts/chat-messages/';
+  // private apiUrl = 'http://localhost:8000/accounts/chat-messages/';
+  private apiUrl = environment.apiUrl + '/accounts/chat-messages/';
   private messages$ = new BehaviorSubject<ChatMessage[]>([]);
 
   constructor(private http: HttpClient, private websocketService: WebsocketService, private router: Router) { }

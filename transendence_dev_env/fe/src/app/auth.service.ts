@@ -5,12 +5,14 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
+import { environment } from 'src/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8000';  // Your Django backend URL
+  // private apiUrl = 'http://localhost:8000';  // Your Django backend URL
+  private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
   public refreshInProgress = false;
   

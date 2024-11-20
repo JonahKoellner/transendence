@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 import { Tournament } from './tournament/local/start/start.component';
+import { environment } from 'src/environment';
 
 export interface Player {
   id: number | null;
@@ -114,9 +115,12 @@ export interface GlobalStats {
   providedIn: 'root'
 })
 export class GameService {
-  private apiUrl = 'http://localhost:8000/games/games/';
-  private tournamentApiUrl = 'http://localhost:8000/games/tournaments/';
-  private statsApiUrl = 'http://localhost:8000/games/stats/';
+  // private apiUrl = 'http://localhost:8000/games/games/';
+  private apiUrl = environment.apiUrl + '/games/games/';
+  // private tournamentApiUrl = 'http://localhost:8000/games/tournaments/';
+  private tournamentApiUrl = environment.apiUrl + '/games/tournaments/';
+  // private statsApiUrl = 'http://localhost:8000/games/stats/';
+  private statsApiUrl = environment.apiUrl + '/games/stats/';
   constructor(private http: HttpClient) {}
 
   // Headers with authorization token
