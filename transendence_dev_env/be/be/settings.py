@@ -81,7 +81,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
-    "http://" + os.getenv("DOMAIN") + ":4200",
+    "http://" + os.getenv("DOMAIN"),
 ]
 
 REST_FRAMEWORK = {
