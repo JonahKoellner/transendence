@@ -86,6 +86,11 @@ export class NotificationService {
     return this.http.post(`${this.apiUrl}mark-all-as-read/`, {}, { withCredentials: true });
   }
 
+  // Clear all notifications
+  clearAll(): Observable<any> {
+    return this.http.delete(`${this.apiUrl}clear-all/`, { withCredentials: true });
+  }
+
   // Listen for new notifications from WebSocket
   private receiveNotifications(): void {
     if (!this.authService.isAuthenticated()) return;

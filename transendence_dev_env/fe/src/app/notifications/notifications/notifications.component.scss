@@ -141,6 +141,11 @@
   padding: 7px 14px;
   border-radius: 4px;
   cursor: pointer;
+  margin-right: 10px;  // Add spacing between buttons
+}
+
+.notifications-footer button:last-child {
+  margin-right: 0;  // Remove margin from last button
 }
 
 .notifications-footer button:hover {

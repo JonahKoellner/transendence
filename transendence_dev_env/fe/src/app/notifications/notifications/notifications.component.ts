@@ -82,6 +82,18 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
+  localClearAll(): void {
+    this.notifications = [];
+    this.filteredNotifications = [];
+    this.updateUnreadCount();
+  }
+
+  clearAll(): void {
+    this.notificationService.clearAll().subscribe(() => {
+      this.localClearAll();
+    });
+  }
+
   updateUnreadCount(): void {
     this.unreadCount = this.notifications.filter((notif) => !notif.is_read).length;
   }
