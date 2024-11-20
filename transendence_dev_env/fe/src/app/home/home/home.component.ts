@@ -38,7 +38,7 @@ export class HomeComponent {
     }
   }
   navigateToLeaderboards() {
-    this.router.navigate(['/leaderboards']);
+    this.router.navigate(['/games/leaderboard']);
   }
   navigateToGameSelection() {
     this.router.navigate(['/games']);

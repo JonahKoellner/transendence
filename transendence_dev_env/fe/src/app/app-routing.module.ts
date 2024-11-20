@@ -24,6 +24,7 @@ import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.com
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 import { ArenaComponent } from './games/arena/arena.component';
 import { ChaosComponent } from './games/chaos/chaos.component';
+import { GamesListComponent } from './games/games-list/games-list.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -48,6 +49,7 @@ const routes: Routes = [
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
+  { path: 'games/list', component: GamesListComponent, canActivate: [AuthGuard] },
   { path: 'games/leaderboard', component: LeaderboardComponent, canActivate: [AuthGuard] },
   { path: 'games/chaos', component: ChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/arena', component: ArenaComponent, canActivate: [AuthGuard] },

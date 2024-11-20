@@ -1,0 +1,60 @@
+<div class="game-list">
+    <h2>All Games</h2>
+    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  
+    <!-- Filter and Sort Controls -->
+    <div class="controls">
+      <input
+        type="text"
+        [(ngModel)]="searchPlayer"
+        (input)="applyFilters()"
+        placeholder="Search by player"
+        class="filter-input"
+      />
+  
+      <label>
+        Start Date:
+        <input type="date" [(ngModel)]="startDate" (change)="applyFilters()" />
+      </label>
+  
+      <label>
+        End Date:
+        <input type="date" [(ngModel)]="endDate" (change)="applyFilters()" />
+      </label>
+  
+      <select [(ngModel)]="sortOrder" (change)="applyFilters()" class="sort-select">
+        <option value="desc">Newest First</option>
+        <option value="asc">Oldest First</option>
+      </select>
+    </div>
+  
+    <!-- Game Cards -->
+    <div class="game-cards">
+      <div *ngFor="let game of filteredGames" class="game-card">
+        <a [routerLink]="['/games/details', game.id]" class="card-link">
+          <div class="card-header">
+            <h3>{{ game.game_mode | titlecase }}</h3>
+            <span
+              class="status"
+              [class.completed]="game.is_completed"
+              [class.in-progress]="!game.is_completed"
+            >
+              {{ game.is_completed ? 'Completed' : 'In Progress' }}
+            </span>
+          </div>
+          <div class="card-body">
+            <p>
+              <strong>Players:</strong>
+              {{ game.player1.username }}
+              <span *ngIf="game.player2">vs {{ game.player2.username }}</span>
+              <span *ngIf="game.player3">vs {{ game.player3.username }}</span>
+              <span *ngIf="game.player4">vs {{ game.player4.username }}</span>
+            </p>
+            <p><strong>Winner:</strong> {{ game.winner?.username || 'TBD' }}</p>
+            <p><strong>Start:</strong> {{ game.start_time | date: 'short' }}</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  
