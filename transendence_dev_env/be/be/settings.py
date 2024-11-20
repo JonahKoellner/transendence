@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-j=&_)ux49j@6hdnbf6dunf^vpq(8*40eke4(%&2!6ru3l3iu(@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", os.getenv("DOMAIN")]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -68,19 +68,20 @@ MIDDLEWARE = [
 
 
 
-CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000")
-CSP_SCRIPT_SRC = ("'self'", "ws://localhost:8000")
-CSP_STYLE_SRC = ("'self'", "ws://localhost:8000")
-CSP_IMG_SRC = ("'self'", "data:", "ws://localhost:8000")
-CSP_FONT_SRC = ("'self'", "ws://localhost:8000")
-CSP_CONNECT_SRC = ("'self'", "ws://localhost:8000")
-CSP_OBJECT_SRC = ("'none'", "ws://localhost:8000")
-CSP_FRAME_SRC = ("'none'", "ws://localhost:8000")
+CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_SCRIPT_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_STYLE_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_IMG_SRC = ("'self'", "data:", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_FONT_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_CONNECT_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_OBJECT_SRC = ("'none'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
+CSP_FRAME_SRC = ("'none'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
 CSP_REPORT_URI = '/csp-violation-report/'
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
+    "http://" + os.getenv("DOMAIN") + ":4200",
 ]
 
 REST_FRAMEWORK = {
