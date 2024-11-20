@@ -35,6 +35,8 @@ FROM node:20 as build
 
 WORKDIR /app
 
+RUN npm install -g @angular/cli@16.2.6
+
 COPY package.json package-lock.json ./
 # RUN npm install
 
@@ -48,7 +50,7 @@ COPY . .
 ENV CHOKIDAR_USEPOLLING=true
 
 # RUN npm run build --configuration=production
-RUN npm run build -- --configuration production
+RUN ng build --configuration production
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine

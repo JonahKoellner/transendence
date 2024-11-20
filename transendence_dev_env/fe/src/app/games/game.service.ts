@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 import { Tournament } from './tournament/local/start/start.component';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 export interface Player {
   id: number | null;

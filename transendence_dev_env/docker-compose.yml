@@ -40,16 +40,18 @@ services:
              daphne -b 0.0.0.0 -p 8000 be.asgi:application"
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_DB=mydb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - DB_HOST=db
-      - DB_PORT=5432
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DJANGO_SETTINGS_MODULE=be.settings
-      - DOMAIN=transendence.42.hn
+    # environment:
+      # - POSTGRES_DB=mydb
+      # - POSTGRES_USER=user
+      # - POSTGRES_PASSWORD=pass
+      # - DB_HOST=db
+      # - DB_PORT=5432
+      # - REDIS_HOST=redis
+      # - REDIS_PORT=6379
+      # - DJANGO_SETTINGS_MODULE=be.settings
+      # - DOMAIN=transendence.42.hn
+    env_file:
+      - be/be/.env
     depends_on:
       - db
       - redis
