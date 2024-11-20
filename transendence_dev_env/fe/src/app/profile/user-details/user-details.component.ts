@@ -160,6 +160,7 @@ export class UserDetailsComponent implements OnInit {
         ? new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
         : new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
     );
+    this.filteredGameHistory = this.filteredGameHistory.filter(game => game.is_completed === true);
   }
 
   // Method to apply filters for tournament history
@@ -177,6 +178,7 @@ export class UserDetailsComponent implements OnInit {
         ? new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
         : new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
     );
+    this.filteredTournamentHistory = this.filteredTournamentHistory.filter(tournament => tournament.status === 'completed');
   }
   getAchievementIconClass(achievement: Achievement): string {
     // Map achievement names or IDs to Bootstrap icon classes
