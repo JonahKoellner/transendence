@@ -142,3 +142,11 @@
 .about-modules ul > li > ul > li.incomplete::before {
     background-color: #FF5722;
 }
+
+.pdf-viewer {
+    width: 90%;
+    max-width: 1000px;
+    min-width: 250px;
+    margin: 0 auto;
+
+}

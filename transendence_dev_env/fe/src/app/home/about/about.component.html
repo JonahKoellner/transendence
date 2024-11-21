@@ -114,4 +114,15 @@
             </li>
         </ul>
     </div>
+    <div class="pdf-viewer">
+        <div class="about-header">
+            <h2>Project Subject</h2>
+        </div>
+        <iframe
+            [src]="sanitizer.bypassSecurityTrustResourceUrl(pdfSrc)"
+            width="100%"
+            height="600"
+            frameborder="0">
+        </iframe>
+    </div>
 </div>

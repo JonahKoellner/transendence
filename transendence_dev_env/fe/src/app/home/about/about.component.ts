@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-about',
@@ -6,5 +7,8 @@ import { Component } from '@angular/core';
   styleUrls: ['./about.component.scss']
 })
 export class AboutComponent {
+  pdfSrc: string = 'assets/subject.pdf';
+
+  constructor(public sanitizer: DomSanitizer) { }
 
 }
