@@ -25,6 +25,11 @@
                 <span class="name">Gergely Pásztor</span>
                 <span class="info">Head of Vibes & Snacks</span>
             </li>
+            <li>
+                <img src="https://cdn.intra.42.fr/users/8c087da4532c6d41740814505a57a870/nburchha.jpg" alt="Gregor Parzdor" class="avatar">
+                <span class="name">Niklas Burchhardt</span>
+                <span class="info">Mastermind</span>
+            </li>
         </ul>
     
         <div class="video-container">
@@ -124,5 +129,18 @@
             height="600"
             frameborder="0">
         </iframe>
+    </div>
+    <div class="retro-game-modal" *ngIf="showRetroGameModal">
+        <div class="modal-content">
+            <span class="close-button" (click)="closeRetroGameModal()">&times;</span>
+            <h2>Enjoy Your Retro Game!</h2>
+            <iframe 
+                [src]="retroGameUrl" 
+                width="100%" 
+                height="600" 
+                frameborder="0" 
+                allowfullscreen>
+            </iframe>
+        </div>
     </div>
 </div>
