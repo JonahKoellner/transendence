@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError
 import random
@@ -23,11 +24,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from .models import Notification, ChatMessage, FriendRequest, Achievement
+from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
 from django.db import models
 from django.db.models import Q
 import be.settings as besettings
-from games.models import Game, Lobby
+from games.models import Game, Lobby, Tournament
 
 
 class RegisterView(APIView):
@@ -244,6 +245,72 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['delete'], url_path='delete')
+    def delete_account(self, request):
+        """
+        Custom action to delete the authenticated user's account.
+        """
+        user = request.user
+        password = request.data.get('password')
+
+        if not password:
+            return Response({"message": "Password is required to delete the account."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Authenticate the user with the provided password
+        user_auth = authenticate(username=user.username, password=password)
+        if user_auth is None:
+            return Response({"message": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                refresh = RefreshToken.for_user(user)
+                refresh.blacklist()
+
+                # Delete or anonymize related data
+                self.delete_related_data(user)
+
+                # Finally, delete the user
+                user.delete()
+
+            return Response({"message": "Your account has been deleted successfully."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"Error deleting account: {e}")
+            return Response({"message": "An error occurred while deleting your account."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete_related_data(self, user):
+        """
+        Deletes or anonymizes all related data for the user.
+        """
+        # Delete Profile
+        try:
+            profile = user.profile
+            profile.delete()
+        except ObjectDoesNotExist:
+            pass
+
+        # Delete Notifications
+        Notification.objects.filter(sender=user).delete()
+        Notification.objects.filter(receiver=user).delete()
+
+        # Delete Chat Messages
+        ChatMessage.objects.filter(sender=user).delete()
+        ChatMessage.objects.filter(receiver=user).delete()
+
+        # Delete Achievements
+        UserAchievement.objects.filter(user=user).delete()
+
+        # Delete Lobbies Hosted or Joined
+        Lobby.objects.filter(host=user).delete()
+        Lobby.objects.filter(guest=user).delete()
+
+        # Delete Tournaments Hosted
+        Tournament.objects.filter(host=user).delete()
+
+        # Delete Games Played
+        Game.objects.filter(player1=user).delete()
+        Game.objects.filter(player2=user).delete()
 
     @action(detail=False, methods=['get'], url_path='search')
     def search_users(self, request):

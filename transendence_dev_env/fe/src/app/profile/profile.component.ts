@@ -4,6 +4,7 @@ import { ProfileService, UserProfile } from '../profile.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ImageSelectorModalComponent } from './image-selector-modal/image-selector-modal.component';
+import { DeleteAccountModalComponent } from './delete-account-modal/delete-account-modal.component';
 interface ImageSelection {
   type: 'preset' | 'upload';
   data: File | string; // File object for uploads, string identifier/path for presets
@@ -508,6 +509,34 @@ export class ProfileComponent implements OnInit {
   // Helper method to extract file name from path
   getFileNameFromPath(path: string): string {
     return path.substring(path.lastIndexOf('/') + 1);
+  }
+
+  openDeleteAccountModal() {
+    const modalRef = this.modalService.open(DeleteAccountModalComponent, { centered: true });
+    modalRef.result.then((password: string) => {
+      if (password) {
+        this.deleteAccount(password);
+      }
+    }, (reason) => {
+      // Handle dismissal if needed
+    });
+  }
+
+  // Method to send delete account request
+  deleteAccount(password: string) {
+    if (confirm('Are you sure you want to delete your account? This action is irreversible.')) {
+      this.profileService.deleteAccount(password).subscribe(
+        (response) => {
+          alert('Your account has been deleted successfully.');
+          // Optionally, redirect to the homepage or login page
+          window.location.href = '/';
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error deleting account:', error);
+          alert(error.error.message || 'An error occurred while deleting your account. Please try again.');
+        }
+      );
+    }
   }
   
 }
