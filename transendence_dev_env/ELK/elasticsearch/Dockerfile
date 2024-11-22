@@ -19,7 +19,7 @@ WORKDIR /usr/share/elasticsearch
 ENV ELASTIC_PASSWORD=yourpassword
 
 # Update and install required dependencies
-RUN apt-get update && apt-get install -y wget unzip && \
+RUN apt-get update && apt-get install -y wget unzip curl && \
     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
     tar -xzf elasticsearch-8.10.2-linux-aarch64.tar.gz --strip-components=1 && \
     rm elasticsearch-8.10.2-linux-aarch64.tar.gz && \
@@ -69,20 +69,28 @@ RUN chown -R ela:ela /usr/share/elasticsearch/config/certs/* && \
 # RUN whoami && ls -l /usr/share/elasticsearch/config/certs/instance
 COPY elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
 
+COPY create-kibana-user.sh /usr/share/elasticsearch/create-user.sh
+RUN chmod +x /usr/share/elasticsearch/create-user.sh
+
 
 # Switch to the non-root user
 USER ela
+RUN /usr/share/elasticsearch/create-user.sh
+
 
 # RUN test -f /usr/share/elasticsearch/config/ca/ca.crt && \
 #     test -f /usr/share/elasticsearch/config/ca/ca.key && \
 #     echo "CA certificates exist." || (echo "CA certificates not found!" && whoami && ls -l /usr/share/elasticsearch/config/certs/instance && exit 1)
 
+ENTRYPOINT ["/bin/bash", "/usr/share/elasticsearch/create-user.sh" ]
+
+# RUN /usr/share/elasticsearch/create-user.sh
 
 # Expose necessary ports
 EXPOSE 9200 9300
 
 # Command to run Elasticsearch
-CMD ["bin/elasticsearch"]
+# CMD ["bin/elasticsearch"]
 
 
 

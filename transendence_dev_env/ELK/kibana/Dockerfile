@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y wget && \
     rm kibana-8.10.2-linux-aarch64.tar.gz && \
     apt-get clean
 
+COPY kibana.yml /usr/share/kibana/config/kibana.yml
+
 
 RUN groupadd -g 1000 kibana && \
     useradd -u 1000 -g kibana kibana && \
@@ -31,6 +33,7 @@ RUN groupadd -g 1000 kibana && \
 
 # Switch to the non-root user
 USER kibana
+
 
 
 EXPOSE 5601

@@ -1,3 +1,24 @@
-server.name: kibana
+# server.name: kibana
+# server.host: "0.0.0.0"
+# elasticsearch.hosts: ["http://elasticsearch:9200"]
+
+
+# kibana.yml
+
+# Elasticsearch connection settings
+elasticsearch.hosts: ["https://localhost:9200"]
+elasticsearch.username: "kibana"
+elasticsearch.password: "kibana"
+
+# SSL Configuration
+# elasticsearch.ssl.verificationMode: none
+# elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
+
+# Kibana server settings
 server.host: "0.0.0.0"
-elasticsearch.hosts: ["http://elasticsearch:9200"]
+server.name: "kibana"
+server.port: 5601
+
+# Enable/Disable security
+xpack.security.enabled: false
+# xpack.security.authc.apiKey.enabled: false
