@@ -14,26 +14,29 @@ services:
 
   elasticsearch:
     build:
-      context: ./elasticsearch
+      context: ./elk/elasticsearch
+    environment:
+      - discovery.type=single-node
     ports:
       - "9200:9200"
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 
   logstash:
     build:
-      context: ./logstash
+      context: ./elk/logstash
     ports:
-      - "5240:5240"
+      - "5234:5234"
+    volumes:
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+    depends_on:
+      - elasticsearch
 
   kibana:
     build:
-      context: ./kibana
+      context: ./elk/kibana
     ports:
       - "5601:5601"
-    environment:
-      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
-
+    depends_on:
+      - elasticsearch
 
 
   angular:
@@ -81,6 +84,7 @@ services:
       - db
       - redis
       - elasticsearch
+      - logstash
     networks:
       - webnet
     volumes:
