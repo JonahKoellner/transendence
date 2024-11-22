@@ -16,6 +16,8 @@ FROM debian:bullseye-slim
 # Set the working directory
 WORKDIR /usr/share/elasticsearch
 
+ENV ELASTIC_PASSWORD=yourpassword
+
 # Update and install required dependencies
 RUN apt-get update && apt-get install -y wget unzip && \
     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
