@@ -1,43 +1,41 @@
 version: '3.8'
 
 services:
-
-  # nginx:
-  #   build:
-  #     context: ./fe
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - django
-  #   networks:
-  #     - webnet
-
   elasticsearch:
     build:
-      context: ./elk/elasticsearch
+      context: ./ELK/elasticsearch
     environment:
       - discovery.type=single-node
     ports:
       - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - elk-net
 
   logstash:
     build:
-      context: ./elk/logstash
+      context: ./ELK/logstash
     ports:
-      - "5234:5234"
+      - "5234:5234"  # For Beats input
+      - "5240:5240/udp"  # For GELF input
     volumes:
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./ELK/logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
       - elasticsearch
+    networks:
+      - elk-net
 
   kibana:
     build:
-      context: ./elk/kibana
+      context: ./ELK/kibana
     ports:
       - "5601:5601"
     depends_on:
       - elasticsearch
-
+    networks:
+      - elk-net
 
   angular:
     build:
@@ -45,15 +43,15 @@ services:
     ports:
       - "4200:4200"
     volumes:
-      - ./fe:/app  # Mount the local Angular app to the container
-      - /app/node_modules  # Ensure node_modules is not overwritten
+      - ./fe:/app
+      - /app/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true  # Use polling for file changes
-    command: ng serve --host 0.0.0.0 --poll 1000  # Serve with polling enabled
+      - CHOKIDAR_USEPOLLING=true
+    command: ng serve --host 0.0.0.0 --poll 1000
     depends_on:
       - django
     networks:
-      - webnet
+      - app-net
     logging:
       driver: "gelf"
       options:
@@ -86,10 +84,10 @@ services:
       - elasticsearch
       - logstash
     networks:
-      - webnet
+      - app-net
     volumes:
-      - ./be:/app  # Bind mount for the Django app code
-      - ./static:/app/static  # Static files directory
+      - ./be:/app
+      - ./static:/app/static
     logging:
       driver: "gelf"
       options:
@@ -102,21 +100,22 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Named volume for database persistence
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - webnet
+      - app-net
 
   redis:
     image: redis:6-alpine
     ports:
       - "6379:6379"
     networks:
-      - webnet
+      - app-net
 
 networks:
-  webnet:
+  elk-net:
+  app-net:
 
 volumes:
-  postgres_data:  # Persistent volume for PostgreSQL data
+  postgres_data:
