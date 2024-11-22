@@ -10,29 +10,42 @@
 
 # CMD ["bin/elasticsearch"]
 # Start from a slim Debian base image
-FROM debian:bullseye-slim
+# FROM debian:bullseye-slim
 
-# Set the working directory
-WORKDIR /usr/share/elasticsearch
+# # Set the working directory
+# WORKDIR /usr/share/elasticsearch
 
-# Update and install required dependencies
-RUN apt-get update && apt-get install -y wget && \
-    wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
-    tar -xzf elasticsearch-8.10.2-linux-aarch64.tar.gz --strip-components=1 && \
-    rm elasticsearch-8.10.2-linux-aarch64.tar.gz && \
-    apt-get clean
+# # Update and install required dependencies
+# RUN apt-get update && apt-get install -y wget && \
+#     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
+#     tar -xzf elasticsearch-8.10.2-linux-aarch64.tar.gz --strip-components=1 && \
+#     rm elasticsearch-8.10.2-linux-aarch64.tar.gz && \
+#     apt-get clean
 
-# Create a non-root user for Elasticsearch (UID 1000 is commonly used)
-RUN groupadd -g 1000 elasticsearch && \
-    useradd -u 1000 -g elasticsearch elasticsearch && \
-    # Set ownership of the installed Elasticsearch files to the non-root user
-    chown -R elasticsearch:elasticsearch /usr/share/elasticsearch
+# # Create a non-root user for Elasticsearch (UID 1000 is commonly used)
+# RUN groupadd -g 1000 elasticsearch && \
+#     useradd -u 1000 -g elasticsearch elasticsearch && \
+#     # Set ownership of the installed Elasticsearch files to the non-root user
+#     chown -R elasticsearch:elasticsearch /usr/share/elasticsearch
 
-# Switch to the non-root user
-USER elasticsearch
+# # Switch to the non-root user
+# USER elasticsearch
 
-# Expose necessary ports
+# # Expose necessary ports
+# EXPOSE 9200 9300
+
+# # Command to run Elasticsearch
+# CMD ["bin/elasticsearch"]
+
+
+# Use an official Elasticsearch base image
+FROM docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+
+# Set environment variables for M1 compatibility (JVM options)
+ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
+
+# Expose Elasticsearch port
 EXPOSE 9200 9300
 
-# Command to run Elasticsearch
-CMD ["bin/elasticsearch"]
+# Ensure Elasticsearch can run without root privileges
+USER elasticsearch

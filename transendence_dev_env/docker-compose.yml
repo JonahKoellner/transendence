@@ -1,121 +1,55 @@
-version: '3.8'
+version: '3.7'
 
 services:
   elasticsearch:
-    build:
-      context: ./ELK/elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
       - "9300:9300"
-    volumes:
-      - ./data/elasticsearch:/usr/share/elasticsearch/data
     networks:
-      - elk-net
+      - elk
 
   logstash:
-    build:
-      context: ./ELK/logstash
-    ports:
-      - "5234:5234"  # For Beats input
-      - "5240:5240/udp"  # For GELF input
+    image: docker.elastic.co/logstash/logstash:7.14.0
+    container_name: logstash
     volumes:
-      - ./ELK/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5431:5431"
+      - "9600:9600"
+    networks:
+      - elk
     depends_on:
       - elasticsearch
-    networks:
-      - elk-net
 
   kibana:
-    build:
-      context: ./ELK/kibana
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     ports:
       - "5601:5601"
+    networks:
+      - elk
     depends_on:
       - elasticsearch
-    networks:
-      - elk-net
-
-  angular:
-    build:
-      context: ./fe
-    ports:
-      - "4200:4200"
-    volumes:
-      - ./fe:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-    command: ng serve --host 0.0.0.0 --poll 1000
-    depends_on:
-      - django
-    networks:
-      - app-net
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5240"
-
-  django:
-    build:
-      context: ./be
-    command: >
-      sh -c "python manage.py makemigrations games &&
-             python manage.py makemigrations accounts &&
-             python manage.py migrate &&
-             python manage.py loaddata achievements.json &&
-             daphne -b 0.0.0.0 -p 8000 be.asgi:application"
-    ports:
-      - "8000:8000"
-    environment:
-      - POSTGRES_DB=mydb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - DB_HOST=db
-      - DB_PORT=5432
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DJANGO_SETTINGS_MODULE=be.settings
-      - DOMAIN=localhost
-    depends_on:
-      - db
-      - redis
-      - elasticsearch
-      - logstash
-    networks:
-      - app-net
-    volumes:
-      - ./be:/app
-      - ./static:/app/static
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5240"
-
-  db:
-    image: postgres:17
-    environment:
-      - POSTGRES_DB=mydb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - app-net
-
-  redis:
-    image: redis:6-alpine
-    ports:
-      - "6379:6379"
-    networks:
-      - app-net
 
 networks:
-  elk-net:
-  app-net:
+  elk:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  esdata:
+    driver: local
