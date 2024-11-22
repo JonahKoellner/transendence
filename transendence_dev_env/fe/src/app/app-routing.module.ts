@@ -27,6 +27,7 @@ import { ChaosComponent } from './games/chaos/chaos.component';
 import { GamesListComponent } from './games/games-list/games-list.component';
 import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
 import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
+import { Local3dPvpComponent } from './games/3d/local-pvp/local-pvp.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -57,6 +58,7 @@ const routes: Routes = [
   { path: 'games/arena', component: ArenaComponent, canActivate: [AuthGuard] },
   { path: 'auth/callback', component: FtAuthCallbackComponentComponent },
   { path: 'about', component: AboutComponent},
+  { path: 'test', component: Local3dPvpComponent},
   { path: '**', redirectTo: 'login' }
 ];
 
