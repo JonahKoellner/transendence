@@ -1,5 +1,30 @@
+# Cluster settings
 cluster.name: "docker-cluster"
+
+# Enable single-node mode (useful for development or testing)
+discovery.type: single-node
+
+# Elasticsearch network settings
 network.host: 0.0.0.0
 http.port: 9200
-discovery.type: single-node
-xpack.security.http.ssl.enabled: false
+# transport.tcp.port: 9300
+
+# Discovery settings
+discovery.seed_hosts: ["127.0.0.1"]
+# cluster.initial_master_nodes: ["${HOSTNAME}"]
+
+# SSL Settings for HTTP (communication over port 9200)
+xpack.security.enabled: true
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
+xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
+xpack.security.http.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
+
+# SSL Settings for Transport (communication over port 9300)
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
+xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
+xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
+
+# Disable SSL certificate validation for testing (for development, not recommended for production)
+# xpack.security.transport.ssl.verification_mode: certificate
