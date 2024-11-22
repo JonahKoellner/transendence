@@ -12,6 +12,29 @@ services:
   #   networks:
   #     - webnet
 
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+
+  logstash:
+    build:
+      context: ./logstash
+    ports:
+      - "5240:5240"
+
+  kibana:
+    build:
+      context: ./kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+
+
 
   angular:
     build:
@@ -28,6 +51,10 @@ services:
       - django
     networks:
       - webnet
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5240"
 
   django:
     build:
@@ -53,11 +80,16 @@ services:
     depends_on:
       - db
       - redis
+      - elasticsearch
     networks:
       - webnet
     volumes:
       - ./be:/app  # Bind mount for the Django app code
       - ./static:/app/static  # Static files directory
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5240"
 
   db:
     image: postgres:17
