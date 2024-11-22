@@ -29,6 +29,7 @@ from django.db import models
 from django.db.models import Q
 import be.settings as besettings
 from games.models import Game, Lobby, Tournament
+from django.utils import timezone
 
 
 class RegisterView(APIView):
@@ -40,6 +41,52 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
+    
+    def check_need_to_revalidate_2fa(self, request, user):
+        """
+        Determine if the user needs to revalidate 2FA based on various factors.
+        """
+        profile = user.profile
+
+        # Current login details
+        current_ip = self.get_client_ip(request)
+        current_user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        # Previous login details
+        last_login = profile.last_login
+        last_ip = profile.last_login_ip
+        last_user_agent = profile.last_user_agent
+
+        # If no previous login data, require 2FA
+        if not last_login or not last_ip or not last_user_agent:
+            return True
+
+        # Check for IP address change
+        ip_changed = current_ip != last_ip
+
+        # Check for User Agent change
+        user_agent_changed = current_user_agent != last_user_agent
+
+        # Time since last login (e.g., revalidate if more than 24 hours)
+        time_difference = timezone.now() - last_login
+        time_exceeded = time_difference.total_seconds() > 24 * 60 * 60  # 24 hours
+
+        # Require 2FA revalidation if any condition is met
+        if ip_changed or user_agent_changed or time_exceeded:
+            return True
+
+        return False
+
+    def get_client_ip(self, request):
+        """
+        Helper method to get the client's IP address from the request.
+        """
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
     
     def post(self, request):
         def get_cookie_settings():
@@ -61,19 +108,28 @@ class LoginView(APIView):
 
             # Retrieve the `is_2fa_enabled` attribute from the user's profile
             is_2fa_enabled = profile.is_2fa_enabled
+            if is_2fa_enabled and self.check_need_to_revalidate_2fa(request, user):
+                # If 2FA is enabled and the user needs to revalidate, return a 401 status code
+                return Response({"message": "2FA revalidation required", 'access': access_token}, status=status.HTTP_401_UNAUTHORIZED)
+            profile.last_login = timezone.now()
+            profile.last_login_ip = self.get_client_ip(request)
+            profile.last_user_agent = request.META.get('HTTP_USER_AGENT', '')
+            
 
             # Response data
             data = {
                 'access': access_token,
                 'refresh': str(refresh),
-                'is_2fa_enabled': is_2fa_enabled
+                'is_2fa_enabled': is_2fa_enabled,
+                'has_logged_in': profile.has_logged_in
             }
 
-            if not is_2fa_enabled or not profile.has_logged_in:
+            if not is_2fa_enabled and not profile.has_logged_in:
                 otp_uri = profile.generate_otp()
                 if otp_uri:
                     data['otp_uri'] = otp_uri
-
+            profile.has_logged_in = True
+            profile.save()
             response = Response(data)
 
             # Set refresh token in HttpOnly cookie
@@ -95,6 +151,8 @@ class LoginView(APIView):
             return response
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
 
 
 class LogoutView(APIView):
@@ -134,8 +192,7 @@ class Enable2FAView(APIView):
         if not profile.is_2fa_enabled:
             # Generate OTP secret and enable 2FA
             otp_uri = profile.generate_otp()  # This generates and saves the OTP secret
-            profile.is_2fa_enabled = True  # Enable 2FA
-            profile.save()
+
 
             return Response({
                 'otp_uri': otp_uri,
@@ -165,6 +222,18 @@ class Disable2FAView(APIView):
 
 
 class VerifyOTPView(APIView):
+    
+    def get_client_ip(self, request):
+        """
+        Helper method to get the client's IP address from the request.
+        """
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
@@ -177,6 +246,9 @@ class VerifyOTPView(APIView):
             # Verify the OTP code using the user's profile
             if request.user.profile.verify_otp(otp_code):
                 request.user.profile.is_2fa_enabled = True  # Enable 2FA
+                request.user.profile.last_login = timezone.now()
+                request.user.profile.last_login_ip = self.get_client_ip(request)
+                request.user.profile.last_user_agent = request.META.get('HTTP_USER_AGENT', '')
                 request.user.profile.save()
 
                 return Response({"success": True, "message": "OTP verified successfully, 2FA is now enabled"}, status=status.HTTP_200_OK)

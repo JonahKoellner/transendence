@@ -52,6 +52,8 @@ import { GameCanvasChaosPvpComponent } from './games/chaos/game-canvas-chaos-pvp
 import { GameCanvasComponentArena } from './games/arena/game-canvas/game-canvas.component';
 import { GamesListComponent } from './games/games-list/games-list.component';
 import { DeleteAccountModalComponent } from './profile/delete-account-modal/delete-account-modal.component';
+import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
+import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -96,7 +98,9 @@ import { DeleteAccountModalComponent } from './profile/delete-account-modal/dele
     GameCanvasChaosPvpComponent,
     GameCanvasComponentArena,
     GamesListComponent,
-    DeleteAccountModalComponent
+    DeleteAccountModalComponent,
+    FtAuthCallbackComponentComponent,
+    RevalidateOtpComponent
   ],
   imports: [
     BrowserModule,

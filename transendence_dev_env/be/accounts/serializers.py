@@ -64,6 +64,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     paddleskin_image_to_delete = serializers.BooleanField(write_only=True, required=False)
     ballskin_image_to_delete = serializers.BooleanField(write_only=True, required=False)
     gamebackground_wallpaper_to_delete = serializers.BooleanField(write_only=True, required=False)
+    is_ft_authenticated = serializers.BooleanField(source='profile.is_ft_authenticated', required=False)
     
     paddleskin_color = serializers.CharField(
         source='profile.paddleskin_color', 
@@ -108,6 +109,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'paddleskin_image_to_delete',
             'ballskin_image_to_delete',
             'gamebackground_wallpaper_to_delete',
+            'is_ft_authenticated',
         ]
         # read_only_fields = ['is_2fa_enabled']
 
@@ -199,6 +201,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
     achievements = serializers.SerializerMethodField()
+    is_ft_authenticated = serializers.BooleanField(source='profile.is_ft_authenticated')
     paddleskin_color = serializers.CharField(
         source='profile.paddleskin_color', 
         required=False, 
@@ -234,7 +237,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level', 'achievements',
             'paddleskin_color', 'paddleskin_image', 'achievements',
             'ballskin_color', 'ballskin_image',
-            'gamebackground_color', 'gamebackground_wallpaper']
+            'gamebackground_color', 'gamebackground_wallpaper', 'is_ft_authenticated']
     
     
     def update(self, instance, validated_data):

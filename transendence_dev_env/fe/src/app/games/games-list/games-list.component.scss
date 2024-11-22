@@ -33,7 +33,7 @@
           border: 1px solid #61BA50;
           border-radius: 8px;
           font-size: 1rem;
-          background-color: #232627;
+          background-color: #2C2C2C;
           color: #e0e0e0;
           width: 180px;
           transition: border-color 0.3s;
@@ -60,7 +60,7 @@
               border: 1px solid #61BA50;
               border-radius: 4px;
               font-size: 0.9rem;
-              background-color: #232627;
+              background-color: #2C2C2C;
               color: #e0e0e0;
               transition: border-color 0.3s;
 
@@ -111,7 +111,7 @@
       &:hover {
           box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
           transform: translateY(-2px);
-          background-color: #232627;
+          background-color: #2C2C2C;
       }
 
       .card-link {

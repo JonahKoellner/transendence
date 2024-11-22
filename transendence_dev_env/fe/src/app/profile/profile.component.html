@@ -227,14 +227,114 @@
           {{ isUpdating ? 'Updating...' : 'Update Profile' }}
         </button>
       </form>
-      <button class="btn btn-danger" (click)="openDeleteAccountModal()">Delete Account</button>
-    </div>
+
+      <app-settings></app-settings>
+      
+      <!-- Delete Account Button -->
+      <button class="btn btn-danger mt-3" (click)="openDeleteAccountModal()">Delete Account</button>
+      
+      <!-- 42 Authentication Section -->
+      <div class="ft-auth-section mt-4">
+        <h3>42 Integration</h3>
     
-  </div>
-  
-  <!-- Error Message -->
-  <div *ngIf="!isLoading && !userProfile" class="alert-error">
-    <p>No profile data available.</p>
-  </div>
-  
-</div>
+        <!-- Loading Indicator -->
+        <div *ngIf="ftLoading" class="alert alert-info">
+          Fetching your 42 profile...
+        </div>
+    
+        <!-- Error Message -->
+        <div *ngIf="ftError" class="alert alert-danger">
+          {{ ftError }}
+        </div>
+    
+        <!-- 42 User Data -->
+        <div *ngIf="ftAuthenticated && ftUserData" class="ft-user-data">
+          <div class="ft-user-card">
+            <!-- 42 User Avatar -->
+            <div class="ft-avatar-container">
+              <img 
+                *ngIf="ftUserData.image?.link" 
+                [src]="ftUserData.image.link" 
+                alt="42 User Avatar" 
+                class="ft-avatar" 
+              />
+            </div>
+            
+            <!-- 42 User Information -->
+            <div class="ft-user-info">
+              <h4>42 Profile Information</h4>
+              <p><strong>Full Name:</strong> {{ ftUserData.usual_full_name || ftUserData.displayname }}</p>
+              <p><strong>First Name:</strong> {{ ftUserData.first_name }}</p>
+              <p><strong>Last Name:</strong> {{ ftUserData.last_name }}</p>
+              <p><strong>Login:</strong> {{ ftUserData.login }}</p>
+              <p><strong>Email:</strong> {{ ftUserData.email }}</p>
+              <p><strong>Phone:</strong> {{ ftUserData.phone || 'N/A' }}</p>
+              <p><strong>Location:</strong> {{ ftUserData.location?.city || 'N/A' }}</p>
+              <p><strong>Wallet:</strong> {{ ftUserData.wallet }}</p>
+              <p><strong>Correction Points:</strong> {{ ftUserData.correction_point }}</p>
+              <p><strong>Campus:</strong> 
+                <span *ngIf="ftUserData.campus && ftUserData.campus.length > 0">
+                  {{ ftUserData.campus[0].name }}
+                </span>
+                <span *ngIf="!ftUserData.campus || ftUserData.campus.length === 0">
+                  N/A
+                </span>
+              </p>
+              <p><strong>Alumni Status:</strong> {{ ftUserData['alumni?'] ? 'Alumni' : 'Current Student' }}</p>
+              <p><strong>Active Status:</strong> {{ ftUserData['active?'] ? 'Active' : 'Inactive' }}</p>
+              <!-- Add more fields as needed -->
+            </div>
+          </div>
+          
+          <!-- Additional 42 Data Sections (Optional) -->
+          <!-- For example, Cursus, Projects, Achievements, etc. -->
+          <div class="ft-additional-data mt-3">
+            <h5>Cursus Information</h5>
+            <div *ngIf="ftUserData.cursus_users && ftUserData.cursus_users.length > 0" class="cursus-list">
+              <div *ngFor="let cursusUser of ftUserData.cursus_users" class="cursus-item">
+                <p><strong>Cursus:</strong> {{ cursusUser.cursus.name }}</p>
+                <p><strong>Grade:</strong> {{ cursusUser.grade || 'N/A' }}</p>
+                <p><strong>Level:</strong> {{ cursusUser.level | number: '1.2-2' }}</p>
+                <!-- Add more cursus-related fields if needed -->
+              </div>
+            </div>
+            <div *ngIf="!ftUserData.cursus_users || ftUserData.cursus_users.length === 0">
+              <p>No Cursus Information Available.</p>
+            </div>
+          </div>
+          
+          <div class="ft-additional-data mt-3">
+            <h5>Projects Information</h5>
+            <div *ngIf="ftUserData.projects_users && ftUserData.projects_users.length > 0" class="projects-list">
+              <div *ngFor="let projectUser of ftUserData.projects_users" class="project-item">
+                <p><strong>Project:</strong> {{ projectUser.project.name }}</p>
+                <p><strong>Status:</strong> {{ projectUser.status }}</p>
+                <p><strong>Final Mark:</strong> {{ projectUser.final_mark || 'N/A' }}</p>
+                <!-- Add more project-related fields if needed -->
+              </div>
+            </div>
+            <div *ngIf="!ftUserData.projects_users || ftUserData.projects_users.length === 0">
+              <p>No Projects Information Available.</p>
+            </div>
+          </div>
+          
+          <!-- Add more sections as needed, e.g., Achievements, Languages, etc. -->
+        </div>
+    
+        <!-- Login Button -->
+        <div *ngIf="!ftAuthenticated && !ftLoading" class="ft-login-section mt-3">
+          <button class="btn btn-info" (click)="loginViaFt()">Login and Link with 42</button>
+        </div>
+        
+        <!-- Logout Button -->
+        <div *ngIf="ftAuthenticated && !ftLoading" class="ft-logout-section mt-3">
+          <button class="btn btn-warning" (click)="logoutFromFt()">Logout and Unlink 42</button>
+        </div>
+      </div>
+      
+      <!-- Error Message -->
+      <div *ngIf="!isLoading && !userProfile" class="alert-error">
+        <p>No profile data available.</p>
+      </div>
+      
+    </div>

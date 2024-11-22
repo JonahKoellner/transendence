@@ -25,7 +25,7 @@
         <h3>Winner</h3>
         <p><strong>Name:</strong> {{ tournament.final_winner }}</p>
         <p><strong>Type:</strong> {{ tournament.final_winner_type }}</p>
-        <p><strong>Tiebreaker:</strong> {{ tournament.tiebreaker_method }}</p>
+        <p *ngIf="tournament.winner_tie_resolved"><strong>Tiebreaker:</strong> {{ tournament.tiebreaker_method }}</p>
         <p *ngIf="tournament.winner_determination_method_message" class="winner-determination">
           {{ tournament.winner_determination_method_message }}
         </p>

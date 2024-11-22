@@ -1,221 +1,141 @@
-.game-details-container {
+.game-details {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
-  max-width: 700px;
+  gap: 2rem;
+  max-width: 900px;
   margin: auto;
-  background-color: #0E0F10;
-  color: #e0e0e0;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
-
-  h2 {
-    color: #61BA50;
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  .player-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    width: 100%;
-    padding: 1.5rem;
-    background: #2b2b2b;
-    border-radius: 8px;
-
-    .players {
-      display: flex;
-      gap: 1rem;
-      font-size: 1.6rem;
-      font-weight: bold;
-      color: #61BA50;
-
-      .vs {
-        color: #ff6b6b;
-        font-size: 1.2rem;
-        font-weight: bold;
-      }
-    }
-
-    .score {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 2rem;
-      color: #ffe066;
-    }
-
-    .game-mode {
-      font-size: 1.1rem;
-      color: #74c0fc;
-      font-weight: bold;
-    }
-
-    .game-status {
-      font-size: 1rem;
-      margin-top: 0.5rem;
-
-      .status-running {
-        color: #ffc107;
-        font-weight: bold;
-      }
-
-      .status-canceled {
-        color: #ff6b6b;
-        font-weight: bold;
-      }
-
-      .status-completed {
-        color: #28a745;
-        font-weight: bold;
-      }
-
-      .winner {
-        margin-top: 0.5rem;
-        font-weight: bold;
-        color: #51cf66;
-      }
-    }
-  }
-
-  .game-times {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    background-color: #232627;
-    padding: 1.5rem;
-    border-radius: 8px;
-    width: 100%;
-    margin-bottom: 2rem;
-
-    .time-box,
-    .duration-box {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .time-label,
-      .duration-label {
-        color: #adb5bd;
-        font-weight: bold;
-      }
-
-      .time-value,
-      .duration-value {
-        font-size: 1.2rem;
-        color: #e0e0e0;
-        font-weight: 500;
-      }
-    }
-  }
-
-  .rounds-info {
-    background-color: #232627;
-    padding: 1.5rem;
-    border-radius: 8px;
-    width: 100%;
-    margin-bottom: 2rem;
-
-    h3 {
-      font-size: 1.4rem;
-      color: #61BA50;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-
-      li {
-        background-color: #3a3a3a;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-
-        .round-header {
-          font-size: 1.2rem;
-          color: #61BA50;
-          font-weight: bold;
-          margin-bottom: 0.5rem;
-        }
-
-        .round-details {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          font-size: 0.9rem;
-          color: #adb5bd;
-        }
-      }
-    }
-  }
-
-  .moves-log {
-    background-color: #232627;
-    padding: 1.5rem;
-    border-radius: 8px;
-    width: 100%;
-    margin-bottom: 2rem;
-
-    h3 {
-      font-size: 1.4rem;
-      color: #61BA50;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-
-      th,
-      td {
-        padding: 0.75rem;
-        text-align: center;
-      }
-
-      th {
-        background-color: #495057;
-        color: #e0e0e0;
-        font-weight: bold;
-      }
-
-      td {
-        color: #adb5bd;
-        border-bottom: 1px solid #3a3a3a;
-      }
-    }
-  }
-
-  .error-message {
-    color: #ff6b6b;
-    font-weight: bold;
-    text-align: center;
-    font-size: 1.2rem;
-    margin-top: 2rem;
-  }
-}
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  padding: 2rem;
+  background-color: #0e0f10;
+  border-radius: 8px;
 }
 
-.chart-container {
+.game-header {
+  text-align: center;
+}
+
+.game-header h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #61ba50;
+  margin-bottom: 0.5rem;
+}
+
+.game-header .status {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #777;
+}
+
+.game-header .status-completed {
+  color: #61ba50;
+}
+
+.game-header .status-running {
+  color: #ffc107;
+}
+
+.game-header .status-canceled {
+  color: #ff5722;
+}
+
+.game-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
   width: 100%;
-  height: 400px; /* Set a fixed height for all charts */
 }
 
-canvas {
-  width: 100% !important;
-  height: 100% !important;
+.info-section,
+.time-section {
+  background: #1c1e20;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #61ba50;
+  flex: 1;
+  min-width: 260px;
+}
+
+.info-section h3,
+.time-section h3 {
+  color: #61ba50;
+  font-weight: bold;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.info-section p,
+.time-section p {
+  font-size: 1rem;
+  color: #adb5bd;
+  margin: 0.5rem 0;
+}
+
+.info-section p strong,
+.time-section p strong {
+  color: #e0e0e0;
+}
+
+.rounds-section {
+  width: 100%;
+}
+
+.rounds-section h3 {
+  text-align: center;
+  color: #61ba50;
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.round-card {
+  background: #0e0f10;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #333;
+}
+
+.round-card h4 {
+  font-size: 1.3rem;
+  color: #61ba50;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.round-card p {
+  font-size: 0.9rem;
+  color: #adb5bd;
+  margin: 0.2rem 0;
+}
+
+.round-card p strong {
+  color: #e0e0e0;
+}
+
+.moves-log {
+  width: 100%;
+  background: #1c1e20;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #61ba50;
+}
+
+.moves-log h3 {
+  color: #61ba50;
+  font-weight: bold;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.moves-log ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.moves-log ul li {
+  font-size: 1rem;
+  color: #adb5bd;
+  margin: 0.5rem 0;
 }

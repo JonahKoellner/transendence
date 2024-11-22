@@ -25,11 +25,13 @@ import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 import { ArenaComponent } from './games/arena/arena.component';
 import { ChaosComponent } from './games/chaos/chaos.component';
 import { GamesListComponent } from './games/games-list/games-list.component';
-
+import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
+import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
   { path: 'verify-otp/:id', component: VerifyOtpComponent },
+  { path: 'revalidate-otp', component: RevalidateOtpComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'profile/user-details/:id', component: UserDetailsComponent, canActivate: [AuthGuard] },
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
@@ -53,6 +55,7 @@ const routes: Routes = [
   { path: 'games/leaderboard', component: LeaderboardComponent, canActivate: [AuthGuard] },
   { path: 'games/chaos', component: ChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/arena', component: ArenaComponent, canActivate: [AuthGuard] },
+  { path: 'auth/callback', component: FtAuthCallbackComponentComponent },
   { path: 'about', component: AboutComponent},
   { path: '**', redirectTo: 'login' }
 ];

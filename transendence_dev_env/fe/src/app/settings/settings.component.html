@@ -12,11 +12,6 @@
         <p>2FA is disabled.</p>
         <button (click)="enable2FA()">Add 2FA</button>
       </div>
-      <div *ngIf="qrCodeImage">
-        <p>Scan this QR code with your authenticator app:</p>
-        <img [src]="qrCodeImage" alt="QR Code" />
-      </div>
-      
       <div *ngIf="error" class="error">{{ error }}</div>
   </div>
   

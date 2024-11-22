@@ -36,6 +36,7 @@ export interface UserProfile {
   gamebackground_color?: string;
   gamebackground_wallpaper?: string;
   is_2fa_enabled: boolean;
+  is_ft_authenticated: boolean;
 }
 
 

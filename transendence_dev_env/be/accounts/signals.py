@@ -16,7 +16,6 @@ def create_profile(sender, instance, created, **kwargs):
 def save_profile(sender, instance, **kwargs):
     instance.profile.save()  # Save without refreshing to avoid overwriting changes
     
-    
 @receiver(m2m_changed, sender=Profile.friends.through)
 def update_friends_count_and_check_achievements(sender, instance, action, **kwargs):
     if action in ['post_add', 'post_remove']:

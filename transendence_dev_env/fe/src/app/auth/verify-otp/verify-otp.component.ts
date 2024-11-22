@@ -23,6 +23,7 @@ export class VerifyOtpComponent {
     this.isLoading = true;
     this.route.paramMap.subscribe(params => {
       this.otp_uri = params.get('id')!;
+      
       if (this.otp_uri) {
         this.showQRCode = true;
         this.generateQRCode(this.otp_uri);
@@ -33,7 +34,7 @@ export class VerifyOtpComponent {
           this.generateQRCode(otpUri);
         } else {
           this.showQRCode = false;
-          this.router.navigate(['/login']);
+          //this.router.navigate(['/login']);
         }
       }
     });

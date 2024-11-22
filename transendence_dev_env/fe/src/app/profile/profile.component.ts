@@ -5,6 +5,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ImageSelectorModalComponent } from './image-selector-modal/image-selector-modal.component';
 import { DeleteAccountModalComponent } from './delete-account-modal/delete-account-modal.component';
+import { FtAuthService, FtUser } from '../ft-auth.service';
+import { ActivatedRoute } from '@angular/router';
 interface ImageSelection {
   type: 'preset' | 'upload';
   data: File | string; // File object for uploads, string identifier/path for presets
@@ -28,6 +30,11 @@ export class ProfileComponent implements OnInit {
   ballskinOption: 'color' | 'image' = 'color';
   gamebackgroundOption: 'color' | 'image' = 'color';
 
+  ftAuthenticated: boolean = false;
+  ftUserData: FtUser | null = null;
+  ftLoading: boolean = false;
+  ftError: string | null = null;
+
   selectedImages: {
     avatar?: ImageSelection;
     paddleskin?: ImageSelection;
@@ -39,12 +46,23 @@ export class ProfileComponent implements OnInit {
     private profileService: ProfileService,
     private fb: FormBuilder,
     private modalService: NgbModal,
-    private http: HttpClient
+    private http: HttpClient,
+    private ftAuthService: FtAuthService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
+
+    this.route.queryParams.subscribe(params => {
+      if (params['ftAuthError'] === 'true') {
+        this.ftAuthenticated = false;
+        this.ftError = 'Failed to authenticate with 42. Please try again.';
+      }
+    });
+
     this.initializeForm();
     this.loadProfile();
+    this.checkFtAuthentication();
   }
 
   initializeForm() {
@@ -97,7 +115,6 @@ export class ProfileComponent implements OnInit {
         this.togglePaddleskinOption(this.paddleskinOption, false);
         this.toggleBallskinOption(this.ballskinOption, false);
         this.toggleGamebackgroundOption(this.gamebackgroundOption, false);
-
         this.isLoading = false;
       },
       (error) => {
@@ -537,6 +554,107 @@ export class ProfileComponent implements OnInit {
         }
       );
     }
+  }
+  checkFtAuthentication() {
+    if (this.ftAuthService.isAuthenticated()) {
+      this.ftLoading = true;
+      this.ftAuthService.get42UserProfile().subscribe(
+        (data) => {
+          this.ftAuthenticated = true;
+          this.ftUserData = data;
+          this.ftLoading = false;
+          // Optionally, update your userProfile with 42 data
+          // this.userProfile.ftData = data;
+          if (this.userProfile.is_ft_authenticated === false) {
+            this.update42ValidationOnProfile();
+          }
+
+        },
+        (error) => {
+          console.error('Failed to fetch 42 user data:', error);
+          this.ftAuthenticated = false;
+          this.ftError = 'Failed to fetch 42 user data. Please log in again.';
+          this.ftLoading = false;
+          // Optionally, you can logout or prompt re-authentication
+          // this.ftAuthService.logout();
+        }
+      );
+    } else {
+      this.ftAuthenticated = false;
+    }
+  }
+
+  update42ValidationOnProfile() {
+    this.userProfile.is_ft_authenticated = true;
+    const formData = new FormData();
+    formData.append('is_ft_authenticated', 'true');
+    this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
+      (response) => {
+        alert('Profile synced with 42 account successfully');
+        // Reload the profile to reflect changes
+        this.loadProfile();
+  
+        // Reset deletion flags
+        this.profileForm.patchValue({
+          avatar_to_delete: false,
+          paddleskin_image_to_delete: false,
+          ballskin_image_to_delete: false,
+          gamebackground_wallpaper_to_delete: false,
+        });
+  
+        // Clear selectedImages
+        this.selectedImages = {};
+        this.isUpdating = false;
+      },
+      (error: HttpErrorResponse) => {
+        this.isUpdating = false;
+        console.error('Error updating profile:', error);
+        alert('An error occurred while updating your profile. Please try again.');
+      }
+    );
+  }
+
+  remove42ValidationOnProfile() {
+    this.userProfile.is_ft_authenticated = false;
+    const formData = new FormData();
+    formData.append('is_ft_authenticated', 'false');
+    this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
+      (response) => {
+        alert('Removed 42 account from profile successfully');
+        // Reload the profile to reflect changes
+        this.loadProfile();
+  
+        // Reset deletion flags
+        this.profileForm.patchValue({
+          avatar_to_delete: false,
+          paddleskin_image_to_delete: false,
+          ballskin_image_to_delete: false,
+          gamebackground_wallpaper_to_delete: false,
+        });
+  
+        // Clear selectedImages
+        this.selectedImages = {};
+        this.isUpdating = false;
+      },
+      (error: HttpErrorResponse) => {
+        this.isUpdating = false;
+        console.error('Error updating profile:', error);
+        alert('An error occurred while updating your profile. Please try again.');
+      }
+    );
+  }
+
+
+  loginViaFt() {
+    this.ftAuthService.login();
+  }
+
+  // Optionally, you can provide a method to refresh or logout from 42
+  logoutFromFt() {
+    this.ftAuthService.logout();
+    this.ftAuthenticated = false;
+    this.ftUserData = null;
+    this.remove42ValidationOnProfile();
   }
   
 }

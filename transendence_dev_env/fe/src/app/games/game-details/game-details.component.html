@@ -1,140 +1,54 @@
-<div class="d-flex justify-content-center align-items-center" *ngIf="isLoading">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
+<div class="game-details" *ngIf="game && !isLoading">
+  <div class="game-header">
+    <h2>{{ game.game_mode }}</h2>
+    <p
+      class="status"
+      [ngClass]="{
+        'status-completed': getGameStatus(game) === 'Completed',
+        'status-canceled': getGameStatus(game) === 'Canceled',
+        'status-running': getGameStatus(game) === 'Running'
+      }"
+    >
+      Status: {{ getGameStatus(game) }}
+    </p>
+  </div>
+
+  <div class="game-info">
+    <div class="info-section">
+      <h3>Details</h3>
+      <p><strong>Player 1:</strong> {{ game.player1.username }}</p>
+      <p><strong>Player 2:</strong> {{ game.player2.username || 'AI' }}</p>
+      <p><strong>Score:</strong> {{ game.score_player1 }} : {{ game.score_player2 }}</p>
+      <p><strong>Winner:</strong> {{ game.winner?.username || 'AI' }}</p>
+      <p><strong>Game Mode:</strong> {{ game.game_mode }}</p>
+    </div>
+
+    <div class="time-section">
+      <h3>Game Times</h3>
+      <p><strong>Start Time:</strong> {{ game.start_time | date: 'medium' }}</p>
+      <p><strong>End Time:</strong> {{ game.end_time | date: 'medium' }}</p>
+      <p><strong>Duration:</strong> {{ game.duration | number }} ms</p>
+    </div>
+  </div>
+
+  <div class="rounds-section" *ngIf="game.rounds?.length">
+    <h3>Rounds</h3>
+    <div *ngFor="let round of game.rounds" class="round-card">
+      <h4>Round {{ round.round_number }}</h4>
+      <p><strong>Start:</strong> {{ round.start_time | date: 'mediumTime' }}</p>
+      <p><strong>End:</strong> {{ round.end_time | date: 'mediumTime' }}</p>
+      <p><strong>Score:</strong> {{ round.score_player1 }} - {{ round.score_player2 }}</p>
+      <p><strong>Winner:</strong> {{ round.winner }}</p>
+    </div>
+  </div>
+
+  <div class="moves-log" *ngIf="game.moves_log?.length">
+    <h3>Move Log</h3>
+    <ul>
+      <li *ngFor="let move of game.moves_log">
+        <strong>{{ move.time | date: 'mediumTime' }}</strong>:
+        <span>{{ move.player }} performed "{{ move.action }}"</span>
+      </li>
+    </ul>
   </div>
 </div>
-
-<div *ngIf="game && !isLoading">
-  <div class="game-details-container" *ngIf="game; else errorTemplate">
-    <h2>🎮 Game Stats</h2>
-  
-    <!-- Player Info and Score Section -->
-    <section class="player-info">
-      <div class="players">
-        <span class="player">{{ game.player1.username }}</span>
-        <span class="vs">VS</span>
-        <span class="player">{{ game.player2.username || 'AI' }}</span>
-      </div>
-      <div class="score">
-        <span>{{ game.score_player1 }}</span>
-        <span class="colon">:</span>
-        <span>{{ game.score_player2 }}</span>
-      </div>
-      <div class="game-mode">{{ game.game_mode }}</div>
-      <div class="game-status">
-        <span [ngClass]="{
-          'status-running': getGameStatus(game) === 'Running',
-          'status-canceled': getGameStatus(game) === 'Canceled',
-          'status-completed': getGameStatus(game) === 'Completed'
-        }">
-          {{ getGameStatus(game) }}
-        </span>
-        <span *ngIf="game.is_completed" class="winner">🏆 Winner: {{ game.winner?.username || game.player2_name_pvp_local || 'AI' }}</span>
-      </div>
-    </section>
-  
-    <!-- Game Times Section -->
-    <section class="game-times">
-      <div class="time-box">
-        <div class="time-label">Game Started</div>
-        <div class="time-value">{{ game.start_time | date:'MMMM d, yyyy, h:mm:ss a' }}</div>
-      </div>
-      <div class="time-box">
-        <div class="time-label">Game Ended</div>
-        <div class="time-value">{{ game.end_time | date:'MMMM d, yyyy, h:mm:ss a' }}</div>
-      </div>
-      <div class="duration-box">
-        <div class="duration-label">⏱ Duration</div>
-        <div class="duration-value">
-          {{ game.duration ? (game.duration | duration) : 'N/A' }}
-        </div>
-      </div>
-    </section>
-  
-    <!-- Rounds Info -->
-    <section class="rounds-info" *ngIf="game.rounds?.length">
-      <h3>🏆 Rounds</h3>
-      <ul>
-        <li *ngFor="let round of game.rounds">
-          <div class="round-header">Round {{ round.round_number }}</div>
-          <div class="round-details">
-            <span>⏲ Start: {{ round.start_time | date:'mediumTime' }}</span>
-            <span *ngIf="round.end_time">⏲ End: {{ round.end_time | date:'mediumTime' }}</span>
-            <span>Score: {{ round.score_player1 }} - {{ round.score_player2 }}</span>
-            <span>Winner: {{ round.winner }}</span>
-          </div>
-        </li>
-      </ul>
-    </section>
-  
-    <!-- Move Log -->
-    <section class="moves-log" *ngIf="game.moves_log?.length">
-      <h3>📜 Move Log</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Player</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let move of game.moves_log">
-            <td>{{ move.time | date:'mediumTime' }}</td>
-            <td>{{ move.player }}</td>
-            <td>{{ move.action }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-  </div>
-  
-  <ng-template #errorTemplate>
-    <p class="error-message">❌ {{ errorMessage }}</p>
-  </ng-template>
-  
-  <div class="charts-grid" *ngIf="gameStats">
-    <div class="chart-container">
-      <div class="chart-title">Game Mode</div>
-      <canvas #gameModeChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Game Duration</div>
-      <canvas #gameDurationChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Win/Loss Status</div>
-      <canvas #winLossChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Rounds Information</div>
-      <canvas #roundsChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Moves Log</div>
-      <canvas #movesLogChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Score Distribution</div>
-      <canvas #scoreDistributionChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Game Status</div>
-      <canvas #gameStatusChart></canvas>
-    </div>
-  
-    <div class="chart-container">
-      <div class="chart-title">Winner Information</div>
-      <canvas #winnerChart></canvas>
-    </div>
-  </div>
-  
-  
-  </div>
-  
