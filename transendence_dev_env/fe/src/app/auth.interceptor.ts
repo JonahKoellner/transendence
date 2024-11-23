@@ -3,12 +3,13 @@ import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse
 import { AuthService } from './auth.service';
 import { Observable, Subject, throwError } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
+import { CookieConsentService } from './services/cookie-consent.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private refreshTokenSubject: Subject<string | null> = new Subject<string | null>();
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private cookieConsent: CookieConsentService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
@@ -61,7 +62,9 @@ export class AuthInterceptor implements HttpInterceptor {
               })
             );
           }
-        } else {
+        } else if (error.status === 401 && error.error.message === '2FA revalidation required') {
+          this.authService.logout(error.error.message);
+        } else if (error.status === 402 || error.status === 403) {
           this.authService.logout(error.error.message);
         }
 

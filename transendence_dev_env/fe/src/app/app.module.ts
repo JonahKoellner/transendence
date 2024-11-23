@@ -56,6 +56,10 @@ import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-com
 import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
 import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
 import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/password-reset-confirm.component';
+import { CookieConsentComponent } from './auth/cookie-consent/cookie-consent.component';
+import { PrivacyPolicyComponent } from './home/privacy-policy/privacy-policy.component';
+import { TermsOfServiceComponent } from './home/terms-of-service/terms-of-service.component';
+import { DisclaimerComponent } from './home/disclaimer/disclaimer.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -104,7 +108,11 @@ import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/pas
     FtAuthCallbackComponentComponent,
     RevalidateOtpComponent,
     PasswordResetComponent,
-    PasswordResetConfirmComponent
+    PasswordResetConfirmComponent,
+    CookieConsentComponent,
+    PrivacyPolicyComponent,
+    TermsOfServiceComponent,
+    DisclaimerComponent
   ],
   imports: [
     BrowserModule,

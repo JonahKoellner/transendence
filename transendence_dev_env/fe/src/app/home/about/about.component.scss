@@ -19,11 +19,12 @@
     background: #1b1b1b;
     padding: 2rem;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    border: 1px solid #444;
     max-width: 800px;
     margin: 0 auto;
     text-align: center;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8.5px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .about-description p {
@@ -142,6 +143,14 @@
 
 .about-modules ul > li > ul > li.incomplete::before {
     background-color: #FF5722;
+}
+
+.about-modules ul > li > ul > li.in_progress {
+    color: #f2ff00;
+}
+
+.about-modules ul > li > ul > li.in_progress::before {
+    background-color: #f2ff00;
 }
 
 .pdf-viewer {

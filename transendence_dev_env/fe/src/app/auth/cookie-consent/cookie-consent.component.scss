@@ -1,0 +1,96 @@
+/* src/app/components/cookie-consent/cookie-consent.component.scss */
+
+.auth-page {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    color: #e0e0e0;
+    z-index: 10000; /* Ensure it's above other elements */
+  }
+  
+  .auth-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8.5px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .auth-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  
+    .auth-icon {
+      color: #61ba50; // Green theme color
+      margin-bottom: 0.5rem;
+    }
+  
+    h2 {
+      font-size: 1.8rem;
+      color: #61ba50;
+      margin: 0;
+    }
+  }
+  
+  .auth-body {
+    .form-group {
+      text-align: center;
+  
+      p {
+        font-size: 1rem;
+        color: #e0e0e0;
+  
+        a {
+          color: #61ba50;
+          text-decoration: underline;
+          cursor: pointer;
+  
+          &:hover {
+            color: #45a049;
+          }
+        }
+      }
+    }
+  }
+  
+  .auth-footer {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .auth-button {
+    background-color: #61ba50;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    min-width: 100px;
+  
+    &:hover {
+      background-color: #45a049;
+    }
+  
+    &:focus {
+      outline: 2px solid #f1d600;
+    }
+  
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+  

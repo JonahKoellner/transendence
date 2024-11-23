@@ -1,0 +1,135 @@
+<!-- src/app/pages/privacy-policy/privacy-policy.component.html -->
+
+<div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h2 id="privacy-policy-title">Privacy Policy</h2>
+      </div>
+      <div class="auth-body" role="document" aria-labelledby="privacy-policy-title">
+        <div class="form-group">
+          <!-- 1. Introduction -->
+          <h3>1. Introduction</h3>
+          <p>
+            Welcome to MyApp. Your privacy is critically important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application. Please read this policy carefully to understand our views and practices regarding your personal data and how we will treat it.
+          </p>
+  
+          <!-- 2. Information We Collect -->
+          <h3>2. Information We Collect</h3>
+          <p>
+            When you register for an account with us, we collect the following information:
+          </p>
+          <ul>
+            <li><strong>Username:</strong> Your chosen unique identifier.</li>
+            <li><strong>Password:</strong> Secure credentials for account access.</li>
+            <li><strong>Email:</strong> Contact information for account verification and communication.</li>
+            <li><strong>Chats:</strong> Messages exchanged within the application.</li>
+            <li><strong>Technical Cookies:</strong> JWT tokens and page states essential for application functionality.</li>
+          </ul>
+  
+          <!-- 3. How We Use Your Information -->
+          <h3>3. How We Use Your Information</h3>
+          <p>
+            We use the collected information for various purposes:
+          </p>
+          <ul>
+            <li>To provide and maintain our Service.</li>
+            <li>To manage your account and authenticate users.</li>
+            <li>To improve our Service by analyzing usage patterns.</li>
+            <li>To communicate with you, including sending updates and notifications.</li>
+            <li>To enhance the security of our Service.</li>
+          </ul>
+  
+          <!-- 4. Cookies and Tracking Technologies -->
+          <h3>4. Cookies and Tracking Technologies</h3>
+          <p>
+            We use cookies to enhance your experience on our application. These cookies are strictly technical and necessary for the proper functioning of the Service, such as managing user sessions and storing JWT tokens.
+          </p>
+          <p><strong>Types of Cookies We Use:</strong></p>
+          <ul>
+            <li><strong>Essential Cookies:</strong> Necessary for the basic functionality of the website, such as security, network management, and accessibility.</li>
+          </ul>
+  
+          <!-- 5. Data Storage and Security -->
+          <h3>5. Data Storage and Security</h3>
+          <p>
+            Your information is stored securely on our servers, which are protected by industry-standard security measures. We implement appropriate technical and organizational measures to protect your data against unauthorized access, alteration, disclosure, or destruction.
+          </p>
+          <p>
+            All passwords are hashed and salted using robust encryption algorithms to ensure your account's security.
+          </p>
+  
+          <!-- 6. Data Retention -->
+          <h3>6. Data Retention</h3>
+          <p>
+            We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy unless a longer retention period is required or permitted by law.
+          </p>
+          <p>
+            When your data is no longer required, it will be securely deleted or anonymized to prevent any future identification.
+          </p>
+  
+          <!-- 7. Your Rights -->
+          <h3>7. Your Rights</h3>
+          <p>
+            You have the following rights regarding your personal data:
+          </p>
+          <ul>
+            <li><strong>Access:</strong> You can request access to the personal data we hold about you.</li>
+            <li><strong>Correction:</strong> You can request correction of any inaccurate or incomplete data.</li>
+            <li><strong>Deletion:</strong> You can request the deletion of your personal data.</li>
+            <li><strong>Restriction:</strong> You can request the restriction of processing your data.</li>
+            <li><strong>Data Portability:</strong> You can request to receive your data in a structured, commonly used format.</li>
+            <li><strong>Objection:</strong> You can object to the processing of your data under certain circumstances.</li>
+            <li><strong>Withdrawal of Consent:</strong> If we are processing your data based on your consent, you can withdraw your consent at any time.</li>
+          </ul>
+          <p>
+            To exercise these rights, please contact us at <a href="mailto:privacy@myapp.com">privacy@myapp.com</a>.
+          </p>
+  
+          <!-- 8. Deletion of User Data -->
+          <h3>8. Deletion of User Data</h3>
+          <p>
+            You have the right to request the deletion of your account and all associated personal data. Upon receiving such a request, we will:
+          </p>
+          <ul>
+            <li>Verify your identity to ensure the request is legitimate.</li>
+            <li>Delete all personal data associated with your account, including username, password, email, chats, and any other related information.</li>
+            <li>Remove your data from our backups and archival systems.</li>
+            <li>Confirm the deletion to you via email.</li>
+          </ul>
+          <p>
+            Please note that certain data may be retained to comply with legal obligations, resolve disputes, and enforce our agreements.
+          </p>
+          <p>
+            To request account deletion, navigate to your account settings and click on the "Delete Account" option, or contact us directly at <a href="mailto:privacy@myapp.com">privacy@myapp.com</a>.
+          </p>
+  
+          <!-- 9. Third-Party Services -->
+          <h3>9. Third-Party Services</h3>
+          <p>
+            We do not use third-party services that collect, monitor, or analyze your information without your explicit consent. All data handling is performed in-house to ensure your privacy and data security.
+          </p>
+  
+          <!-- 10. Changes to This Privacy Policy -->
+          <h3>10. Changes to This Privacy Policy</h3>
+          <p>
+            We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
+          </p>
+  
+          <!-- 11. Contact Us -->
+          <h3>11. Contact Us</h3>
+          <p>
+            If you have any questions about this Privacy Policy, please contact us:
+          </p>
+          <ul>
+            <li>By email: <a href="mailto:privacy@myapp.com">privacy@myapp.com</a></li>
+            <li>By visiting this page on our website: <a href="https://www.myapp.com/contact">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="auth-footer">
+        <button class="auth-button" (click)="removeConsent()">Remove Cookie Consent</button>
+        <button class="auth-button" (click)="printPolicy()">Print Policy</button>
+      </div>
+    </div>
+  </div>
+  

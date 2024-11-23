@@ -24,7 +24,7 @@ export class GameLobbyService {
     if (this.socket$ && this.isConnected.value) return;
     const token = this.authService.getAccessToken(); // Assuming a method to get the access token
     // this.socket$ = webSocket(`ws://localhost:8000/ws/lobby/${roomId}/?token=${token}`);
-    this.socket$ = webSocket(environment.wsUrl + `/games/lobby/${roomId}/?token=${token}`);
+    this.socket$ = webSocket(environment.wsUrl + `/lobby/${roomId}/?token=${token}`);
 
     this.socket$.subscribe(
       (msg) => {this.messages$.next(msg),  console.log(msg, roomId)},
