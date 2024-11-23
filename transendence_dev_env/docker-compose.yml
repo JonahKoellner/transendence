@@ -1,4 +1,4 @@
-version: '3.8'
+version: '2'
 
 services:
 
@@ -31,7 +31,7 @@ services:
     build:
       context: ./elk/logstash
     ports:
-      - "5234:5234"  # For Beats input
+      # - "5234:5234"  # For Beats input
       - "5240:5240"  # For GELF input
       - "5431:5431"
     volumes:
@@ -40,6 +40,12 @@ services:
       - elasticsearch
     networks:
       - elk-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
 
   # Kibana Service
   kibana:
@@ -69,9 +75,11 @@ services:
       - CHOKIDAR_USEPOLLING=true
     command: ng serve --host 0.0.0.0 --poll 1000
     depends_on:
-      - django
+      logstash:
+        condition: service_healthy
     networks:
       - app-net
+      - elk-net
     logging:
       driver: "gelf"
       options:
@@ -100,12 +108,14 @@ services:
       - DJANGO_SETTINGS_MODULE=be.settings
       - DOMAIN=localhost
     depends_on:
-      - db
-      - redis
-      - elasticsearch
-      - logstash
+      # - db
+      # redis
+      # elasticsearch
+      logstash:
+        condition: service_healthy
     networks:
       - app-net
+      - elk-net
     volumes:
       - ./be:/app
       - ./static:/app/static
