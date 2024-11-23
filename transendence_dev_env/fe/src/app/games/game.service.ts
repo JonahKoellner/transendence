@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 import { Tournament } from './tournament/local/start/start.component';
+// import { environment } from 'src/environment';
 import { environment } from 'src/environments/environment';
 
 export interface Player {
@@ -190,6 +191,16 @@ export class GameService {
       })
     );
   }
+
+  getAllGames(): Observable<Game[]> {
+    return this.http.get<Game[]>(`${this.apiUrl}all-games/`, { headers: this.getHeaders() }).pipe(
+      catchError((error) => {
+        console.error('Error fetching games:', error);
+        return of([]);
+      })
+    );
+  }
+
   createTournament(tournamentData: Tournament): Observable<Tournament> {
     return this.http.post<Tournament>(this.tournamentApiUrl, tournamentData, { headers: this.getHeaders() }).pipe(
       catchError((error) => {

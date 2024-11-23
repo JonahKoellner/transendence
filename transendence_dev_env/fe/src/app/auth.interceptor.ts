@@ -11,6 +11,11 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+
+    if (req.url.includes('api.intra.42.fr')) {
+      return next.handle(req);
+    }
+
     const accessToken = this.authService.getAccessToken();
 
     if (accessToken && !this.authService.jwtHelper.isTokenExpired(accessToken)) {
@@ -22,7 +27,7 @@ export class AuthInterceptor implements HttpInterceptor {
         console.error('Interceptor caught error:', error);
 
         // 401 error handling with refresh token logic
-        if (error.status === 401) {
+        if (error.status === 401 && error.error.message !== '2FA revalidation required') {
           if (!this.authService.refreshInProgress) {
             this.authService.refreshInProgress = true;
             this.refreshTokenSubject.next(null); // Reset the subject for new refresh
@@ -35,15 +40,13 @@ export class AuthInterceptor implements HttpInterceptor {
                   req = this.addTokenToRequest(req, newAccessToken);
                   return next.handle(req);
                 } else {
-                  this.authService.clearAll();
-                  this.authService.logout();
+                  this.authService.logout(error.error.message);
                   return throwError('Failed to refresh token');
                 }
               }),
               catchError((refreshError) => {
                 this.authService.refreshInProgress = false;
-                this.authService.clearAll();
-                this.authService.logout();
+                this.authService.logout(error.error.message);
                 return throwError(refreshError);
               })
             );
@@ -58,14 +61,22 @@ export class AuthInterceptor implements HttpInterceptor {
               })
             );
           }
+        } else if (error.status === 401 && error.error.message === '2FA revalidation required'){
+          this.authService.logout(error.error.message);
+        } else if (error.status === 403 || error.status === 402) {
+          this.authService.logout(error.error.message);
         }
-
         return throwError(error);
       })
     );
   }
 
   private addTokenToRequest(req: HttpRequest<any>, token: string): HttpRequest<any> {
+
+    if (req.url.includes('api.intra.42.fr')) {
+      return req;
+    }
+
     return req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`

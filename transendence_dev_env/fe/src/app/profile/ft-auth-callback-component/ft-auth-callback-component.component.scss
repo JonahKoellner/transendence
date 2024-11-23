@@ -1,0 +1,103 @@
+/* src/app/ft-auth-callback-component/ft-auth-callback-component.component.scss */
+
+.auth-callback-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    min-height: 100vh;
+    color: #e0e0e0;
+    background-color: #121212; /* Dark background for consistency */
+  
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background-color: #1e1e1e; /* Slightly lighter for contrast */
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(8.5px);
+      -webkit-backdrop-filter: blur(8.5px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      text-align: center;
+  
+      .auth-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 1.5rem;
+  
+        .auth-icon {
+          color: #61BA50; /* Green color matching your theme */
+          margin-bottom: 0.5rem;
+        }
+  
+        h2 {
+          color: #61BA50;
+          font-size: 1.8rem;
+          margin: 0;
+        }
+      }
+  
+      .auth-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+  
+        .spinner {
+          border: 8px solid #f3f3f3;
+          border-top: 8px solid #61BA50;
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          animation: spin 1s linear infinite;
+          margin-bottom: 1rem;
+        }
+  
+        p {
+          font-size: 1rem;
+          color: #c0c0c0;
+        }
+      }
+    }
+  }
+  
+  /* Spinner Animation */
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .auth-callback-page {
+      padding: 1rem;
+  
+      .auth-card {
+        padding: 1.5rem;
+  
+        .auth-header {
+          .auth-icon {
+            font-size: 2rem;
+          }
+  
+          h2 {
+            font-size: 1.5rem;
+          }
+        }
+  
+        .auth-body {
+          .spinner {
+            width: 50px;
+            height: 50px;
+            border-width: 6px;
+          }
+  
+          p {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+  }
+  

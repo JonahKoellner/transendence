@@ -150,6 +150,16 @@ class GameViewSet(viewsets.ModelViewSet):
         else:
             serializer.save()
             
+    @action(detail=False, methods=['get'], url_path='all-games')
+    def all_games(self, request):
+        """
+        Custom action to retrieve all games.
+        Accessible via the URL path 'all-games'.
+        """
+        games = Game.objects.all()
+        serializer = self.get_serializer(games, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+            
     @action(detail=False, methods=['get'], url_path='user-stats')
     def user_statistics(self, request):
         user = request.user

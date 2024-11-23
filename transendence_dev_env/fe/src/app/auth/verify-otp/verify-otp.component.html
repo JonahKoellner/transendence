@@ -1,29 +1,32 @@
-<div class="container d-flex justify-content-center align-items-center vh-100 verify-otp-container" *ngIf="!isLoading">
-  <div class="card bg-dark text-light shadow-lg p-4" style="width: 100%; max-width: 400px;">
-    <h3 class="text-center mb-4">Verify OTP</h3>
-
-    <div *ngIf="showQRCode" class="text-center mb-4">
-      <p>Scan the QR Code with your authenticator app:</p>
-      <img [src]="qrCodeImage" alt="QR Code" class="img-fluid rounded">
-    </div>
-
-    <form #otpForm="ngForm" (ngSubmit)="verifyOTP(otpForm)" class="form-dark">
-      <!-- OTP Code -->
-      <div class="form-group">
-        <label for="otp_code">OTP Code:</label>
-        <input id="otp_code" [(ngModel)]="otp_code" name="otp_code" required pattern="^\d{6}$"
-          class="form-control bg-secondary text-light border-0" #otpInput="ngModel">
-        <div *ngIf="otpInput.invalid && (otpInput.dirty || otpInput.touched)" class="text-danger">
-          <small *ngIf="otpInput.errors?.['required']">OTP Code is required.</small>
-          <small *ngIf="otpInput.errors?.['pattern']">OTP Code must be a 6-digit number.</small>
-        </div>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <i class="fas fa-key fa-3x auth-icon"></i>
+      <div *ngIf="showQRCode" class="text-center mb-4">
+        <img [src]="qrCodeImage" alt="QR Code" class="img-fluid rounded">
       </div>
 
-      <!-- Submit Button -->
-      <button type="submit" class="btn btn-primary btn-block mt-3" [disabled]="otpForm.invalid">Verify</button>
+      <h2>Verify OTP</h2>
+    </div>
+    <form #otpForm="ngForm" (ngSubmit)="verifyOTP(otpForm)" class="auth-body">
+      <div class="form-group">
+        <label for="otp">OTP Code:</label>
+        <input
+          id="otp"
+          [(ngModel)]="otp_code"
+          name="otp_code"
+          required
+          pattern="^\d{6}$"
+          class="form-control"
+          #otpInput="ngModel"
+        />
+        <div *ngIf="otpInput.invalid && (otpInput.dirty || otpInput.touched)" class="error-message">
+          <small *ngIf="otpInput.errors?.['required']">OTP is required.</small>
+          <small *ngIf="otpInput.errors?.['pattern']">Must be a 6-digit code.</small>
+        </div>
+      </div>
+      <button type="submit" class="auth-button" [disabled]="otpForm.invalid">Verify</button>
     </form>
-
-    <!-- Error Message -->
-    <div *ngIf="error" class="alert alert-danger mt-3 text-center">{{ error }}</div>
+    <div *ngIf="error" class="error-message text-center">{{ error }}</div>
   </div>
 </div>

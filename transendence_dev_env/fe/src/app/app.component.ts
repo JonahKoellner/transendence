@@ -49,13 +49,11 @@ export class AppComponent implements OnInit {
 
           if (!this.is2FaEnabled && !this.toldUser && !this.router.url.startsWith('/verify-otp')) {
             const userChoice = confirm(
-              "Two-Factor Authentication (2FA) is not enabled. Without 2FA, most features will be disabled. " +
-              "Would you like to continue without enabling 2FA? If you choose 'No', you will be logged out and redirected to the login page. " +
-              "Please enable 2FA after logging in."
+              "You have not enabled 2FA. We recommend you enable it in your profile settings. Do you want to enable it now?"
             );
             this.toldUser = true;
-            if (!userChoice) {
-              this.logout();
+            if (userChoice) {
+              this.router.navigate(['/profile']);
             }
           }
           

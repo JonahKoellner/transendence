@@ -7,12 +7,53 @@ from django.db import transaction
 from games.models import Lobby
 import re
 from .utils import check_achievements
+from django.contrib.auth.password_validation import validate_password
+from django.utils.encoding import force_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from rest_framework.validators import UniqueValidator
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uidb64 = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+    def validate(self, attrs):
+        try:
+            uid = force_str(urlsafe_base64_decode(attrs['uidb64']))
+            user = User.objects.get(pk=uid)
+        except (DjangoUnicodeDecodeError, User.DoesNotExist):
+            raise serializers.ValidationError("Invalid token or user.")
+        
+        token = attrs['token']
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise serializers.ValidationError("Invalid or expired token.")
+        
+        attrs['user'] = user
+        return attrs
 
 def validate_hex_color(value):
     if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', value):
         raise serializers.ValidationError(f'{value} is not a valid hex color code.')
 
 class RegisterSerializer(serializers.ModelSerializer):
+    
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
     class Meta:
         model = User
         fields = ('username', 'email', 'password')
@@ -64,6 +105,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     paddleskin_image_to_delete = serializers.BooleanField(write_only=True, required=False)
     ballskin_image_to_delete = serializers.BooleanField(write_only=True, required=False)
     gamebackground_wallpaper_to_delete = serializers.BooleanField(write_only=True, required=False)
+    is_ft_authenticated = serializers.BooleanField(source='profile.is_ft_authenticated', required=False)
     
     paddleskin_color = serializers.CharField(
         source='profile.paddleskin_color', 
@@ -108,6 +150,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'paddleskin_image_to_delete',
             'ballskin_image_to_delete',
             'gamebackground_wallpaper_to_delete',
+            'is_ft_authenticated',
         ]
         # read_only_fields = ['is_2fa_enabled']
 
@@ -199,6 +242,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     level = serializers.IntegerField(source='profile.level', read_only=True)
     xp_for_next_level = serializers.SerializerMethodField()
     achievements = serializers.SerializerMethodField()
+    is_ft_authenticated = serializers.BooleanField(source='profile.is_ft_authenticated')
     paddleskin_color = serializers.CharField(
         source='profile.paddleskin_color', 
         required=False, 
@@ -234,7 +278,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level', 'achievements',
             'paddleskin_color', 'paddleskin_image', 'achievements',
             'ballskin_color', 'ballskin_image',
-            'gamebackground_color', 'gamebackground_wallpaper']
+            'gamebackground_color', 'gamebackground_wallpaper', 'is_ft_authenticated']
     
     
     def update(self, instance, validated_data):

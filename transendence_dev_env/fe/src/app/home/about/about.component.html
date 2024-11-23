@@ -25,6 +25,11 @@
                 <span class="name">Gergely Pásztor</span>
                 <span class="info">Head of Vibes & Snacks</span>
             </li>
+            <li>
+                <img src="https://cdn.intra.42.fr/users/8c087da4532c6d41740814505a57a870/nburchha.jpg" alt="Gregor Parzdor" class="avatar">
+                <span class="name">Niklas Burchhardt</span>
+                <span class="info">Mastermind</span>
+            </li>
         </ul>
     
         <div class="video-container">
@@ -39,7 +44,7 @@
     <div class="about-modules">
         <h3>Project Overview</h3>
         <div class="module-summary">
-            <p><strong>Total Points Achieved:</strong> 10.5</p>
+            <p><strong>Total Points Achieved:</strong> 12.0</p>
             <p><strong>Completion Requirements:</strong> A minimum of 7 points is needed to achieve 100% project completion.</p>
             <p><strong>Bonus Eligibility:</strong> To reach the maximum score of 125%, a total of 9.5 points is required.</p>
             <p><strong>Bonus Scoring:</strong></p>
@@ -60,7 +65,7 @@
             <li>User Management
                 <ul>
                     <li class="completed">Standard user management and authentication (1 point) - Implemented with JWT Django and Angular tools.</li>
-                    <li class="incomplete">Remote authentication (1 point)</li>
+                    <li class="completed">Remote authentication (1 point)</li>
                 </ul>
             </li>
             <li>Gameplay and User Experience
@@ -81,7 +86,7 @@
             <li>Cybersecurity
                 <ul>
                     <li class="incomplete">Implement WAF/ModSecurity with Hardened Configuration and HashiCorp Vault for Secrets Management (1 point).</li>
-                    <li class="incomplete">GDPR Compliance Options with User Anonymization, Local Data Management, and Account Deletion (0.5 points).</li>
+                    <li class="completed">GDPR Compliance Options with User Anonymization, Local Data Management, and Account Deletion (0.5 points).</li>
                     <li class="completed">Implement Two-Factor Authentication (2FA) and JWT (1 point) - Enhanced security through OTP-based 2FA.</li>
                 </ul>
             </li>
@@ -113,5 +118,29 @@
                 </ul>
             </li>
         </ul>
+    </div>
+    <div class="pdf-viewer">
+        <div class="about-header">
+            <h2>Project Subject</h2>
+        </div>
+        <iframe
+            [src]="sanitizer.bypassSecurityTrustResourceUrl(pdfSrc)"
+            width="100%"
+            height="600"
+            frameborder="0">
+        </iframe>
+    </div>
+    <div class="retro-game-modal" *ngIf="showRetroGameModal">
+        <div class="modal-content">
+            <span class="close-button" (click)="closeRetroGameModal()">&times;</span>
+            <h2>Enjoy Your Retro Game!</h2>
+            <iframe 
+                [src]="retroGameUrl" 
+                width="100%" 
+                height="600" 
+                frameborder="0" 
+                allowfullscreen>
+            </iframe>
+        </div>
     </div>
 </div>

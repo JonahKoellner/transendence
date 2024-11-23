@@ -50,6 +50,12 @@ import { ChaosComponent } from './games/chaos/chaos.component';
 import { GameCanvasChaosComponent } from './games/chaos/game-canvas-chaos/game-canvas-chaos.component';
 import { GameCanvasChaosPvpComponent } from './games/chaos/game-canvas-chaos-pvp/game-canvas-chaos-pvp.component';
 import { GameCanvasComponentArena } from './games/arena/game-canvas/game-canvas.component';
+import { GamesListComponent } from './games/games-list/games-list.component';
+import { DeleteAccountModalComponent } from './profile/delete-account-modal/delete-account-modal.component';
+import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
+import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
+import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
+import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/password-reset-confirm.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -92,7 +98,13 @@ import { GameCanvasComponentArena } from './games/arena/game-canvas/game-canvas.
     ChaosComponent,
     GameCanvasChaosComponent,
     GameCanvasChaosPvpComponent,
-    GameCanvasComponentArena
+    GameCanvasComponentArena,
+    GamesListComponent,
+    DeleteAccountModalComponent,
+    FtAuthCallbackComponentComponent,
+    RevalidateOtpComponent,
+    PasswordResetComponent,
+    PasswordResetConfirmComponent
   ],
   imports: [
     BrowserModule,

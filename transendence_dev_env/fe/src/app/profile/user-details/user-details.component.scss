@@ -88,7 +88,7 @@
         position: absolute;
         top: -5px;
         right: 50px;
-        background-color: #232627;
+        background-color: #2C2C2C;
         color: #61BA50;
         padding: .4rem .6rem;
         border-radius: 300px;
@@ -115,6 +115,9 @@
         font-size: 1rem;
         color: #cccccc;
       }
+      .icon-42 {
+        font-size: 42px;
+      }
     }
     /* Tab Controls */
     .tab-controls {
@@ -124,7 +127,7 @@
       margin-bottom: 2rem;
 
       button {
-        background-color: #232627;
+        background-color: #2C2C2C;
         color: #e0e0e0;
         padding: 0.75rem 1.5rem;
         border: none;
@@ -283,7 +286,7 @@
           }
 
           .game-item, .tournament-item {
-            background-color: #232627;
+            background-color: #2C2C2C;
             padding: 1rem 1.5rem;
             border-radius: 8px;
             display: flex;
@@ -523,7 +526,7 @@
 
   .achievement-card {
     width: 180px;
-    background-color: #232627;
+    background-color: #2C2C2C;
     border: 2px solid #61BA50;
     border-radius: 10px;
     overflow: hidden;

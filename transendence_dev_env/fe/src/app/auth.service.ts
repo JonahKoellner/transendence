@@ -29,13 +29,20 @@ export class AuthService {
       tap((response: any) => {
         if (response.access && response.refresh) {
           this.storeTokens(response.access, response.refresh);
-          localStorage.setItem('otp_uri', response.otp_uri);
+          if (response.otp_uri) localStorage.setItem('otp_uri', response.otp_uri);
           this.websocketService.connectNotifications(response.access);
         } else {
           console.error('Login failed: Access or refresh token not received');
         }
       }),
       catchError(error => {
+        if (error.status === 400) {
+          console.error('Login failed: Invalid username or password');
+        } else if (error.status === 401) {
+          localStorage.setItem('temp_token', error.error.access);
+          console.error('Login failed: User must revalidate OTP');
+          this.router.navigate(['/revalidate-otp', { needToReVarify: true }]);
+        }
         console.error('Login error:', error);
         return of(null);
       })
@@ -44,7 +51,7 @@ export class AuthService {
 
   // Verify OTP and mark the 2FA as completed
   verifyOTP(otp_code: string): Observable<any> {
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem('access_token') || localStorage.getItem('temp_token');
     if (!accessToken) throw new Error('Access token is missing');
   
     return this.http.post(`${this.apiUrl}/accounts/verify-otp/`, { otp_code }, {
@@ -85,30 +92,50 @@ export class AuthService {
     return token ? !this.jwtHelper.isTokenExpired(token) : false;
   }
 
-  logout(): void {
+  logout(reason?: string): void {
+    let revalidate = false;
+    if (reason === "2FA revalidation required") {
+      console.error('we need to reeval:', reason);
+      revalidate = true;
+    }
     const accessToken = localStorage.getItem('access_token');
     console.log('Attempting to logout. Access token:', accessToken);
-
+    console.log('Logout reason:', reason);
     if (accessToken) {
       const headers = { Authorization: `Bearer ${accessToken}` };
       this.http.post(`${this.apiUrl}/accounts/logout/`, {}, { headers, withCredentials: true }).subscribe(
         (response) => {
           console.log('Logout successful. Response:', response);
-          this.clearAll();
           this.websocketService.disconnect();
-          window.location.href = '/login';
+          if (revalidate)
+          {
+            this.router.navigate(['/revalidate-otp', { needToReVarify: true }]);
+          } else {
+            this.router.navigate(['/login']);
+            this.clearAll();
+          }
         },
         (error) => {
           console.error('Logout error:', error);
-          this.clearAll();
           this.websocketService.disconnect();
-          window.location.href = '/login';
+          if (revalidate)
+            {
+              this.router.navigate(['/revalidate-otp', { needToReVarify: true }]);
+            } else {
+              this.router.navigate(['/login']);
+              this.clearAll();
+            }
         }
       );
     } else {
-      this.clearAll();
       this.websocketService.disconnect();
-      window.location.href = '/login';
+      if (revalidate)
+        {
+          this.router.navigate(['/revalidate-otp', { needToReVarify: true }]);
+        } else {
+          this.router.navigate(['/login']);
+          this.clearAll();
+        }
     }
   }
 
@@ -132,21 +159,6 @@ export class AuthService {
       const eqPos = cookie.indexOf('=');
       const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-    }
-  }
-
-
-  // Handle redirection after login based on authentication state
-  handleAuthNavigation() {
-    if (this.isAuthenticated()) {
-      const otpVerified = localStorage.getItem('otp_verified') === 'true';
-      if (!otpVerified) {
-        this.router.navigate(['/verify-otp']);  // Redirect to OTP verification if not completed
-      } else {
-        this.router.navigate(['/home']);  // Redirect to home if authenticated and verified
-      }
-    } else {
-      this.router.navigate(['/login']);
     }
   }
 

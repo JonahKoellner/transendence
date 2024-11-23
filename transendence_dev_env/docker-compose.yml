@@ -18,6 +18,17 @@ services:
   #   build:
   #     context: ./fe
   #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - django
+  #   networks:
+  #     - webnet
+
+
+  # angular:
+  #   build:
+  #     context: ./fe
+  #   ports:
   #     - "4200:4200"
   #   volumes:
   #     - ./fe:/app  # Mount the local Angular app to the container

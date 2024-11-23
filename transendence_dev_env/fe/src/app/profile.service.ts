@@ -36,6 +36,7 @@ export interface UserProfile {
   gamebackground_color?: string;
   gamebackground_wallpaper?: string;
   is_2fa_enabled: boolean;
+  is_ft_authenticated: boolean;
 }
 
 
@@ -71,5 +72,25 @@ export class ProfileService {
   }
   getAchievements(): Observable<any> {
     return this.http.get<any>(`${this.base}achievements/`, { withCredentials: true });
-  }  
+  }
+  deleteAccount(password: string): Observable<any> {
+    const options = {
+      body: { password },
+      withCredentials: true
+    };
+    return this.http.delete<any>(`${this.apiUrl}delete/`, options);
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post(`${this.base}password-reset/`, { email });
+  }
+
+  confirmPasswordReset(uidb64: string, token: string, new_password: string): Observable<any> {
+    return this.http.post(`${this.base}password-reset-confirm/`, {
+      uidb64,
+      token,
+      new_password,
+    });
+  }
+  
 }

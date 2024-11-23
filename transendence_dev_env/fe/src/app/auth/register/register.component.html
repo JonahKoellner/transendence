@@ -1,42 +1,69 @@
-<div class="container d-flex justify-content-center align-items-center vh-100 register-container">
-  <div class="card bg-dark text-light shadow-lg p-4" style="width: 100%; max-width: 400px;">
-    <h2 class="text-center mb-4">Register</h2>
-    <form #registerForm="ngForm" (ngSubmit)="register(registerForm)" class="form-dark">
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <i class="fas fa-user-plus fa-3x auth-icon"></i>
+      <h2>Register</h2>
+    </div>
+    <form #registerForm="ngForm" (ngSubmit)="register(registerForm)" class="auth-body">
       <!-- Username -->
       <div class="form-group">
         <label for="username">Username:</label>
-        <input id="username" [(ngModel)]="username" name="username" required minlength="3" maxlength="15"
-          class="form-control bg-secondary text-light border-0" #usernameInput="ngModel">
-        <div *ngIf="usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)" class="text-danger">
+        <input
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          required
+          minlength="3"
+          maxlength="15"
+          class="form-control"
+          #usernameInput="ngModel"
+        />
+        <div *ngIf="usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)" class="error-message">
           <small *ngIf="usernameInput.errors?.['required']">Username is required.</small>
-          <small *ngIf="usernameInput.errors?.['minlength']">Username must be at least 3 characters long.</small>
-          <small *ngIf="usernameInput.errors?.['maxlength']">Username cannot exceed 15 characters.</small>
+          <small *ngIf="usernameInput.errors?.['minlength']">Must be at least 3 characters.</small>
+          <small *ngIf="usernameInput.errors?.['maxlength']">Cannot exceed 15 characters.</small>
         </div>
       </div>
 
       <!-- Email -->
       <div class="form-group">
         <label for="email">Email:</label>
-        <input id="email" [(ngModel)]="email" name="email" required email maxlength="50"
-          class="form-control bg-secondary text-light border-0" #emailInput="ngModel">
-        <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="text-danger">
+        <input
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          email
+          maxlength="50"
+          class="form-control"
+          #emailInput="ngModel"
+        />
+        <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="error-message">
           <small *ngIf="emailInput.errors?.['required']">Email is required.</small>
-          <small *ngIf="emailInput.errors?.['email']">Please enter a valid email address.</small>
-          <small *ngIf="emailInput.errors?.['maxlength']">Email cannot exceed 50 characters.</small>
+          <small *ngIf="emailInput.errors?.['email']">Enter a valid email.</small>
+          <small *ngIf="emailInput.errors?.['maxlength']">Cannot exceed 50 characters.</small>
         </div>
       </div>
 
       <!-- Password -->
       <div class="form-group">
         <label for="password">Password:</label>
-        <input id="password" type="password" [(ngModel)]="password" name="password" required minlength="8"
-          maxlength="20" pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-          class="form-control bg-secondary text-light border-0" #passwordInput="ngModel">
-        <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="text-danger">
+        <input
+          id="password"
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          minlength="8"
+          class="form-control"
+          #passwordInput="ngModel"
+          maxlength="50"
+          pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+        />
+        <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="error-message">
           <small *ngIf="passwordInput.errors?.['required']">Password is required.</small>
-          <small *ngIf="passwordInput.errors?.['minlength']">Password must be at least 8 characters long.</small>
-          <small *ngIf="passwordInput.errors?.['maxlength']">Password cannot exceed 20 characters.</small>
-          <small *ngIf="passwordInput.errors?.['pattern']">
+          <small *ngIf="passwordInput.errors?.['minlength']">Must be at least 8 characters.</small>
+          <small *ngIf="passwordInput.errors?.['maxlength']">Password cannot exceed 50 characters.</small>          <small *ngIf="passwordInput.errors?.['pattern']">
             Password must include at least one uppercase letter, one lowercase letter, one number, and one special
             character.
           </small>
@@ -44,15 +71,11 @@
       </div>
 
       <!-- Submit Button -->
-      <button type="submit" class="btn btn-primary btn-block mt-3" [disabled]="registerForm.invalid">Register</button>
-
-      <!-- Redirect to Login -->
-      <div class="text-center mt-3">
-        <a [routerLink]="['/login']" class="text-light">Already have an account? Login here.</a>
-      </div>
+      <button type="submit" class="auth-button" [disabled]="registerForm.invalid">Register</button>
     </form>
-
-    <!-- Error Message -->
-    <div *ngIf="error" class="alert alert-danger mt-3 text-center">{{ error }}</div>
+    <div class="auth-footer">
+      <a [routerLink]="['/login']">Already have an account? Login</a>
+    </div>
+    <div *ngIf="error" class="error-message text-center">{{ error }}</div>
   </div>
 </div>

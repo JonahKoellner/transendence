@@ -1,0 +1,30 @@
+<div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-header">
+        <i class="fas fa-key fa-3x auth-icon"></i>
+  
+        <h2>Verify OTP</h2>
+      </div>
+      <form #otpForm="ngForm" (ngSubmit)="verifyOTP(otpForm)" class="auth-body">
+        <div class="form-group">
+          <label for="otp">OTP Code:</label>
+          <input
+            id="otp"
+            [(ngModel)]="otp_code"
+            name="otp_code"
+            required
+            pattern="^\d{6}$"
+            class="form-control"
+            #otpInput="ngModel"
+          />
+          <div *ngIf="otpInput.invalid && (otpInput.dirty || otpInput.touched)" class="error-message">
+            <small *ngIf="otpInput.errors?.['required']">OTP is required.</small>
+            <small *ngIf="otpInput.errors?.['pattern']">Must be a 6-digit code.</small>
+          </div>
+        </div>
+        <button type="submit" class="auth-button" [disabled]="otpForm.invalid">Verify</button>
+      </form>
+      <div *ngIf="error" class="error-message text-center">{{ error }}</div>
+    </div>
+  </div>
+  

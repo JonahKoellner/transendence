@@ -5,6 +5,7 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
 import { GameSettings } from '../games/online-pvp/create-room/create-room.component';
 import { Router } from '@angular/router';
+// import { environment } from 'src/environment';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -24,7 +25,7 @@ export class GameLobbyService {
     if (this.socket$ && this.isConnected.value) return;
     const token = this.authService.getAccessToken(); // Assuming a method to get the access token
     // this.socket$ = webSocket(`ws://localhost:8000/ws/lobby/${roomId}/?token=${token}`);
-    this.socket$ = webSocket(environment.wsUrl + `/games/lobby/${roomId}/?token=${token}`);
+    this.socket$ = webSocket(environment.wsUrl + `/lobby/${roomId}/?token=${token}`);
 
     this.socket$.subscribe(
       (msg) => {this.messages$.next(msg),  console.log(msg, roomId)},

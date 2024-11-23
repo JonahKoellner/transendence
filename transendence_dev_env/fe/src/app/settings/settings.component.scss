@@ -1,0 +1,92 @@
+.settings-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+
+  
+    .settings-card {
+      width: 100%;
+      max-width: 800px;
+      text-align: center;
+  
+      h2 {
+        font-size: 1.8rem;
+        color: #61ba50;
+        margin-bottom: 1.5rem;
+      }
+  
+      .error-alert {
+        background-color: #dc3545;
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 1rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+  
+      .settings-section {
+        margin-top: 1.5rem;
+  
+        p {
+          font-size: 1.1rem;
+          color: #adb5bd;
+          margin-bottom: 1rem;
+        }
+  
+        .btn-custom {
+          padding: 0.75rem 1.5rem;
+          border-radius: 25px;
+          font-size: 1rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  
+          &.btn-success {
+            background-color: #61ba50;
+            color: #ffffff;
+            border: none;
+  
+            &:hover {
+              background-color: #45a049;
+              transform: translateY(-2px);
+              box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+  
+            &:active {
+              transform: translateY(0);
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            }
+          }
+  
+          &.btn-danger {
+            background-color: #dc3545;
+            color: #ffffff;
+            border: none;
+  
+            &:hover {
+              background-color: #c82333;
+              transform: translateY(-2px);
+              box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+  
+            &:active {
+              transform: translateY(0);
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            }
+          }
+  
+          &:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+          }
+        }
+      }
+    }
+  }
+  
+  

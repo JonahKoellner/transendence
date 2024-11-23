@@ -17,6 +17,9 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     otp_secret = models.CharField(max_length=32, blank=True, null=True)
     is_2fa_enabled = models.BooleanField(default=False)
+    last_login = models.DateTimeField(null=True, blank=True)
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+    last_user_agent = models.TextField(null=True, blank=True)
     has_logged_in = models.BooleanField(default=False)
 
     display_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
@@ -28,6 +31,8 @@ class Profile(models.Model):
     
     xp = models.IntegerField(default=0)
     level = models.IntegerField(default=1)
+    
+    is_ft_authenticated = models.BooleanField(default=False)
     
     # Stats tracking for achievements
     games_played = models.IntegerField(default=0)

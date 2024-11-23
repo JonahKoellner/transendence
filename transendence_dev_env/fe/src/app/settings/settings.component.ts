@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../auth.service';
 import * as QRCode from 'qrcode';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -12,17 +13,13 @@ export class SettingsComponent {
   qrCodeImage: string = '';
   error: string = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     // Fetch the user's profile to check if 2FA is enabled
     this.authService.getProfile().subscribe(
       (profile) => {
         this.is2FAEnabled = profile.is_2fa_enabled;  // Update the UI based on the 2FA status
-        const otpUri = localStorage.getItem('otp_uri');
-        if (otpUri && this.is2FAEnabled) {
-          this.generateQRCode(otpUri);  // Display QR code if 2FA is enabled and OTP URI is available
-        }
       },
       (error) => {
         console.error('Error fetching profile:', error);
@@ -49,8 +46,7 @@ export class SettingsComponent {
     this.authService.enable2FA().subscribe(
       (response) => {
         if (response && response.otp_uri) {
-          alert('2FA enabled successfully');
-          this.qrCodeImage = response.otp_uri;  // Store the QR code for display
+          this.router.navigate(['/verify-otp', response.otp_uri]);
         } else {
           this.error = 'Failed to enable 2FA';
         }
@@ -71,6 +67,7 @@ export class SettingsComponent {
           alert('2FA disabled successfully');
           this.qrCodeImage = '';  // Remove the QR code image
           this.is2FAEnabled = false;  // Update the status in UI
+          window.location.reload();  // Reload the page to reflect the changes
         } else {
           this.error = 'Failed to disable 2FA';
         }
@@ -80,14 +77,5 @@ export class SettingsComponent {
         this.error = 'Error disabling 2FA. Please try again.';
       }
     );
-  }
-  generateQRCode(otpUri: string) {
-    QRCode.toDataURL(otpUri, (error: Error | null | undefined, url: string) => {
-      if (error) {
-        console.error('Error generating QR code', error);
-      } else {
-        this.qrCodeImage = url;
-      }
-    });
   }
 }

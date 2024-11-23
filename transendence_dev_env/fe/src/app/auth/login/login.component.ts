@@ -42,15 +42,14 @@ export class LoginComponent implements OnInit {
             console.log('Profile in login:', profile);
             if (!profile.is_2fa_enabled && response.otp_uri) {
               this.router.navigate(['/verify-otp', response.otp_uri]);
-            } else if (profile.is_2fa_enabled && !response.otp_uri) {
+            } else if (!profile.is_2fa_enabled && !response.otp_uri) {
               window.location.href = '/home';
-            } else if (profile.is_2fa_enabled && response.otp_uri) {
+            } else if (profile.is_2fa_enabled) {
               window.location.href = '/home';
             }
           },
           error => {
             console.error('Failed to load profile:', error);
-            this.router.navigate(['/login']);
           }
         );
       },

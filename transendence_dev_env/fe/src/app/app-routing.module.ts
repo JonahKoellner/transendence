@@ -24,11 +24,17 @@ import { GameRoomsComponent } from './games/online-pvp/game-rooms/game-rooms.com
 import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 import { ArenaComponent } from './games/arena/arena.component';
 import { ChaosComponent } from './games/chaos/chaos.component';
-
+import { GamesListComponent } from './games/games-list/games-list.component';
+import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
+import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
+import { Local3dPvpComponent } from './games/3d/local-pvp/local-pvp.component';
+import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
+import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/password-reset-confirm.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
   { path: 'verify-otp/:id', component: VerifyOtpComponent },
+  { path: 'revalidate-otp', component: RevalidateOtpComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'profile/user-details/:id', component: UserDetailsComponent, canActivate: [AuthGuard] },
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
@@ -48,10 +54,15 @@ const routes: Routes = [
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
+  { path: 'games/list', component: GamesListComponent, canActivate: [AuthGuard] },
   { path: 'games/leaderboard', component: LeaderboardComponent, canActivate: [AuthGuard] },
   { path: 'games/chaos', component: ChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/arena', component: ArenaComponent, canActivate: [AuthGuard] },
+  { path: 'auth/callback', component: FtAuthCallbackComponentComponent },
+  { path: 'forgot-password', component: PasswordResetComponent },
+  { path: 'reset-password', component: PasswordResetConfirmComponent },
   { path: 'about', component: AboutComponent},
+  { path: 'test', component: Local3dPvpComponent},
   { path: '**', redirectTo: 'login' }
 ];
 
