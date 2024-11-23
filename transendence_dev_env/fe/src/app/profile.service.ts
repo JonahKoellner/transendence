@@ -80,4 +80,17 @@ export class ProfileService {
     };
     return this.http.delete<any>(`${this.apiUrl}delete/`, options);
   }
+
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post(`${this.base}password-reset/`, { email });
+  }
+
+  confirmPasswordReset(uidb64: string, token: string, new_password: string): Observable<any> {
+    return this.http.post(`${this.base}password-reset-confirm/`, {
+      uidb64,
+      token,
+      new_password,
+    });
+  }
+  
 }

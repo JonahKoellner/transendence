@@ -13,3 +13,5 @@ django-password-validators
 Pillow
 channels_redis
 daphne
+django-anymail
+sendgrid

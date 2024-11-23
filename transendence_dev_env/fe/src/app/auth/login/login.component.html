@@ -51,6 +51,8 @@
     </form>
     <div class="auth-footer">
       <a [routerLink]="['/register']">Don't have an account? Register</a>
+      <br>
+      <a [routerLink]="['/forgot-password']">Forgot your password?</a>
     </div>
     <div *ngIf="error" class="error-message text-center">{{ error }}</div>
   </div>

@@ -14,7 +14,7 @@ from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
     TokenSerializer, UserProfileSerializer, NotificationSerializer,
     UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
-    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer,
+    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 )
 from .utils import create_notification, update_profile_with_transaction
 from django.http import JsonResponse
@@ -30,6 +30,72 @@ from django.db.models import Q
 import be.settings as besettings
 from games.models import Game, Lobby, Tournament
 from django.utils import timezone
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+import logging
+from django.utils.http import urlsafe_base64_encode
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+logger = logging.getLogger('accounts')
+from anymail.message import AnymailMessage
+from django.conf import settings
+from django.urls import reverse
+class PasswordResetRequestView(APIView):
+    """
+    Handle password reset requests by sending an email with a reset link.
+    """
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = User.objects.get(email=email)
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            reset_url = f"{settings.FRONTEND_DOMAIN}/reset-password?uidb64={uidb64}&token={token}"
+            
+            subject = "Password Reset Requested"
+            context = {
+                'user': user,
+                'reset_url': reset_url,
+            }
+            # Render HTML and plain text versions
+            text_content = render_to_string('accounts/password_reset_email.txt', context)
+            html_content = render_to_string('accounts/password_reset_email.html', context)
+            
+            try:
+                message = AnymailMessage(
+                    subject=subject,
+                    body=text_content,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[email],
+                )
+                message.attach_alternative(html_content, "text/html")
+                message.send()
+                logger.info(f"Password reset email sent to {email}")
+                return Response({"message": "Password reset email sent"}, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.error(f"Error sending password reset email to {email}: {e}")
+                return Response({"error": "Error sending email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            logger.warning(f"Invalid password reset request data: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PasswordResetConfirmView(APIView):
+    """
+    Handle password reset confirmations by setting a new password.
+    """
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            new_password = serializer.validated_data['new_password']
+            user.set_password(new_password)
+            user.save()
+            logger.info(f"Password reset successfully for user {user.email}")
+            return Response({"message": "Password has been reset successfully"}, status=status.HTTP_200_OK)
+        else:
+            logger.warning(f"Invalid password reset confirmation data: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterView(APIView):

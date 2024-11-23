@@ -54,6 +54,8 @@ import { GamesListComponent } from './games/games-list/games-list.component';
 import { DeleteAccountModalComponent } from './profile/delete-account-modal/delete-account-modal.component';
 import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
 import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
+import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
+import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/password-reset-confirm.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -100,7 +102,9 @@ import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.com
     GamesListComponent,
     DeleteAccountModalComponent,
     FtAuthCallbackComponentComponent,
-    RevalidateOtpComponent
+    RevalidateOtpComponent,
+    PasswordResetComponent,
+    PasswordResetConfirmComponent
   ],
   imports: [
     BrowserModule,

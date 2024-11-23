@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'django_password_validators',
     'django_password_validators.password_history',
     'django_password_validators.password_character_requirements',
-    'channels'
+    'channels',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -66,6 +67,17 @@ MIDDLEWARE = [
     'csp.middleware.CSPMiddleware'
 ]
 
+EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+ANYMAIL = {
+    "SENDGRID_API_KEY": os.getenv("SG.."),  # Ensure this is set in your environment variables
+    "SENDGRID_ECHO_TO_STDOUT": False,  # Set to True for development to print emails to console
+}
+
+# Default from email
+DEFAULT_FROM_EMAIL = "no-reply@yourdomain.com"  # Replace with your verified sender email
+
+# Frontend domain for constructing reset URLs
+FRONTEND_DOMAIN = os.getenv("DOMAIN", "http://localhost:4200")
 
 
 CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
