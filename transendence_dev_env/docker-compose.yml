@@ -32,6 +32,7 @@ services:
     ports:
       - "5234:5234"  # For Beats input
       - "5240:5240"  # For GELF input
+      - "5431:5431"
     volumes:
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:

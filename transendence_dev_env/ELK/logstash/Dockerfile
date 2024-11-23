@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install -y wget && \
     apt-get clean
 
 COPY pipeline ./pipeline
-EXPOSE 5234 5240
+EXPOSE 5234 5240 5431
 
 CMD ["bin/logstash", "-f", "pipeline"]
