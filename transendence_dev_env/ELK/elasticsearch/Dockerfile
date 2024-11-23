@@ -56,9 +56,11 @@ RUN chown -R ela:ela /usr/share/elasticsearch/config/certs/* && \
 # RUN whoami && ls -l /usr/share/elasticsearch/config/certs/instance
 COPY elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
 
-COPY create-kibana-user.sh /usr/share/elasticsearch/create-user.sh
-RUN chmod +x /usr/share/elasticsearch/create-user.sh
+COPY create_service_token.sh /usr/share/elasticsearch/bin/create_service_token.sh
+RUN chmod +x /usr/share/elasticsearch/bin/create_service_token.sh
 
+RUN mkdir -p /usr/share/elasticsearch/service_token
+RUN chown -R ela:ela /usr/share/elasticsearch/service_token
 
 # Switch to the non-root user
 USER ela
@@ -69,7 +71,7 @@ USER ela
 #     test -f /usr/share/elasticsearch/config/ca/ca.key && \
 #     echo "CA certificates exist." || (echo "CA certificates not found!" && whoami && ls -l /usr/share/elasticsearch/config/certs/instance && exit 1)
 
-# ENTRYPOINT ["/usr/share/elasticsearch/create-user.sh" ]
+ENTRYPOINT ["/bin/bash", "-c", "/usr/share/elasticsearch/bin/create_service_token.sh" ]
 
 # RUN /usr/share/elasticsearch/create-user.sh
 
@@ -77,4 +79,4 @@ USER ela
 EXPOSE 9200 9300
 
 # Command to run Elasticsearch
-CMD ["bin/elasticsearch"]
+# CMD ["bin/elasticsearch"]

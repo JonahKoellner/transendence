@@ -22,6 +22,7 @@ services:
       - ./elk/elasticsearch/.env
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
+      - elasticsearch-service-token:/usr/share/elasticsearch/service_token
     networks:
       - elk-net
 
@@ -52,6 +53,8 @@ services:
       - elasticsearch
     networks:
       - elk-net
+    volumes:
+      - elasticsearch-service-token:/usr/share/kibana/service_token
 
   # Angular Frontend Service
   angular:
@@ -143,4 +146,6 @@ volumes:
   postgres_data:
     driver: local
   esdata:
+    driver: local
+  elasticsearch-service-token:
     driver: local

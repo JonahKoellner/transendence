@@ -6,9 +6,9 @@
 # kibana.yml
 
 # Elasticsearch connection settings
-elasticsearch.hosts: ["https://elasticsearch:9200"]
-elasticsearch.username: "kibana"
-elasticsearch.password: "kibana"
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+# elasticsearch.username: "kibana"
+# elasticsearch.password: "kibana"
 
 # SSL Configuration
 elasticsearch.ssl.verificationMode: "none"

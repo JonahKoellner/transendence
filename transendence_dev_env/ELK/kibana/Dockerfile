@@ -20,13 +20,15 @@ RUN groupadd -g 1000 kibana && \
 
     
 # Switch to the non-root user
+
+COPY setup_kibana.sh /usr/share/kibana/setup_kibana.sh
+RUN chmod +x /usr/share/kibana/setup_kibana.sh
+
 USER kibana
-
-# COPY setup-kibana.sh /usr/share/kibana/setup-kibana.sh
-# RUN chmod +x /usr/share/kibana/setup-kibana.sh
-
 
 EXPOSE 5601
 
+ENTRYPOINT ["/bin/bash", "/usr/share/kibana/setup_kibana.sh"]
+
 # ENTRYPOINT [ "/usr/share/kibana/setup-kibana.sh" ]
-CMD ["bin/kibana"]
+# CMD ["bin/kibana"]
