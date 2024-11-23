@@ -1,16 +1,3 @@
-# FROM debian:bullseye-slim
-
-# WORKDIR /usr/share/elasticsearch
-
-# RUN apt-get update && apt-get install -y wget && \
-#     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-x86_64.tar.gz && \
-#     tar -xzf elasticsearch-8.10.2-linux-x86_64.tar.gz --strip-components=1 && \
-#     rm elasticsearch-8.10.2-linux-x86_64.tar.gz && \
-#     apt-get clean
-
-# CMD ["bin/elasticsearch"]
-# Start from a slim Debian base image
-
 FROM debian:bullseye-slim
 
 # Set the working directory
@@ -75,14 +62,14 @@ RUN chmod +x /usr/share/elasticsearch/create-user.sh
 
 # Switch to the non-root user
 USER ela
-RUN /usr/share/elasticsearch/create-user.sh
+# RUN /usr/share/elasticsearch/create-user.sh
 
 
 # RUN test -f /usr/share/elasticsearch/config/ca/ca.crt && \
 #     test -f /usr/share/elasticsearch/config/ca/ca.key && \
 #     echo "CA certificates exist." || (echo "CA certificates not found!" && whoami && ls -l /usr/share/elasticsearch/config/certs/instance && exit 1)
 
-ENTRYPOINT ["/bin/bash", "/usr/share/elasticsearch/create-user.sh" ]
+# ENTRYPOINT ["/usr/share/elasticsearch/create-user.sh" ]
 
 # RUN /usr/share/elasticsearch/create-user.sh
 
@@ -90,20 +77,4 @@ ENTRYPOINT ["/bin/bash", "/usr/share/elasticsearch/create-user.sh" ]
 EXPOSE 9200 9300
 
 # Command to run Elasticsearch
-# CMD ["bin/elasticsearch"]
-
-
-
-
-
-# Use an official Elasticsearch base image
-# FROM docker.elastic.co/elasticsearch/elasticsearch:8.5.0
-
-# # Set environment variables for M1 compatibility (JVM options)
-# ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
-
-# # Expose Elasticsearch port
-# EXPOSE 9200 9300
-
-# # Ensure Elasticsearch can run without root privileges
-# USER elasticsearch
+CMD ["bin/elasticsearch"]
