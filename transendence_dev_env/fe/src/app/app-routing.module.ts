@@ -33,6 +33,10 @@ import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/pas
 import { PrivacyPolicyComponent } from './home/privacy-policy/privacy-policy.component';
 import { DisclaimerComponent } from './home/disclaimer/disclaimer.component';
 import { TermsOfServiceComponent } from './home/terms-of-service/terms-of-service.component';
+import { OnlinePvpChaosComponent } from './games/online-pvp-chaos/online-pvp-chaos.component';
+import { CreateRoomChaosComponent } from './games/online-pvp-chaos/create-room/create-room-chaos.component';
+import { JoinRoomChaosComponent } from './games/online-pvp-chaos/join-room/join-room-chaos.component';
+import { GameRoomsChaosComponent } from './games/online-pvp-chaos/game-rooms/game-rooms-chaos.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -52,6 +56,14 @@ const routes: Routes = [
       { path: 'join', component: JoinRoomComponent, canActivate: [AuthGuard] }
     ],
    },
+   { path: 'games/online-pvp-chaos',component: OnlinePvpChaosComponent, canActivate: [AuthGuard],
+    children: [
+      { path: 'rooms', component: GameRoomsChaosComponent, canActivate: [AuthGuard]},
+      { path: 'create', component: CreateRoomChaosComponent, canActivate: [AuthGuard]},
+      { path: 'join', component: JoinRoomChaosComponent, canActivate: [AuthGuard] }
+    ],
+   },
+  { path: 'games/online-pvp-chaos/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },

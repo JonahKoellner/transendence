@@ -60,6 +60,12 @@ import { CookieConsentComponent } from './auth/cookie-consent/cookie-consent.com
 import { PrivacyPolicyComponent } from './home/privacy-policy/privacy-policy.component';
 import { TermsOfServiceComponent } from './home/terms-of-service/terms-of-service.component';
 import { DisclaimerComponent } from './home/disclaimer/disclaimer.component';
+import { OnlinePvpChaosComponent } from './games/online-pvp-chaos/online-pvp-chaos.component';
+import { JoinRoomChaosComponent } from './games/online-pvp-chaos/join-room/join-room-chaos.component';
+import { GameRoomsChaosComponent } from './games/online-pvp-chaos/game-rooms/game-rooms-chaos.component';
+import { GameRoomChaosComponent } from './games/online-pvp-chaos/game-room/game-room-chaos.component';
+import { GameDisplayChaosComponent } from './games/online-pvp-chaos/game-display/game-display-chaos.component';
+import { CreateRoomChaosComponent } from './games/online-pvp-chaos/create-room/create-room-chaos.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -93,9 +99,15 @@ import { DisclaimerComponent } from './home/disclaimer/disclaimer.component';
     CreateRoomComponent,
     JoinRoomComponent,
     GameRoomComponent,
-    GameDisplayComponent,
-    AboutComponent,
     GameRoomsComponent,
+    GameDisplayComponent,
+    OnlinePvpChaosComponent,
+    JoinRoomChaosComponent,
+    GameRoomsChaosComponent,
+    GameRoomChaosComponent,
+    GameDisplayChaosComponent,
+    CreateRoomChaosComponent,
+    AboutComponent,
     LeaderboardComponent,
     ImageSelectorModalComponent,
     ArenaComponent,

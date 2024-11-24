@@ -136,6 +136,65 @@ class Lobby(models.Model):
         """Returns True if the guest has joined the lobby."""
         return self.guest is not None
 
+class ChaosLobby(models.Model):
+    room_id = models.CharField(max_length=10, unique=True)
+    host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_chaos_lobbies")
+    guest = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name="joined_chaos_lobbies")
+    is_host_ready = models.BooleanField(default=False)
+    is_guest_ready = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    max_rounds = models.IntegerField(default=3)  # New field for max rounds
+    round_score_limit = models.IntegerField(default=3)  # New field for round score limit
+    powerup_spawn_rate = models.IntegerField(default=10)  # New field for round score limit
+    host_paddle_color = models.CharField(max_length=7, default="#FFFFFF")
+    guest_paddle_color = models.CharField(max_length=7, default="#FFFFFF")
+    host_paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)
+    guest_paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)
+    
+    def is_full(self):
+        return self.guest is not None
+
+    def all_ready(self):
+        return self.is_host_ready and self.is_guest_ready
+
+    def get_host_name(self):
+        return self.host.username if self.host else "Waiting for host"
+
+    def get_guest_name(self):
+        return self.guest.username if self.guest else "Waiting for guest"
+
+    def set_ready_status(self, user, is_ready):
+        """ Set the ready status for the host or guest based on the user. """
+        if user == self.host:
+            self.is_host_ready = is_ready
+        elif user == self.guest:
+            self.is_guest_ready = is_ready
+        self.save()
+
+    def get_lobby_state(self):
+        """Return the lobby state with serialized image URLs."""
+        state = {
+            "is_host_ready": self.is_host_ready,
+            "is_guest_ready": self.is_guest_ready,
+            "all_ready": self.all_ready(),
+            "host_name": str(self.host.username) if self.host else None,
+            "guest_name": str(self.guest.username) if self.guest else None,
+            "is_full": self.is_full(),
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat(),
+            "max_rounds": self.max_rounds,
+            "round_score_limit": self.round_score_limit,
+            "powerup_spawn_rate": self.powerup_spawn_rate,
+            "room_id": self.room_id,
+        }
+        
+        return state
+
+    def has_guest_joined(self):
+        """Returns True if the guest has joined the lobby."""
+        return self.guest is not None
+
 class Game(models.Model):
     # Game Modes
     PVE = 'pve'
@@ -143,6 +202,7 @@ class Game(models.Model):
     ONLINE_PVP = 'online_pvp'
     CHAOS_PVE = 'chaos_pve'
     CHAOS_PVP = 'chaos_pvp'
+    ONLINE_CHAOS_PVP = 'online_chaos_pvp'
 
 
     GAME_MODES = [
@@ -150,7 +210,8 @@ class Game(models.Model):
         (LOCAL_PVP, 'Local Player vs Local Player'),
         (ONLINE_PVP, 'Online Player vs Online Player'),
         (CHAOS_PVE, 'Chaos Player vs AI'),
-        (CHAOS_PVP, 'Chaos Player vs Player')
+        (CHAOS_PVP, 'Chaos Player vs Player'),
+        (ONLINE_CHAOS_PVP, 'Online Chaos Player vs Player')
     ]
     
     # Game States

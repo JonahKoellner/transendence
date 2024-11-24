@@ -14,7 +14,7 @@ import calendar
 from django.contrib.auth.models import User 
 from accounts.serializers import UserProfileSerializer
 from accounts.models import Profile
-from .models import Tournament, Match, Round, Game, Lobby, Stage, TournamentType, MatchOutcome
+from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, Stage, TournamentType, MatchOutcome
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
@@ -60,8 +60,10 @@ class GameViewSet(viewsets.ModelViewSet):
             mode_multiplier = 0.7 if not is_winner else 1.0  # PvE easier, give less XP if lost
         elif game.game_mode == Game.LOCAL_PVP:
             mode_multiplier = 1.0 if not is_winner else 1.1  # Balanced mode, slight bonus for win
-        else:
+        elif game.game_mode == Game.ONLINE_PVP:
             mode_multiplier = 1.1 if not is_winner else 1.3  # Online PvP, higher reward for higher challenge
+        else:
+            mode_multiplier = 1.2 if not is_winner else 1.5  # Online Chaos PVP, highest reward for win
 
         # Apply base, duration, level, performance, and mode multipliers
         xp_gain = (base_xp + duration_xp + level_bonus) * performance_multiplier * mode_multiplier
@@ -716,7 +718,185 @@ class LobbyViewSet(viewsets.ViewSet):
 
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
+
+class ChaosLobbyViewSet(viewsets.ViewSet):
+    @action(detail=False, methods=['post'])
+    def create_room(self, request):
+        room_id = generate_room_id()
+        host = request.user
+        self.clear_existing_user_rooms(host)
+        # Get settings from the request
+        max_rounds = request.data.get("maxRounds", 3)
+        round_score_limit = request.data.get("roundScoreLimit", 3)
+        powerup_spawn_rate = request.data.get("powerupSpawnRate", 10)
+
+        # Create lobby with additional settings
+        lobby = ChaosLobby.objects.create(
+            room_id=room_id,
+            host=host,
+            max_rounds=max_rounds,
+            round_score_limit=round_score_limit,
+            powerup_spawn_rate=powerup_spawn_rate
+        )
+
+        return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    @transaction.atomic  # Ensures that the following changes are atomic
+    def join_room(self, request):
+        room_id = request.data.get("room_id")
+        user = request.user
+
+        try:
+            # Try to fetch the requested lobby
+            lobby = ChaosLobby.objects.get(room_id=room_id, is_active=True)
+
+            # Check if the user is the host; if so, ignore the request
+            if lobby.host == user:
+                return Response(
+                    {"detail": "You are already the host of this room."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Check if the user is already the guest; if so, allow them to rejoin without modification
+            if lobby.guest == user:
+                return Response(
+                    {"detail": "You are already the guest in this room."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Check if the lobby is full (has a guest already)
+            if lobby.is_full():
+                return Response({"detail": "Room is full"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # If the user is not the host or current guest, set them as the guest
+            # First, clear any other room associations for the user
+            self.remove_user_from_other_rooms(user)
+
+            # Add the user as a guest to the room
+            lobby.guest = user
+            lobby.save()
+
+            return Response(
+                {"detail": "Joined room successfully. You were removed from any other active rooms."},
+                status=status.HTTP_200_OK
+            )
+
+        except ChaosLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def remove_user_from_other_rooms(self, user):
+        """Removes the user from any rooms they are currently in."""
+        # Remove user from any room where they are a guest
+        ChaosLobby.objects.filter(guest=user).update(guest=None, is_guest_ready=False)
         
+        # Optional: If a user can host and join rooms simultaneously and needs to be removed as a host too
+        # Lobby.objects.filter(host=user).delete()  # Uncomment if needed
+        
+    def clear_existing_user_rooms(self, user):
+        """Clears any existing room associations for the user before creating a new one."""
+        # Remove the user as a guest from any existing lobbies
+        ChaosLobby.objects.filter(guest=user).update(guest=None, is_guest_ready=False)
+
+        # Delete any lobbies where the user is the host
+        ChaosLobby.objects.filter(host=user).delete()
+
+    @action(detail=False, methods=['post'])
+    def set_ready(self, request):
+        room_id = request.data.get("room_id")
+        is_ready = request.data.get("is_ready", False)
+
+        try:
+            lobby = ChaosLobby.objects.get(room_id=room_id, is_active=True)
+            if request.user == lobby.host:
+                lobby.is_host_ready = is_ready
+            elif request.user == lobby.guest:
+                lobby.is_guest_ready = is_ready
+            else:
+                return Response({"detail": "Not part of this lobby"}, status=status.HTTP_400_BAD_REQUEST)
+
+            lobby.save()
+            return Response({"detail": "Ready status updated"}, status=status.HTTP_200_OK)
+        except ChaosLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def room_status(self, request, room_id=None):
+        try:
+            lobby = Lobby.objects.get(room_id=room_id)
+
+            # Host's profile
+            host_profile = lobby.host.profile
+            host_paddle_image = host_profile.paddleskin_image.url if host_profile.paddleskin_image else None
+            host_paddle_color = host_profile.paddleskin_color or "#FFFFFF"  # Default color
+
+            # Guest's profile (if guest exists)
+            guest_profile = lobby.guest.profile if lobby.guest else None
+            guest_paddle_image = guest_profile.paddleskin_image.url if guest_profile and guest_profile.paddleskin_image else None
+            guest_paddle_color = guest_profile.paddleskin_color or "#FFFFFF" if guest_profile else None
+
+            return Response({
+                "room_id": room_id,
+                "is_active": lobby.is_active,
+                "host": lobby.host.username,
+                "guest": lobby.guest.username if lobby.guest else None,
+                "is_host_ready": lobby.is_host_ready,
+                "is_guest_ready": lobby.is_guest_ready,
+                "all_ready": lobby.all_ready(),
+                "is_full": lobby.is_full(),
+                "max_rounds": lobby.max_rounds,
+                "round_score_limit": lobby.round_score_limit,
+                "powerup_spawn_rate": lobby.powerup_spawn_rate,
+                "paddleskin_color_left": host_paddle_color,
+                "paddleskin_color_right": guest_paddle_color,
+                "paddleskin_image_left": host_paddle_image,
+                "paddleskin_image_right": guest_paddle_image,
+            }, status=status.HTTP_200_OK)
+        except ChaosLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    @action(detail=False, methods=['get'])
+    def list_rooms(self, request):
+        """
+        Returns a list of all available rooms with host and guest information.
+        """
+        rooms = ChaosLobby.objects.filter(is_active=True)
+        data = [
+            {
+                "room_id": room.room_id,
+                "host": room.host.username,
+                "guest": room.guest.username if room.guest else None,
+                "is_host_ready": room.is_host_ready,
+                "is_guest_ready": room.is_guest_ready,
+                "is_full": room.is_full(),
+                "all_ready": room.all_ready(),
+                "max_rounds": room.max_rounds,
+                "round_score_limit": room.round_score_limit,
+                "powerup_spawn_rate": room.powerup_spawn_rate
+            }
+            for room in rooms
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<room_id>[^/.]+)')
+    def delete_room(self, request, room_id=None):
+        """
+        Deletes the lobby if the requesting user is the host.
+        """
+        try:
+            # Attempt to retrieve the lobby by room_id
+            lobby = ChaosLobby.objects.get(room_id=room_id, is_active=True)
+
+            # Check if the requesting user is the host
+            if request.user != lobby.host:
+                return Response({"detail": "Only the host can delete this room."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Delete the lobby if the user is the host
+            lobby.delete()
+            return Response({"detail": "Lobby deleted successfully."}, status=status.HTTP_200_OK)
+
+        except ChaosLobby.DoesNotExist:
+            return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
+
 class StatsViewSet(viewsets.ViewSet):
     """
     A viewset for retrieving user-specific and global statistics.
