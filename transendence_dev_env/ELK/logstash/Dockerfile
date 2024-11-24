@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y wget curl && \
     apt-get clean
 
 COPY pipeline ./pipeline
-EXPOSE 5240 5431
+EXPOSE 5240 5431 5959
 
 COPY wait_for_elastic.sh /usr/share/logstash/wait_for_elastic.sh
 RUN chmod +x /usr/share/logstash/wait_for_elastic.sh

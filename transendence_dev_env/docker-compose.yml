@@ -28,12 +28,14 @@ services:
 
   # Logstash Service
   logstash:
+    container_name: logstash
     build:
       context: ./elk/logstash
     ports:
       # - "5234:5234"  # For Beats input
       - "5240:5240"  # For GELF input
       - "5431:5431"
+      - "5959:5959"
     volumes:
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
@@ -80,10 +82,10 @@ services:
     networks:
       - app-net
       - elk-net
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5240"
+    # logging:
+    #   driver: "gelf"
+    #   options:
+    #     gelf-address: "udp://logstash:5240"
 
   # Django Backend Service
   django:
@@ -119,10 +121,10 @@ services:
     volumes:
       - ./be:/app
       - ./static:/app/static
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5240"
+    # logging:
+    #   driver: "gelf"
+    #   options:
+    #     gelf-address: "udp://logstash:5240"
 
   # PostgreSQL Database Service
   db:

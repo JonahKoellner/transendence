@@ -20,8 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install daphne for ASGI support
 RUN pip install daphne
 
+COPY wait-for-service.sh /usr/bin/wait-for-it.sh
+RUN chmod +x /usr/bin/wait-for-it.sh
+
 # Expose port 8000
 EXPOSE 8000
 
 # Start Django with migrations
-CMD ["python", "manage.py", "makemigrations", "accounts", "&&", "python", "manage.py", "makemigrations", "games", "&&",  "python", "manage.py", "migrate", "&&",  "python", "manage.py", "loaddata","achievements.json", "&&", "daphne", "-b", "0.0.0.0", "-p", "8000", "be.asgi:application"]
+CMD ["/usr/bin/wait-for-it.sh", "logstash", "9600", "--", "python", "manage.py", "makemigrations", "accounts", "&&", "python", "manage.py", "makemigrations", "games", "&&",  "python", "manage.py", "migrate", "&&",  "python", "manage.py", "loaddata","achievements.json", "&&", "daphne", "-b", "0.0.0.0", "-p", "8000", "be.asgi:application"]

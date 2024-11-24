@@ -213,6 +213,12 @@ LOGGING = {
         },
     },
     'handlers': {
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.SocketHandler',
+            'host': 'logstash',  # Logstash container name or IP
+            'port': 5431,  # Logstash input port
+        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
