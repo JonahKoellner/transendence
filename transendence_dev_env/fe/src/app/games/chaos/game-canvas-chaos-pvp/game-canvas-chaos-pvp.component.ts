@@ -220,7 +220,6 @@ drawPowerUps() {
   }
 }
 
-
   checkPowerUpCollection() {
     this.activePowerUps = this.activePowerUps.filter(powerUp => {
       const distance = Math.sqrt(
@@ -236,7 +235,6 @@ drawPowerUps() {
       return true;
     });
   }
-  
 
   updateScore(player: "player1" | "player2") {
     this.onScore.emit(player);

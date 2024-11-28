@@ -80,6 +80,7 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
             this.guestId = msg.guestId;
           } else if (msg.type === 'game_state') {
             this.gameState = msg;
+            console.log('Game state:', msg);
             this.leftScore = msg.leftScore;
             this.rightScore = msg.rightScore;
           } else if (msg.type === 'game_started') {

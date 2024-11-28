@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby, Game
+from .models import Lobby, ChaosLobby, Game
 from django.contrib.auth.models import User 
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -9,6 +9,7 @@ import asyncio
 import random
 from asyncio import Lock
 from django.utils import timezone
+from threading import Timer
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -60,7 +61,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {"type": "game_started"}
         )
-        
+
         await self.channel_layer.group_send(
         self.room_group_name,
         {
@@ -71,12 +72,12 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Start the game loop
         self.game_loop_task = asyncio.create_task(self.game_loop())
-        
+
     async def update_host_and_guest(self):
         self.lobby = await self.get_lobby(self.room_id)
         self.host = await self.get_lobby_host()
         self.guest = await self.get_lobby_guest()
-            
+
     @database_sync_to_async
     def create_new_game_instance(self):
         logger.debug(f"Creating new game instance for players: {self.host} and {self.guest}")
@@ -687,7 +688,6 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         lobby.save()
 
 class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.game_in_progress = False
@@ -695,12 +695,17 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.right_paddle_y = 250
         self.left_paddle_speed = 0
         self.right_paddle_speed = 0
+        self.paddle_size_modifier = 1
+        self.ball_size_modifier = 1
+        self.ball_speed_modifier = 1
+        self.active_power_ups = []
+        self.POWER_UPS = ["enlargePaddle", "shrinkPaddle", "slowBall", "fastBall", "teleportBall", "shrinkBall", "growBall"]
         self.game_lock = Lock()
         self.game_manager_channel = None  # Initialize game manager channel
         self.current_round = 1
         self.rounds = []
         self.round_start_time = None
-        
+
     async def start_game(self):
         if self.game_in_progress:
             return  # Prevent starting a new game if one is already in progress
@@ -722,6 +727,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         # Get settings from lobby
         self.max_rounds = self.lobby.max_rounds
         self.round_score_limit = self.lobby.round_score_limit
+        self.powerup_spawn_rate = self.lobby.powerup_spawn_rate
 
         # Initialize rounds data
         self.rounds = []
@@ -734,7 +740,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {"type": "game_started"}
         )
-        
+
         await self.channel_layer.group_send(
         self.room_group_name,
         {
@@ -745,12 +751,13 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Start the game loop
         self.game_loop_task = asyncio.create_task(self.game_loop())
-        
+
+
     async def update_host_and_guest(self):
         self.lobby = await self.get_lobby(self.room_id)
         self.host = await self.get_lobby_host()
         self.guest = await self.get_lobby_guest()
-            
+
     @database_sync_to_async
     def create_new_game_instance(self):
         logger.debug(f"Creating new game instance for players: {self.host} and {self.guest}")
@@ -758,7 +765,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.game = Game.objects.create(
             player1=self.host,
             player2=self.guest,
-            game_mode=Game.ONLINE_PVP,
+            game_mode=Game.ONLINE_CHAOS_PVP,
             start_time=timezone.now(),
             is_completed=False,
             moves_log=[],
@@ -770,17 +777,17 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
     def clear_existing_user_rooms(self):
         """Removes the user from any existing rooms and deletes any rooms they created, except the one they are joining."""
         # Remove the user as a guest from any other lobbies, excluding the current one
-        Lobby.objects.filter(guest=self.user).exclude(room_id=self.room_id).update(guest=None, is_guest_ready=False)
-        
+        ChaosLobby.objects.filter(guest=self.user).exclude(room_id=self.room_id).update(guest=None, is_guest_ready=False)
+
         # Delete any lobbies where the user is the host, excluding the current one
-        Lobby.objects.filter(host=self.user).exclude(room_id=self.room_id).delete()
+        ChaosLobby.objects.filter(host=self.user).exclude(room_id=self.room_id).delete()
 
     async def set_game_manager(self, event):
         # Only set the game_manager_channel if the current consumer is not the host
         if not await self.is_user_host():
             self.game_manager_channel = event["channel_name"]
             logger.debug(f"Set game_manager_channel for guest: {self.game_manager_channel}")
-        
+
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.lobby = await self.get_lobby(self.room_id)
@@ -790,7 +797,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         # Set self.host and self.guest from the lobby
         self.host = await self.get_lobby_host()
         self.guest = await self.get_lobby_guest()
-        
+
         # Ensure the user is only in one room by clearing existing associations
         await self.clear_existing_user_rooms()
         
@@ -826,8 +833,8 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_lobby(self, room_id):
-        return Lobby.objects.select_related('host', 'guest').get(room_id=room_id)
-    
+        return ChaosLobby.objects.select_related('host', 'guest').get(room_id=room_id)
+
     @database_sync_to_async
     def get_lobby_host(self):
         return self.lobby.host
@@ -966,18 +973,79 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 self.left_paddle_speed = speed
             else:
                 self.right_paddle_speed = speed
-                
+
     async def game_loop(self):
+        tick_count = 0
         while self.game_in_progress:
             await self.game_tick()
+            tick_count += 1
+            if (tick_count % (60 * self.powerup_spawn_rate) == 0):
+                self.generate_power_up()
+                tick_count = 0
             await asyncio.sleep(1 / 60)
 
     def update_paddle_position(self, paddle, speed):
         if paddle == "left":
-            self.left_paddle_y = max(0, min(self.left_paddle_y + speed, 500 - 60))
+            self.left_paddle_y = max(0, min(self.left_paddle_y + speed, 500 - (60 * self.paddle_size_modifier)))
         elif paddle == "right":
-            self.right_paddle_y = max(0, min(self.right_paddle_y + speed, 500 - 60))
-            
+            self.right_paddle_y = max(0, min(self.right_paddle_y + speed, 500 - (60 * self.paddle_size_modifier)))
+
+    def enlarge_paddle(self):
+        if (self.paddle_size_modifier < 2):
+            self.paddle_size_modifier += 0.1
+            Timer(10, self.shrink_paddle).start()
+
+    def shrink_paddle(self):
+        if (self.paddle_size_modifier > 0.2):
+            self.paddle_size_modifier -= 0.1
+            Timer(10, self.enlarge_paddle).start()
+
+    def shrink_ball(self):
+        if (self.ball_size_modifier > 0.2):
+            self.ball_size_modifier -= 0.1
+            Timer(10, self.grow_ball).start()
+    
+    def grow_ball(self):
+        if (self.ball_size_modifier < 2):
+            self.ball_size_modifier += 0.1
+            Timer(10, self.shrink_ball).start()
+
+    def slow_ball(self):
+        if (self.ball_speed_modifier > 0.25):
+            self.ball_speed_modifier -= 0.25
+            Timer(10, self.fast_ball).start()
+
+    def fast_ball(self):
+        if (self.ball_speed_modifier < 2):
+            self.ball_speed_modifier += 0.25
+            Timer(10, self.slow_ball).start()
+
+    def teleport_ball(self):
+        self.ball_x = random.randint(30 * self.ball_size_modifier, 1000 - 30 * self.ball_size_modifier)
+        self.ball_y = random.randint(30 * self.ball_size_modifier, 500 - 30 * self.ball_size_modifier)
+
+    def generate_power_up(self):
+        power_up = random.choice(self.POWER_UPS)
+        power_up_x = random.randint(25, 975)
+        power_up_y = random.randint(25, 475)
+        self.active_power_ups.append({"x": power_up_x, "y": power_up_y, "type": power_up})
+
+    def activate_power_up(self, power_up):
+        if power_up == "enlargePaddle":
+            self.enlarge_paddle()
+        elif power_up == "shrinkPaddle":
+            self.shrink_paddle()
+        elif power_up == "slowBall":
+            self.slow_ball()
+        elif power_up == "fastBall":
+            self.fast_ball()
+        elif power_up == "teleportBall":
+            self.teleport_ball()
+        elif power_up == "shrinkBall":
+            self.shrink_ball()
+        elif power_up == "growBall":
+            self.grow_ball()
+
     async def game_tick(self):
         async with self.game_lock:
 
@@ -986,18 +1054,28 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.update_paddle_position("right", self.right_paddle_speed)
 
             # Update ball position
-            self.ball_x += self.ball_direction_x * self.ball_speed
-            self.ball_y += self.ball_direction_y * self.ball_speed
+            self.ball_x += self.ball_direction_x * (self.ball_speed * self.ball_speed_modifier)
+            self.ball_y += self.ball_direction_y * (self.ball_speed * self.ball_speed_modifier)
 
             # Handle collisions with top/bottom walls
             if self.ball_y <= 0 or self.ball_y >= 500:
                 self.ball_direction_y *= -1
 
             # Paddle collision handling
-            if self.ball_x <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
+            if self.ball_x - (15 * self.ball_size_modifier) <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + (60 * self.paddle_size_modifier):
                 self.ball_direction_x *= -1
-            elif self.ball_x >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
+            elif self.ball_x + (15 * self.ball_size_modifier) >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + (60 * self.paddle_size_modifier):
                 self.ball_direction_x *= -1
+
+            # Power-up logic
+            for power_up in list(self.active_power_ups):  # Use a copy to avoid modification during iteration
+                power_up_x = power_up['x']
+                power_up_y = power_up['y']
+                power_up_type = power_up['type']
+                if (abs((self.ball_x + 15 * self.ball_size_modifier) - power_up_x) < 15 * self.ball_size_modifier and
+                        abs((self.ball_y + 15 * self.ball_size_modifier) - power_up_y) < 15 * self.ball_size_modifier):
+                    self.activate_power_up(power_up_type)
+                    self.active_power_ups.remove(power_up)
 
             # Scoring logic
             scoring_player = None
@@ -1026,13 +1104,14 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                     "ball_y": self.ball_y,
                     "left_paddle_y": self.left_paddle_y,
                     "right_paddle_y": self.right_paddle_y,
+                    "paddle_size_modifier": self.paddle_size_modifier,
+                    "ball_size_modifier": self.ball_size_modifier,
                     "left_speed": self.left_paddle_speed,
                     "right_speed": self.right_paddle_speed,
+                    "active_power_ups": self.active_power_ups or [],
                 }
             )
-        
-        
-                
+
     async def complete_round(self):
         print("Round completed")
         # Determine round winner
@@ -1272,14 +1351,14 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_lobby_state(self):
-        lobby = Lobby.objects.get(room_id=self.room_id)
+        lobby = ChaosLobby.objects.get(room_id=self.room_id)
         return lobby.get_lobby_state()
 
     @database_sync_to_async
     def update_ready_status(self, is_ready, user_id):
         try:
             with transaction.atomic():
-                lobby = Lobby.objects.select_for_update().get(room_id=self.room_id)
+                lobby = ChaosLobby.objects.select_for_update().get(room_id=self.room_id)
                 if user_id == lobby.host.id:
                     lobby.is_host_ready = is_ready
                 elif lobby.guest and user_id == lobby.guest.id:
@@ -1323,14 +1402,14 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def is_user_eligible_as_guest(self):
         try:
-            lobby = Lobby.objects.get(room_id=self.room_id)
+            lobby = ChaosLobby.objects.get(room_id=self.room_id)
             return lobby.guest is None and self.user != lobby.host
-        except Lobby.DoesNotExist:
+        except ChaosLobby.DoesNotExist:
             return False
 
     @database_sync_to_async
     def set_guest(self):
-        lobby = Lobby.objects.get(room_id=self.room_id)
+        lobby = ChaosLobby.objects.get(room_id=self.room_id)
         lobby.guest = self.user
         lobby.save()
         self.lobby = lobby  # Update self.lobby to reflect changes
@@ -1339,23 +1418,23 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def is_user_host(self):
         """Check if the disconnecting user is the host."""
-        lobby = Lobby.objects.get(room_id=self.room_id)
+        lobby = ChaosLobby.objects.get(room_id=self.room_id)
         return self.user == lobby.host
     
     @database_sync_to_async
     def is_user_host_id(self, user_id):
-        lobby = Lobby.objects.get(room_id=self.room_id)
+        lobby = ChaosLobby.objects.get(room_id=self.room_id)
         return user_id == lobby.host_id  # Use host_id to avoid fetching the host object
 
     @database_sync_to_async
     def delete_lobby(self):
         """Delete the lobby if the host disconnects."""
-        Lobby.objects.filter(room_id=self.room_id).delete()
+        ChaosLobby.objects.filter(room_id=self.room_id).delete()
 
     @database_sync_to_async
     def remove_guest(self):
         """Remove the guest from the lobby if the guest disconnects."""
-        lobby = Lobby.objects.get(room_id=self.room_id)
+        lobby = ChaosLobby.objects.get(room_id=self.room_id)
         lobby.guest = None
         lobby.is_guest_ready = False
         lobby.save()

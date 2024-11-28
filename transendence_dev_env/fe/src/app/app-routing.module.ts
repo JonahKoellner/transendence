@@ -37,6 +37,7 @@ import { OnlinePvpChaosComponent } from './games/online-pvp-chaos/online-pvp-cha
 import { CreateRoomChaosComponent } from './games/online-pvp-chaos/create-room/create-room-chaos.component';
 import { JoinRoomChaosComponent } from './games/online-pvp-chaos/join-room/join-room-chaos.component';
 import { GameRoomsChaosComponent } from './games/online-pvp-chaos/game-rooms/game-rooms-chaos.component';
+import { GameRoomChaosComponent } from './games/online-pvp-chaos/game-room/game-room-chaos.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -63,7 +64,7 @@ const routes: Routes = [
       { path: 'join', component: JoinRoomChaosComponent, canActivate: [AuthGuard] }
     ],
    },
-  { path: 'games/online-pvp-chaos/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
+  { path: 'games/online-pvp-chaos/game-room/:roomId', component: GameRoomChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },

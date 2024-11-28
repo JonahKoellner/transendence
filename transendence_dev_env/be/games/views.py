@@ -822,7 +822,7 @@ class ChaosLobbyViewSet(viewsets.ViewSet):
 
     def room_status(self, request, room_id=None):
         try:
-            lobby = Lobby.objects.get(room_id=room_id)
+            lobby = ChaosLobby.objects.get(room_id=room_id)
 
             # Host's profile
             host_profile = lobby.host.profile

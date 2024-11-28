@@ -11,6 +11,12 @@ interface GameSettings {
   gamebackground_wallpaper?: string;
 }
 
+interface PowerUp {
+  x: number;
+  y: number;
+  type: string;
+}
+
 @Component({
   selector: 'app-game-display-chaos',
   templateUrl: './game-display-chaos.component.html',
@@ -163,6 +169,9 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
     // Draw background
     this.drawBackground();
 
+    // Draw power-ups
+    this.drawPowerUps();
+
     // Draw ball
     this.drawBall(this.gameState.ball_x, this.gameState.ball_y);
 
@@ -172,6 +181,38 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
     // Draw right paddle
     this.drawPaddle(990, this.gameState.right_paddle_y, 'right');
   }
+
+  drawPowerUps() {
+    const powerUpData: { [key: string]: { color: string; icon: string } } = {
+      enlargePaddle: { color: 'green', icon: '⇧' },  // Up arrow
+      shrinkPaddle: { color: 'red', icon: '⇩' },    // Down arrow
+      slowBall: { color: 'purple', icon: '🐢' },    // Turtle
+      fastBall: { color: 'orange', icon: '🔥' },    // Fire
+      teleportBall: { color: 'cyan', icon: '✈️' },  // Airplane
+      shrinkBall: { color: 'brown', icon: '🔽' },  // Downward arrow
+      growBall: { color: 'lime', icon: '🔼' },     // Upward arrow
+    };
+  console.log("Drawing Powerups");
+  const activePowerUps: PowerUp[] = this.gameState.active_power_ups || [];
+  for (const powerUp of activePowerUps) {
+    const { color, icon } = powerUpData[powerUp.type] || { color: 'white', icon: '?' };
+
+    console.log("Drawing Powerup: " + powerUp.type + " " + color + " " + icon);
+    // Draw the power-up circle
+    this.context.fillStyle = color;
+    this.context.beginPath();
+    this.context.arc(powerUp.x, powerUp.y, 15, 0, 2 * Math.PI);
+    this.context.closePath();
+    this.context.fill();
+
+    // Draw the power-up icon
+    this.context.fillStyle = 'black'; // Icon/Text color
+    this.context.font = 'bold 16px Arial'; // Icon font
+    this.context.textAlign = 'center';
+    this.context.textBaseline = 'middle';
+    this.context.fillText(icon, powerUp.x, powerUp.y);
+  }
+}
 
   /**
    * Draws the game background using an image or color.
@@ -197,18 +238,18 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
    * @param y Y-coordinate of the ball
    */
   drawBall(x: number, y: number) {
+    const ballSize = 30 * this.gameState.paddle_size_modifier; // Diameter of the ball
     if (this.ballImage && this.imagesLoaded) {
-      const ballSize = 30; // Diameter of the ball
       this.context.drawImage(this.ballImage, x - ballSize / 2, y - ballSize / 2, ballSize, ballSize);
     } else if (this.gameSettings.ballskin_color) {
       this.context.beginPath();
-      this.context.arc(x, y, 15, 0, 2 * Math.PI);
+      this.context.arc(x, y, ballSize / 2, 0, 2 * Math.PI);
       this.context.fillStyle = this.gameSettings.ballskin_color;
       this.context.fill();
     } else {
       // Default ball color
       this.context.beginPath();
-      this.context.arc(x, y, 15, 0, 2 * Math.PI);
+      this.context.arc(x, y, ballSize / 2, 0, 2 * Math.PI);
       this.context.fillStyle = 'white';
       this.context.fill();
     }
@@ -222,7 +263,7 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
    */
   drawPaddle(x: number, y: number, side: 'left' | 'right') {
     const paddleWidth = 10;
-    const paddleHeight = 60;
+    const paddleHeight = 60 * this.gameState.paddle_size_modifier;
 
     // console.log("Draw Paddle: " + (this.paddleImageLeft != null) + " " + this.imagesLoaded);
     if (side === 'left') {
