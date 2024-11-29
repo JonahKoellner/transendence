@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 
 services:
 
@@ -25,15 +25,19 @@ services:
       - elasticsearch-service-token:/usr/share/elasticsearch/service_token
     networks:
       - elk-net
+      - host-bridge
 
   # Logstash Service
   logstash:
     container_name: logstash
     build:
       context: ./elk/logstash
+    # network_mode: host
     ports:
       # - "5234:5234"  # For Beats input
       - "5240:5240"  # For GELF input
+      - "5240:5240/udp"
+      - "5431:5431/udp"
       - "5431:5431"
       - "5959:5959"
     volumes:
@@ -41,7 +45,9 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - elk-net
+      # - elk-net
+      host-bridge:
+        ipv4_address: 172.25.0.10
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9600"]
       interval: 30s
@@ -61,6 +67,7 @@ services:
       - elasticsearch
     networks:
       - elk-net
+      - host-bridge
     volumes:
       - elasticsearch-service-token:/usr/share/kibana/service_token
 
@@ -82,10 +89,14 @@ services:
     networks:
       - app-net
       - elk-net
-    # logging:
-    #   driver: "gelf"
-    #   options:
-    #     gelf-address: "udp://logstash:5240"
+      - host-bridge
+    logging:
+      driver: "gelf"
+      options:
+        # gelf-address: "udp://172.25.9.10:5240"
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
+
 
   # Django Backend Service
   django:
@@ -118,13 +129,15 @@ services:
     networks:
       - app-net
       - elk-net
+      - host-bridge
     volumes:
       - ./be:/app
       - ./static:/app/static
-    # logging:
-    #   driver: "gelf"
-    #   options:
-    #     gelf-address: "udp://logstash:5240"
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
   # PostgreSQL Database Service
   db:
@@ -153,6 +166,13 @@ networks:
     driver: bridge
   app-net:
     driver: bridge
+  host-bridge:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
 
 volumes:
   postgres_data:

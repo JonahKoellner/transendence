@@ -199,6 +199,7 @@ else:
 
 
 import logging
+import logging.config
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -213,15 +214,15 @@ LOGGING = {
         },
     },
     'handlers': {
-        'logstash': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.SocketHandler',
-            'host': 'logstash',  # Logstash container name or IP
-            'port': 5431,  # Logstash input port
-        },
+        # 'logstash': {
+        #     'level': 'DEBUG',
+        #     'class': 'logging.handlers.SocketHandler',
+        #     'host': 'logstash',  # Logstash container name or IP
+        #     'port': 5431,  # Logstash input port
+        # },
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'formatter': 'verbose',
         },
         'file': {
             'class': 'logging.FileHandler',
@@ -248,7 +249,7 @@ LOGGING = {
     },
 }
 
-
+logging.config.dictConfig(LOGGING)
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
