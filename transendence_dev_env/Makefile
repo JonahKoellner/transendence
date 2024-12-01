@@ -1,7 +1,7 @@
 
+# Function to generate password based on available tools
 generate-password = \
-    $(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
-
+	$(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
 
 # Docker Compose file
 COMPOSE_FILE := docker-compose.yml
@@ -35,7 +35,7 @@ stop:
 
 # Stop and remove all containers
 down:
-	docker-compose -f $(COMPOSE_FILE) down
+	docker-compose -f $(COMPOSE_FILE) down -v
 
 # Restart all services
 restart: down up
@@ -44,9 +44,6 @@ restart: down up
 logs:
 	docker-compose -f $(COMPOSE_FILE) logs -f
 
-# Function to generate password based on available tools
-generate-password = \
-	$(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
 
 # Example target that calls the generate-password function
 print-password:
