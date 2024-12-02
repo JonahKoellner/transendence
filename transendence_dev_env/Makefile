@@ -44,6 +44,10 @@ restart: down up
 logs:
 	docker-compose -f $(COMPOSE_FILE) logs -f
 
+# Clear everything and remove the volumes
+clean: down
+	@docker system prune -af
+	@docker volume ls -q | xargs -r docker volume rm
 
 # Example target that calls the generate-password function
 print-password:

@@ -150,8 +150,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    depends_on:
+      logstash:
+        condition: service_healthy
     networks:
       - app-net
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
   # Redis Service
   redis:
