@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
 import asyncio
 import random
+import math
 from asyncio import Lock
 from django.utils import timezone
 from threading import Timer
@@ -990,35 +991,41 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         elif paddle == "right":
             self.right_paddle_y = max(0, min(self.right_paddle_y + speed, 500 - (60 * self.paddle_size_modifier)))
 
-    def enlarge_paddle(self):
+    def enlarge_paddle(self, reset_toggle=True):
         if (self.paddle_size_modifier < 2):
-            self.paddle_size_modifier += 0.1
-            Timer(10, self.shrink_paddle).start()
+            self.paddle_size_modifier += 0.5
+            if not reset_toggle:
+                Timer(3, self.shrink_paddle, [False]).start()
 
-    def shrink_paddle(self):
+    def shrink_paddle(self, reset_toggle=True):
         if (self.paddle_size_modifier > 0.2):
-            self.paddle_size_modifier -= 0.1
-            Timer(10, self.enlarge_paddle).start()
+            self.paddle_size_modifier -= 0.5
+            if not reset_toggle:
+                Timer(3, self.enlarge_paddle, [False]).start()
 
-    def shrink_ball(self):
+    def shrink_ball(self, reset_toggle=True):
         if (self.ball_size_modifier > 0.2):
-            self.ball_size_modifier -= 0.1
-            Timer(10, self.grow_ball).start()
+            self.ball_size_modifier -= 0.5
+            if not reset_toggle:
+                Timer(3, self.grow_ball, [False]).start()
     
-    def grow_ball(self):
+    def grow_ball(self, reset_toggle=True):
         if (self.ball_size_modifier < 2):
-            self.ball_size_modifier += 0.1
-            Timer(10, self.shrink_ball).start()
+            self.ball_size_modifier += 0.5
+            if not reset_toggle:
+                Timer(3, self.shrink_ball, [False]).start()
 
-    def slow_ball(self):
+    def slow_ball(self, reset_toggle=True):
         if (self.ball_speed_modifier > 0.25):
-            self.ball_speed_modifier -= 0.25
-            Timer(10, self.fast_ball).start()
+            self.ball_speed_modifier -= 0.5
+            if not reset_toggle:
+                Timer(3, self.fast_ball, [False]).start()
 
-    def fast_ball(self):
+    def fast_ball(self, reset_toggle=True):
         if (self.ball_speed_modifier < 2):
-            self.ball_speed_modifier += 0.25
-            Timer(10, self.slow_ball).start()
+            self.ball_speed_modifier += 0.5
+            if not reset_toggle:
+                Timer(3, self.slow_ball, [False]).start()
 
     def teleport_ball(self):
         self.ball_x = random.randint(30 * self.ball_size_modifier, 1000 - 30 * self.ball_size_modifier)
@@ -1062,9 +1069,9 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 self.ball_direction_y *= -1
 
             # Paddle collision handling
-            if self.ball_x - (15 * self.ball_size_modifier) <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + (60 * self.paddle_size_modifier):
+            if self.ball_x - 15 * self.ball_size_modifier <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
                 self.ball_direction_x *= -1
-            elif self.ball_x + (15 * self.ball_size_modifier) >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + (60 * self.paddle_size_modifier):
+            elif self.ball_x + 15 * self.ball_size_modifier >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
                 self.ball_direction_x *= -1
 
             # Power-up logic
@@ -1072,8 +1079,9 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 power_up_x = power_up['x']
                 power_up_y = power_up['y']
                 power_up_type = power_up['type']
-                if (abs((self.ball_x + 15 * self.ball_size_modifier) - power_up_x) < 15 * self.ball_size_modifier and
-                        abs((self.ball_y + 15 * self.ball_size_modifier) - power_up_y) < 15 * self.ball_size_modifier):
+                distance_squared = (self.ball_x - power_up_x) ** 2 + (self.ball_y - power_up_y) ** 2
+                radius_sum_squared = (15 + 15 * self.ball_size_modifier) ** 2
+                if distance_squared < radius_sum_squared:
                     self.activate_power_up(power_up_type)
                     self.active_power_ups.remove(power_up)
 
