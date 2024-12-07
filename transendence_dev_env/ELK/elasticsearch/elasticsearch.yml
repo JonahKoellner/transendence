@@ -15,16 +15,16 @@ discovery.seed_hosts: ["127.0.0.1"]
 
 # SSL Settings for HTTP (communication over port 9200)
 xpack.security.enabled: false
-xpack.security.http.ssl.enabled: false
-xpack.security.http.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
-xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
-xpack.security.http.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
-
-# SSL Settings for Transport (communication over port 9300)
 xpack.security.transport.ssl.enabled: false
-xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
-xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
-xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
+xpack.security.http.ssl.enabled: false
+# xpack.security.http.ssl.keystore.path: certs/http.p12
+# xpack.security.http.ssl.truststore.path: certs/http.p12
+
+# # SSL Settings for Transport (communication over port 9300)
+# xpack.security.transport.ssl.enabled: false
+# xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
+# xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
+# xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
 
 # Disable SSL certificate validation for testing (for development, not recommended for production)
 # xpack.security.transport.ssl.verification_mode: certificate

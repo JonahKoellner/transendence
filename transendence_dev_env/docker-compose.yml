@@ -11,6 +11,7 @@ services:
       - xpack.security.enabled=false
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     ulimits:
       memlock:
         soft: -1
@@ -61,8 +62,12 @@ services:
       context: ./elk/kibana
     ports:
       - "5601:5601"
-    env_file:
-      - ./elk/kibana/.env
+    environment:
+      - KIBANA_ENCRYPTION_KEY=${KIBANA_ENCRYPTION_KEY}
+      - ELASTICSEARCH_HOSTS=https://localhost:9200
+      # - KIBANA_USER_PASSWORD=kibanapassword
+    # env_file:
+    #   - ./elk/kibana/.env
     depends_on:
       - elasticsearch
     networks:

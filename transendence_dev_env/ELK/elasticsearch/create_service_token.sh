@@ -62,7 +62,7 @@ if [ "$POLICY_EXISTS" -eq 0 ]; then
   # Create index template
   curl -X PUT "http://localhost:9200/_template/logs_template" -H 'Content-Type: application/json' -d'
   {
-    "index_patterns": ["logs*"],
+    "index_patterns": ["logstash*"],
     "settings": {
       "number_of_shards": 3,
       "number_of_replicas": 1,

@@ -3,6 +3,12 @@
 generate-password = \
 	$(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
 
+generate_passwords:
+	@echo "Generating passwords..."
+	@echo "ELASTIC_PASSWORD=$(call generate-password)" > .env
+	@echo "KIBANA_ENCRYPTION_KEY=$(call generate-password)" >> .env
+	@echo "Passwords generated and stored in .env file."
+
 # Docker Compose file
 COMPOSE_FILE := docker-compose.yml
 
@@ -20,13 +26,14 @@ help:
 	@echo "  restart           Restart all services"
 	@echo "  logs              Show logs for all running services"
 	@echo "  help              Show this help message"
+	@echo "  clean             Clean everything and remove the volumes"
 
 # Build and start all services interactively
-up:
+up: generate_passwords
 	docker-compose -f $(COMPOSE_FILE) up --build
 
 # Build and start all services in detached mode
-start:
+start: generate_passwords
 	docker-compose -f $(COMPOSE_FILE) up --build -d
 
 # Stop all running services
@@ -46,6 +53,8 @@ logs:
 
 # Clear everything and remove the volumes
 clean: down
+	@echo "Removing .env"
+	@rm .env
 	@docker system prune -af
 	@docker volume ls -q | xargs -r docker volume rm
 
