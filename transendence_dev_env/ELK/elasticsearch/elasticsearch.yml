@@ -1,30 +1,86 @@
+# # Cluster settings
+# cluster.name: "docker-cluster"
+
+# # Enable single-node mode (useful for development or testing)
+# discovery.type: single-node
+
+# # Elasticsearch network settings
+# network.host: 0.0.0.0
+# http.port: 9200
+# # transport.tcp.port: 9300
+
+# # Discovery settings
+# discovery.seed_hosts: ["127.0.0.1"]
+# # cluster.initial_master_nodes: ["${HOSTNAME}"]
+
+# # SSL Settings for HTTP (communication over port 9200)
+# xpack.security.enabled: false
+# xpack.security.transport.ssl.enabled: false
+# xpack.security.http.ssl.enabled: false
+# # xpack.security.http.ssl.keystore.path: certs/http.p12
+# # xpack.security.http.ssl.truststore.path: certs/http.p12
+
+# # # SSL Settings for Transport (communication over port 9300)
+# # xpack.security.transport.ssl.enabled: false
+# # xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
+# # xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
+# # xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
+
+# # Disable SSL certificate validation for testing (for development, not recommended for production)
+# # xpack.security.transport.ssl.verification_mode: certificate
+
+# # Cluster settings
+# cluster.name: "docker-cluster"
+
+# # Enable single-node mode
+# discovery.type: single-node
+
+# # Elasticsearch network settings
+# network.host: 0.0.0.0
+# http.port: 9200
+
+# # Discovery settings
+# discovery.seed_hosts: ["127.0.0.1"]
+
+# # Enable security
+# xpack.security.enabled: true
+
+# # SSL Settings for HTTP (port 9200)
+# xpack.security.http.ssl.enabled: true
+# xpack.security.http.ssl.key: "/usr/share/elasticsearch/shared/elasticsearch-certs/elasticsearch/elasticsearch.key"
+# xpack.security.http.ssl.certificate: "/usr/share/elasticsearch/shared/elasticsearch-certs/elasticsearch/elasticsearch.crt"
+# xpack.security.http.ssl.certificate_authorities: ["/usr/share/elasticsearch/shared/elastic-stack-ca/ca/ca.crt"]
+
+# # SSL Settings for Transport (port 9300)
+# xpack.security.transport.ssl.enabled: true
+# xpack.security.transport.ssl.key: "/usr/share/elasticsearch/shared/elasticsearch-certs/elasticsearch/elasticsearch.key"
+# xpack.security.transport.ssl.certificate: "/usr/share/elasticsearch/shared/elasticsearch-certs/elasticsearch/elasticsearch.crt"
+# xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/shared/elastic-stack-ca/ca/ca.crt"]
+# xpack.security.transport.ssl.verification_mode: certificate
+
 # Cluster settings
 cluster.name: "docker-cluster"
-
-# Enable single-node mode (useful for development or testing)
 discovery.type: single-node
-
-# Elasticsearch network settings
 network.host: 0.0.0.0
 http.port: 9200
-# transport.tcp.port: 9300
-
-# Discovery settings
 discovery.seed_hosts: ["127.0.0.1"]
-# cluster.initial_master_nodes: ["${HOSTNAME}"]
 
-# SSL Settings for HTTP (communication over port 9200)
-xpack.security.enabled: false
-xpack.security.transport.ssl.enabled: false
-xpack.security.http.ssl.enabled: false
-# xpack.security.http.ssl.keystore.path: certs/http.p12
-# xpack.security.http.ssl.truststore.path: certs/http.p12
+# Enable security
+xpack.security.enabled: true
 
-# # SSL Settings for Transport (communication over port 9300)
-# xpack.security.transport.ssl.enabled: false
-# xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/instance/instance.key
-# xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/instance/instance.crt
-# xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/ca/ca/ca.crt"]
+# SSL Settings for HTTP (port 9200)
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: "/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key"
+xpack.security.http.ssl.certificate: "/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt"
+xpack.security.http.ssl.key_passphrase: "ElasticCert"
+xpack.security.http.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/certs/ca/ca.crt"]
 
-# Disable SSL certificate validation for testing (for development, not recommended for production)
-# xpack.security.transport.ssl.verification_mode: certificate
+# SSL Settings for Transport (port 9300)
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: "/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key"
+xpack.security.transport.ssl.certificate: "/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt"
+xpack.security.transport.ssl.key_passphrase: "ElasticCert"
+xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/certs/ca/ca.crt"]
+xpack.security.transport.ssl.verification_mode: certificate
+
+

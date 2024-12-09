@@ -53,6 +53,8 @@ RUN chown -R ela:ela /usr/share/elasticsearch/config/certs/* && \
     chmod 600 /usr/share/elasticsearch/config/certs/instance/instance.key && \
     chmod 600 /usr/share/elasticsearch/config/certs/instance/instance.crt
 
+# RUN chown -R ela:ela /usr/share/elasticsearch/shared
+
 # RUN whoami && ls -l /usr/share/elasticsearch/config/certs/instance
 COPY elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
 

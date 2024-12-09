@@ -1,24 +1,42 @@
-# server.name: kibana
-# server.host: "0.0.0.0"
+# # server.name: kibana
+# # server.host: "0.0.0.0"
+# # elasticsearch.hosts: ["http://elasticsearch:9200"]
+
+
+# # kibana.yml
+
+# # Elasticsearch connection settings
 # elasticsearch.hosts: ["http://elasticsearch:9200"]
+# # elasticsearch.username: "kibana"
+# # elasticsearch.password: "kibana"
 
+# # SSL Configuration
+# elasticsearch.ssl.verificationMode: "none"
+# # elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
 
-# kibana.yml
+# # Kibana server settings
+# server.host: "0.0.0.0"
+# server.name: "kibana"
+# server.port: 5601
 
-# Elasticsearch connection settings
-elasticsearch.hosts: ["http://elasticsearch:9200"]
-# elasticsearch.username: "kibana"
-# elasticsearch.password: "kibana"
-
-# SSL Configuration
-elasticsearch.ssl.verificationMode: "none"
-# elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
+# # Enable/Disable security
+# xpack.security.enabled: false
+# # xpack.security.authc.apiKey.enabled: false
 
 # Kibana server settings
 server.host: "0.0.0.0"
 server.name: "kibana"
 server.port: 5601
+server.ssl.enabled: true
+server.ssl.certificate: "/usr/share/kibana/shared/kibana-certs/kibana/kibana.crt"
+server.ssl.key: "/usr/share/kibana/shared/kibana-certs/kibana/kibana.key"
+server.ssl.keyPassphrase: "KibanaCert"
 
-# Enable/Disable security
-xpack.security.enabled: false
-# xpack.security.authc.apiKey.enabled: false
+# Elasticsearch connection settings
+elasticsearch.hosts: ["https://elasticsearch:9200"]
+elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
+elasticsearch.ssl.verificationMode: "full"
+
+# Enable security
+xpack.security.enabled: true
+

@@ -4,6 +4,7 @@ services:
 
   # Elasticsearch Service
   elasticsearch:
+    container_name: elasticsearch
     build:
       context: ./elk/elasticsearch
     environment:
@@ -23,7 +24,8 @@ services:
       - ./elk/elasticsearch/.env
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
-      - elasticsearch-service-token:/usr/share/elasticsearch/service_token
+      # - elasticsearch-service-token:/usr/share/elasticsearch/service_token
+      - ./data/elk-shared:/usr/share/elasticsearch/shared
     networks:
       - elk-net
       - host-bridge
@@ -43,6 +45,7 @@ services:
       - "5959:5959"
     volumes:
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./data/elk-shared:/usr/share/logstash/shared
     depends_on:
       - elasticsearch
     networks:
@@ -58,6 +61,7 @@ services:
 
   # Kibana Service
   kibana:
+    container_name: kibana
     build:
       context: ./elk/kibana
     ports:
@@ -74,7 +78,8 @@ services:
       - elk-net
       - host-bridge
     volumes:
-      - elasticsearch-service-token:/usr/share/kibana/service_token
+      # - elasticsearch-service-token:/usr/share/kibana/service_token
+      - ./data/elk-shared:/usr/share/kibana/shared
 
   # Angular Frontend Service
   angular:
@@ -192,5 +197,7 @@ volumes:
     driver: local
   esdata:
     driver: local
-  elasticsearch-service-token:
+  # elasticsearch-service-token:
+  #   driver: local
+  elk-shared:
     driver: local
