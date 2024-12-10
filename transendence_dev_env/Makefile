@@ -1,11 +1,12 @@
 
 # Function to generate password based on available tools
-generate-password=$(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
+generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64)))
 
 generate_passwords:
 	@echo "Generating passwords..."
 	@echo "ELASTIC_PASSWORD=$(call generate-password)" > .env
 	@echo "KIBANA_ENCRYPTION_KEY=$(call generate-password)" >> .env
+	@echo "ELASTIC_ADMIN_PASSWORD=$(call generate-password)" >> .env
 	@echo "Passwords generated and stored in .env file."
 
 # Docker Compose file

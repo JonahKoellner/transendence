@@ -161,7 +161,7 @@ fi
 #   "email" : "kibana_system@example.com"
 # }'
 
-bin/elasticsearch-users useradd admin -p admin_password -r superuser
+bin/elasticsearch-users useradd admin -p $ELASTIC_ADMIN_PASSWORD -r superuser
 
 # Save the token to a shared file (ensure this volume is shared with Kibana)
 # mkdir -p /usr/share/elasticsearch/service_token
