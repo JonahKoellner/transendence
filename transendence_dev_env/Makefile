@@ -1,7 +1,6 @@
 
 # Function to generate password based on available tools
-generate-password = \
-	$(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
+generate-password=$(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64))
 
 generate_passwords:
 	@echo "Generating passwords..."

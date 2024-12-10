@@ -9,10 +9,10 @@ services:
       context: ./elk/elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_PASSWORD=elapwd
     ulimits:
       memlock:
         soft: -1
@@ -20,8 +20,8 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    env_file:
-      - ./elk/elasticsearch/.env
+    # env_file:
+    #   - ./elk/elasticsearch/.env
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
       # - elasticsearch-service-token:/usr/share/elasticsearch/service_token
@@ -69,6 +69,8 @@ services:
     environment:
       - KIBANA_ENCRYPTION_KEY=${KIBANA_ENCRYPTION_KEY}
       - ELASTICSEARCH_HOSTS=https://localhost:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=elapwd
       # - KIBANA_USER_PASSWORD=kibanapassword
     # env_file:
     #   - ./elk/kibana/.env

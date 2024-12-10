@@ -47,9 +47,9 @@ cp $CA_CERT /usr/share/elasticsearch/config/certs/ca/ca.crt
 # echo "xpack.security.http.ssl.certificate: $ELASTIC_CERTS_DIR/elasticsearch.crt" >> /usr/share/elasticsearch/config/elasticsearch.yml
 # echo "xpack.security.http.ssl.certificate_authorities: [\"$CA_CERT\"]" >> /usr/share/elasticsearch/config/elasticsearch.yml
 bin/elasticsearch-keystore create
-echo "elapwd" | bin/elasticsearch-keystore add "bootstrap.password" --stdin
-echo "kibpwd" | bin/elasticsearch-keystore add "xpack.security.authc.realms.native.native1.secure_kibana_system_password" --stdin
-echo "logpwd" | bin/elasticsearch-keystore add "xpack.security.authc.realms.native.native1.secure_logstash_system_password" --stdin
+# echo "elapwd" | bin/elasticsearch-keystore add "bootstrap.password" --stdin
+# echo "kibpwd" | bin/elasticsearch-keystore add "xpack.security.authc.realms.native.native1.secure_kibana_system_password" --stdin
+# echo "logpwd" | bin/elasticsearch-keystore add "xpack.security.authc.realms.native.native1.secure_logstash_system_password" --stdin
 
 # cd /usr/share/elasticsearch
 
@@ -67,6 +67,9 @@ bin/elasticsearch &
 
 # Wait for Elasticsearch to start
 wait_for_elasticsearch
+
+# Generate the service token
+SERVICE_TOKEN=$(bin/elasticsearch-service-tokens create elastic/kibana kibana | grep -oP '(?<=SERVICE_TOKEN elastic/kibana/kibana = ).*')
 
 # Check if the ILM policy already exists
 POLICY_EXISTS=$(curl -k -s -X GET "http://localhost:9200/_ilm/policy/logs_policy" | grep -c 'policy')
@@ -150,8 +153,15 @@ else
   echo "ILM policy already exists. Skipping initialization."
 fi
 
-# Generate the service token
-SERVICE_TOKEN=$(bin/elasticsearch-service-tokens create elastic/kibana kibana | grep -oP '(?<=SERVICE_TOKEN elastic/kibana/kibana = ).*')
+# curl -k -u elastic:elapwd -X POST "https://localhost:9200/_security/user/kibana_system" -H "Content-Type: application/json" -d'
+# {
+#   "password" : "kibana_system_password",
+#   "roles" : [ "kibana_system" ],
+#   "full_name" : "Kibana System User",
+#   "email" : "kibana_system@example.com"
+# }'
+
+bin/elasticsearch-users useradd admin -p admin_password -r superuser
 
 # Save the token to a shared file (ensure this volume is shared with Kibana)
 # mkdir -p /usr/share/elasticsearch/service_token

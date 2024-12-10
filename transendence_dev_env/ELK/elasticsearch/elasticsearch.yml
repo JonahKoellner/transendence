@@ -67,6 +67,7 @@ discovery.seed_hosts: ["127.0.0.1"]
 
 # Enable security
 xpack.security.enabled: true
+# xpack.security.authc.token.enabled: true
 
 # SSL Settings for HTTP (port 9200)
 xpack.security.http.ssl.enabled: true
