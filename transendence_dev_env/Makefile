@@ -7,6 +7,7 @@ generate_passwords:
 	@echo "ELASTIC_PASSWORD=$(call generate-password)" > .env
 	@echo "KIBANA_ENCRYPTION_KEY=$(call generate-password)" >> .env
 	@echo "ELASTIC_ADMIN_PASSWORD=$(call generate-password)" >> .env
+	@echo "ELASTIC_LOGSTASH_PASSWORD=$(call generate-password)" >> .env
 	@echo "Passwords generated and stored in .env file."
 
 # Docker Compose file
@@ -43,6 +44,7 @@ stop:
 # Stop and remove all containers
 down:
 	docker-compose -f $(COMPOSE_FILE) down -v
+	rm -rf data/
 
 # Restart all services
 restart: down up

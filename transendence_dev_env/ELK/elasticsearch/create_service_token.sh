@@ -153,20 +153,78 @@ else
   echo "ILM policy already exists. Skipping initialization."
 fi
 
-# curl -k -u elastic:elapwd -X POST "https://localhost:9200/_security/user/kibana_system" -H "Content-Type: application/json" -d'
+bin/elasticsearch-users useradd admin -p $ELASTIC_ADMIN_PASSWORD -r superuser
+# curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X PUT "https://elasticsearch:9200/_security/role/logstash_writer" -H 'Content-Type: application/json' -d'
 # {
-#   "password" : "kibana_system_password",
-#   "roles" : [ "kibana_system" ],
-#   "full_name" : "Kibana System User",
-#   "email" : "kibana_system@example.com"
+#   "cluster": ["monitor"],
+#   "indices": [
+#     {
+#       "names": ["logstash-*"],
+#       "privileges": ["write", "create_index"]
+#     }
+#   ]
+# }'
+# bin/elasticsearch-users useradd logstash_writer -p "$ELASTIC_LOGSTASH_PASSWORD" -r logstash_writer
+
+# Ensure the logstash_writer role exists (create it if not)
+# echo "Checking if logstash_writer role exists..."
+# ROLE_EXISTS=$(curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -s -o /dev/null -w "%{http_code}" "https://localhost:9200/_security/role/logstash_writer")
+
+# curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X GET "https://localhost:9200/_security/_authenticate?pretty"
+
+until curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X GET "https://localhost:9200/_security/_authenticate?pretty" | grep -q '"username" : "admin"'; do
+  echo "Authentication failed or not yet ready for admin. Retrying..."
+  sleep 5
+done
+
+# if [ "$ROLE_EXISTS" -eq 404 ]; then
+  echo "Creating logstash_writer role..."
+  curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X PUT "https://localhost:9200/_security/role/logstash_writer" -H 'Content-Type: application/json' -d'
+  {
+    "cluster": ["monitor"],
+    "indices": [
+      {
+        "names": ["logstash-*", "logs-*"], 
+        "privileges": ["write", "create_index", "manage", "auto_configure"]
+      }
+    ]
+  }'
+# else
+#   echo "logstash_writer role already exists."
+# fi
+
+# Create the logstash_writer user with the assigned role
+echo "Creating logstash_writer user..."
+curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X POST "https://localhost:9200/_security/user/logstash_writer" -H 'Content-Type: application/json' -d"
+{
+  \"password\": \"$ELASTIC_LOGSTASH_PASSWORD\",
+  \"roles\": [\"logstash_writer\"]
+}"
+# bin/elasticsearch-users useradd logstash_writer -p "$ELASTIC_LOGSTASH_PASSWORD" -r logstash_writer
+
+echo "logstash_writer user created successfully!"
+
+
+# curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X PUT "https://elasticsearch:9200/_security/role/logstash_writer" -H 'Content-Type: application/json' -d'
+# {
+#   "cluster": ["monitor"],
+#   "indices": [
+#     {
+#       "names": ["logstash-*"],
+#       "privileges": ["write", "create_index"]
+#     }
+#   ]
 # }'
 
-bin/elasticsearch-users useradd admin -p $ELASTIC_ADMIN_PASSWORD -r superuser
+# bin/elasticsearch-service-tokens create logstash/default default
+# # sleep 100
+# LOGSTASH_SERVICE_TOKEN=$(bin/elasticsearch-service-tokens create logstash/default default | grep -oP '(?<=SERVICE_TOKEN logstash/default/default = ).*')
 
 # Save the token to a shared file (ensure this volume is shared with Kibana)
 # mkdir -p /usr/share/elasticsearch/service_token
 # touch /usr/share/elasticsearch/service_token/token.tok
 (echo "$SERVICE_TOKEN" > /usr/share/elasticsearch/shared/token.tok && echo "Service token generated and saved to /usr/share/elasticsearch/shared/token.tok") || echo "ERROR storing servicetoken: $SERVICE_TOKEN in /usr/share/elasticsearch/shared/token.tok"
+# (echo "$LOGSTASH_SERVICE_TOKEN" > /usr/share/elasticsearch/shared/logstash_token.tok && echo "Service token generated and saved to /usr/share/elasticsearch/shared/logstash_token.tok") || echo "ERROR storing servicetoken: $LOGSTASH_SERVICE_TOKEN in /usr/share/elasticsearch/shared/logstash_token.tok"
 
 
 

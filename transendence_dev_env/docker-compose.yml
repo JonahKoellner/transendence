@@ -43,6 +43,8 @@ services:
       - "5431:5431/udp"
       - "5431:5431"
       - "5959:5959"
+    env_file:
+      - .env
     volumes:
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
       - ./data/elk-shared:/usr/share/logstash/shared
@@ -55,7 +57,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9600"]
       interval: 30s
-      retries: 3
+      retries: 10
       start_period: 10s
       timeout: 10s
 
