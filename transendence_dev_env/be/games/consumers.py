@@ -1949,13 +1949,14 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         score_difference = abs(game.score_player1 - game.score_player2)
         performance_multiplier = 1 + min(score_difference / 100, 0.5)  # Up to +50% XP based on score gap
 
-        # Game mode multiplier: more challenging modes award more XP
-        if game.game_mode == Game.PVE:
-            mode_multiplier = 0.7 if not is_winner else 1.0  # PvE easier, give less XP if lost
-        elif game.game_mode == Game.LOCAL_PVP:
-            mode_multiplier = 1.0 if not is_winner else 1.1  # Balanced mode, slight bonus for win
-        else:
-            mode_multiplier = 1.1 if not is_winner else 1.3  # Online PvP, higher reward for higher challenge
+        # # Game mode multiplier: more challenging modes award more XP
+        # if game.game_mode == Game.PVE:
+        #     mode_multiplier = 0.7 if not is_winner else 1.0  # PvE easier, give less XP if lost
+        # elif game.game_mode == Game.LOCAL_PVP:
+        #     mode_multiplier = 1.0 if not is_winner else 1.1  # Balanced mode, slight bonus for win
+        # else:
+        #     mode_multiplier = 1.1 if not is_winner else 1.3  # Online PvP, higher reward for higher challenge
+        mode_multiplier = 1.2 if not is_winner else 1.4  # Online PvP, higher reward for higher challenge
 
         # Apply base, duration, level, performance, and mode multipliers
         xp_gain = (base_xp + duration_xp + level_bonus) * performance_multiplier * mode_multiplier
@@ -1993,20 +1994,26 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
             player3_round_wins = 0
             player4_round_wins = 0
 
-        if player1_round_wins > player2_round_wins:
-            winner, loser = self.game.player1, self.game.player2
-        elif player2_round_wins > player1_round_wins:
-            winner, loser = self.game.player2, self.game.player1
-        else:
-            winner, loser = None, None  # Tie
+        # Determine the winner based on round wins from the four players
+        player_scores = {
+            self.game.player1: player1_round_wins,
+            self.game.player2: player2_round_wins,
+            self.game.player3: player3_round_wins,
+            self.game.player4: player4_round_wins
+        }
+
+        winner = max(player_scores, key=player_scores.get) if player_scores else None
+
+        losers = [player for player in player_scores if player != winner]
 
         logger.info(f"Game winner: {winner}")
 
         # Calculate XP gain
         winner_xp = await self.calculate_xp_gain(self.game, winner, is_winner=True) if winner else 0
-        loser_xp = max(10, await self.calculate_xp_gain(self.game, loser, is_winner=False) // 4) if loser else 0
+        loser_xps = [await self.calculate_xp_gain(self.game, player, is_winner=False) for player in losers]
+  # loser_xp = max(10, await self.calculate_xp_gain(self.game, loser, is_winner=False) // 4) if loser else 0
 
-        await self.finalize_game(winner, Game.FINISHED, winner_xp, loser_xp)
+        await self.finalize_game(winner, Game.FINISHED, winner_xp, loser_xps)
 
         # Notify players that the game has ended
         await self.channel_layer.group_send(
@@ -2023,12 +2030,11 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         # Cancel the game loop task
         if hasattr(self, 'game_loop_task'):
             self.game_loop_task.cancel()
-         
 
     @database_sync_to_async
     def get_player_level(self, player):
-        return player.profile.level   
-    
+        return player.profile.level
+
     @database_sync_to_async
     def get_player_usernames(self):
         player1_username = self.game.player1.username
@@ -2036,23 +2042,37 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         player3_username = self.game.player3.username
         player4_username = self.game.player4.username
         return player1_username, player2_username, player3_username, player4_username
-            
+
     @database_sync_to_async
-    def finalize_game(self, winner, status, winner_xp, loser_xp):
+    def finalize_game(self, winner, status, winner_xp, loser_xps):
         self.game.end_time = timezone.now()
         self.game.duration = (self.game.end_time - self.game.start_time).total_seconds()
         self.game.winner = winner
         self.game.is_completed = True
         self.game.status = status
-        
+
         # Save the game instance
         self.game.save()
 
         # Apply XP to profiles if winner and loser are actual User instances
         if isinstance(winner, User):
             winner.profile.add_xp(winner_xp)
-        if isinstance(self.game.player2, User) and self.game.player2 != winner:
-            self.game.player2.profile.add_xp(loser_xp)
+
+        for loser, loser_xp in zip([self.game.player2, self.game.player3, self.game.player4], loser_xps):
+            if isinstance(loser, User):
+                loser.profile.add_xp(loser_xp)
+
+        # if isinstance(self.game.player1, User) and self.game.player1 != winner:
+        #     self.game.player1.profile.add_xp(loser_xp)
+
+        # if isinstance(self.game.player2, User) and self.game.player2 != winner:
+        #     self.game.player2.profile.add_xp(loser_xp)
+
+        # if isinstance(self.game.player3, User) and self.game.player3 != winner:
+        #     self.game.player3.profile.add_xp(loser_xp)
+
+        # if isinstance(self.game.player4, User) and self.game.player4 != winner:
+        #     self.game.player4.profile.add_xp(loser_xp)
 
     async def reset_ball(self):
         # Reset ball position to the center
@@ -2069,7 +2089,6 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Increase ball speed by 1.05x each reset, capping at 100
         self.ball_speed = min(self.ball_speed * 1.05, 100) if hasattr(self, 'ball_speed') else 5
-
 
     async def game_started(self, event):
         await self.send_json({"type": "game_started"})
