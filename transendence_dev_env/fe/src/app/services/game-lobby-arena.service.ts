@@ -3,14 +3,14 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, delay, Observable, retryWhen, Subject, tap } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
-import { GameSettings } from '../games/online-pvp-chaos/create-room/create-room-chaos.component';
+import { GameSettings } from '../games/online-arena/create-room/create-room.component';
 import { Router } from '@angular/router';
 import { environment } from 'src/environment';
 
 @Injectable({
   providedIn: 'root'
 })
-export class GameLobbyChaosService {
+export class GameLobbyArenaService {
   private socket$!: WebSocketSubject<any>;
   public messages$ = new Subject<any>();
   private isConnected = new BehaviorSubject<boolean>(false);
@@ -23,7 +23,7 @@ export class GameLobbyChaosService {
     }
     if (this.socket$ && this.isConnected.value) return;
     const token = this.authService.getAccessToken(); // Assuming a method to get the access token
-    this.socket$ = webSocket(environment.wsUrl + `/lobby_chaos/${roomId}/?token=${token}`);
+    this.socket$ = webSocket(environment.wsUrl + `/lobby_arena/${roomId}/?token=${token}`);
 
     this.socket$.subscribe(
       (msg) => {this.messages$.next(msg),  console.log(msg, roomId)},
@@ -33,16 +33,16 @@ export class GameLobbyChaosService {
   }
 
   handleError(msg: any, roomId: string) {
-    this.router.navigate(['/games/online-pvp-chaos/rooms'])
+    this.router.navigate(['/games/online-arena/rooms'])
 
     this.deleteRoom(roomId).subscribe(
       (res) => {
         console.log(res);
-        this.router.navigate(['/games/online-pvp-chaos/rooms'])
+        this.router.navigate(['/games/online-arena/rooms'])
       },
       (err) => {
         console.log(err);
-        this.router.navigate(['/games/online-pvp-chaos/rooms'])
+        this.router.navigate(['/games/online-arena/rooms'])
       }
     );
   }
@@ -73,25 +73,25 @@ export class GameLobbyChaosService {
   }
 
   createRoom(settings: GameSettings): Observable<{ room_id: string }> {
-    return this.http.post<{ room_id: string }>(environment.apiUrl + '/games/lobby_chaos/create/', settings);
+    return this.http.post<{ room_id: string }>(environment.apiUrl + '/games/lobby_arena/create/', settings);
   }
 
   joinRoom(roomId: string): Observable<any> {
-    return this.http.post(environment.apiUrl + '/games/lobby_chaos/join/', { room_id: roomId });
+    return this.http.post(environment.apiUrl + '/games/lobby_arena/join/', { room_id: roomId });
   }
 
   getRoomStatus(roomId: string): Observable<any> {
-    return this.http.get(environment.apiUrl + `/games/lobby_chaos/status/${roomId}`);
+    return this.http.get(environment.apiUrl + `/games/lobby_arena/status/${roomId}`);
   }
 
   setReadyStatus(roomId: string, isReady: boolean, userId: number): Observable<any> {
-    return this.http.post(environment.apiUrl + '/games/lobby_chaos/set_ready/', { room_id: roomId, is_ready: isReady, user_id: userId });
+    return this.http.post(environment.apiUrl + '/games/lobby_arena/set_ready/', { room_id: roomId, is_ready: isReady, user_id: userId });
   }
 
   getAllRooms(): Observable<any[]> {
-    return this.http.get<any[]>(environment.apiUrl + `/games/lobby_chaos/rooms/`);
+    return this.http.get<any[]>(environment.apiUrl + `/games/lobby_arena/rooms/`);
   }
   deleteRoom(roomId: string): Observable<any> {
-    return this.http.delete(environment.apiUrl + `/games/lobby_chaos/delete/${roomId}`);
+    return this.http.delete(environment.apiUrl + `/games/lobby_arena/delete/${roomId}`);
   }
 }

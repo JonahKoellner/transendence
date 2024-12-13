@@ -66,6 +66,12 @@ import { GameRoomsChaosComponent } from './games/online-pvp-chaos/game-rooms/gam
 import { GameRoomChaosComponent } from './games/online-pvp-chaos/game-room/game-room-chaos.component';
 import { GameDisplayChaosComponent } from './games/online-pvp-chaos/game-display/game-display-chaos.component';
 import { CreateRoomChaosComponent } from './games/online-pvp-chaos/create-room/create-room-chaos.component';
+import { OnlineArenaComponent } from './games/online-arena/online-arena.component';
+import { CreateRoomArenaComponent } from './games/online-arena/create-room/create-room.component';
+import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room.component';
+import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
+import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
+import { GameDisplayArenaComponent } from './games/online-arena/game-display/game-display.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -124,7 +130,13 @@ import { CreateRoomChaosComponent } from './games/online-pvp-chaos/create-room/c
     CookieConsentComponent,
     PrivacyPolicyComponent,
     TermsOfServiceComponent,
-    DisclaimerComponent
+    DisclaimerComponent,
+    OnlineArenaComponent,
+    CreateRoomArenaComponent,
+    JoinRoomArenaComponent,
+    GameRoomsArenaComponent,
+    GameRoomArenaComponent,
+    GameDisplayArenaComponent
   ],
   imports: [
     BrowserModule,

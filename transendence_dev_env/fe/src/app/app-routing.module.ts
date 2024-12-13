@@ -38,6 +38,11 @@ import { CreateRoomChaosComponent } from './games/online-pvp-chaos/create-room/c
 import { JoinRoomChaosComponent } from './games/online-pvp-chaos/join-room/join-room-chaos.component';
 import { GameRoomsChaosComponent } from './games/online-pvp-chaos/game-rooms/game-rooms-chaos.component';
 import { GameRoomChaosComponent } from './games/online-pvp-chaos/game-room/game-room-chaos.component';
+import { OnlineArenaComponent } from './games/online-arena/online-arena.component';
+import { CreateRoomArenaComponent } from './games/online-arena/create-room/create-room.component';
+import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room.component';
+import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
+import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -64,6 +69,14 @@ const routes: Routes = [
       { path: 'join', component: JoinRoomChaosComponent, canActivate: [AuthGuard] }
     ],
    },
+   { path: 'games/online-arena',component: OnlineArenaComponent, canActivate: [AuthGuard],
+    children: [
+      { path: 'rooms', component: GameRoomsArenaComponent, canActivate: [AuthGuard]},
+      { path: 'create', component: CreateRoomArenaComponent, canActivate: [AuthGuard]},
+      { path: 'join', component: JoinRoomArenaComponent, canActivate: [AuthGuard] }
+    ],
+   },
+  { path: 'games/online-arena/game-room/:roomId', component: GameRoomArenaComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp-chaos/game-room/:roomId', component: GameRoomChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },

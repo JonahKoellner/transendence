@@ -14,7 +14,7 @@ import calendar
 from django.contrib.auth.models import User 
 from accounts.serializers import UserProfileSerializer
 from accounts.models import Profile
-from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, Stage, TournamentType, MatchOutcome
+from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
@@ -896,6 +896,208 @@ class ChaosLobbyViewSet(viewsets.ViewSet):
 
         except ChaosLobby.DoesNotExist:
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
+
+class ArenaLobbyViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['post'])
+    def create_room(self, request):
+        room_id = generate_room_id()
+        host = request.user
+        self.clear_existing_user_rooms(host)
+
+        # Get settings from the request
+        max_rounds = request.data.get("maxRounds", 3)
+        round_score_limit = request.data.get("roundScoreLimit", 3)
+
+        # Create an ArenaLobby with the host as player_one
+        lobby = ArenaLobby.objects.create(
+            room_id=room_id,
+            player_one=host,
+            max_rounds=max_rounds,
+            round_score_limit=round_score_limit
+        )
+
+        return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    @transaction.atomic
+    def join_room(self, request):
+        room_id = request.data.get("room_id")
+        user = request.user
+
+        try:
+            lobby = ArenaLobby.objects.get(room_id=room_id, is_active=True)
+
+            # Check if user is already the host (player_one)
+            if lobby.player_one == user:
+                return Response({"detail": "You are already the host of this room."},
+                                status=status.HTTP_200_OK)
+
+            # Check if user is already in the lobby in any slot
+            if (lobby.player_two == user or
+                lobby.player_three == user or
+                lobby.player_four == user):
+                return Response({"detail": "You are already in this room."}, 
+                                status=status.HTTP_200_OK)
+
+            # Check if the lobby is full
+            if lobby.is_full():
+                return Response({"detail": "Room is full"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Remove the user from any other lobbies
+            self.remove_user_from_other_rooms(user)
+
+            # Assign user to the first available player slot
+            if lobby.player_two is None:
+                lobby.player_two = user
+            elif lobby.player_three is None:
+                lobby.player_three = user
+            elif lobby.player_four is None:
+                lobby.player_four = user
+
+            lobby.save()
+
+            return Response({"detail": "Joined room successfully. You were removed from any other active rooms."},
+                            status=status.HTTP_200_OK)
+
+        except ArenaLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def remove_user_from_other_rooms(self, user):
+        """Removes the user from any rooms they are currently in as any player."""
+        # Clear the user if they appear in any of these player slots
+        ArenaLobby.objects.filter(player_two=user).update(player_two=None, is_player_two_ready=False)
+        ArenaLobby.objects.filter(player_three=user).update(player_three=None, is_player_three_ready=False)
+        ArenaLobby.objects.filter(player_four=user).update(player_four=None, is_player_four_ready=False)
+        
+        # If needed, remove as host from other active lobbies
+        # ArenaLobby.objects.filter(player_one=user).delete()
+
+    def clear_existing_user_rooms(self, user):
+        """Clears any existing room associations for the user before creating a new one as host."""
+        # Remove the user from any player slots in other lobbies
+        ArenaLobby.objects.filter(player_two=user).update(player_two=None, is_player_two_ready=False)
+        ArenaLobby.objects.filter(player_three=user).update(player_three=None, is_player_three_ready=False)
+        ArenaLobby.objects.filter(player_four=user).update(player_four=None, is_player_four_ready=False)
+
+        # Delete any lobbies where the user is the host
+        ArenaLobby.objects.filter(player_one=user).delete()
+
+    @action(detail=False, methods=['post'])
+    def set_ready(self, request):
+        room_id = request.data.get("room_id")
+        is_ready = request.data.get("is_ready", False)
+
+        try:
+            lobby = ArenaLobby.objects.get(room_id=room_id, is_active=True)
+            user = request.user
+
+            # Use the lobby's method to set ready status
+            if user in [lobby.player_one, lobby.player_two, lobby.player_three, lobby.player_four]:
+                lobby.set_ready_status(user, is_ready)
+                return Response({"detail": "Ready status updated"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Not part of this lobby"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except ArenaLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def room_status(self, request, room_id=None):
+        try:
+            lobby = ArenaLobby.objects.get(room_id=room_id)
+
+            player_one_profile = lobby.player_one.profile # Host is guaranteed to exist
+            player_one_paddle_image = player_one_profile.paddleskin_image.url if player_one_profile.paddleskin_image else None
+            player_one_paddle_color = player_one_profile.paddleskin_color or "#FFFFFF"
+
+            player_two_profile = lobby.player_two.profile if lobby.player_two else None
+            player_two_paddle_image = player_two_profile.paddleskin_image.url if player_two_profile and player_two_profile.paddleskin_image else None
+            player_two_paddle_color = player_two_profile.paddleskin_color or "#FFFFFF" if player_two_profile else None
+
+            player_three_profile = lobby.player_three.profile if lobby.player_three else None
+            player_three_paddle_image = player_three_profile.paddleskin_image.url if player_three_profile and player_three_profile.paddleskin_image else None
+            player_three_paddle_color = player_three_profile.paddleskin_color or "#FFFFFF" if player_three_profile else None
+
+            player_four_profile = lobby.player_four.profile if lobby.player_four else None
+            player_four_paddle_image = player_four_profile.paddleskin_image.url if player_four_profile and player_four_profile.paddleskin_image else None
+            player_four_paddle_color = player_four_profile.paddleskin_color or "#FFFFFF" if player_four_profile else None
+
+            # Append paddle colors and images to the state
+            return Response({
+                "room_id": room_id,
+                "is_active": lobby.is_active,
+                "player_one": lobby.player_one.username,
+                "player_two": lobby.player_two.username if lobby.player_two else None,
+                "player_three": lobby.player_three.username if lobby.player_three else None,
+                "player_four": lobby.player_four.username if lobby.player_four else None,
+                "is_player_one_ready": lobby.is_player_one_ready,
+                "is_player_two_ready": lobby.is_player_two_ready,
+                "is_player_three_ready": lobby.is_player_three_ready,
+                "is_player_four_ready": lobby.is_player_four_ready,
+                "all_ready": lobby.all_ready(),
+                "is_full": lobby.is_full(),
+                "max_rounds": lobby.max_rounds,
+                "round_score_limit": lobby.round_score_limit,
+                "paddleskin_color_left": player_one_paddle_color,
+                "paddleskin_color_right": player_two_paddle_color,
+                "paddleskin_color_top": player_three_paddle_color,
+                "paddleskin_color_bottom": player_four_paddle_color,
+                "paddleskin_image_left": player_one_paddle_image,
+                "paddleskin_image_right": player_two_paddle_image,
+                "paddleskin_image_top": player_three_paddle_image,
+                "paddleskin_image_bottom": player_four_paddle_image,
+            }, status=status.HTTP_200_OK)
+
+        except ArenaLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
+    def list_rooms(self, request):
+        """
+        Returns a list of all available rooms with host and guest information.
+        """
+        rooms = ArenaLobby.objects.filter(is_active=True)
+        data = [
+            {
+                "room_id": room.room_id,
+                "is_active": room.is_active,
+                "player_one": room.player_one.username,
+                "player_two": room.player_two.username if room.player_two else None,
+                "player_three": room.player_three.username if room.player_three else None,
+                "player_four": room.player_four.username if room.player_four else None,
+                "is_player_one_ready": room.is_player_one_ready,
+                "is_player_two_ready": room.is_player_two_ready,
+                "is_player_three_ready": room.is_player_three_ready,
+                "is_player_four_ready": room.is_player_four_ready,
+                "all_ready": room.all_ready(),
+                "is_full": room.is_full(),
+                "max_rounds": room.max_rounds,
+                "round_score_limit": room.round_score_limit,
+            }
+            for room in rooms
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<room_id>[^/.]+)')
+    def delete_room(self, request, room_id=None):
+        """
+        Deletes the lobby if the requesting user is the host.
+        """
+        try:
+            # Attempt to retrieve the lobby by room_id
+            lobby = Lobby.objects.get(room_id=room_id, is_active=True)
+
+            # Check if the requesting user is the host
+            if request.user != lobby.host:
+                return Response({"detail": "Only the host can delete this room."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Delete the lobby if the user is the host
+            lobby.delete()
+            return Response({"detail": "Lobby deleted successfully."}, status=status.HTTP_200_OK)
+
+        except Lobby.DoesNotExist:
+            return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class StatsViewSet(viewsets.ViewSet):
     """

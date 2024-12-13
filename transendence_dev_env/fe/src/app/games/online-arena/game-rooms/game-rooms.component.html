@@ -1,0 +1,33 @@
+<div class="game-rooms">
+  <h2>Available Rooms</h2>
+  <div *ngIf="rooms.length; else noRooms">
+    <table>
+      <thead>
+        <tr>
+          <th>Room ID</th>
+          <th>Host</th>
+          <th>Guest</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let room of rooms">
+          <td>{{ room.room_id }}</td>
+          <td>{{ room.host }}</td>
+          <td>{{ room.guest || 'Waiting for guest' }}</td>
+          <td>
+            {{ room.all_ready ? 'Room Full' : room.is_full ? 'Waiting for Ready' : 'Open' }}
+          </td>
+          <td>
+            <a [routerLink]="['/games/online-arena/game-room', room.room_id]">Join</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #noRooms>
+    <p>No available rooms at the moment. Create one to start a game!</p>
+  </ng-template>
+</div>

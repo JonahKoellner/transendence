@@ -5,6 +5,8 @@ from .models import Tournament, Round, Match
 class GameSerializer(serializers.ModelSerializer):
     player1 = serializers.SerializerMethodField()
     player2 = serializers.SerializerMethodField()
+    player3 = serializers.SerializerMethodField()
+    player4 = serializers.SerializerMethodField()
     winner = serializers.SerializerMethodField()
 
     class Meta:
@@ -24,7 +26,7 @@ class GameSerializer(serializers.ModelSerializer):
                 "id": 0,  # Placeholder ID for non-existent users
                 "username": obj.player2_name_pvp_local
             }
-        elif obj.is_against_ai():  # Handle AI case
+        elif obj.is_against_ai():  # AI case for PVE and CHAOS_PVE
             return {
                 "id": 0,
                 "username": "AI"
@@ -34,27 +36,60 @@ class GameSerializer(serializers.ModelSerializer):
                 "id": obj.player2.id,
                 "username": obj.player2.username
             }
-        return None  # No player2 set
+        return None  # No player2 set and not AI scenario
+
+    def get_player3(self, obj):
+        # Player3 is only relevant in Arena modes
+        if obj.game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+            if obj.player3 is not None:
+                return {
+                    "id": obj.player3.id,
+                    "username": obj.player3.username
+                }
+            else:
+                # For Arena modes, if there's no player3, it may mean the slot is not filled
+                return None
+        # For non-Arena modes, player3 is irrelevant
+        return None
+
+    def get_player4(self, obj):
+        # Player4 is only relevant in Arena modes
+        if obj.game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+            if obj.player4 is not None:
+                return {
+                    "id": obj.player4.id,
+                    "username": obj.player4.username
+                }
+            else:
+                # For Arena modes, if there's no player4, it may mean the slot is not filled
+                return None
+        # For non-Arena modes, player4 is irrelevant
+        return None
 
     def get_winner(self, obj):
-        if obj.winner:  # Winner is a real user
+        # If a winner is explicitly set, return that user
+        if obj.winner:
             return {
                 "id": obj.winner.id,
                 "username": obj.winner.username
             }
-        elif obj.is_against_ai() and obj.score_player1 < obj.score_player2:  # AI wins
+
+        # If no explicit winner is set, handle AI or local PVP placeholders as before
+        if obj.is_against_ai() and obj.score_player1 < obj.score_player2:
+            # AI wins
             return {
                 "id": 0,
                 "username": "AI"
             }
-        elif obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local and obj.score_player1 < obj.score_player2:
-            # Player2 placeholder wins
+
+        # For local PVP or Chaos PVP, if player2_name_pvp_local exists and score_player2 is higher
+        if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local and obj.score_player1 < obj.score_player2:
             return {
                 "id": 0,
                 "username": obj.player2_name_pvp_local
             }
-        return None  # No winner set
-        
+
+        return None  # No winner determined
 
 
 class MatchSerializer(serializers.ModelSerializer):

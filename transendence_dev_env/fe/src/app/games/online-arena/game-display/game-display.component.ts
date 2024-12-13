@@ -1,0 +1,322 @@
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+
+interface GameSettings {
+  paddleskin_color_left?: string;
+  paddleskin_image_left?: string;
+  paddleskin_color_right?: string;
+  paddleskin_image_right?: string;
+  paddleskin_color_top?: string;
+  paddleskin_image_top?: string;
+  paddleskin_color_bottom?: string;
+  paddleskin_image_bottom?: string;
+  ballskin_color?: string;
+  ballskin_image?: string;
+  gamebackground_color?: string;
+  gamebackground_wallpaper?: string;
+}
+
+@Component({
+  selector: 'app-game-display-arena',
+  templateUrl: './game-display.component.html',
+  styleUrls: ['./game-display.component.scss']
+})
+export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
+  @Input() gameState: any;
+  @Input() gameSettings!: GameSettings;
+  @ViewChild('gameCanvas') canvas!: ElementRef<HTMLCanvasElement>;
+  context!: CanvasRenderingContext2D;
+
+  // Image elements
+  private paddleImageLeft: HTMLImageElement | null = null;
+  private paddleImageRight: HTMLImageElement | null = null;
+  private paddleImageTop: HTMLImageElement | null = null;
+  private paddleImageBottom: HTMLImageElement | null = null;
+  private ballImage: HTMLImageElement | null = null;
+  private backgroundImage: HTMLImageElement | null = null;
+
+  // Flags to check if images are loaded
+  private imagesLoaded: boolean = false;
+
+  ngAfterViewInit() {
+    const context = this.canvas.nativeElement.getContext('2d');
+    if (context) {
+      this.context = context;
+      this.loadImages().then(() => {
+        this.drawGame();
+      }).catch(err => {
+        console.error('Error loading images:', err);
+        this.drawGame(); // Fallback to colors if images fail to load
+      });
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['gameSettings']) {
+      this.loadImages().then(() => {
+        if (this.context) {
+          this.drawGame();
+        }
+      }).catch(err => {
+        console.error('Error loading images:', err);
+        if (this.context) {
+          this.drawGame(); // Fallback to colors if images fail to load
+        }
+      });
+    }
+
+    if (changes['gameState'] && this.context) {
+      this.drawGame();
+    }
+  }
+
+  /**
+   * Loads images based on the game settings.
+   * Returns a promise that resolves when all images are loaded or skipped if not provided.
+   */
+  private loadImages(): Promise<void> {
+    const promises: Promise<void>[] = [];
+    console.log(this.gameSettings);
+
+    // Load left paddle image if provided
+    if (this.gameSettings.paddleskin_image_left) {
+      console.log("Loading Left Paddle Skin " + this.gameSettings.paddleskin_image_left);
+      promises.push(new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image_left!;
+        img.onload = () => {
+          this.paddleImageLeft = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Left PaddleSkin Image. Falling back to colour.');
+          resolve();
+        }
+      }));
+    } else {
+      this.paddleImageLeft = null;
+    }
+
+    // Load right paddle image if provided
+    if (this.gameSettings.paddleskin_image_right) {
+      console.log("Loading Right Paddle Skin " + this.gameSettings.paddleskin_image_right);
+      promises.push(new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image_right!;
+        img.onload = () => {
+          this.paddleImageRight = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Right PaddleSkin Image. Falling back to colour.');
+          resolve();
+        }
+      }));
+    } else {
+      this.paddleImageRight = null;
+    }
+
+    // Load top paddle image if provided
+    if (this.gameSettings.paddleskin_image_top) {
+      console.log("Loading Top Paddle Skin " + this.gameSettings.paddleskin_image_top);
+      promises.push(new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image_top!;
+        img.onload = () => {
+          this.paddleImageTop = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Top PaddleSkin Image. Falling back to colour.');
+          resolve();
+        }
+      }));
+    } else {
+      this.paddleImageTop = null;
+    }
+
+    // Load bottom paddle image if provided
+    if (this.gameSettings.paddleskin_image_bottom) {
+      console.log("Loading Bottom Paddle Skin " + this.gameSettings.paddleskin_image_bottom);
+      promises.push(new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.paddleskin_image_bottom!;
+        img.onload = () => {
+          this.paddleImageBottom = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Bottom PaddleSkin Image. Falling back to colour.');
+          resolve();
+        }
+      }));
+    } else {
+      this.paddleImageBottom = null;
+    }
+
+    // Load ball image if provided
+    if (this.gameSettings.ballskin_image) {
+      console.log("Loading Ball Skin " + this.gameSettings.ballskin_image);
+      promises.push(new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.ballskin_image!;
+        img.onload = () => {
+          this.ballImage = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Ball Skin Image. Falling back to colour.');
+          resolve();
+        }
+      }));
+    } else {
+      this.ballImage = null;
+    }
+
+    // Load background wallpaper if provided
+    if (this.gameSettings.gamebackground_wallpaper) {
+      console.log("Loading Background Skin " + this.gameSettings.gamebackground_wallpaper);
+      promises.push(new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.src = this.gameSettings.gamebackground_wallpaper!;
+        img.onload = () => {
+          this.backgroundImage = img;
+          resolve();
+        }
+        img.onerror = () => {
+          console.warn('Failed to load Background Image. Falling back to colour.');
+          resolve();
+        }
+      }));
+    } else {
+      this.backgroundImage = null;
+    }
+
+    return Promise.all(promises).then(() => {
+      this.imagesLoaded = true;
+    }).catch(err => {
+      console.error(err);
+      this.imagesLoaded = false;
+    });
+  }
+
+  /**
+   * Draws the entire game state on the canvas.
+   */
+  drawGame() {
+    // console.log('Drawing game state:', this.gameSettings);
+    // Draw background
+    this.drawBackground();
+
+    // Draw ball
+    this.drawBall(this.gameState.ball_x, this.gameState.ball_y);
+
+    // Draw left paddle
+    this.drawPaddle(0, this.gameState.left_paddle_y, 'left');
+
+    // Draw right paddle
+    this.drawPaddle(790, this.gameState.right_paddle_y, 'right');
+
+    // Draw top paddle
+    this.drawPaddle(this.gameState.top_paddle_x, 0, 'top');
+
+    // Draw bottom paddle
+    this.drawPaddle(this.gameState.bottom_paddle_x, 790, 'bottom');
+  }
+
+  /**
+   * Draws the game background using an image or color.
+   */
+  private drawBackground() {
+    if (this.backgroundImage) {
+      // Draw the background image stretched to canvas size
+      this.context.drawImage(this.backgroundImage, 0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+    } else if (this.gameSettings.gamebackground_color) {
+      // Fill with background color
+      this.context.fillStyle = this.gameSettings.gamebackground_color;
+      this.context.fillRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+    } else {
+      // Default background
+      this.context.fillStyle = 'black';
+      this.context.fillRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+    }
+  }
+
+  /**
+   * Draws the ball using an image or color.
+   * @param x X-coordinate of the ball
+   * @param y Y-coordinate of the ball
+   */
+  drawBall(x: number, y: number) {
+    if (this.ballImage && this.imagesLoaded) {
+      const ballSize = 30; // Diameter of the ball
+      this.context.drawImage(this.ballImage, x - ballSize / 2, y - ballSize / 2, ballSize, ballSize);
+    } else if (this.gameSettings.ballskin_color) {
+      this.context.beginPath();
+      this.context.arc(x, y, 15, 0, 2 * Math.PI);
+      this.context.fillStyle = this.gameSettings.ballskin_color;
+      this.context.fill();
+    } else {
+      // Default ball color
+      this.context.beginPath();
+      this.context.arc(x, y, 15, 0, 2 * Math.PI);
+      this.context.fillStyle = 'white';
+      this.context.fill();
+    }
+  }
+
+  /**
+   * Draws a paddle using an image or color.
+   * @param x X-coordinate of the paddle
+   * @param y Y-coordinate of the paddle
+   * @param side 'left' or 'right' to determine which paddle to draw
+   */
+  drawPaddle(x: number, y: number, side: 'left' | 'right' | 'top' | 'bottom') {
+    const paddleWidth = 10;
+    const paddleHeight = 60;
+
+    // console.log("Draw Paddle: " + (this.paddleImageLeft != null) + " " + this.imagesLoaded);
+    if (side === 'left') {
+      if (this.paddleImageLeft) {
+        this.context.drawImage(this.paddleImageLeft, x, y, paddleWidth, paddleHeight);
+        return;
+      }
+    } else if (side === 'right') {
+      if (this.paddleImageRight) {
+        this.context.drawImage(this.paddleImageRight, x, y, paddleWidth, paddleHeight);
+        return;
+      }
+    } else if (side === 'top') {
+      if (this.paddleImageTop) {
+        this.context.drawImage(this.paddleImageTop, x, y, paddleHeight, paddleWidth);
+        return;
+      }
+    } else if (side === 'bottom') {
+      if (this.paddleImageBottom) {
+        this.context.drawImage(this.paddleImageBottom, x, y, paddleHeight, paddleWidth);
+        return;
+      }
+    }
+
+    // If no image, use color
+    if (side === 'left' && this.gameSettings.paddleskin_color_left) {
+      this.context.fillStyle = this.gameSettings.paddleskin_color_left;
+    } else if (side === 'right' && this.gameSettings.paddleskin_color_right) {
+      this.context.fillStyle = this.gameSettings.paddleskin_color_right;
+    } else if (side === 'top' && this.gameSettings.paddleskin_color_top) {
+      this.context.fillStyle = this.gameSettings.paddleskin_color_top;
+    } else if (side === 'bottom' && this.gameSettings.paddleskin_color_bottom) {
+      this.context.fillStyle = this.gameSettings.paddleskin_color_bottom;
+    } else {
+      this.context.fillStyle = 'white'; // Default paddle color
+    }
+
+    if (side === 'left' || side === 'right') {
+      this.context.fillRect(x, y, paddleWidth, paddleHeight);
+      console.log("Drawing Paddle: " + x + " " + y + " " + paddleWidth + " " + paddleHeight + " " + side + this.context.fillStyle);
+    }
+    else {
+      this.context.fillRect(x, y, paddleHeight, paddleWidth);
+      console.log("Drawing Paddle: " + x + " " + y + " " + paddleHeight + " " + paddleWidth + " " + side + this.context.fillStyle);
+    }
+  }
+}

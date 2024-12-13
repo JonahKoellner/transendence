@@ -1,0 +1,224 @@
+<div class="game-room">
+  <header>
+    <h2>Pong Arena Online</h2>
+    <div class="header-actions">
+      <p (click)="copyLinkToClipboard()">{{ roomId }}</p>
+      <!-- Invite Button (Visible only to host) -->
+      <button
+      *ngIf="isHost && !gameInProgress"
+      class="btn btn-invite"
+      (click)="openInviteModal(inviteModal)"
+      aria-label="Invite Friends"
+    >
+      <svg viewBox="0 0 24 24">
+        <!-- Invite Icon (e.g., Plus Icon) -->
+        <path fill="#fff" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+      </svg>
+    </button>
+    </div>
+  </header>
+  <section class="players" *ngIf="!gameInProgress">
+    <div class="player-info" [ngClass]="{'ready': isPlayerOneReady, 'not-ready': !isPlayerOneReady}">
+      <div class="status-icon">
+        <svg *ngIf="isPlayerOneReady" viewBox="0 0 24 24">
+          <!-- Checkmark Icon -->
+          <path fill="#61BA50" d="M9 16.17L4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <svg *ngIf="!isPlayerOneReady" viewBox="0 0 24 24">
+          <path fill="#ff6b6b" d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2zm2 2v2.83L10.17 8 8 10.17V13h8v-2.83L13.83 8 16 5.83V4H8z"/>
+        </svg>
+      </div>
+      <p><strong>Left (Host:)</strong> {{ playerOne }}</p>
+      <p>Status: {{ isPlayerOneReady ? 'Ready' : 'Not Ready' }}</p>
+    </div>
+
+    <div class="player-info" [ngClass]="{'ready': isPlayerTwoReady, 'not-ready': !isPlayerTwoReady}">
+      <div class="status-icon">
+        <svg *ngIf="isPlayerTwoReady" viewBox="0 0 24 24">
+          <!-- Checkmark Icon -->
+          <path fill="#61BA50" d="M9 16.17L4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <svg *ngIf="!isPlayerTwoReady" viewBox="0 0 24 24">
+          <path fill="#ff6b6b" d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2zm2 2v2.83L10.17 8 8 10.17V13h8v-2.83L13.83 8 16 5.83V4H8z"/>
+        </svg>
+      </div>
+      <p><strong>Right:</strong> {{ playerTwo || 'Waiting for guest' }}</p>
+      <p>Status: {{ isPlayerTwoReady ? 'Ready' : 'Not Ready' }}</p>
+    </div>
+
+    <div class="player-info" [ngClass]="{'ready': isPlayerThreeReady, 'not-ready': !isPlayerThreeReady}">
+      <div class="status-icon">
+        <svg *ngIf="isPlayerThreeReady" viewBox="0 0 24 24">
+          <!-- Checkmark Icon -->
+          <path fill="#61BA50" d="M9 16.17L4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <svg *ngIf="!isPlayerThreeReady" viewBox="0 0 24 24">
+          <path fill="#ff6b6b" d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2zm2 2v2.83L10.17 8 8 10.17V13h8v-2.83L13.83 8 16 5.83V4H8z"/>
+        </svg>
+      </div>
+      <p><strong>Top:</strong> {{ playerThree || 'Waiting for guest' }}</p>
+      <p>Status: {{ isPlayerThreeReady ? 'Ready' : 'Not Ready' }}</p>
+    </div>
+
+    <div class="player-info" [ngClass]="{'ready': isPlayerFourReady, 'not-ready': !isPlayerFourReady}">
+      <div class="status-icon">
+        <svg *ngIf="isPlayerFourReady" viewBox="0 0 24 24">
+          <!-- Checkmark Icon -->
+          <path fill="#61BA50" d="M9 16.17L4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <svg *ngIf="!isPlayerFourReady" viewBox="0 0 24 24">
+          <path fill="#ff6b6b" d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2zm2 2v2.83L10.17 8 8 10.17V13h8v-2.83L13.83 8 16 5.83V4H8z"/>
+        </svg>
+      </div>
+      <p><strong>Bottom:</strong> {{ playerFour || 'Waiting for guest' }}</p>
+      <p>Status: {{ isPlayerFourReady ? 'Ready' : 'Not Ready' }}</p>
+    </div>
+  </section>
+
+  <section class="settings">
+    <div class="setting-item">
+      <h4>Max Rounds</h4>
+      <p>{{ roomData?.max_rounds }}</p>
+    </div>
+    <div class="setting-item">
+      <h4>Round Score Limit</h4>
+      <p>{{ roomData?.round_score_limit }}</p>
+    </div>
+  </section>
+
+  <section class="actions" *ngIf="!gameInProgress">
+    <button *ngIf="isHost && allReady && !gameInProgress" (click)="startGame()">
+      <svg viewBox="0 0 24 24">
+        <!-- Play Icon -->
+        <path fill="#fff" d="M8 5v14l11-7z"/>
+      </svg>
+      Start Game
+    </button>
+    <button
+    (click)="toggleReady()"
+    [ngClass]="{'ready': isReady, 'not-ready': !isReady}"
+    [attr.aria-label]="isReady ? 'Click to unready' : 'Click to ready'"
+  >
+    <ng-container *ngIf="!isReady; else readyIcon">
+      <!-- Unready Icon (Gear) -->
+      <svg viewBox="0 0 24 24" role="img" aria-label="Not Ready Icon">
+        <path fill="#fff" d="M19.14,12.94c0.04-0.31,0.06-0.63,0.06-0.94s-0.02-0.63-0.06-0.94l2.03-1.58
+          c0.18-0.14,0.23-0.4,0.12-0.61l-1.92-3.32c-0.11-0.21-0.36-0.3-0.58-0.22l-2.39,0.96
+          c-0.5-0.38-1.03-0.7-1.62-0.94L14.5,2.81c-0.05-0.22-0.24-0.38-0.47-0.38h-3.06
+          c-0.23,0-0.42,0.16-0.47,0.38L10.2,5.35c-0.59,0.24-1.12,0.56-1.62,0.94L6.19,5.32
+          c-0.22-0.09-0.47,0.01-0.58,0.22L3.69,8.86c-0.11,0.21-0.06,0.47,0.12,0.61l2.03,1.58
+          c-0.04,0.31-0.06,0.63-0.06,0.94s0.02,0.63,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.4-0.12,0.61
+          l1.92,3.32c0.11,0.21,0.36,0.3,0.58,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.77,2.53
+          c0.05,0.22,0.24,0.38,0.47,0.38h3.06c0.23,0,0.42-0.16,0.47-0.38l0.77-2.53
+          c0.59-0.24,1.12-0.56,1.62-0.94l2.39,0.96c0.22,0.09,0.47-0.01,0.58-0.22l1.92-3.32
+          c0.11-0.21,0.06-0.47-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5
+          s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
+      </svg>
+    </ng-container>
+    <ng-template #readyIcon>
+      <!-- Ready Icon (Rocket) -->
+      <svg viewBox="0 0 24 24" role="img" aria-label="Ready Icon">
+        <path fill="#fff" d="M2.81,14.13l4.64-4.64c-0.2-1.28,0.14-2.64,1.03-3.53
+          c1.38-1.38,3.45-1.65,5.07-0.76l1.41-1.41c0.78-0.78,2.05-0.78,2.83,0
+          c0.78,0.78,0.78,2.05,0,2.83l-1.41,1.41c0.89,1.62,0.62,3.69-0.76,5.07
+          c-0.89,0.89-2.25,1.23-3.53,1.03l-4.64,4.64c-0.39,0.39-1.02,0.39-1.41,0
+          l-2.83-2.83C2.42,15.15,2.42,14.52,2.81,14.13z"/>
+      </svg>
+    </ng-template>
+    {{ isReady ? 'Unready' : 'Ready' }}
+  </button>
+  </section>
+
+  <p *ngIf="allReady && !gameInProgress" class="waiting-message">
+    All players are ready. Waiting for host to start the game...
+  </p>
+
+  <p *ngIf="!gameInProgress && winner">
+    <strong>{{ winner }} won!</strong>
+  </p>
+
+  <section class="game-view" *ngIf="gameInProgress">
+    <p class="score">
+      <strong>{{ playerOne }}:</strong> {{ leftScore }} - <strong>{{ playerTwo }}:</strong> {{ rightScore }} -
+      <strong>{{ playerThree }}:</strong> {{ topScore }} - <strong>{{ playerFour }}:</strong> {{ bottomScore }}
+    </p>
+    <app-game-display-arena [gameState]="gameState" [gameSettings]="gameSettings"></app-game-display-arena>
+  </section>
+
+    <!-- Invite Friends Modal Template -->
+    <ng-template #inviteModal>
+      <!-- Dialog Overlay -->
+      <div class="modal-overlay" (click)="modalService.dismissAll()" tabindex="-1" aria-hidden="true"></div>
+    
+      <!-- Dialog Content -->
+      <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inviteFriendsTitle"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title" id="inviteFriendsTitle">Invite Friends</h4>
+          <button
+            type="button"
+            class="close-button"
+            aria-label="Close Invite Friends Modal"
+            (click)="modalService.dismissAll()"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                d="M18.3 5.71a1 1 0 00-1.42-1.42L12 9.17 7.12 4.29a1 1 0 10-1.42 1.42L10.83 12l-5.14 5.29a1 1 0 101.42 1.42L12 14.83l4.88 4.88a1 1 0 001.42-1.42L13.17 12l5.13-5.29z"
+              />
+            </svg>
+          </button>
+        </div>
+    
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <!-- No Friends Message -->
+          <div *ngIf="friends.length === 0" class="no-items">
+            <p>You have no friends to invite.</p>
+          </div>
+    
+          <!-- Friends List -->
+          <ul *ngIf="friends.length > 0" class="friends-list">
+            <li *ngFor="let friend of friends" class="friend-card">
+              <!-- Friend Avatar -->
+              <img
+                [src]="friend.avatar || 'assets/default_avatar.png'"
+                alt="{{ friend.username }}"
+                class="avatar"
+              />
+    
+              <!-- Friend Information -->
+              <div class="friend-info">
+                <h5 class="display-name">{{ friend.display_name || friend.username }}</h5>
+                <p class="username">Username: {{ friend.username }}</p>
+              </div>
+    
+              <!-- Invite Action -->
+              <div class="actions">
+                <button class="btn-invite-friend" (click)="inviteFriend(friend.id)">
+                  <svg viewBox="0 0 24 24" class="invite-icon">
+                    <path fill="currentColor" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                  </svg>
+                  <span>Invite</span>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+    
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="modalService.dismissAll()">Close</button>
+        </div>
+      </div>
+    </ng-template>
+    
+</div>

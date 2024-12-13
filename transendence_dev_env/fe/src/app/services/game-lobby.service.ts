@@ -73,8 +73,6 @@ export class GameLobbyService {
     this.disconnect();
   }
 
-
-
   createRoom(settings: GameSettings): Observable<{ room_id: string }> {
     // return this.http.post<{ room_id: string }>('http://localhost:8000/games/lobby/create/', settings);
     return this.http.post<{ room_id: string }>(environment.apiUrl + '/games/lobby/create/', settings);
