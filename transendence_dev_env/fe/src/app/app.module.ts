@@ -72,6 +72,7 @@ import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room
 import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
 import { GameDisplayArenaComponent } from './games/online-arena/game-display/game-display.component';
+import { ImpressumComponent } from './home/impressum/impressum.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -136,7 +137,8 @@ import { GameDisplayArenaComponent } from './games/online-arena/game-display/gam
     JoinRoomArenaComponent,
     GameRoomsArenaComponent,
     GameRoomArenaComponent,
-    GameDisplayArenaComponent
+    GameDisplayArenaComponent,
+    ImpressumComponent
   ],
   imports: [
     BrowserModule,

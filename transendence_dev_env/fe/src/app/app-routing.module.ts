@@ -43,6 +43,7 @@ import { CreateRoomArenaComponent } from './games/online-arena/create-room/creat
 import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room.component';
 import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
+import { ImpressumComponent } from './home/impressum/impressum.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -93,6 +94,7 @@ const routes: Routes = [
   { path: 'auth/callback', component: FtAuthCallbackComponentComponent },
   { path: 'forgot-password', component: PasswordResetComponent },
   { path: 'reset-password', component: PasswordResetConfirmComponent },
+  { path: 'impressum', component: ImpressumComponent },
   { path: 'about', component: AboutComponent},
   { path: 'test', component: Local3dPvpComponent},
   { path: '**', redirectTo: 'login' }
