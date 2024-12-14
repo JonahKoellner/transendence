@@ -25,6 +25,7 @@ export class ArenaComponent implements OnInit, OnDestroy {
   gameElapsedTime: string = '0 seconds';
   roundElapsedTime: string = '0 seconds';
   hostProfile: UserProfile | null = null;
+  gameId: string = '';
 
   player1Name: string = 'Player 1';
   player2Name: string = 'Player 2';
@@ -61,7 +62,7 @@ export class ArenaComponent implements OnInit, OnDestroy {
     if (!this.validateSettings()) return;
 
     const newGame: Game = {
-      game_mode: 'arena',
+      game_mode: 'arena_pvp',
       player1: { id: this.hostProfile!.id, username: this.player1Name },
       player2: { id: 0, username: this.player2Name },
       player3: { id: 0, username: this.player3Name },
@@ -83,20 +84,21 @@ export class ArenaComponent implements OnInit, OnDestroy {
       score_player2: 0
     };
 
-    this.gameService.createGame(newGame).subscribe()
-
-        if (this.logs.length) {
-          this.previousGames.push(...this.logs);
-          this.logs = [];
-        }
-        this.currentGame = newGame;
-        this.gameInProgress = true;
-        this.logs.push(
-          `New game started among ${this.player1Name}, ${this.player2Name}, ${this.player3Name}, and ${this.player4Name}`
-        );
-        this.startTimers();
-        this.startNewRound();
-    
+    this.gameService.createGame(newGame).subscribe( (game) => {
+      console.log('Game created:', game);
+      this.gameId = game.id?.toString() || '';
+      if (this.logs.length) {
+        this.previousGames.push(...this.logs);
+        this.logs = [];
+      }
+      this.currentGame = newGame;
+      this.gameInProgress = true;
+      this.logs.push(
+        `New game started among ${this.player1Name}, ${this.player2Name}, ${this.player3Name}, and ${this.player4Name}`
+      );
+      this.startTimers();
+      this.startNewRound();
+    });
   }
 
   startTimers(): void {
@@ -230,8 +232,8 @@ export class ArenaComponent implements OnInit, OnDestroy {
 
     this.gameInProgress = false;
     this.logs.push(`Game ended. Winner: ${this.currentGame!.winner?.username || 'Tie'}`);
-
-    if (this.currentGame && this.currentGame.id) {
+    console.log('Game ended:', this.currentGame);
+    if (this.currentGame && this.gameId) {
       const updatedGameData: Partial<Game> = {
         end_time: this.currentGame.end_time,
         duration: this.currentGame.duration,
@@ -242,7 +244,8 @@ export class ArenaComponent implements OnInit, OnDestroy {
         rounds: this.currentGame.rounds,
       };
 
-      this.gameService.updateGame(this.currentGame.id, updatedGameData).subscribe((updatedGame) => {
+      this.gameService.updateGame(Number(this.gameId), updatedGameData).subscribe((updatedGame) => {
+        console.log('Game updated:', updatedGame);
         this.currentGame = { ...this.currentGame, ...updatedGame };
       });
     }
