@@ -180,3 +180,26 @@
     font-size: 1rem;
   }
 }
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+
+  .spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #61BA50;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.2rem;
+    color: #61BA50;
+  }
+}

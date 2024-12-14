@@ -4,8 +4,9 @@
   <h1>Leaderboards & Global Statistics</h1>
 
   <!-- Loading Indicator -->
-  <div *ngIf="isLoading" class="loading">
-    <p>Loading data...</p>
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading leaderboard data...</p>
   </div>
 
   <!-- Error Message -->
