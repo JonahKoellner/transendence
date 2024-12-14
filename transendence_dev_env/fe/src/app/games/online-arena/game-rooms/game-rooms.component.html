@@ -6,7 +6,7 @@
         <tr>
           <th>Room ID</th>
           <th>Host</th>
-          <th>Guest</th>
+          <th>Players</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
@@ -14,13 +14,21 @@
       <tbody>
         <tr *ngFor="let room of rooms">
           <td>{{ room.room_id }}</td>
-          <td>{{ room.host }}</td>
-          <td>{{ room.guest || 'Waiting for guest' }}</td>
+          <td>{{ room.player_one }}</td>
           <td>
-            {{ room.all_ready ? 'Room Full' : room.is_full ? 'Waiting for Ready' : 'Open' }}
+            <ul>
+              <li>{{ room.player_two || 'Waiting for player 2' }}</li>
+              <li>{{ room.player_three || 'Waiting for player 3' }}</li>
+              <li>{{ room.player_four || 'Waiting for player 4' }}</li>
+            </ul>
           </td>
           <td>
-            <a [routerLink]="['/games/online-arena/game-room', room.room_id]">Join</a>
+            {{ room.all_ready ? 'Ready to Start' : room.is_full ? 'Waiting for Ready' : 'Open' }}
+          </td>
+          <td>
+            <a [routerLink]="['/games/online-arena/game-room', room.room_id]" 
+               *ngIf="!room.all_ready">Join</a>
+            <span *ngIf="room.all_ready">Game Starting</span>
           </td>
         </tr>
       </tbody>
