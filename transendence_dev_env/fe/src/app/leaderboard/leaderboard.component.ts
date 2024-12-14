@@ -23,6 +23,9 @@ export class LeaderboardComponent implements OnInit {
   isLoading: boolean = false;
   error: string | null = null;
 
+  // Active Tab
+  activeTab: 'leaderboards' | 'charts' = 'leaderboards';
+
   constructor(private gameService: GameService) { }
 
   ngOnInit(): void {
