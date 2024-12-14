@@ -4,7 +4,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 export interface FtUser {
   id: number

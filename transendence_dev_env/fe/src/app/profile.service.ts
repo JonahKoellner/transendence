@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 export interface Profile {
   display_name: string;
@@ -92,5 +92,5 @@ export class ProfileService {
       new_password,
     });
   }
-  
+
 }

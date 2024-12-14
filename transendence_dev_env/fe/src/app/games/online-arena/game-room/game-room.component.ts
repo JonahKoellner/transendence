@@ -6,7 +6,7 @@ import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { NotificationService, SendGameInvitePayload } from 'src/app/notifications/notification.service';
 import { FriendService } from 'src/app/friend.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 interface GameSettings {
   paddleskin_color_left?: string;

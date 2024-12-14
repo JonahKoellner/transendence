@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-j=&_)ux49j@6hdnbf6dunf^vpq(8*40eke4(%&2!6ru3l3iu(@"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", os.getenv("DOMAIN")]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", os.getenv("DOMAIN"), "1-a-6.42heilbronn.de"]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -77,7 +77,7 @@ ANYMAIL = {
 DEFAULT_FROM_EMAIL = "no-reply@yourdomain.com"  # Replace with your verified sender email
 
 # Frontend domain for constructing reset URLs
-FRONTEND_DOMAIN = os.getenv("DOMAIN", "http://localhost:4200")
+FRONTEND_DOMAIN = os.getenv("DOMAIN", "https://localhost:4200")
 
 
 CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000", "ws://" + os.getenv("DOMAIN") + ":8000")
@@ -92,8 +92,8 @@ CSP_REPORT_URI = '/csp-violation-report/'
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-    "http://" + os.getenv("DOMAIN"),
+    "https://localhost:4200",
+    "https://" + os.getenv("DOMAIN"),
 ]
 
 REST_FRAMEWORK = {
@@ -189,6 +189,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS = 31536000  # One year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

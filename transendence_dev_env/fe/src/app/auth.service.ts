@@ -5,7 +5,7 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
   public refreshInProgress = false;
-  
+
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService) {}
 
   // Register a new user
@@ -53,7 +53,7 @@ export class AuthService {
   verifyOTP(otp_code: string): Observable<any> {
     const accessToken = localStorage.getItem('access_token') || localStorage.getItem('temp_token');
     if (!accessToken) throw new Error('Access token is missing');
-  
+
     return this.http.post(`${this.apiUrl}/accounts/verify-otp/`, { otp_code }, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
@@ -225,11 +225,11 @@ export class AuthService {
   // Method to enable 2FA
   enable2FA(): Observable<any> {
     const accessToken = localStorage.getItem('access_token');  // Get JWT access token
-  
+
     if (!accessToken) {
       throw new Error('Access token is missing');
     }
-  
+
     return this.http.post(`${this.apiUrl}/accounts/enable-2fa/`, {}, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
@@ -250,11 +250,11 @@ export class AuthService {
   // Method to disable 2FA
   disable2FA(): Observable<any> {
     const accessToken = localStorage.getItem('access_token');  // Get JWT access token
-  
+
     if (!accessToken) {
       throw new Error('Access token is missing');
     }
-  
+
     return this.http.post(`${this.apiUrl}/accounts/disable-2fa/`, {}, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(

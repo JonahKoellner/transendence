@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AuthService } from '../auth.service';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 export interface SendGameInvitePayload {
   receiver_id: number;
