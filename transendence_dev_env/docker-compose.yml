@@ -87,6 +87,7 @@ services:
 
   # Angular Frontend Service
   angular:
+    container_name: angular
     build:
       context: ./fe
     ports:
@@ -114,6 +115,7 @@ services:
 
   # Django Backend Service
   django:
+    container_name: django
     build:
       context: ./be
     command: >
@@ -155,6 +157,7 @@ services:
 
   # PostgreSQL Database Service
   db:
+    container_name: db
     image: postgres:17
     environment:
       - POSTGRES_DB=mydb

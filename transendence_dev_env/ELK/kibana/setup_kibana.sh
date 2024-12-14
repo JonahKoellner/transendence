@@ -17,15 +17,6 @@ SERVICE_TOKEN=$(cat /usr/share/kibana/shared/token.tok)
 mkdir -p /usr/share/kibana/config/certs/ca
 cp /usr/share/kibana/shared/elastic-stack-ca/ca/ca.crt /usr/share/kibana/config/certs/ca.crt
 
-# # Update kibana.yml
-# echo "elasticsearch.hosts: [\"https://elasticsearch:9200\"]" >> /usr/share/kibana/config/kibana.yml
-# echo "elasticsearch.serviceAccountToken: $SERVICE_TOKEN" >> /usr/share/kibana/config/kibana.yml
-# echo "elasticsearch.ssl.certificateAuthorities: [\"$CA_CERT\"]" >> /usr/share/kibana/config/kibana.yml
-# echo "elasticsearch.ssl.verificationMode: full" >> /usr/share/kibana/config/kibana.yml
-# echo "server.ssl.enabled: true" >> /usr/share/kibana/config/kibana.yml
-# echo "server.ssl.certificate: $KIBANA_CERTS_DIR/kibana.crt" >> /usr/share/kibana/config/kibana.yml
-# echo "server.ssl.key: $KIBANA_CERTS_DIR/kibana.key" >> /usr/share/kibana/config/kibana.yml
-
 cat <<EOL >> /usr/share/kibana/config/kibana.yml
 elasticsearch.hosts: ["https://elasticsearch:9200"]
 elasticsearch.serviceAccountToken: "$SERVICE_TOKEN"
@@ -45,6 +36,20 @@ EOL
 
 chown kibana:kibana /usr/share/kibana/config/kibana.yml
 chmod 600 /usr/share/kibana/config/kibana.yml
+
+# Create the base dataview file with index pattern settings
+cat <<EOF > /usr/share/kibana/config/kibana_saved_objects.ndjson
+{"type":"index-pattern","id":"logstash-*","attributes":{"title":"logstash-*","timeFieldName":"@timestamp"}}
+EOF
+chown kibana:kibana /usr/share/kibana/config/kibana_saved_objects.ndjson
+chmod 644 /usr/share/kibana/config/kibana_saved_objects.ndjson
+
+# Import base dataview before starting Kibana
+echo "Importing base dataview..."
+curl -k -X POST "https://localhost:5601/api/saved_objects/_import" \
+  -H "kbn-xsrf: true" \
+  -H "Authorization: Bearer $SERVICE_TOKEN" \
+  --form file=@/usr/share/kibana/config/kibana_saved_objects.ndjson
 
 # Start Kibana
 exec bin/kibana

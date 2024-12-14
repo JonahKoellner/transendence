@@ -40,18 +40,8 @@ cp -R $ELASTIC_CERTS_DIR/elasticsearch /usr/share/elasticsearch/config/certs/
 mkdir -p /usr/share/elasticsearch/config/certs/ca
 cp $CA_CERT /usr/share/elasticsearch/config/certs/ca/ca.crt
 
-# Update elasticsearch.yml
-# echo "xpack.security.enabled: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
-# echo "xpack.security.http.ssl.enabled: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
-# echo "xpack.security.http.ssl.key: $ELASTIC_CERTS_DIR/elasticsearch.key" >> /usr/share/elasticsearch/config/elasticsearch.yml
-# echo "xpack.security.http.ssl.certificate: $ELASTIC_CERTS_DIR/elasticsearch.crt" >> /usr/share/elasticsearch/config/elasticsearch.yml
-# echo "xpack.security.http.ssl.certificate_authorities: [\"$CA_CERT\"]" >> /usr/share/elasticsearch/config/elasticsearch.yml
-bin/elasticsearch-keystore create
-# echo "elapwd" | bin/elasticsearch-keystore add "bootstrap.password" --stdin
-# echo "kibpwd" | bin/elasticsearch-keystore add "xpack.security.authc.realms.native.native1.secure_kibana_system_password" --stdin
-# echo "logpwd" | bin/elasticsearch-keystore add "xpack.security.authc.realms.native.native1.secure_logstash_system_password" --stdin
 
-# cd /usr/share/elasticsearch
+bin/elasticsearch-keystore create
 
 # Function to check if Elasticsearch is up
 function wait_for_elasticsearch() {
@@ -71,14 +61,21 @@ wait_for_elasticsearch
 # Generate the service token
 SERVICE_TOKEN=$(bin/elasticsearch-service-tokens create elastic/kibana kibana | grep -oP '(?<=SERVICE_TOKEN elastic/kibana/kibana = ).*')
 
+bin/elasticsearch-users useradd admin -p $ELASTIC_ADMIN_PASSWORD -r superuser
+
+until curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X GET "https://localhost:9200/_security/_authenticate?pretty" | grep -q '"username" : "admin"'; do
+  echo "Authentication failed or not yet ready for admin. Retrying..."
+  sleep 5
+done
+
 # Check if the ILM policy already exists
-POLICY_EXISTS=$(curl -k -s -X GET "http://localhost:9200/_ilm/policy/logs_policy" | grep -c 'policy')
+POLICY_EXISTS=$(curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -s -X GET "https://localhost:9200/_ilm/policy/logs_policy" | grep -c 'policy')
 
 if [ "$POLICY_EXISTS" -eq 0 ]; then
   echo "Creating ILM policy..."
 
   # Create ILM policy
-  curl -k -s -X PUT "http://localhost:9200/_ilm/policy/logs_policy" -H 'Content-Type: application/json' -d'
+  curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -s -X PUT "https://localhost:9200/_ilm/policy/logs_policy" -H 'Content-Type: application/json' -d'
   {
     "policy": {
       "phases": {
@@ -116,7 +113,7 @@ if [ "$POLICY_EXISTS" -eq 0 ]; then
   echo "Creating index template..."
 
   # Create index template
-  curl -k -s -X PUT "http://localhost:9200/_template/logs_template" -H 'Content-Type: application/json' -d'
+  curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -s -X PUT "https://localhost:9200/_template/logs_template" -H 'Content-Type: application/json' -d'
   {
     "index_patterns": ["logstash*"],
     "settings": {
@@ -138,7 +135,7 @@ if [ "$POLICY_EXISTS" -eq 0 ]; then
   echo "Creating initial index..."
 
   # Create initial index
-  curl -k -s -X PUT "http://localhost:9200/logs-000001" -H 'Content-Type: application/json' -d'
+  curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -s -X PUT "https://localhost:9200/logs-000001" -H 'Content-Type: application/json' -d'
   {
     "aliases": {
       "logs-read": {},
@@ -153,29 +150,6 @@ else
   echo "ILM policy already exists. Skipping initialization."
 fi
 
-bin/elasticsearch-users useradd admin -p $ELASTIC_ADMIN_PASSWORD -r superuser
-# curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X PUT "https://elasticsearch:9200/_security/role/logstash_writer" -H 'Content-Type: application/json' -d'
-# {
-#   "cluster": ["monitor"],
-#   "indices": [
-#     {
-#       "names": ["logstash-*"],
-#       "privileges": ["write", "create_index"]
-#     }
-#   ]
-# }'
-# bin/elasticsearch-users useradd logstash_writer -p "$ELASTIC_LOGSTASH_PASSWORD" -r logstash_writer
-
-# Ensure the logstash_writer role exists (create it if not)
-# echo "Checking if logstash_writer role exists..."
-# ROLE_EXISTS=$(curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -s -o /dev/null -w "%{http_code}" "https://localhost:9200/_security/role/logstash_writer")
-
-# curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X GET "https://localhost:9200/_security/_authenticate?pretty"
-
-until curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X GET "https://localhost:9200/_security/_authenticate?pretty" | grep -q '"username" : "admin"'; do
-  echo "Authentication failed or not yet ready for admin. Retrying..."
-  sleep 5
-done
 
 # if [ "$ROLE_EXISTS" -eq 404 ]; then
   echo "Creating logstash_writer role..."
@@ -204,28 +178,7 @@ curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X POST "https://localhost:9200/_securi
 
 echo "logstash_writer user created successfully!"
 
-
-# curl -k -u admin:$ELASTIC_ADMIN_PASSWORD -X PUT "https://elasticsearch:9200/_security/role/logstash_writer" -H 'Content-Type: application/json' -d'
-# {
-#   "cluster": ["monitor"],
-#   "indices": [
-#     {
-#       "names": ["logstash-*"],
-#       "privileges": ["write", "create_index"]
-#     }
-#   ]
-# }'
-
-# bin/elasticsearch-service-tokens create logstash/default default
-# # sleep 100
-# LOGSTASH_SERVICE_TOKEN=$(bin/elasticsearch-service-tokens create logstash/default default | grep -oP '(?<=SERVICE_TOKEN logstash/default/default = ).*')
-
-# Save the token to a shared file (ensure this volume is shared with Kibana)
-# mkdir -p /usr/share/elasticsearch/service_token
-# touch /usr/share/elasticsearch/service_token/token.tok
 (echo "$SERVICE_TOKEN" > /usr/share/elasticsearch/shared/token.tok && echo "Service token generated and saved to /usr/share/elasticsearch/shared/token.tok") || echo "ERROR storing servicetoken: $SERVICE_TOKEN in /usr/share/elasticsearch/shared/token.tok"
-# (echo "$LOGSTASH_SERVICE_TOKEN" > /usr/share/elasticsearch/shared/logstash_token.tok && echo "Service token generated and saved to /usr/share/elasticsearch/shared/logstash_token.tok") || echo "ERROR storing servicetoken: $LOGSTASH_SERVICE_TOKEN in /usr/share/elasticsearch/shared/logstash_token.tok"
-
 
 
 wait
