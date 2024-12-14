@@ -297,7 +297,7 @@
           <div class="ft-additional-data mt-3">
             <h5>Cursus Information</h5>
             <div *ngIf="ftUserData.cursus_users && ftUserData.cursus_users.length > 0" class="cursus-list">
-              <div *ngFor="let cursusUser of ftUserData.cursus_users | paginate: { itemsPerPage: itemsPerPageCursus, currentPage: pCursus }" class="cursus-item">
+              <div *ngFor="let cursusUser of ftUserData.cursus_users | paginate: { itemsPerPage: itemsPerPageCursus, currentPage: pCursus, id: 'cursusPagination'  }" class="cursus-item">
                 <p><strong>Cursus:</strong> {{ cursusUser.cursus.name }}</p>
                 <p><strong>Grade:</strong> {{ cursusUser.grade || 'N/A' }}</p>
                 <p><strong>Level:</strong> {{ cursusUser.level | number: '1.2-2' }}</p>
@@ -305,7 +305,14 @@
               </div>
           
               <!-- Pagination Controls -->
-              <pagination-controls (pageChange)="pCursus = $event"></pagination-controls>
+<pagination-controls 
+  (pageChange)="pCursus = $event" 
+  id="cursusPagination"
+  class="custom-pagination cursus-pagination"
+  [maxSize]="5"
+  [directionLinks]="true"
+  [autoHide]="true">
+</pagination-controls>
             </div>
             
             <div *ngIf="!ftUserData.cursus_users || ftUserData.cursus_users.length === 0">
@@ -316,20 +323,25 @@
           <div class="ft-additional-data mt-3">
             <h5>Projects Information</h5>
             <div *ngIf="ftUserData.projects_users && ftUserData.projects_users.length > 0" class="projects-list">
-              <div *ngFor="let projectUser of ftUserData.projects_users | paginate: { itemsPerPage: itemsPerPageProjects, currentPage: pProjects }" class="project-item">
+              <div *ngFor="let projectUser of ftUserData.projects_users | paginate: { itemsPerPage: itemsPerPageProjects, currentPage: pProjects, id: 'projectsPagination' }" class="project-item">
                 <p><strong>Project:</strong> {{ projectUser.project.name }}</p>
                 <p><strong>Status:</strong> {{ projectUser.status }}</p>
                 <p><strong>Final Mark:</strong> {{ projectUser.final_mark || 'N/A' }}</p>
                 <!-- Add more project-related fields if needed -->
               </div>
-              <pagination-controls (pageChange)="pProjects = $event"></pagination-controls>
+              <pagination-controls 
+              (pageChange)="pProjects = $event" 
+              id="projectsPagination"
+  class="custom-pagination projects-pagination"
+              [maxSize]="5"
+              [directionLinks]="true"
+              [autoHide]="true">
+            </pagination-controls>
             </div>
             <div *ngIf="!ftUserData.projects_users || ftUserData.projects_users.length === 0">
               <p>No Projects Information Available.</p>
             </div>
           </div>
-          
-          <!-- Add more sections as needed, e.g., Achievements, Languages, etc. -->
         </div>
     
         <!-- Login Button -->

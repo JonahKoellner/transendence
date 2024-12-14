@@ -25,6 +25,7 @@ export class ProfileComponent implements OnInit {
   isUpdating = false;
   userProfile!: UserProfile;
   
+  
   // Options for customization
   paddleskinOption: 'color' | 'image' = 'color';
   ballskinOption: 'color' | 'image' = 'color';
