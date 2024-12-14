@@ -5,13 +5,6 @@ WORKDIR /usr/share/elasticsearch
 
 ENV ELASTIC_PASSWORD=yourpassword
 
-# Update and install required dependencies
-# RUN apt-get update && apt-get install -y wget unzip curl && \
-#     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
-#     tar -xzf elasticsearch-8.10.2-linux-aarch64.tar.gz --strip-components=1 && \
-#     rm elasticsearch-8.10.2-linux-aarch64.tar.gz && \
-#     apt-get clean
-
 RUN apt-get update && apt-get install -y wget unzip curl && \
     ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
@@ -81,19 +74,9 @@ RUN chown -R ela:ela /usr/share/elasticsearch/service_token
 
 # Switch to the non-root user
 USER ela
-# RUN /usr/share/elasticsearch/create-user.sh
 
-
-# RUN test -f /usr/share/elasticsearch/config/ca/ca.crt && \
-#     test -f /usr/share/elasticsearch/config/ca/ca.key && \
-#     echo "CA certificates exist." || (echo "CA certificates not found!" && whoami && ls -l /usr/share/elasticsearch/config/certs/instance && exit 1)
-
+# Start
 ENTRYPOINT ["/bin/bash", "-c", "/usr/share/elasticsearch/bin/create_service_token.sh" ]
-
-# RUN /usr/share/elasticsearch/create-user.sh
 
 # Expose necessary ports
 EXPOSE 9200 9300
-
-# Command to run Elasticsearch
-# CMD ["bin/elasticsearch"]

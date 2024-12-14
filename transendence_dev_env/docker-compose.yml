@@ -46,7 +46,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      #- ./elk/logstash/pipeline:/usr/share/logstash/pipeline
       - ./data/elk-shared:/usr/share/logstash/shared
     depends_on:
       - elasticsearch

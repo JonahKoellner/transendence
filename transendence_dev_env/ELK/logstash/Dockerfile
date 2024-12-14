@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y wget curl && \
     rm logstash-8.10.2-linux-aarch64.tar.gz && \
     apt-get clean
 
-COPY pipeline ./pipeline
+#COPY pipeline ./pipeline
 EXPOSE 5240 5431 5959
 
 COPY wait_for_elastic.sh /usr/share/logstash/wait_for_elastic.sh
