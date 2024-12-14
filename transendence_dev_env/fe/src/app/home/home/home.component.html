@@ -2,7 +2,7 @@
   <!-- Hero Section -->
   <section class="hero-section">
     <div class="hero-content">
-      <h1 class="hero-title"><span><strong>Pong Arena</strong></span></h1>
+      <h1 class="hero-title flicker"><span><strong>Pong Arena</strong></span></h1>
       <p class="hero-description">
         Dive into the ultimate Pong experience with thrilling PvP battles, tournaments, and arenas.
       </p>
@@ -10,62 +10,176 @@
     </div>
   </section>
 
-  <!-- Featured Game Modes Section -->
-  <section class="game-modes-section">
-    <h2>Choose Your Challenge</h2>
-    <div class="game-modes-cards">
-      <div class="game-mode-card">
-        <h3>1v1 Player vs Environment</h3>
-        <p>Test your skills against AI opponents and improve your game.</p>
-        <button (click)="navigateToMode('pve')">Play PvE</button>
-      </div>
-      <div class="game-mode-card">
-        <h3>1v1 Local PvP</h3>
-        <p>Challenge a friend in local matches and prove who’s the best.</p>
-        <button (click)="navigateToMode('local_pvp')">Play Local PvP</button>
-      </div>
-      <div class="game-mode-card">
-        <h3>Online PvP</h3>
-        <p>Compete with players around the world and climb the ranks.</p>
-        <button (click)="navigateToMode('online_pvp')">Play Online PvP</button>
-      </div>
-      <div class="game-mode-card">
-        <h3>Tournaments</h3>
-        <p>Enter single-elimination tournaments and emerge as the ultimate champion.</p>
-        <button (click)="navigateToMode('tournament')">Join Tournaments</button>
-      </div>
-      <div class="game-mode-card">
-        <h3>Arena Mode</h3>
-        <p>Enter the Arena and face multiple players in intense free-for-all battles.</p>
-        <button (click)="navigateToMode('arena')">Play Arena</button>
-      </div>
-    </div>
-  </section>
+
 
   <!-- How It Works Section -->
   <section class="how-it-works-section">
-    <h2>How It Works</h2>
+    <h2 class="section-title">How It Works</h2>
     <p>Experience fast-paced Pong battles across multiple game modes. Earn XP, level up, and unlock unique achievements as you progress through the ranks. Ready to take on the challenge?</p>
   </section>
 
   <!-- Community and Leaderboards Section -->
   <section class="community-section">
-    <h2>Engage with the Community</h2>
+    <h2 class="section-title">Engage with the Community</h2>
     <p>Compete with top players, join tournaments, and see where you stand on the leaderboards. Show off your skills and climb to the top!</p>
-    <button (click)="navigateToLeaderboards()">View Leaderboards</button>
+    <button class="community-button" (click)="navigateToLeaderboards()">View Leaderboards</button>
   </section>
+
+    <!-- Featured Game Modes Section -->
+    <section class="game-modes-section">
+      <h2 class="section-title">Choose Your Challenge</h2>
+  
+      <!-- Loading Spinner -->
+      <!-- <div *ngIf="isLoading" class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div> -->
+  
+      <!-- Game Modes Content -->
+      <div class="selection-container">
+        <!-- Classic Game Modes -->
+        <div class="game-category">
+          <h3>Classic Game Modes</h3>
+          <div class="game-mode-grid">
+            <!-- 1v1 Player vs Environment -->
+            <div class="game-mode-card" (click)="navigateToMode('pve')">
+              <div class="icon">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" class="pve-icon"></circle>
+                </svg>
+              </div>
+              <h4>Player vs Environment (PVE)</h4>
+              <p>Test your skills against AI opponents in a solo challenge.</p>
+            </div>
+  
+            <!-- Local 1v1 PvP -->
+            <div class="game-mode-card" (click)="navigateToMode('local_pvp')">
+              <div class="icon">
+                <svg viewBox="0 0 24 24">
+                  <rect x="5" y="5" width="6" height="6" class="local-pvp-icon"></rect>
+                  <rect x="13" y="13" width="6" height="6" class="local-pvp-icon"></rect>
+                </svg>
+              </div>
+              <h4>Local Player vs Player (PvP)</h4>
+              <p>Engage in a 1v1 match with a friend on the same device.</p>
+            </div>
+  
+            <!-- Online 1v1 PvP -->
+            <div class="game-mode-card" (click)="navigateToMode('online_pvp')">
+              <div class="icon">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="12,2 22,12 12,22 2,12" class="online-pvp-icon"></polygon>
+                </svg>
+              </div>
+              <h4>Online Player vs Player (PvP)</h4>
+              <p>Compete in real-time 1v1 matches against online players.</p>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Tournament Modes -->
+        <div class="game-category">
+          <h3>Tournament Modes</h3>
+          <div class="game-mode-grid">
+            <!-- Local Tournament -->
+            <div class="game-mode-card" (click)="navigateToMode('local_tournament')">
+              <div class="icon">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="6" cy="6" r="2.5" class="local-tournament-icon"></circle>
+                  <circle cx="18" cy="6" r="2.5" class="local-tournament-icon"></circle>
+                  <circle cx="12" cy="12" r="2.5" class="local-tournament-icon"></circle>
+                  <line x1="6" y1="6" x2="12" y2="12" class="local-tournament-icon"></line>
+                  <line x1="18" y1="6" x2="12" y2="12" class="local-tournament-icon"></line>
+                </svg>
+              </div>
+              <h4>Local Tournament</h4>
+              <p>Organize a tournament with friends on the same device.</p>
+            </div>
+  
+            <!-- Online Tournament -->
+            <div class="game-mode-card" (click)="navigateToMode('online_tournament')">
+              <div class="icon">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" class="online-tournament-icon"></circle>
+                  <circle cx="12" cy="12" r="5" class="online-tournament-icon"></circle>
+                </svg>
+              </div>
+              <h4>Online Tournament</h4>
+              <p>Join or create an online tournament and compete for the top spot.</p>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Party Modes -->
+        <div class="game-category">
+          <h3>Party Modes</h3>
+          <div class="game-mode-grid">
+            <!-- Chaos Mode -->
+            <div class="game-mode-card" (click)="navigateToMode('chaos')">
+              <div class="icon">
+                <svg viewBox="0 0 64 64">
+                  <polygon points="32,4 40,24 60,24 44,36 52,56 32,44 12,56 20,36 4,24 24,24" fill="#F5A623" stroke="#F5A623" stroke-width="2"/>
+                  <circle cx="32" cy="32" r="6" fill="#fff"/>
+                </svg>
+              </div>
+              <h4>Chaos Mode</h4>
+              <p>Experience unpredictable gameplay with powerups.</p>
+            </div>
+  
+            <!-- Online Chaos Mode -->
+            <div class="game-mode-card" (click)="navigateToMode('online_pvp_chaos')">
+              <div class="icon">
+                <svg viewBox="0 0 64 64">
+                  <polygon points="32,4 40,24 60,24 44,36 52,56 32,44 12,56 20,36 4,24 24,24" fill="#D0021B" stroke="#D0021B" stroke-width="2"/>
+                  <circle cx="32" cy="32" r="6" fill="#fff"/>
+                </svg>
+              </div>
+              <h4>Online Chaos Mode</h4>
+              <p>Play online with powerups for a chaotic experience.</p>
+            </div>
+  
+            <!-- Arena -->
+            <div class="game-mode-card" (click)="navigateToMode('arena')">
+              <div class="icon">
+                <svg viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="30" stroke="#4A90E2" stroke-width="4" fill="none"/>
+                  <path d="M16 48 L32 16 L48 48 Z" fill="#4A90E2" opacity="0.7"/>
+                  <circle cx="32" cy="32" r="4" fill="#fff"/>
+                </svg>
+              </div>
+              <h4>Arena</h4>
+              <p>Engage in a free-for-all battle in the arena.</p>
+            </div>
+  
+            <!-- Online Arena -->
+            <div class="game-mode-card" (click)="navigateToMode('online_arena')">
+              <div class="icon">
+                <svg viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="30" stroke="#E94E77" stroke-width="4" fill="none"/>
+                  <path d="M16 48 L32 16 L48 48 Z" fill="#E94E77" opacity="0.7"/>
+                  <circle cx="32" cy="32" r="4" fill="#fff"/>
+                </svg>
+              </div>
+              <h4>Online Arena</h4>
+              <p>Fight a free-for-all battle online in the arena.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
   <!-- Call to Action Section -->
   <section class="cta-section">
-    <h2>Explore More</h2>
+    <h2 class="section-title">Explore More</h2>
     <p>Check out your Game History, review your Statistics, or update your Profile to personalize your experience.</p>
     <div class="cta-buttons">
-      <button routerLink="/games/list">Game History</button>
-      <button routerLink="/games/tournament/local/list">Tournament History</button>
+      <button class="cta-button-secondary" routerLink="/games/list">Game History</button>
+      <button class="cta-button-secondary" routerLink="/games/tournament/local/list">Tournament History</button>
     </div>
   </section>
 
-
+  <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
       <p>© 2024 Pong Arena. All rights reserved.</p>
@@ -77,5 +191,4 @@
       </div>
     </div>
   </footer>
-
 </div>

@@ -3,122 +3,233 @@
   margin: auto;
   padding: 2rem;
   color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  /* Neon Flicker Animation */
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+      opacity: 1;
+    }
+    20%, 24%, 55% {
+      opacity: 0.4;
+    }
+  }
+
+  /* Fade-In Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Fade-In Up Animation */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scale-Up Animation */
+  @keyframes scaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* Rotate Icon Animation */
+  @keyframes rotateIcon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
 
   /* Hero Section */
   .hero-section {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(34, 34, 34, 0.9));
-    background-size: cover;
+    background-size: 400% 400%;
+    animation: gradientMove 15s ease infinite;
     background-position: center;
     text-align: center;
-    padding: 3rem;
+    padding: 4rem 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     color: #e0e0e0;
-    margin-bottom: 2rem;
-  }
-  
-  .hero-content {
-    max-width: 800px;
-    margin: auto;
-  }
-  
-  .hero-title {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #e0e0e0;
-    margin-bottom: 1rem;
-    display: inline-block;
-  
-    span {
-      color: #61BA50;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+
+    /* Moving Gradient Animation */
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: auto;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #e0e0e0;
+      margin-bottom: 1rem;
+      display: inline-block;
       text-shadow: 0px 0px 10px rgba(76, 175, 80, 0.8);
+      animation: flicker 3s infinite;
+
+      span {
+        color: #61BA50;
+      }
+    }
+
+    .hero-description {
+      font-size: 1.2rem;
+      color: #cfcfcf;
+      max-width: 700px;
+      margin: auto;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+      animation: fadeIn 3s ease-in-out;
+    }
+
+    .cta-button {
+      background-color: #61BA50;
+      color: #ffffff;
+      padding: 0.75rem 2rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+      &:hover {
+        background-color: #45A049;
+        transform: scale(1.05);
+      }
     }
   }
-  
-  .hero-description {
-    font-size: 1.1rem;
-    color: #cfcfcf;
-    max-width: 700px;
-    margin: auto;
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
-  }
-  
-  .cta-button {
-    background-color: #61BA50;
-    color: #ffffff;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+
+  /* Section Titles */
+  .section-title {
+    font-size: 2.5rem;
+    color: #61BA50;
     font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-  
-    &:hover {
-      background-color: #45A049;
+    margin-bottom: 2rem;
+    position: relative;
+    display: inline-block;
+    animation: fadeInUp 1s ease-out;
+
+    &::after {
+      content: '';
+      width: 50px;
+      height: 4px;
+      background-color: #61BA50;
+      display: block;
+      margin: 0.5rem auto 0;
+      border-radius: 2px;
     }
   }
 
   /* Game Modes Section */
   .game-modes-section {
-    margin-top: 2rem;
     text-align: center;
+    margin-bottom: 3rem;
 
-    h2 {
-      font-size: 2rem;
-      color: #61BA50;
-      font-weight: bold;
-      margin-bottom: 1.5rem;
+    /* Loading Spinner */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px; /* Adjust as needed */
+      animation: fadeIn 1s ease-in-out;
     }
 
-    .game-modes-cards {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      justify-content: center;
+    /* Selection Container */
+    .selection-container {
+      animation: fadeIn 2s ease-in-out;
 
-      .game-mode-card {
-        background-color: #0E0F10;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        width: 250px;
-        text-align: center;
-        transition: transform 0.3s, box-shadow 0.3s;
-
-        &:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-          background-color: #2C2C2C;
-        }
+      /* Game Categories */
+      .game-category {
+        margin-bottom: 3rem;
 
         h3 {
+          font-size: 2rem;
           color: #61BA50;
-          font-size: 1.4rem;
           font-weight: bold;
-          margin-bottom: 0.75rem;
-        }
-
-        p {
-          font-size: 0.95rem;
-          color: #bdbdbd;
           margin-bottom: 1.5rem;
+          position: relative;
+          display: inline-block;
+
+          /* Optional: Decorative Line or Icon */
         }
 
-        button {
-          background-color: #61BA50;
-          color: #ffffff;
-          padding: 0.5rem 1rem;
-          font-size: 1rem;
-          border: none;
-          border-radius: 5px;
+        /* Game Mode Grid */
+        .game-mode-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 1.5rem;
+          justify-items: center;
+        }
+
+        /* Game Mode Card */
+        .game-mode-card {
+          background-color: #0E0F10;
+          padding: 2rem 1.5rem;
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+          width: 100%;
+          max-width: 300px;
+          text-align: center;
+          transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           cursor: pointer;
-          transition: background-color 0.3s, transform 0.2s;
+          animation: scaleUp 0.5s ease-out;
 
           &:hover {
-            background-color: #45A049;
-            transform: translateY(-2px);
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background-color: #2C2C2C;
+          }
+
+          .icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+
+            svg {
+              width: 100%;
+              height: 100%;
+
+              /* Icon Specific Styles */
+              .pve-icon { fill: #61BA50; }
+              .local-pvp-icon { fill: #ff6b6b; }
+              .online-pvp-icon { fill: #ffc107; }
+              .local-tournament-icon { fill: #61BA50; stroke: #fff; stroke-width: 1; }
+              .online-tournament-icon { fill: none; stroke: #ffc107; stroke-width: 2; }
+              .chaos-icon { fill: none; stroke: #ff5722; stroke-width: 2; }
+              .online-arena-icon { fill: #ff5722; opacity: 0.3; }
+            }
+          }
+
+          h4 {
+            font-size: 1.5rem;
+            color: #61BA50;
+            margin-bottom: 1rem;
+            transition: color 0.3s;
+
+            &:hover {
+              color: #45A049;
+            }
+          }
+
+          p {
+            font-size: 1rem;
+            color: #bdbdbd;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
           }
         }
       }
@@ -127,109 +238,90 @@
 
   /* How It Works Section */
   .how-it-works-section {
-    margin-top: 3rem;
     text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeIn 2s ease-in-out;
 
-    h2 {
-      font-size: 2rem;
-      color: #61BA50;
-      font-weight: bold;
-      margin-bottom: 1rem;
+    p {
+      font-size: 1.2rem;
+      color: #bfbfbf;
+      max-width: 800px;
+      margin: auto;
+      line-height: 1.8;
     }
+  }
+
+  /* Community Section */
+  .community-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeIn 2s ease-in-out;
 
     p {
       font-size: 1.1rem;
       color: #bfbfbf;
       max-width: 700px;
       margin: auto;
-      line-height: 1.6;
-    }
-  }
-
-  /* Community and Leaderboards Section */
-  .community-section {
-    margin-top: 3rem;
-    text-align: center;
-
-    h2 {
-      font-size: 2rem;
-      color: #61BA50;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      font-size: 1rem;
-      color: #bfbfbf;
-      max-width: 600px;
-      margin: auto;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
       line-height: 1.6;
     }
 
-    button {
+    .community-button {
       background-color: #61BA50;
       color: #ffffff;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
+      padding: 0.8rem 2rem;
+      font-size: 1.1rem;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.3s, transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 
       &:hover {
         background-color: #45A049;
-        transform: translateY(-2px);
+        transform: scale(1.05);
       }
     }
   }
 
   /* Call to Action Section */
   .cta-section {
-    margin-top: 3rem;
     text-align: center;
-
-    h2 {
-      font-size: 2rem;
-      color: #61BA50;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      font-size: 1rem;
-      color: #bfbfbf;
-      max-width: 700px;
-      margin: auto;
-      margin-bottom: 1.5rem;
-      line-height: 1.6;
-    }
+    margin-bottom: 3rem;
+    animation: fadeIn 2s ease-in-out;
 
     .cta-buttons {
       display: flex;
-      gap: 1rem;
+      gap: 1.5rem;
       justify-content: center;
+      margin-top: 1.5rem;
 
-      button {
+      .cta-button-secondary {
         background-color: #61BA50;
         color: #ffffff;
-        padding: 0.75rem 1.5rem;
+        padding: 0.8rem 2rem;
         font-size: 1rem;
         border: none;
-        border-radius: 5px;
+        border-radius: 8px;
         cursor: pointer;
         transition: background-color 0.3s, transform 0.2s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 
         &:hover {
           background-color: #45A049;
+          transform: scale(1.05);
         }
       }
     }
   }
+
+  /* Footer */
   .footer {
-    padding: 1.5rem 0;
+    padding: 2rem 0;
     color: #bfbfbf;
-    
+    background-color: #0E0F10;
+    border-top: 1px solid #333;
+
     .footer-content {
       max-width: 1200px;
       margin: auto;
@@ -237,25 +329,25 @@
       flex-direction: column;
       align-items: center;
       gap: 1rem;
-      
+
       p {
         margin: 0;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
       }
-      
+
       .footer-links {
         display: flex;
         gap: 1rem;
-        
+
         .footer-link {
           color: #61BA50;
           text-decoration: none;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           padding: 0.5rem 1rem;
           border: 1px solid #61BA50;
           border-radius: 5px;
           transition: background-color 0.3s, color 0.3s;
-          
+
           &:hover {
             background-color: #61BA50;
             color: #ffffff;
@@ -264,19 +356,57 @@
       }
     }
   }
-  
+
+  /* Animations */
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
   /* Responsive Design */
+  @media (max-width: 1200px) {
+    .game-mode-card {
+      max-width: 280px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .game-mode-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+  }
+
   @media (max-width: 600px) {
-    .footer-content {
-      .footer-links {
-        flex-direction: column;
-        align-items: center;
-        
-        .footer-link {
-          width: 80%;
-          text-align: center;
-        }
-      }
+    .footer-content .footer-links {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .footer-link {
+      width: 80%;
+      text-align: center;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .game-mode-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .game-mode-card {
+      max-width: 90%;
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+      gap: 1rem;
     }
   }
 }
