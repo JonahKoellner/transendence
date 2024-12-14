@@ -42,7 +42,7 @@ cp $CA_CERT /usr/share/logstash/config/certs/ca/ca.crt
 
 
 # sleep 100
-
+mkdir /usr/share/logstash/pipeline/
 cat <<EOL > /usr/share/logstash/pipeline/logstash.conf
 input {
   gelf {
@@ -75,4 +75,4 @@ output {
 }
 EOL
 
-bin/logstash -f pipeline
+bin/logstash -f /usr/share/logstash/pipeline/logstash.conf

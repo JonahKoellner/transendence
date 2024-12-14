@@ -7,11 +7,11 @@ services:
     container_name: elasticsearch
     build:
       context: ./elk/elasticsearch
-    # environment:
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     #   - discovery.type=single-node
     #   - xpack.security.enabled=true
     #   - bootstrap.memory_lock=true
-    #   - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     #   - ELASTIC_PASSWORD=elapwd
     ulimits:
       memlock:
@@ -59,7 +59,7 @@ services:
       interval: 30s
       retries: 10
       start_period: 10s
-      timeout: 10s
+      #timeout: 10s
 
   # Kibana Service
   kibana:
