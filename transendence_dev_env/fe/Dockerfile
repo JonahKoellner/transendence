@@ -19,16 +19,17 @@ RUN npm install chart.js@^4.4.5 ng2-charts@5.0.0 --legacy-peer-deps
 # Copy the rest of the application code
 COPY . .
 
-# Copy wait-fir-it-sh script
-COPY wait-for-service.sh /usr/bin/wait-for-it.sh
-RUN chmod +x /usr/bin/wait-for-it.sh
+## Copy wait-fir-it-sh script
+#COPY wait-for-service.sh /usr/bin/wait-for-it.sh
+#RUN chmod +x /usr/bin/wait-for-it.sh
 
 
 # Set environment variable to enable polling (useful in Docker)
 ENV CHOKIDAR_USEPOLLING=true
 
 # Default command: Run Angular development server
-CMD ["/usr/bin/wait-for-it.sh", "logstash", "9600", "--", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--configuration", "development", "--poll", "2000", "--watch", "--disable-host-check"]
+#CMD ["/usr/bin/wait-for-it.sh", "logstash", "9600", "--", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--configuration", "development", "--poll", "2000", "--watch", "--disable-host-check"]
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--configuration", "development", "--poll", "2000", "--watch", "--disable-host-check"]
 
 # Uncomment this section if you want to serve with Nginx instead of ng serve
 # Use Nginx to serve the Angular files
