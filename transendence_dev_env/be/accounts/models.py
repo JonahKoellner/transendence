@@ -346,6 +346,8 @@ class Achievement(models.Model):
     criteria_key = models.CharField(max_length=50, blank=True, null=True)
     criteria_value = models.IntegerField(null=True, blank=True)
     criteria_expression = models.CharField(max_length=255, blank=True, null=True)  # For complex criteria
+    
+    image_url = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return self.name

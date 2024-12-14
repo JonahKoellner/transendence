@@ -407,7 +407,7 @@ class AchievementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Achievement
-        fields = ['id', 'name', 'description', 'points', 'is_earned', 'progress']
+        fields = ['id', 'name', 'description', 'points', 'is_earned', 'progress', 'image_url']
 
     def get_is_earned(self, obj):
         request = self.context.get('request', None)

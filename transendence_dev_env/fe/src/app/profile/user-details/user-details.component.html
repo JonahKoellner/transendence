@@ -189,7 +189,7 @@
         
     <div *ngIf="activeTab === 'achievements'" class="tab-content achievements-tab">
       <div class="achievements-container">
-        <h2>achievements</h2>
+        <h2>Achievements</h2>
         <div class="achievements-grid">
           <div
             *ngFor="let achievement of achievements"
@@ -199,14 +199,22 @@
               'not-earned': !userAchievementIds.has(achievement.id)
             }"
           >
-            <div class="achievement-icon">
-              <!-- Use Bootstrap Icons -->
+            <!-- Achievement Image -->
+            <div class="achievement-image-container">
+              <img
+                *ngIf="achievement.image_url"
+                [src]="achievement.image_url"
+                [alt]="achievement.name + ' Image'"
+                class="achievement-image"
+              />
               <i
+                *ngIf="!achievement.image_url"
                 class="bi"
                 [ngClass]="getAchievementIconClass(achievement)"
                 aria-hidden="true"
               ></i>
             </div>
+    
             <div class="achievement-details">
               <h3>{{ achievement.name }}</h3>
               <p>{{ achievement.description }}</p>
@@ -216,6 +224,7 @@
         </div>
       </div>
     </div>
+    
     
     <div *ngIf="activeTab === 'stats'" class="tab-content stats-tab">
       <div *ngIf="userStats" class="user-stats-display">
