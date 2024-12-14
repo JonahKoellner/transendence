@@ -6,10 +6,25 @@ WORKDIR /usr/share/elasticsearch
 ENV ELASTIC_PASSWORD=yourpassword
 
 # Update and install required dependencies
+# RUN apt-get update && apt-get install -y wget unzip curl && \
+#     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
+#     tar -xzf elasticsearch-8.10.2-linux-aarch64.tar.gz --strip-components=1 && \
+#     rm elasticsearch-8.10.2-linux-aarch64.tar.gz && \
+#     apt-get clean
+
 RUN apt-get update && apt-get install -y wget unzip curl && \
-    wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.10.2-linux-aarch64.tar.gz && \
-    tar -xzf elasticsearch-8.10.2-linux-aarch64.tar.gz --strip-components=1 && \
-    rm elasticsearch-8.10.2-linux-aarch64.tar.gz && \
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        VERSION="elasticsearch-8.10.2-linux-x86_64.tar.gz"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        VERSION="elasticsearch-8.10.2-linux-aarch64.tar.gz"; \
+    else \
+        echo "Unknown architecture: $ARCH"; \
+        exit 1; \
+    fi && \
+    wget https://artifacts.elastic.co/downloads/elasticsearch/$VERSION && \
+    tar -xzf $VERSION --strip-components=1 && \
+    rm $VERSION && \
     apt-get clean
 
 # Create required directories
