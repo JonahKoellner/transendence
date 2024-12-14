@@ -159,7 +159,7 @@ export class ProfileComponent implements OnInit {
     this.paddleskinOption = option;
     if (option === 'image') {
       this.profileForm.get('paddleskin_color')?.disable();
-      this.profileForm.get('paddleskin_color')?.setValue('#FF0000'); // Reset to default or keep existing
+      this.profileForm.get('paddleskin_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
     } else {
       this.profileForm.get('paddleskin_image')?.reset();
       this.profileForm.get('paddleskin_image_to_delete')?.setValue(false); // Reset deletion flag
@@ -173,7 +173,7 @@ export class ProfileComponent implements OnInit {
     this.ballskinOption = option;
     if (option === 'image') {
       this.profileForm.get('ballskin_color')?.disable();
-      this.profileForm.get('ballskin_color')?.setValue('#0000FF'); // Reset to default or keep existing
+      this.profileForm.get('ballskin_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
     } else {
       this.profileForm.get('ballskin_image')?.reset();
       this.profileForm.get('ballskin_image_to_delete')?.setValue(false); // Reset deletion flag
@@ -187,7 +187,7 @@ export class ProfileComponent implements OnInit {
     this.gamebackgroundOption = option;
     if (option === 'image') {
       this.profileForm.get('gamebackground_color')?.disable();
-      this.profileForm.get('gamebackground_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
+      this.profileForm.get('gamebackground_color')?.setValue('#000000'); // Reset to default or keep existing
     } else {
       this.profileForm.get('gamebackground_wallpaper')?.reset();
       this.profileForm.get('gamebackground_wallpaper_to_delete')?.setValue(false); // Reset deletion flag
