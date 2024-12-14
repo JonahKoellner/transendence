@@ -27,6 +27,7 @@
           [src]="user.profile?.avatar || user.avatar"
           alt="User Avatar"
           class="avatar"
+          loading="lazy"
           [ngClass]="{
             'online': user.is_online === true,
             'offline': user.is_online === false,
@@ -41,7 +42,7 @@
       <!-- Display Name and Email -->
       <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
       <p class="email"><strong>Email:</strong> {{ user.email }}</p>
-      <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg" alt="42 logo white">
+      <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg" alt="42 logo white" loading="lazy">
     </div>
     
     <!-- Tab Controls -->
@@ -205,6 +206,7 @@
                 *ngIf="achievement.image_url"
                 [src]="achievement.image_url"
                 [alt]="achievement.name + ' Image'"
+                loading="lazy"
                 class="achievement-image"
               />
               <i
@@ -218,7 +220,7 @@
             <div class="achievement-details">
               <h3>{{ achievement.name }}</h3>
               <p>{{ achievement.description }}</p>
-              <p class="achievement-points">Points: {{ achievement.points }}</p>
+              <p class="achievement-points">XP Points: {{ achievement.points }}</p>
             </div>
           </div>
         </div>

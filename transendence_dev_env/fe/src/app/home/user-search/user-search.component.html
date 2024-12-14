@@ -15,7 +15,7 @@
 
     <ul *ngIf="users.length > 0" class="user-list">
       <li *ngFor="let user of users" class="user-card">
-        <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" class="avatar" />
+        <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" class="avatar" loading="lazy"/>
         <div class="user-info">
           <h4>{{ user.display_name || user.username }}</h4>
           <small>Username: {{ user.username }}</small>

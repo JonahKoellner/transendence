@@ -26,7 +26,7 @@
     <div *ngIf="friends.length === 0" class="no-items">You have no friends yet.</div>
     <ul class="friends-list">
       <li *ngFor="let friend of friends" class="friend-card">
-        <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" class="avatar" />
+        <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" class="avatar" loading="lazy"/>
         <div class="friend-info">
           <h5>{{ friend.display_name || friend.username }}</h5>
           <small>Username: {{ friend.username }}</small>
@@ -69,7 +69,7 @@
     <div *ngIf="blockedUsers.length === 0" class="no-items">No users blocked at the moment.</div>
     <ul class="friends-list">
       <li *ngFor="let blockedUser of blockedUsers" class="friend-card">
-        <img [src]="blockedUser.avatar || 'assets/default_avatar.png'" alt="{{ blockedUser.username }}" class="avatar" />
+        <img [src]="blockedUser.avatar || 'assets/default_avatar.png'" alt="{{ blockedUser.username }}" class="avatar" loading="lazy" />
         <div class="friend-info">
           <h5>{{ blockedUser.display_name || blockedUser.username }}</h5>
           <small>Username: {{ blockedUser.username }}</small>

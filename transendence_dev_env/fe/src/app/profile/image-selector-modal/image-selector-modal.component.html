@@ -10,7 +10,7 @@
     <h5 class="section-title">Choose a Preset</h5>
     <div class="preset-images">
       <div class="preset-image" *ngFor="let preset of presetImages" (click)="selectPreset(preset)">
-        <img [src]="preset" alt="Preset Image" class="img-thumbnail">
+        <img [src]="preset" alt="Preset Image" class="img-thumbnail" loading="lazy">
       </div>
     </div>
     

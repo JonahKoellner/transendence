@@ -110,12 +110,12 @@ class Profile(models.Model):
             self.otp_secret = pyotp.random_base32()
             self.save()
         totp = pyotp.TOTP(self.otp_secret)
-        otp_uri = totp.provisioning_uri(name=self.user.username, issuer_name='YourAppName')
+        otp_uri = totp.provisioning_uri(name=self.user.username, issuer_name='PongArena')
         return otp_uri
 
     # Generate the provisioning URI for QR code
     def get_otp_uri(self):
-        return pyotp.TOTP(self.otp_secret).provisioning_uri(self.user.email, issuer_name="YourApp")
+        return pyotp.TOTP(self.otp_secret).provisioning_uri(self.user.email, issuer_name="PongArena")
 
     # Verify the OTP code entered by the user
     def verify_otp(self, otp_code):

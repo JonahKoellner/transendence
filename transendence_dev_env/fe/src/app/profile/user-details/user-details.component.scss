@@ -364,7 +364,7 @@
       /* Achievements Tab */
       &.achievements-tab {
         .achievements-container {
-          padding: 2rem;
+
 
           h2 {
             text-align: center;
@@ -419,10 +419,10 @@
               .achievement-image {
                 max-width: 100%;
                 max-height: 100%;
-                object-fit: contain;
                 border-radius: 50%;
                 border: 2px solid #61ba50;
                 background-color: #1b1b1b;
+                object-fit: cover;
               }
 
               /* Fallback Icon */
@@ -535,7 +535,7 @@
 
     /* Achievements Container Outside Tab Content (if any) */
     .achievements-container {
-      padding: 2rem;
+
     }
 
     /* Animations */
@@ -682,6 +682,7 @@
               .achievement-image {
                 max-width: 100%;
                 max-height: 100%;
+                object-fit: cover;
               }
 
               .bi {
@@ -714,7 +715,8 @@
 
   /* Achievements Container Outside User Details (if any) */
   .achievements-container {
-    padding: 2rem;
+
+
   }
 
   /* Achievements Grid */
@@ -765,7 +767,7 @@
       .achievement-image {
         max-width: 100%;
         max-height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         border-radius: 50%;
         border: 2px solid #61ba50;
         background-color: #1b1b1b;
@@ -958,6 +960,7 @@
               .achievement-image {
                 max-width: 100%;
                 max-height: 100%;
+                object-fit: cover;
               }
 
               .bi {
@@ -1002,6 +1005,7 @@
         .achievement-image {
           max-width: 100%;
           max-height: 100%;
+          object-fit: cover;
         }
 
         .bi {

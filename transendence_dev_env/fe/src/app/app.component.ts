@@ -11,7 +11,7 @@ import { ProfileService } from './profile.service';
 })
 
 export class AppComponent implements OnInit {
-  title = 'MyApp';
+  title = 'Pong Arena';
   isDarkTheme = true;
   isCollapsed = true;
   isAuthenticated = false;

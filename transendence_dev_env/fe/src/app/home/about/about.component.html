@@ -14,7 +14,7 @@
       <!-- Contributors Section -->
       <ul class="contributors">
         <li class="contributor-card" *ngFor="let contributor of contributors">
-          <img [src]="contributor.avatar" [alt]="contributor.name" class="avatar">
+          <img [src]="contributor.avatar" [alt]="contributor.name" class="avatar" loading="lazy">
           <div class="contributor-info">
             <span class="name">{{ contributor.name }}</span>
             <span class="info">{{ contributor.role }}</span>

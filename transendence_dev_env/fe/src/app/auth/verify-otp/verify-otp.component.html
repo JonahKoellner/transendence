@@ -3,7 +3,7 @@
     <div class="auth-header">
       <i class="fas fa-key fa-3x auth-icon"></i>
       <div *ngIf="showQRCode" class="text-center mb-4">
-        <img [src]="qrCodeImage" alt="QR Code" class="img-fluid rounded">
+        <img loading="lazy" [src]="qrCodeImage" alt="QR Code" class="img-fluid rounded">
       </div>
 
       <h2>Verify OTP</h2>

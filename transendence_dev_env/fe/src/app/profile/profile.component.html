@@ -19,7 +19,8 @@
           <img 
             *ngIf="userProfile.avatar" 
             [src]="userProfile.avatar" 
-            alt="User Avatar" 
+            alt="User Avatar"
+            loading="lazy" 
             class="avatar" 
           />
         </div>
@@ -74,7 +75,8 @@
             <img
               *ngIf="avatarPreview || userProfile.avatar"
               [src]="avatarPreview || userProfile.avatar || 'assets/default_avatar.png'" 
-              alt="Avatar Preview" 
+              alt="Avatar Preview"
+              loading="lazy" 
               class="avatar-preview" 
             />
             <button class="delete-icon" *ngIf="avatarPreview || userProfile.avatar" (click)="deleteAvatar()" type="button">
@@ -119,7 +121,8 @@
               <img 
                 *ngIf="paddleskinImagePreview || userProfile.paddleskin_image"
                 [src]="paddleskinImagePreview || userProfile.paddleskin_image" 
-                alt="Paddle Skin Preview" 
+                alt="Paddle Skin Preview"
+                loading="lazy" 
                 class="image-preview" 
               />
               <button class="delete-icon" *ngIf="paddleskinImagePreview || userProfile.paddleskin_image" (click)="deletePaddleskinImage()" type="button">
@@ -164,7 +167,8 @@
               <img
                 *ngIf="ballskinImagePreview || userProfile.ballskin_image"
                 [src]="ballskinImagePreview || userProfile.ballskin_image" 
-                alt="Ball Skin Preview" 
+                alt="Ball Skin Preview"
+                loading="lazy" 
                 class="image-preview" 
               />
               <button class="delete-icon" *ngIf="ballskinImagePreview || userProfile.ballskin_image" (click)="deleteBallskinImage()" type="button">
@@ -209,7 +213,8 @@
               <img
                 *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper"
                 [src]="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" 
-                alt="Game Background Preview" 
+                alt="Game Background Preview"
+                loading="lazy" 
                 class="image-preview" 
               />
               <button class="delete-icon" *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" (click)="deleteGamebackgroundImage()" type="button">
@@ -256,7 +261,8 @@
                 *ngIf="ftUserData.image?.link" 
                 [src]="ftUserData.image.link" 
                 alt="42 User Avatar" 
-                class="ft-avatar" 
+                class="ft-avatar"
+                loading="lazy" 
               />
             </div>
             
