@@ -147,9 +147,6 @@
       <app-game-canvas-chaos-pvp [gameSettings]="settings" (onScore)="updateScorePvp($event)"
         *ngIf="settings.enemyType === 'PvP'"></app-game-canvas-chaos-pvp>
     </div>
-    <div class="fullscreen-controls">
-      <button (click)="toggleFullScreen(gameContainer)">Toggle Fullscreen</button>
-    </div>
     <div class="timers">
       <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
       <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>

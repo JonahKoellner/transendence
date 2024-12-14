@@ -214,18 +214,6 @@ export class ChaosComponent  implements OnInit, OnDestroy {
   getCurrentRound(): Round {
     return this.currentGame!.rounds[this.currentGame!.rounds.length - 1];
   }
-  
-  toggleFullScreen(element: HTMLElement): void {
-    if (!document.fullscreenElement) {
-      element.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-      });
-    } else {
-      document.exitFullscreen().catch((err) => {
-        console.error(`Error attempting to exit full-screen mode: ${err.message}`);
-      });
-    }
-  }
 
   private checkRoundCompletion(round: Round): void {
     if (round.score_player1 >= this.settings.roundScoreLimit || round.score_player2 >= this.settings.roundScoreLimit) {
