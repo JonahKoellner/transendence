@@ -35,6 +35,12 @@ export class ProfileComponent implements OnInit {
   ftLoading: boolean = false;
   ftError: string | null = null;
 
+  pCursus: number = 1; // Current page
+  itemsPerPageCursus: number = 5; // Items per page
+
+  pProjects: number = 1; // Current page
+  itemsPerPageProjects: number = 5; // Items per page
+
   selectedImages: {
     avatar?: ImageSelection;
     paddleskin?: ImageSelection;
@@ -63,6 +69,13 @@ export class ProfileComponent implements OnInit {
     this.initializeForm();
     this.loadProfile();
     this.checkFtAuthentication();
+  }
+
+  onPageChangeCursus(page: number) {
+    this.pCursus = page;
+  }
+  onPageChangeProjects(page: number) {
+    this.pProjects = page;
   }
 
   initializeForm() {
@@ -565,7 +578,7 @@ export class ProfileComponent implements OnInit {
           this.ftLoading = false;
           // Optionally, update your userProfile with 42 data
           // this.userProfile.ftData = data;
-          if (this.userProfile.is_ft_authenticated === false) {
+          if (this.userProfile && this.userProfile.is_ft_authenticated === false) {
             this.update42ValidationOnProfile();
           }
 

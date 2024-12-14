@@ -73,6 +73,7 @@ import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-ro
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
 import { GameDisplayArenaComponent } from './games/online-arena/game-display/game-display.component';
 import { ImpressumComponent } from './home/impressum/impressum.component';
+import { NgxPaginationModule } from 'ngx-pagination';
 @NgModule({
   declarations: [
     AppComponent,
@@ -149,7 +150,8 @@ import { ImpressumComponent } from './home/impressum/impressum.component';
     CommonModule,
     NgChartsModule,
     RouterModule,
-    NgbModule
+    NgbModule,
+    NgxPaginationModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
