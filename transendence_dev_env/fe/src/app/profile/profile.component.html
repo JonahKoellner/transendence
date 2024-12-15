@@ -7,12 +7,35 @@
     <div class="spinner"></div>
     <p>Loading your profile...</p>
   </div>
+
   
-  <!-- Profile Content -->
   <div *ngIf="!isLoading && userProfile" class="profile-content">
-    
-    <!-- Profile Card -->
+    <div class="tab-controls">
+        <button 
+          (click)="activeTab = 'info'" 
+          [ngClass]="{'active-tab': activeTab === 'info'}">
+          info
+        </button>
+        <button 
+          (click)="activeTab = 'edit'" 
+          [ngClass]="{'active-tab': activeTab === 'edit'}">
+          edit
+      </button>
+      <button 
+          (click)="activeTab = 'settings'" 
+          [ngClass]="{'active-tab': activeTab === 'settings'}">
+          settings
+      </button>
+      <button 
+        (click)="activeTab = '42'" 
+        [ngClass]="{'active-tab': activeTab === '42'}">
+        42
+      </button>
+    </div>
+
     <div class="profile-card">
+
+    <div *ngIf="activeTab === 'info'" class="tab-content info-tab"> 
       <div class="profile-header">
         <!-- Avatar -->
         <div class="avatar-container">
@@ -32,6 +55,7 @@
             Go to Account Page
           </a>
           <p><strong>Username:</strong> {{ userProfile.username }}</p>
+          <p *ngIf="userProfile.display_name"><strong>Display Name</strong> {{ userProfile.display_name }}</p>
           <p><strong>Email:</strong> {{ userProfile.email }}</p>
         </div>
       </div>
@@ -52,11 +76,18 @@
           </div>
         </div>
       </div>
-      
-      <!-- Profile Update Form -->
+    </div>
+  
+    <div *ngIf="activeTab === 'edit'" class="tab-content edit-tab">
+
+      <h2>Edit Profile</h2>
+
+
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="update-form">
   
         <!-- Display Name -->
+
+
         <div class="form-group">
           <label for="displayName">Display Name:</label>
           <input 
@@ -69,8 +100,9 @@
         </div>
         
         <!-- Avatar Upload -->
+
         <div class="form-group avatar-section">
-          <label for="avatar">Avatar:</label>
+          <label *ngIf="avatarPreview || userProfile.avatar" for="avatar">Avatar:</label>
           <div class="avatar-preview-container">
             <img
               *ngIf="avatarPreview || userProfile.avatar"
@@ -88,6 +120,8 @@
             {{ avatarPreview || userProfile.avatar ? 'Change Avatar' : 'Select Avatar' }}
           </button>
         </div>
+
+        <h4>Ingame Customisations</h4>
         
         <!-- Paddle Skin Customization -->
         <div class="form-group customization-section">
@@ -232,13 +266,16 @@
           {{ isUpdating ? 'Updating...' : 'Update Profile' }}
         </button>
       </form>
-
+    </div>
+  
+    <div *ngIf="activeTab === 'settings'" class="tab-content settings-tab">
       <app-settings></app-settings>
       
       <!-- Delete Account Button -->
       <button class="btn btn-danger mt-3" (click)="openDeleteAccountModal()">Delete Account</button>
-      
-      <!-- 42 Authentication Section -->
+    </div>
+  
+    <div *ngIf="activeTab === '42'" class="tab-content 42-tab">
       <div class="ft-auth-section mt-4">
         <h3>42 Integration</h3>
     
@@ -352,10 +389,7 @@
           <button class="btn btn-warning" (click)="logoutFromFt()">Logout and Unlink 42</button>
         </div>
       </div>
-      
-      <!-- Error Message -->
-      <div *ngIf="!isLoading && !userProfile" class="alert-error">
-        <p>No profile data available.</p>
-      </div>
-      
     </div>
+    </div>
+  </div>
+

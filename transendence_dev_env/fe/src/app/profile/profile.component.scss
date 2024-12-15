@@ -44,6 +44,35 @@
     -webkit-backdrop-filter: blur(8.5px);
     border: 1px solid rgba(255, 255, 255, 0.18);
 
+
+    .tab-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        background-color: #1f1f1f;
+        color: #e0e0e0;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+
+        &:hover {
+          background-color: #61BA50;
+          color: #ffffff;
+        }
+
+        &.active {
+          background-color: #61BA50;
+          color: #ffffff;
+        }
+      }
+    }
+
     /* Profile Card */
     .profile-card {
       padding: 2rem;

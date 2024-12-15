@@ -26,6 +26,7 @@ export class ProfileComponent implements OnInit {
   isUpdating = false;
   userProfile!: UserProfile;
   
+  activeTab: 'info' | 'edit' | 'settings' | '42'= 'info';
   
   // Options for customization
   paddleskinOption: 'color' | 'image' = 'color';
@@ -66,7 +67,11 @@ export class ProfileComponent implements OnInit {
       if (params['ftAuthError'] === 'true') {
         this.ftAuthenticated = false;
         this.ftError = 'Failed to authenticate with 42. Please try again.';
+      } else if (params['ftAuthError'] === 'false') {
+        this.ftError = null;
+        this.activeTab = '42';
       }
+
     });
 
     this.initializeForm();
