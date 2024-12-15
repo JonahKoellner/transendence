@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { GameLobbyChaosService } from 'src/app/services/game-lobby-chaos.service';
 
 @Component({
@@ -9,7 +10,7 @@ import { GameLobbyChaosService } from 'src/app/services/game-lobby-chaos.service
 export class GameRoomsChaosComponent {
   rooms: any[] = [];
 
-  constructor(private lobbyService: GameLobbyChaosService) {}
+  constructor(private lobbyService: GameLobbyChaosService, private toastr: ToastrService) {}
 
   ngOnInit() {
     this.fetchRooms();
@@ -20,7 +21,7 @@ export class GameRoomsChaosComponent {
       (rooms) => {
         this.rooms = rooms;
       },
-      (error) => console.error('Error fetching rooms:', error)
+      (error) => this.toastr.error('Failed to fetch game rooms.', 'Error')
     );
   }
 }

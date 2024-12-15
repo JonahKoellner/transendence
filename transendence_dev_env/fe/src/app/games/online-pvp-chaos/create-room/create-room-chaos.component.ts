@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { GameLobbyChaosService } from 'src/app/services/game-lobby-chaos.service';
 
 export interface GameSettings {
@@ -20,11 +21,10 @@ export class CreateRoomChaosComponent {
     roundScoreLimit: 3,
     powerupSpawnRate: 10
   };
-  constructor(private http: HttpClient, private lobbyService: GameLobbyChaosService, private router: Router) {}
+  constructor(private http: HttpClient, private lobbyService: GameLobbyChaosService, private router: Router, private toastr: ToastrService) {}
 
   createRoom() {
     if (!this.validateSettings()) {
-      console.error('Invalid settings');
       return;
     }
     this.lobbyService.createRoom(this.settings).subscribe(response => {
@@ -44,12 +44,12 @@ export class CreateRoomChaosComponent {
       this.settings.roundScoreLimit <= 25;
   
     if (!isMaxRoundsValid) {
-      console.error('Max Rounds must be an integer between 1 and 25.');
+      this.toastr.error('Max Rounds must be an integer between 1 and 25.', 'Error');
       return false;
     }
   
     if (!isRoundScoreLimitValid) {
-      console.error('Round Score Limit must be an integer between 1 and 25.');
+      this.toastr.error('Round Score Limit must be an integer between 1 and 25.', 'Error');
       return false;
     }
   

@@ -49,7 +49,6 @@ export class SettingsComponent {
     this.authService.enable2FA().subscribe(
       (response) => {
         if (response && response.otp_uri) {
-          this.toastr.success('2FA enabled successfully', 'Success');
           this.router.navigate(['/verify-otp', response.otp_uri]);
         } else {
           this.toastr.error('Failed to enable 2FA', 'Error');

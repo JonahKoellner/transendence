@@ -3,6 +3,7 @@ import { Notification, NotificationService } from '../notification.service';
 import { ProfileService } from 'src/app/profile.service';
 import { ChatService } from 'src/app/chat/chat.service';
 import { AuthService } from 'src/app/auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 
 @Component({
@@ -40,7 +41,8 @@ export class NotificationsComponent implements OnInit {
     private notificationService: NotificationService,
     private userService: ProfileService,
     private chatService: ChatService,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -51,7 +53,7 @@ export class NotificationsComponent implements OnInit {
         this.updateUnreadCount();
         this.filterNotifications();
       },
-      (error) => console.error(error)
+      (error) => this.toastr.error('Failed to load notifications. Please try again later.', 'Error')
     );
   }
 
@@ -70,7 +72,7 @@ export class NotificationsComponent implements OnInit {
           notification.is_read = true;
           this.updateUnreadCount();
         },
-        (error) => console.error('Error marking as read:', error)
+        (error) => this.toastr.error('Failed to mark notification as read. Please try again later.', 'Error')
       );
     }
   }

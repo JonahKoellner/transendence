@@ -23,7 +23,7 @@ export class StatsComponent implements OnInit {
     //     this.initExtendedCharts(data);
     //   },
     //   error: (error) => {
-    //     console.error("Error fetching user stats:", error);
+
     //   }
     // });
   }

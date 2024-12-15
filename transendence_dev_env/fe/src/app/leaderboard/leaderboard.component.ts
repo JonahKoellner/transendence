@@ -2,6 +2,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { GameService, GlobalStats, LeaderboardEntry } from '../games/game.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-leaderboard',
@@ -26,7 +27,7 @@ export class LeaderboardComponent implements OnInit {
   // Active Tab
   activeTab: 'leaderboards' | 'charts' = 'leaderboards';
 
-  constructor(private gameService: GameService) { }
+  constructor(private gameService: GameService, private toastr: ToastrService) { }
 
   ngOnInit(): void {
     this.fetchGlobalStats();
@@ -52,7 +53,7 @@ export class LeaderboardComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err: any) => {
-        console.error('Error fetching global stats:', err);
+        this.toastr.error('Failed to load global statistics. Please try again later.', 'Error');
         this.error = 'Failed to load global statistics. Please try again later.';
         this.isLoading = false;
       }

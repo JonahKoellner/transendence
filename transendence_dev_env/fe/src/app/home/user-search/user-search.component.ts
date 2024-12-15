@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 
@@ -14,7 +15,7 @@ export class UserSearchComponent {
   successMessage: string = '';
   isLoading: boolean = false;
 
-  constructor(private userService: ProfileService, private friendService: FriendService) { }
+  constructor(private userService: ProfileService, private friendService: FriendService, private toastr: ToastrService) { }
 
   searchUsers(): void {
     console.log('Searching for users:', this.searchQuery);
@@ -33,7 +34,7 @@ export class UserSearchComponent {
       (err) => {
         this.error = 'Error searching users.';
         this.isLoading = false;
-        console.error(err);
+        this.toastr.error('Error searching users.', 'Error');
       }
     );
   }
@@ -48,7 +49,7 @@ export class UserSearchComponent {
       (err) => {
         this.error = err.error.detail || 'Error adding friend.';
         this.successMessage = '';
-        console.error(err);
+        this.toastr.error('Error adding friend.', 'Error');
       }
     );
   }

@@ -3,6 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { ProfileService } from './profile.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,8 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private renderer: Renderer2,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private toastr: ToastrService
   ) {
     this.authService.initializeWebSocket();
     this.applyTheme();
@@ -44,23 +46,17 @@ export class AppComponent implements OnInit {
     if (this.authService.isAuthenticated()) {
       this.profileService.getProfile().subscribe(
         profile => {
-          console.log("Profile main: ", profile);
           this.is2FaEnabled = profile.is_2fa_enabled;
 
           if (!this.is2FaEnabled && !this.toldUser && !this.router.url.startsWith('/verify-otp')) {
-            const userChoice = confirm(
-              "You have not enabled 2FA. We recommend you enable it in your profile settings. Do you want to enable it now?"
-            );
+            this.toastr.info('You have not enabled 2FA. We recommend you enable it in your profile settings.', 'Info', { timeOut: 10000 });
             this.toldUser = true;
-            if (userChoice) {
-              this.router.navigate(['/profile']);
-            }
           }
           
           this.isAuthenticated = true;
         },
         error => {
-          console.error('Failed to load profile:', error);
+          this.toastr.error('Failed to load profile. Please try again later.', 'Error');
           this.isAuthenticated = false;
           this.router.navigate(['/login']);
         }

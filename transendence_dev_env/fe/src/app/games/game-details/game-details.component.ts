@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetector
 import { ActivatedRoute } from '@angular/router';
 import { Game, GameService } from '../game.service';
 import { Chart } from 'chart.js';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-game-details',
@@ -27,7 +28,8 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
   constructor(
     private route: ActivatedRoute, 
     private gameService: GameService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -54,7 +56,7 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
         this.loadStats();
       },
       (error) => {
-        console.error('Error loading game details:', error);
+        this.toastr.error('Failed to load game details.', 'Error');
         this.errorMessage = 'Failed to load game details.';
         this.isLoading = false;
       }
@@ -62,17 +64,15 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
   }
 
   loadStats(): void {
-    console.log("Stats loading...");
     this.gameService.getGameStats(this.gameId).subscribe({
       next: (data: any) => {
         this.gameStats = data;
-        console.log('Game Stats:', this.gameStats);
         this.cdr.detectChanges(); // Ensure view is updated
         // this.initCharts();
         this.isLoading = false;
       },
       error: (error) => {
-        console.error("Error fetching game stats:", error);
+        this.toastr.error('Failed to load game statistics.', 'Error');
         this.errorMessage = 'Failed to load game statistics.';
         this.isLoading = false;
       }
@@ -81,7 +81,6 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
 
   initCharts(): void {
     if (!this.gameStats) {
-      console.error("Game stats are null.");
       return;
     }
   

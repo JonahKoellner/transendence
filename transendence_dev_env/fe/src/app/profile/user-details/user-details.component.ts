@@ -1,6 +1,7 @@
 // user-details.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { forkJoin } from 'rxjs';
 import { Game, GameService } from 'src/app/games/game.service';
 import { Tournament } from 'src/app/games/tournament/local/start/start.component';
@@ -44,6 +45,7 @@ export class UserDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private profileService: ProfileService,
     private gameService: GameService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -63,7 +65,8 @@ export class UserDetailsComponent implements OnInit {
         this.loadUserStats(data.id);
       },
       (error) => {
-        console.error('Error loading profile:', error);
+        this.errorMessage = error;
+        this.toastr.error('Failed to load profile. Please try again later.', 'Error');
         this.isLoading = false;
       }
     );

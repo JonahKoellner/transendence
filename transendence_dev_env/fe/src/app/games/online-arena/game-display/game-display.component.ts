@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 
 interface GameSettings {
   paddleskin_color_left?: string;
@@ -37,6 +38,8 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
   // Flags to check if images are loaded
   private imagesLoaded: boolean = false;
 
+  constructor(private toastr: ToastrService) { }
+
   ngAfterViewInit() {
     const context = this.canvas.nativeElement.getContext('2d');
     if (context) {
@@ -44,7 +47,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
       this.loadImages().then(() => {
         this.drawGame();
       }).catch(err => {
-        console.error('Error loading images:', err);
+        this.toastr.error('Error loading images', 'Error');
         this.drawGame(); // Fallback to colors if images fail to load
       });
     }
@@ -57,7 +60,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           this.drawGame();
         }
       }).catch(err => {
-        console.error('Error loading images:', err);
+        this.toastr.error('Error loading images', 'Error');
         if (this.context) {
           this.drawGame(); // Fallback to colors if images fail to load
         }
@@ -75,11 +78,9 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
    */
   private loadImages(): Promise<void> {
     const promises: Promise<void>[] = [];
-    console.log(this.gameSettings);
 
     // Load left paddle image if provided
     if (this.gameSettings.paddleskin_image_left) {
-      console.log("Loading Left Paddle Skin " + this.gameSettings.paddleskin_image_left);
       promises.push(new Promise((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.paddleskin_image_left!;
@@ -88,7 +89,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          console.warn('Failed to load Left PaddleSkin Image. Falling back to colour.');
+          this.toastr.warning('Failed to load Left PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -98,7 +99,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
 
     // Load right paddle image if provided
     if (this.gameSettings.paddleskin_image_right) {
-      console.log("Loading Right Paddle Skin " + this.gameSettings.paddleskin_image_right);
       promises.push(new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.paddleskin_image_right!;
@@ -107,7 +107,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          console.warn('Failed to load Right PaddleSkin Image. Falling back to colour.');
+          this.toastr.warning('Failed to load Right PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -117,7 +117,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
 
     // Load top paddle image if provided
     if (this.gameSettings.paddleskin_image_top) {
-      console.log("Loading Top Paddle Skin " + this.gameSettings.paddleskin_image_top);
       promises.push(new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.paddleskin_image_top!;
@@ -126,7 +125,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          console.warn('Failed to load Top PaddleSkin Image. Falling back to colour.');
+          this.toastr.warning('Failed to load Top PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -136,7 +135,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
 
     // Load bottom paddle image if provided
     if (this.gameSettings.paddleskin_image_bottom) {
-      console.log("Loading Bottom Paddle Skin " + this.gameSettings.paddleskin_image_bottom);
       promises.push(new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.paddleskin_image_bottom!;
@@ -145,7 +143,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          console.warn('Failed to load Bottom PaddleSkin Image. Falling back to colour.');
+          this.toastr.warning('Failed to load Bottom PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -155,7 +153,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
 
     // Load ball image if provided
     if (this.gameSettings.ballskin_image) {
-      console.log("Loading Ball Skin " + this.gameSettings.ballskin_image);
       promises.push(new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.ballskin_image!;
@@ -164,7 +161,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          console.warn('Failed to load Ball Skin Image. Falling back to colour.');
+          this.toastr.warning('Failed to load Ball Skin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -174,7 +171,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
 
     // Load background wallpaper if provided
     if (this.gameSettings.gamebackground_wallpaper) {
-      console.log("Loading Background Skin " + this.gameSettings.gamebackground_wallpaper);
       promises.push(new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.src = this.gameSettings.gamebackground_wallpaper!;
@@ -183,7 +179,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          console.warn('Failed to load Background Image. Falling back to colour.');
+          this.toastr.warning('Failed to load Background Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -194,7 +190,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
     return Promise.all(promises).then(() => {
       this.imagesLoaded = true;
     }).catch(err => {
-      console.error(err);
+      this.toastr.error('Failed to load images.', 'Error');
       this.imagesLoaded = false;
     });
   }
@@ -312,11 +308,9 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
 
     if (side === 'left' || side === 'right') {
       this.context.fillRect(x, y, paddleWidth, paddleHeight);
-      console.log("Drawing Paddle: " + x + " " + y + " " + paddleWidth + " " + paddleHeight + " " + side + this.context.fillStyle);
     }
     else {
       this.context.fillRect(x, y, paddleHeight, paddleWidth);
-      console.log("Drawing Paddle: " + x + " " + y + " " + paddleHeight + " " + paddleWidth + " " + side + this.context.fillStyle);
     }
   }
 }

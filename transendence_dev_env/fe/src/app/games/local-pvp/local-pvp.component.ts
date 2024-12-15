@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Game, GameService, MoveLog, Round, Player } from '../game.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { GameCanvasComponentPVP } from './game-canvas/game-canvas.component';
+import { ToastrService } from 'ngx-toastr';
 
 
 export interface GameSettings {
@@ -40,7 +41,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
     roundScoreLimit: 3
   };
 
-  constructor(private gameService: GameService, private profileService: ProfileService) {}
+  constructor(private gameService: GameService, private profileService: ProfileService, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.profileService.getProfile().subscribe(
@@ -55,7 +56,7 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
         this.settings.gamebackground_wallpaper = profile.gamebackground_wallpaper;
       },
       error => {
-        console.error('Failed to load profile:', error);
+        this.toastr.error('Failed to load profile data.', 'Error');
       }
     );
   }
@@ -107,7 +108,6 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   }
 
   startRoundTimer(): void {
-    console.log(this.currentGame)
     this.clearRoundTimer();
     const roundStart = new Date();
 
@@ -218,7 +218,6 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
       this.currentGame!.winner = this.currentGame!.player2;
     else
       this.currentGame!.winner = {id: -1, username: 'Tie'};
-    console.log("Winner test: " + this.currentGame!.winner.username);
     this.gameInProgress = false;
     this.logs.push(`Game ended. Winner: ${this.currentGame!.winner?.username || 'None'}`);
 

@@ -4,6 +4,7 @@ import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { environment } from 'src/environment';
+import { ToastrService } from 'ngx-toastr';
 
 export interface SendGameInvitePayload {
   receiver_id: number;
@@ -52,7 +53,8 @@ export class NotificationService {
   constructor(
     private http: HttpClient,
     private websocketService: WebsocketService,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastr: ToastrService
   ) {
     this.retrieveNotifications();  // Fetch initial notifications on service initialization
     this.receiveNotifications();   // Listen for new notifications via WebSocket
@@ -65,7 +67,7 @@ export class NotificationService {
         (notifications) => {
           this.notifications$.next(notifications);  // Populate initial notifications list
         },
-        (error) => console.error('Error fetching notifications:', error)
+        (error) => this.toastr.error('Failed to load notifications. Please try again later.', 'Error')
       );
   }
 

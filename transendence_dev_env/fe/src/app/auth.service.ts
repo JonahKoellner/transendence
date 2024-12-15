@@ -6,6 +6,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
 import { environment } from 'src/environment';
+import { ToastrService } from 'ngx-toastr';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export class AuthService {
   public jwtHelper = new JwtHelperService();
   public refreshInProgress = false;
   
-  constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService) {}
+  constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
   register(username: string, email: string, password: string): Observable<any> {
@@ -37,13 +38,13 @@ export class AuthService {
       }),
       catchError(error => {
         if (error.status === 400) {
-          console.error('Login failed: Invalid username or password');
+          this.toastr.error('Invalid username or password', 'Login failed');
         } else if (error.status === 401) {
           localStorage.setItem('temp_token', error.error.access);
-          console.error('Login failed: User must revalidate OTP');
+          this.toastr.warning('Please revalidate your OTP');
           this.router.navigate(['/revalidate-otp', { needToReVarify: true }]);
         }
-        console.error('Login error:', error);
+        this.toastr.error('Login failed', 'Error');
         return of(null);
       })
     );
@@ -61,7 +62,7 @@ export class AuthService {
         if (response.success) {
           localStorage.setItem('otp_verified', 'true');
         } else {
-          console.error('OTP verification failed');
+          this.toastr.error('OTP verification failed', 'Error');
         }
       })
     );
@@ -71,16 +72,11 @@ export class AuthService {
   private storeTokens(accessToken: string, refreshToken: string): void {
     localStorage.setItem('access_token', accessToken);
     document.cookie = `refresh_token=${refreshToken}; path=/; SameSite=Lax; Secure=False`;
-    console.log('Access token stored:', accessToken);  // Debug log
-    console.log('Refresh token stored:', refreshToken);  // Debug log
-    console.log('Cookies:', document.cookie);  // Debug log
-    console.log('Via getCookie:', this.getRefreshToken());  // Debug log
   }
 
   // Get the access token
   public getAccessToken(): string | null {
     const token = localStorage.getItem('access_token');
-    console.log('Retrieved access token:', token);  // Debug log
     return token;
   }
   public getRefreshToken(): string | null {
@@ -95,17 +91,13 @@ export class AuthService {
   logout(reason?: string): void {
     let revalidate = false;
     if (reason === "2FA revalidation required") {
-      console.error('we need to reeval:', reason);
       revalidate = true;
     }
     const accessToken = localStorage.getItem('access_token');
-    console.log('Attempting to logout. Access token:', accessToken);
-    console.log('Logout reason:', reason);
     if (accessToken) {
       const headers = { Authorization: `Bearer ${accessToken}` };
       this.http.post(`${this.apiUrl}/accounts/logout/`, {}, { headers, withCredentials: true }).subscribe(
         (response) => {
-          console.log('Logout successful. Response:', response);
           this.websocketService.disconnect();
           if (revalidate)
           {
@@ -116,7 +108,6 @@ export class AuthService {
           }
         },
         (error) => {
-          console.error('Logout error:', error);
           this.websocketService.disconnect();
           if (revalidate)
             {
@@ -213,10 +204,10 @@ export class AuthService {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
       tap((response: any) => {
-        console.log('Profile data retrieved:', response);  // Debug log
+        // console.log('Profile data retrieved:', response);  // Debug log
       }),
       catchError(err => {
-        console.error('Error fetching profile data', err);
+        this.toastr.error('Failed to load profile data', 'Error');
         return of(null);  // Handle the error and return an observable
       })
     );
@@ -241,7 +232,7 @@ export class AuthService {
         }
       }),
       catchError(err => {
-        console.error('Error enabling 2FA', err);
+        this.toastr.error('Failed to enable 2FA', 'Error');
         return of(null);  // Handle the error and return an observable
       })
     );
@@ -259,12 +250,11 @@ export class AuthService {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
       tap((response: any) => {
-        console.log('2FA disabled:', response.message);
         localStorage.removeItem('otp_uri');  // Remove the OTP URI from local storage
         localStorage.removeItem('otp_verified');  // Remove the OTP verified flag
       }),
       catchError(err => {
-        console.error('Error disabling 2FA', err);
+        this.toastr.error('Failed to disable 2FA', 'Error');
         return of(null);  // Handle the error and return an observable
       })
     );

@@ -1,4 +1,5 @@
 import { Component, HostListener } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 
@@ -23,7 +24,7 @@ export class FriendListComponent {
   dragOffset = { x: 0, y: 0 };
 
 
-  constructor(private friendService: FriendService,private profileService: ProfileService) { }
+  constructor(private friendService: FriendService,private profileService: ProfileService, private toastr: ToastrService) { }
 
   ngOnInit(): void {
 
@@ -37,7 +38,7 @@ export class FriendListComponent {
         this.currentUser = user;
       },
       (error) => {
-        console.error('Failed to load current user profile:', error);
+        this.toastr.error('Failed to load current user profile.', 'Error');
         this.error = 'Failed to load current user profile.';
       }
     );
@@ -61,7 +62,7 @@ export class FriendListComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to load friends.', 'Error');
         this.error = 'Failed to load friends.';
         this.isLoading = false;
       }
@@ -84,7 +85,7 @@ export class FriendListComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to load friend requests.', 'Error');
         this.error = 'Failed to load friend requests.';
         this.isLoading = false;
       }
@@ -99,7 +100,7 @@ export class FriendListComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to load blocked users.', 'Error');
         this.error = 'Failed to load blocked users.';
         this.isLoading = false;
       }
@@ -113,7 +114,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to unblock user.', 'Error');
         this.error = 'Failed to unblock user.';
       }
     );
@@ -126,7 +127,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to accept friend request.', 'Error');
         this.error = 'Failed to accept friend request.';
       }
     );
@@ -139,7 +140,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to reject friend request.', 'Error');
         this.error = 'Failed to reject friend request.';
       }
     );
@@ -152,7 +153,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to remove friend.', 'Error');
         this.error = 'Failed to remove friend.';
       }
     );
@@ -165,7 +166,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to block user.', 'Error');
         this.error = 'Failed to block user.';
       }
     );
