@@ -85,7 +85,6 @@ export class ArenaComponent implements OnInit, OnDestroy {
     };
 
     this.gameService.createGame(newGame).subscribe( (game) => {
-      console.log('Game created:', game);
       this.gameId = game.id?.toString() || '';
       if (this.logs.length) {
         this.previousGames.push(...this.logs);
@@ -232,7 +231,6 @@ export class ArenaComponent implements OnInit, OnDestroy {
 
     this.gameInProgress = false;
     this.logs.push(`Game ended. Winner: ${this.currentGame!.winner?.username || 'Tie'}`);
-    console.log('Game ended:', this.currentGame);
     if (this.currentGame && this.gameId) {
       const updatedGameData: Partial<Game> = {
         end_time: this.currentGame.end_time,
@@ -245,7 +243,6 @@ export class ArenaComponent implements OnInit, OnDestroy {
       };
 
       this.gameService.updateGame(Number(this.gameId), updatedGameData).subscribe((updatedGame) => {
-        console.log('Game updated:', updatedGame);
         this.currentGame = { ...this.currentGame, ...updatedGame };
       });
     }

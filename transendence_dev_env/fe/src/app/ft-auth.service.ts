@@ -279,8 +279,8 @@ export class FtAuthService {
           // Example:
           // this.userService.setAuthenticated(true);
           // Here, we'll use localStorage as a simple example
-          console.log('Access token:', this.accessToken);
-          console.log('response:', response);
+          // console.log('Access token:', this.accessToken);
+          // console.log('response:', response);
           localStorage.setItem('ft_access_token', this.accessToken!);
           localStorage.setItem('ft_refresh_token', this.refreshToken!);
           localStorage.setItem('ft_secret_valid_until', String(this.secretValidUntil!));

@@ -30,7 +30,7 @@
   
     <!-- Game Cards -->
     <div class="game-cards">
-      <div *ngFor="let game of filteredGames" class="game-card">
+      <div *ngFor="let game of filteredGames | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }" class="game-card">
         <a [routerLink]="['/games/details', game.id]" class="card-link">
           <div class="card-header">
             <h3>{{ game.game_mode | titlecase }}</h3>
@@ -55,6 +55,14 @@
           </div>
         </a>
       </div>
+      <pagination-controls 
+      (pageChange)="pGames = $event" 
+      id="gamesPagination"
+      class="custom-pagination games-pagination"
+      [maxSize]="6"
+      [directionLinks]="true"
+      [autoHide]="true">
+      </pagination-controls>
     </div>
   </div>
   

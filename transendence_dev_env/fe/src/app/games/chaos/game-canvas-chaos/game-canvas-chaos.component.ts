@@ -194,7 +194,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
         // Teleport the ball to a random position
         this.ballX = Math.random() * this.canvasWidth;
         this.ballY = Math.random() * this.canvasHeight;
-        console.log("Ball teleported!");
       },
       shrinkBall: () => {
         const originalBallRadius = this.ballRadius;

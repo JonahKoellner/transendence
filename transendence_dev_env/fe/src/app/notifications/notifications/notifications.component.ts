@@ -49,7 +49,6 @@ export class NotificationsComponent implements OnInit {
     this.notificationService.getNotifications().subscribe(
       (notifications) => {
         this.notifications = notifications;
-        console.log(notifications);
         this.updateUnreadCount();
         this.filterNotifications();
       },
@@ -58,7 +57,6 @@ export class NotificationsComponent implements OnInit {
   }
 
   toggleNotifications(): void {
-    console.log('Toggling notifications');
     this.showNotifications = !this.showNotifications;
     if (this.showNotifications) {
       // this.markAllAsRead();
@@ -113,7 +111,7 @@ export class NotificationsComponent implements OnInit {
         this.openChat(notification.sender.id, notification.sender.username);
         break;
       default:
-        console.log('Unhandled notification type:', notification.notification_type);
+        console.warn('Unhandled notification type:', notification.notification_type);
     }
     this.markAsRead(notification);
   }

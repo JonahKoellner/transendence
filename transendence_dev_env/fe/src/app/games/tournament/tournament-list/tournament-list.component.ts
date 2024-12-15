@@ -17,10 +17,18 @@ export class TournamentListComponent {
     startDate: string = '';
     endDate: string = '';
     sortOrder: 'asc' | 'desc' = 'desc';
+
+  pTournaments: number = 1; // Current page
+  itemsPerPageTournaments: number = 6; // Items per page
+
   constructor(private gameService: GameService) {}
 
   ngOnInit(): void {
     this.fetchTournaments();
+  }
+
+  onPageChangeTournaments(page: number) {
+    this.pTournaments = page;
   }
 
   fetchTournaments(): void {

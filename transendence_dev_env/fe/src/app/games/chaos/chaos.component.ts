@@ -56,7 +56,6 @@ export class ChaosComponent  implements OnInit, OnDestroy {
         this.settings.ballskin_image = profile.ballskin_image;
         this.settings.gamebackground_color = profile.gamebackground_color;
         this.settings.gamebackground_wallpaper = profile.gamebackground_wallpaper;
-        console.log('Profile loaded:', profile);
       },
       error => {
         console.error('Failed to load profile:', error);
@@ -91,7 +90,6 @@ export class ChaosComponent  implements OnInit, OnDestroy {
       newGame.player2_name_pvp_local = this.player2Name;
     }
     
-    console.log('Creating new game:', newGame);
     this.gameService.createGame(newGame).subscribe((game) => {
       if (this.logs.length) {
         this.previousGames.push(...this.logs);
@@ -99,7 +97,6 @@ export class ChaosComponent  implements OnInit, OnDestroy {
       }
       this.currentGame = game;
       this.gameInProgress = true;
-      console.log('New game started in PvE mode:', this.currentGame);
       this.logs.push('New game started in PvE mode');
       this.startTimers();
       this.startNewRound();
@@ -159,7 +156,6 @@ export class ChaosComponent  implements OnInit, OnDestroy {
 
     this.currentGame.rounds.push(newRound);
     this.logs.push(`Round ${roundNumber} started.`);
-    console.log(this.currentGame)
     this.startRoundTimer(); // Start the round timer
   }
 
@@ -253,7 +249,6 @@ export class ChaosComponent  implements OnInit, OnDestroy {
       this.currentGame!.winner = this.currentGame!.player2;
     else
       this.currentGame!.winner = {id: -1, username: 'Tie'};
-    console.log("Winner test: " + this.currentGame!.winner.username);
 
     this.gameInProgress = false;
     this.logs.push(`Game ended. Winner: ${this.currentGame!.winner.username || 'None'}`);

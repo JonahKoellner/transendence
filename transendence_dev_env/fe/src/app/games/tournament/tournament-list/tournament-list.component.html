@@ -38,7 +38,7 @@
 
   <!-- Tournament Cards -->
   <div class="tournament-cards">
-      <div *ngFor="let tournament of filteredTournaments" class="tournament-card">
+      <div *ngFor="let tournament of filteredTournaments | paginate: { itemsPerPage: itemsPerPageTournaments, currentPage: pTournaments, id: 'tournamentPagination'  }" class="tournament-card">
           <a [routerLink]="['/games/tournament/details', tournament.id]" class="card-link">
               <div class="card-header">
                   <h3>{{ tournament.name }}</h3>
@@ -54,5 +54,13 @@
               </div>
           </a>
       </div>
+      <pagination-controls 
+      (pageChange)="pTournaments = $event" 
+      id="tournamentPagination"
+      class="custom-pagination tournament-pagination"
+      [maxSize]="6"
+      [directionLinks]="true"
+      [autoHide]="true">
+      </pagination-controls>
   </div>
 </div>

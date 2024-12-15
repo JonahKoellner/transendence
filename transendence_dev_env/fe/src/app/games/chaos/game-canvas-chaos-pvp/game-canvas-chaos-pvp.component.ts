@@ -228,7 +228,6 @@ drawPowerUps() {
       if (distance < this.ballRadius + 15) {
         if (this.lastHit && this.powerUpEffects[powerUp.type]) {
           this.powerUpEffects[powerUp.type](this.lastHit);
-          console.log(`Player ${this.lastHit} collected ${powerUp.type} power-up!`);
         }
         return false;
       }

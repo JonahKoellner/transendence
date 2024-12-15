@@ -44,16 +44,11 @@ export class ChatWindowComponent implements OnInit {
   listenForIncomingMessages(): void {
     this.chatService.receiveMessages().subscribe((message: ChatMessage) => {
       // Check if the message is part of the current chat
-      console.log(message)
-      console.log(message.sender.username)
-      console.log(message.receiver.username)
-      console.log(this.friendUsername)
       if (
         message.sender.username === this.friendUsername ||
         message.receiver.username === this.friendUsername
       ) {
         if (message.notification_type !== 'new_message') return;  // Ignore other notifications
-        console.log("Pusing message")
         // if (this.messages.length > 0)
         //   this.scrollToBottom();
         this.messages.push(message);  // Add the new message to the chat
@@ -62,18 +57,14 @@ export class ChatWindowComponent implements OnInit {
   }
   
   sendMessage(): void {
-    console.log("Sending message")
     if (this.newMessage.trim()) {
-      console.log("Sending message")
       this.chatService.sendMessageViaRest(this.newMessage, this.friendId).subscribe(
         (response) => {
-          console.log("Response")
           // if (this.messages.length > 0)
           //   this.scrollToBottom();
           this.messages.push(response);  // Add the new message to the chat
         },
         (error) => {
-          console.log("Error")
           console.error(error);
         }
       );  // Send via WebSocket

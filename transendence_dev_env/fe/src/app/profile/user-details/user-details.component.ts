@@ -40,7 +40,11 @@ export class UserDetailsComponent implements OnInit {
   // Filtered lists for displaying results
   filteredGameHistory: Game[] = [];
   filteredTournamentHistory: Tournament[] = [];
-    
+  pGames: number = 1; // Current page
+  itemsPerPageGames: number = 5; // Items per page
+
+  pTournaments: number = 1; // Current page
+  itemsPerPageTournaments: number = 5; // Items per page
   constructor(
     private route: ActivatedRoute,
     private profileService: ProfileService,
@@ -53,6 +57,13 @@ export class UserDetailsComponent implements OnInit {
       this.userId = +params.get('id')!;
       this.loadProfile(this.userId);
     });
+  }
+
+  onPageChangeProjects(page: number) {
+    this.pGames = page;
+  }
+  onPageChangeTournaments(page: number) {
+    this.pTournaments = page;
   }
 
   loadProfile(userId: number) {
@@ -96,8 +107,6 @@ export class UserDetailsComponent implements OnInit {
       console.error(`Invalid hex color format: '${hex}'. Expected 3 or 6 characters.`);
       return `rgba(0, 0, 0, ${alpha})`; // Fallback to black with the given alpha
     }
-  
-    console.log(`Converted Hex: #${hex} to RGBA: rgba(${r}, ${g}, ${b}, ${alpha})`);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 

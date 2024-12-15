@@ -78,7 +78,6 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
    */
   private loadImages(): Promise<void> {
     const promises: Promise<void>[] = [];
-    console.log(this.gameSettings);
 
     // Load left paddle image if provided
     if (this.gameSettings.paddleskin_image_left) {
