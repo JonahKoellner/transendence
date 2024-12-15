@@ -22,7 +22,7 @@ class Profile(models.Model):
     last_user_agent = models.TextField(null=True, blank=True)
     has_logged_in = models.BooleanField(default=False)
 
-    display_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    display_name = models.CharField(max_length=25, unique=False, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     
     friends = models.ManyToManyField('self', symmetrical=False, related_name='friends_with', blank=True)

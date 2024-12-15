@@ -87,7 +87,7 @@ class OTPVerifySerializer(serializers.Serializer):
     otp_code = serializers.CharField()
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    display_name = serializers.CharField(source='profile.display_name', required=False)
+    display_name = serializers.CharField(source='profile.display_name', allow_blank=True, required=False)
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     friends = serializers.SerializerMethodField()
     blocked_users = serializers.SerializerMethodField()

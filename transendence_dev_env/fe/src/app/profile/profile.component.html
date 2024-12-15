@@ -93,9 +93,20 @@
             type="text"
             formControlName="display_name" 
             class="form-input" 
-            placeholder="Enter your display name" 
+            placeholder="Enter your display name"
+            maxlength="25" 
           />
         </div>
+
+        <div 
+        *ngIf="profileForm.get('display_name')?.invalid && (profileForm.get('display_name')?.dirty || profileForm.get('display_name')?.touched)" 
+        class="text-danger">
+
+        <small *ngIf="profileForm.get('display_name')?.errors?.['maxlength']">
+          Display Name cannot exceed 25 characters.
+        </small>
+        
+      </div>
         
         <!-- Avatar Upload -->
 
