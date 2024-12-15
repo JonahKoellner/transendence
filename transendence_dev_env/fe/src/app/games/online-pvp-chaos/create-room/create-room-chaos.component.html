@@ -9,17 +9,39 @@
         <h3>Game Settings</h3>
       </div>
       <div class="settings-body">
+        <!-- Enable Chaos Checkbox -->
+        <div class="setting-item full-width">
+          <label>
+            <input type="checkbox" [(ngModel)]="chaosEnabled" />
+            Enable Chaos
+          </label>
+        </div>
+
         <!-- Max Rounds -->
         <div class="setting-item">
           <h4>Max Rounds</h4>
-          <input type="number" [(ngModel)]="settings.maxRounds" name="maxRounds" min="1" max="25" step="1"
-            pattern="^[0-9]+$" class="form-control" placeholder="Enter max rounds" #maxRoundsInput="ngModel" required />
-          <div *ngIf="maxRoundsInput.invalid && (maxRoundsInput.dirty || maxRoundsInput.touched)" class="text-danger">
+          <input
+            type="number"
+            [(ngModel)]="settings.maxRounds"
+            name="maxRounds"
+            min="1"
+            max="25"
+            step="1"
+            pattern="^[0-9]+$"
+            class="form-control"
+            placeholder="Enter max rounds"
+            #maxRoundsInput="ngModel"
+            required
+          />
+          <div
+            *ngIf="maxRoundsInput.invalid && (maxRoundsInput.dirty || maxRoundsInput.touched)"
+            class="text-danger"
+          >
             <small *ngIf="maxRoundsInput.errors?.['required']">Max Rounds is required.</small>
             <small *ngIf="maxRoundsInput.errors?.['min']">Minimum value is 1.</small>
             <small *ngIf="maxRoundsInput.errors?.['max']">Maximum value is 25.</small>
             <small *ngIf="maxRoundsInput.errors?.['pattern']">
-              Round Score Limit must be a whole number.
+              Max Rounds must be a whole number.
             </small>
           </div>
         </div>
@@ -27,11 +49,23 @@
         <!-- Round Score Limit -->
         <div class="setting-item">
           <h4>Round Score Limit</h4>
-          <input type="number" [(ngModel)]="settings.roundScoreLimit" name="roundScoreLimit" min="1" max="25" step="1"
-            pattern="^[0-9]+$" class="form-control" placeholder="Enter score limit" #roundScoreLimitInput="ngModel"
-            required />
-          <div *ngIf="roundScoreLimitInput.invalid && (roundScoreLimitInput.dirty || roundScoreLimitInput.touched)"
-            class="text-danger">
+          <input
+            type="number"
+            [(ngModel)]="settings.roundScoreLimit"
+            name="roundScoreLimit"
+            min="1"
+            max="25"
+            step="1"
+            pattern="^[0-9]+$"
+            class="form-control"
+            placeholder="Enter score limit"
+            #roundScoreLimitInput="ngModel"
+            required
+          />
+          <div
+            *ngIf="roundScoreLimitInput.invalid && (roundScoreLimitInput.dirty || roundScoreLimitInput.touched)"
+            class="text-danger"
+          >
             <small *ngIf="roundScoreLimitInput.errors?.['required']">Round Score Limit is required.</small>
             <small *ngIf="roundScoreLimitInput.errors?.['min']">Minimum value is 1.</small>
             <small *ngIf="roundScoreLimitInput.errors?.['max']">Maximum value is 25.</small>
@@ -41,19 +75,36 @@
           </div>
         </div>
 
-        <!-- Powerup Spawn Rate-->
+        <!-- Powerup Spawn Rate -->
         <div class="setting-item">
           <h4>Powerup Spawn Rate</h4>
-          <input type="number" [(ngModel)]="settings.powerupSpawnRate" name="roundScoreLimit" min="1" max="25" step="1"
-            pattern="^[0-9]+$" class="form-control" placeholder="Enter score limit" #powerupSpawnRateInput="ngModel"
-            required />
-          <div *ngIf="powerupSpawnRateInput.invalid && (powerupSpawnRateInput.dirty || powerupSpawnRateInput.touched)"
-            class="text-danger">
-            <small *ngIf="powerupSpawnRateInput.errors?.['required']">Powerup Spawn Rate is required.</small>
-            <small *ngIf="powerupSpawnRateInput.errors?.['min']">Minimum value is 1.</small>
+          <input
+            type="number"
+            [(ngModel)]="settings.powerupSpawnRate"
+            name="powerupSpawnRate"
+            [attr.min]="chaosEnabled ? 0.1 : 1"
+            max="25"
+            [attr.step]="chaosEnabled ? '0.1' : '1'"
+            [pattern]="chaosEnabled ? '^[0-9]+(\.[0-9]{1})?$' : '^[0-9]+$'"
+            class="form-control"
+            placeholder="Enter spawn rate"
+            #powerupSpawnRateInput="ngModel"
+            required
+          />
+          <div
+            *ngIf="powerupSpawnRateInput.invalid && (powerupSpawnRateInput.dirty || powerupSpawnRateInput.touched)"
+            class="text-danger"
+          >
+            <small *ngIf="powerupSpawnRateInput.errors?.['required']">
+              Powerup Spawn Rate is required.
+            </small>
+            <small *ngIf="powerupSpawnRateInput.errors?.['min']">
+              Minimum value is {{ chaosEnabled ? '0.1' : '1' }}.
+            </small>
             <small *ngIf="powerupSpawnRateInput.errors?.['max']">Maximum value is 25.</small>
             <small *ngIf="powerupSpawnRateInput.errors?.['pattern']">
-              Powerup Spawn Rate must be a whole number.
+              Powerup Spawn Rate must be
+              {{ chaosEnabled ? 'a whole number or one decimal place.' : 'a whole number.' }}
             </small>
           </div>
         </div>
@@ -61,8 +112,15 @@
     </div>
 
     <div class="actions">
-      <button class="start-game-btn" (click)="createRoom()"
-        [disabled]="maxRoundsInput.invalid || roundScoreLimitInput.invalid">
+      <button
+        class="start-game-btn"
+        (click)="createRoom()"
+        [disabled]="
+          maxRoundsInput.invalid ||
+          roundScoreLimitInput.invalid ||
+          powerupSpawnRateInput.invalid
+        "
+      >
         <svg viewBox="0 0 24 24">
           <path fill="#fff" d="M8 5v14l11-7z" />
         </svg>

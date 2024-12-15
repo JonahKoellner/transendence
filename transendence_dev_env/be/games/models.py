@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class TournamentType(models.TextChoices):
     SINGLE_ELIMINATION = 'Single Elimination'
@@ -83,8 +84,8 @@ class BaseLobby(models.Model):
     room_id = models.CharField(max_length=10, unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    max_rounds = models.IntegerField(default=3)  # New field for max rounds
-    round_score_limit = models.IntegerField(default=3)  # New field for round score limit
+    max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)]) 
+    round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
 
 class Lobby(BaseLobby):
     # room_id = models.CharField(max_length=10, unique=True)
