@@ -38,7 +38,7 @@ export class ProfileComponent implements OnInit {
   ftError: string | null = null;
 
   pCursus: number = 1; // Current page
-  itemsPerPageCursus: number = 5; // Items per page
+  itemsPerPageCursus: number = 1; // Items per page
 
   pProjects: number = 1; // Current page
   itemsPerPageProjects: number = 5; // Items per page

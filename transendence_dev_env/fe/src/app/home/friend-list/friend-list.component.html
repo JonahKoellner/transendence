@@ -42,7 +42,6 @@
       (pageChange)="pFriends = $event" 
       id="friendsPagination"
       class="custom-pagination friends-pagination"
-      [maxSize]="25"
       [directionLinks]="true"
       [autoHide]="true">
       </pagination-controls>
@@ -72,7 +71,6 @@
       (pageChange)="pFriendRequests = $event" 
       id="friendRequestsPagination"
       class="custom-pagination friend-request-pagination"
-      [maxSize]="25"
       [directionLinks]="true"
       [autoHide]="true">
       </pagination-controls>
@@ -97,7 +95,6 @@
     (pageChange)="pBlockedUsers = $event"
     id="blockedUsersPagination"
     class="custom-pagination blocked-users-pagination"
-    [maxSize]="25"
     [directionLinks]="true"
     [autoHide]="true">
     </pagination-controls>
