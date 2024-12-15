@@ -7,6 +7,7 @@ import { ImageSelectorModalComponent } from './image-selector-modal/image-select
 import { DeleteAccountModalComponent } from './delete-account-modal/delete-account-modal.component';
 import { FtAuthService, FtUser } from '../ft-auth.service';
 import { ActivatedRoute } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 interface ImageSelection {
   type: 'preset' | 'upload';
   data: File | string; // File object for uploads, string identifier/path for presets
@@ -55,7 +56,8 @@ export class ProfileComponent implements OnInit {
     private modalService: NgbModal,
     private http: HttpClient,
     private ftAuthService: FtAuthService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
@@ -132,7 +134,7 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
       },
       (error) => {
-        console.error('Error loading profile:', error);
+        this.toastr.error('An error occurred while loading your profile. Please try again.');
         this.isLoading = false;
       }
     );
@@ -309,7 +311,6 @@ export class ProfileComponent implements OnInit {
   
     const formData = new FormData();
     if (this.profileForm.get('display_name')!.value) {
-      console.log('display_name', this.profileForm.get('display_name')!.value);
       formData.append('display_name', this.profileForm.get('display_name')!.value);
     } else {
       formData.delete('display_name');
@@ -391,7 +392,7 @@ export class ProfileComponent implements OnInit {
   
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
-        alert('Profile updated successfully');
+        this.toastr.success('Profile updated successfully', 'Success');
         // Reload the profile to reflect changes
         this.loadProfile();
   
@@ -410,8 +411,7 @@ export class ProfileComponent implements OnInit {
       },
       (error: HttpErrorResponse) => {
         this.isUpdating = false;
-        console.error('Error updating profile:', error);
-        alert('An error occurred while updating your profile. Please try again.');
+        this.toastr.error('An error occurred while updating your profile. Please try again.', 'Error');
       }
     );
   }
@@ -529,9 +529,7 @@ export class ProfileComponent implements OnInit {
           reader.readAsDataURL(file);
         },
         (error) => {
-          console.error('Error fetching preset image:', error);
-          // Optionally, notify the user about the error
-          alert('Failed to load the selected preset image. Please try another one.');
+          this.toastr.error('Failed to load the selected preset image. Please try another one.', 'Error');
         }
       );
     }
@@ -558,13 +556,12 @@ export class ProfileComponent implements OnInit {
     if (confirm('Are you sure you want to delete your account? This action is irreversible.')) {
       this.profileService.deleteAccount(password).subscribe(
         (response) => {
-          alert('Your account has been deleted successfully.');
+          this.toastr.success('Your account has been successfully deleted.', 'Success');
           // Optionally, redirect to the homepage or login page
           window.location.href = '/';
         },
         (error: HttpErrorResponse) => {
-          console.error('Error deleting account:', error);
-          alert(error.error.message || 'An error occurred while deleting your account. Please try again.');
+          this.toastr.error('An error occurred while deleting your account. Please try again.', 'Error');
         }
       );
     }
@@ -585,7 +582,7 @@ export class ProfileComponent implements OnInit {
 
         },
         (error) => {
-          console.error('Failed to fetch 42 user data:', error);
+          this.toastr.error('Failed to fetch 42 user data. Please log in again.', 'Error');
           this.ftAuthenticated = false;
           this.ftError = 'Failed to fetch 42 user data. Please log in again.';
           this.ftLoading = false;
@@ -604,7 +601,7 @@ export class ProfileComponent implements OnInit {
     formData.append('is_ft_authenticated', 'true');
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
-        alert('Profile synced with 42 account successfully');
+        this.toastr.success('Profile synced with 42 account successfully', 'Success');
         // Reload the profile to reflect changes
         this.loadProfile();
   
@@ -622,8 +619,7 @@ export class ProfileComponent implements OnInit {
       },
       (error: HttpErrorResponse) => {
         this.isUpdating = false;
-        console.error('Error updating profile:', error);
-        alert('An error occurred while updating your profile. Please try again.');
+        this.toastr.error('An error occurred while updating your profile. Please try again.', 'Error');
       }
     );
   }
@@ -634,7 +630,7 @@ export class ProfileComponent implements OnInit {
     formData.append('is_ft_authenticated', 'false');
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
-        alert('Removed 42 account from profile successfully');
+        this.toastr.success('Removed 42 account from profile successfully', 'Success');
         // Reload the profile to reflect changes
         this.loadProfile();
   
@@ -652,8 +648,7 @@ export class ProfileComponent implements OnInit {
       },
       (error: HttpErrorResponse) => {
         this.isUpdating = false;
-        console.error('Error updating profile:', error);
-        alert('An error occurred while updating your profile. Please try again.');
+        this.toastr.error('An error occurred while removing 42 account from profile. Please try again.', 'Error');
       }
     );
   }

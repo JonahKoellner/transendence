@@ -74,6 +74,8 @@ import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room
 import { GameDisplayArenaComponent } from './games/online-arena/game-display/game-display.component';
 import { ImpressumComponent } from './home/impressum/impressum.component';
 import { NgxPaginationModule } from 'ngx-pagination';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ToastrModule } from 'ngx-toastr';
 @NgModule({
   declarations: [
     AppComponent,
@@ -151,7 +153,23 @@ import { NgxPaginationModule } from 'ngx-pagination';
     NgChartsModule,
     RouterModule,
     NgbModule,
-    NgxPaginationModule
+    NgxPaginationModule,
+    BrowserAnimationsModule, // Required for Toastr
+    ToastrModule.forRoot({
+      // Global configuration options
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+      preventDuplicates: true,
+      autoDismiss: true,
+      closeButton: true,
+      // progressBar: true,
+      easing : 'ease-in',
+      tapToDismiss: true,
+      maxOpened: 2,
+      newestOnTop: true,
+      enableHtml: true,
+      // progressAnimation: 'increasing',
+    }),
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

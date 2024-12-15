@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/auth.service';
 import * as QRCode from 'qrcode';
 import { NgForm } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-revalidate-otp',
@@ -14,7 +15,7 @@ export class RevalidateOtpComponent {
   error: string = '';
   isLoading: boolean = false;
   otp_uri: string = "";
-  constructor(private authService: AuthService, private router: Router, private route: ActivatedRoute) {}
+  constructor(private authService: AuthService, private router: Router, private route: ActivatedRoute, private toastr: ToastrService) {}
 
 
   ngOnInit(): void {
@@ -31,7 +32,7 @@ export class RevalidateOtpComponent {
     this.authService.verifyOTP(this.otp_code).subscribe(
       (response: any) => {
         if (response.success) {
-          alert('OTP Verified Successfully');
+          this.toastr.success('OTP verified successfully', 'Success');
           localStorage.setItem('otp_verified', 'true');
           this.isLoading = false;
           this.router.navigate(['/login']); // Navigate to the home page
