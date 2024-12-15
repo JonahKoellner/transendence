@@ -72,6 +72,7 @@ output {
     password => "$ELASTIC_LOGSTASH_PASSWORD"
     index => "logstash-%{container_name}_container"
   }
+  stdout { codec => rubydebug }
 }
 EOL
 

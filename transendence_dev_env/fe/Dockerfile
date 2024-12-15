@@ -166,8 +166,13 @@ RUN mkdir -p /etc/nginx/modsecurity
 RUN cp /usr/src/ModSecurity/modsecurity.conf-recommended /etc/nginx/modsecurity/modsecurity.conf
 RUN cp /usr/src/ModSecurity/unicode.mapping /etc/nginx/modsecurity/
 
+# Copy custom ModSecurity configuration file
+COPY modsecurity_custom.conf /etc/nginx/modsecurity/modsecurity_custom.conf
+
+
 # Set up ModSecurity
 RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/nginx/modsecurity/modsecurity.conf
+RUN echo "Include /etc/nginx/modsecurity/modsecurity_custom.conf" >> /etc/nginx/modsecurity/modsecurity.conf
 
 # Download the OWASP ModSecurity Core Rule Set
 WORKDIR /etc/nginx/modsecurity
