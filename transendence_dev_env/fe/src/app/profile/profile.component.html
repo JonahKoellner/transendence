@@ -50,13 +50,11 @@
         
         <!-- User Info -->
         <div class="user-info">
-          <h2>Your Profile</h2>
+          <h2>{{ userProfile.username }} <span *ngIf="userProfile.display_name"> - {{ userProfile.display_name }}</span></h2>
           <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
             Go to Account Page
           </a>
-          <p><strong>Username:</strong> {{ userProfile.username }}</p>
-          <p *ngIf="userProfile.display_name"><strong>Display Name</strong> {{ userProfile.display_name }}</p>
-          <p><strong>Email:</strong> {{ userProfile.email }}</p>
+          <p>{{ userProfile.email }}</p>
         </div>
       </div>
       
