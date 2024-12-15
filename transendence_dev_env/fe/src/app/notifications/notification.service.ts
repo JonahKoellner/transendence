@@ -107,4 +107,12 @@ export class NotificationService {
   sendGameInvite(payload: SendGameInvitePayload): Observable<any> {
     return this.http.post(`${this.apiUrl}send-game-invite/`, payload, { withCredentials: true });
   }
+
+  sendGameInviteArena(payload: SendGameInvitePayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}send-game-invite-arena/`, payload, { withCredentials: true });
+  }
+
+  sendGameInviteChaos(payload: SendGameInvitePayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}send-game-invite-chaos/`, payload, { withCredentials: true });
+  }
 }

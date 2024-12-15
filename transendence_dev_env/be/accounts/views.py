@@ -14,7 +14,8 @@ from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
     TokenSerializer, UserProfileSerializer, NotificationSerializer,
     UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
-    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    SendArenaGameInviteSerializer, SendChaosGameInviteSerializer
 )
 from .utils import create_notification, update_profile_with_transaction
 from django.http import JsonResponse
@@ -28,7 +29,7 @@ from .models import Notification, ChatMessage, FriendRequest, Achievement, UserA
 from django.db import models
 from django.db.models import Q
 import be.settings as besettings
-from games.models import Game, Lobby, Tournament
+from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby
 from django.utils import timezone
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import logging
@@ -787,7 +788,141 @@ class NotificationViewSet(viewsets.ModelViewSet):
                 notification_type='game_invite',
                 data={
                     'message': f'{sender_user.username} has invited you to join Lobby {room_id}.',
-                    'room_id': room_id
+                    'room_id': room_id,
+                    'game_type': "classic"
+                },
+                priority='high'
+            )
+
+            return Response({'status': 'Game invite sent successfully.'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+    @action(detail=False, methods=['post'], url_path='send-game-invite-arena')
+    def send_game_invite_arena(self, request):
+        serializer = SendArenaGameInviteSerializer(data=request.data)
+        if serializer.is_valid():
+            receiver_id = serializer.validated_data['receiver_id']
+            room_id = serializer.validated_data['room_id']
+
+            sender_user = request.user
+
+            # Retrieve the receiver user
+            try:
+                receiver_user = User.objects.get(id=receiver_id)
+            except User.DoesNotExist:
+                return Response({'detail': 'Receiver user does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Retrieve the lobby instance using room_id
+            try:
+                lobby = ArenaLobby.objects.get(room_id=room_id)
+            except ArenaLobby.DoesNotExist:
+                return Response({'detail': 'Lobby does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if lobby.player_one == receiver_user:
+                return Response({'detail': 'Cannot send game invite to the host of the Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is already part of a Game in the Lobby
+            if Game.objects.filter(lobby=lobby, player2=receiver_user).exists() or \
+               Game.objects.filter(lobby=lobby, player1=receiver_user).exists():
+                return Response({'detail': 'User is already part of a game in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is a friend
+            if not sender_user.profile.friends.filter(id=receiver_user.profile.id).exists():
+                return Response({'detail': 'You can only send game invites to your friends.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver has blocked the sender or vice versa
+            if sender_user.profile.blocked_users.filter(id=receiver_user.profile.id).exists() or \
+               receiver_user.profile.blocked_users.filter(id=sender_user.profile.id).exists():
+                return Response({'detail': 'Cannot send game invite to this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if there is already a pending game invite to this Lobby for this receiver
+            existing_invites = Notification.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                is_read=False,
+                data__room_id=room_id
+            )
+            if existing_invites.exists():
+                return Response({'detail': 'A pending game invite already exists for this user in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the game invite notification
+            create_notification(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                data={
+                    'message': f'{sender_user.username} has invited you to join Lobby {room_id}.',
+                    'room_id': room_id,
+                    'game_type': "arena"
+                },
+                priority='high'
+            )
+
+            return Response({'status': 'Game invite sent successfully.'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=False, methods=['post'], url_path='send-game-invite-chaos')
+    def send_game_invite_chaos(self, request):
+        serializer = SendChaosGameInviteSerializer(data=request.data)
+        if serializer.is_valid():
+            receiver_id = serializer.validated_data['receiver_id']
+            room_id = serializer.validated_data['room_id']
+
+            sender_user = request.user
+
+            # Retrieve the receiver user
+            try:
+                receiver_user = User.objects.get(id=receiver_id)
+            except User.DoesNotExist:
+                return Response({'detail': 'Receiver user does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Retrieve the lobby instance using room_id
+            try:
+                chaosLobby = ChaosLobby.objects.get(room_id=room_id)
+            except ChaosLobby.DoesNotExist:
+                return Response({'detail': 'Lobby does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if chaosLobby.host == receiver_user:
+                return Response({'detail': 'Cannot send game invite to the host of the Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is already part of a Game in the Lobby
+            if Game.objects.filter(lobby=chaosLobby, player2=receiver_user).exists() or \
+               Game.objects.filter(lobby=chaosLobby, player1=receiver_user).exists():
+                return Response({'detail': 'User is already part of a game in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is a friend
+            if not sender_user.profile.friends.filter(id=receiver_user.profile.id).exists():
+                return Response({'detail': 'You can only send game invites to your friends.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver has blocked the sender or vice versa
+            if sender_user.profile.blocked_users.filter(id=receiver_user.profile.id).exists() or \
+               receiver_user.profile.blocked_users.filter(id=sender_user.profile.id).exists():
+                return Response({'detail': 'Cannot send game invite to this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if there is already a pending game invite to this Lobby for this receiver
+            existing_invites = Notification.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                is_read=False,
+                data__room_id=room_id
+            )
+            if existing_invites.exists():
+                return Response({'detail': 'A pending game invite already exists for this user in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the game invite notification
+            create_notification(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                data={
+                    'message': f'{sender_user.username} has invited you to join Lobby {room_id}.',
+                    'room_id': room_id,
+                    'game_type': "chaos"
                 },
                 priority='high'
             )

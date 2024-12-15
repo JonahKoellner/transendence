@@ -356,7 +356,7 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
         room_id: this.roomId,
         receiver_id: friend_id
       };
-      this.notificationService.sendGameInvite(gameInvitePayload).subscribe(
+      this.notificationService.sendGameInviteArena(gameInvitePayload).subscribe(
         () => {
           this.toastr.success('Game invite sent!', 'Success');
         }

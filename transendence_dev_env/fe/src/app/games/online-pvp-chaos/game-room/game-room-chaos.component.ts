@@ -283,7 +283,7 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
         room_id: this.roomId,
         receiver_id: friend_id
       };
-      this.notificationService.sendGameInvite(gameInvitePayload).subscribe(
+      this.notificationService.sendGameInviteChaos(gameInvitePayload).subscribe(
         () => {
           this.toastr.success('Game invite sent successfully!', 'Success');
         }

@@ -44,12 +44,7 @@
       border-radius: 10px;
       text-align: center;
       margin-bottom: 2rem;
-      transition: transform 0.3s, box-shadow 0.3s;
 
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-      }
 
       /* Online Status */
       .online-status {

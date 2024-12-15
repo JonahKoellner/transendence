@@ -328,7 +328,9 @@ class Game(models.Model):
         (CANCELED_BY_HOST, 'Canceled by Host'),
         (CANCELED_BY_GUEST, 'Canceled by Guest')
     ]
-    lobby = models.ForeignKey(Lobby, on_delete=models.CASCADE, related_name='games', null=True, blank=True, default=None)
+    lobby = models.ForeignKey(BaseLobby, on_delete=models.CASCADE, related_name='games', null=True, blank=True, default=None)
+    
+    
     # Core Fields
     player1 = models.ForeignKey(
         settings.AUTH_USER_MODEL, 

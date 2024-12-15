@@ -70,6 +70,11 @@
           background-color: #61BA50;
           color: #ffffff;
         }
+        &:hover,
+        &.active-tab {
+          background-color: #61BA50;
+          color: #ffffff;
+        }
       }
     }
 

@@ -11,25 +11,25 @@
   
   <div *ngIf="!isLoading && userProfile" class="profile-content">
     <div class="tab-controls">
-        <button 
-          (click)="activeTab = 'info'" 
-          [ngClass]="{'active-tab': activeTab === 'info'}">
-          info
-        </button>
-        <button 
-          (click)="activeTab = 'edit'" 
-          [ngClass]="{'active-tab': activeTab === 'edit'}">
-          edit
+      <button 
+        (click)="activeTab = 'info'" 
+        [ngClass]="{'active-tab': activeTab === 'info'}">
+        Profile Information
       </button>
       <button 
-          (click)="activeTab = 'settings'" 
-          [ngClass]="{'active-tab': activeTab === 'settings'}">
-          settings
+        (click)="activeTab = 'edit'" 
+        [ngClass]="{'active-tab': activeTab === 'edit'}">
+        Edit Profile
+      </button>
+      <button 
+        (click)="activeTab = 'settings'" 
+        [ngClass]="{'active-tab': activeTab === 'settings'}">
+        Account Settings
       </button>
       <button 
         (click)="activeTab = '42'" 
         [ngClass]="{'active-tab': activeTab === '42'}">
-        42
+        42 Integration
       </button>
     </div>
 

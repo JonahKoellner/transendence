@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, User, Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
 from django.db import transaction
-from games.models import Lobby
+from games.models import Lobby, ArenaLobby, ChaosLobby
 import re
 from .utils import check_achievements
 from django.contrib.auth.password_validation import validate_password
@@ -346,7 +346,8 @@ class NotificationSerializer(serializers.ModelSerializer):
             'timestamp',
             'is_read',
             'data',
-            'room_id'
+            'room_id',
+            'game_type'
         ]
 
     def get_room_id(self, obj):
@@ -377,6 +378,34 @@ class SendGameInviteSerializer(serializers.Serializer):
 
     def validate_room_id(self, value):
         if not Lobby.objects.filter(room_id=value).exists():
+            raise serializers.ValidationError("Lobby with the given room_id does not exist.")
+        return value
+    
+class SendChaosGameInviteSerializer(serializers.Serializer):
+    receiver_id = serializers.IntegerField()
+    room_id = serializers.CharField()
+
+    def validate_receiver_id(self, value):
+        if not User.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Receiver user does not exist.")
+        return value
+
+    def validate_room_id(self, value):
+        if not ChaosLobby.objects.filter(room_id=value).exists():
+            raise serializers.ValidationError("Lobby with the given room_id does not exist.")
+        return value
+    
+class SendArenaGameInviteSerializer(serializers.Serializer):
+    receiver_id = serializers.IntegerField()
+    room_id = serializers.CharField()
+
+    def validate_receiver_id(self, value):
+        if not User.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Receiver user does not exist.")
+        return value
+
+    def validate_room_id(self, value):
+        if not ArenaLobby.objects.filter(room_id=value).exists():
             raise serializers.ValidationError("Lobby with the given room_id does not exist.")
         return value
     
