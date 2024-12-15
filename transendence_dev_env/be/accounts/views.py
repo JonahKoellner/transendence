@@ -360,7 +360,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         # Use UserProfileSerializer for detailed views and UserDetailSerializer for others
-        if self.action in ['retrieve', 'update', 'partial_update']:
+        if self.action in ['update', 'partial_update']:
+            return UserDetailSerializer
+        elif self.action == 'retrieve':
             return UserProfileSerializer
         return UserDetailSerializer
 

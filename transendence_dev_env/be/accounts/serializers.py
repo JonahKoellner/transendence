@@ -234,7 +234,7 @@ class TokenSerializer(serializers.Serializer):
     access = serializers.CharField()
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    display_name = serializers.CharField(source='profile.display_name', required=False)
+    display_name = serializers.CharField(source='profile.display_name', required=False, allow_blank=True)
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
     is_2fa_enabled  = serializers.BooleanField(source='profile.is_2fa_enabled')

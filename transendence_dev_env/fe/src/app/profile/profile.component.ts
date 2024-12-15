@@ -393,8 +393,8 @@ export class ProfileComponent implements OnInit {
   
     // Append username if required
     formData.append("username", this.userProfile.username);
-
-  
+    const displayName = this.profileForm.get('display_name')?.value ?? '';
+    formData.append('display_name', displayName);
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
         this.toastr.success('Profile updated successfully', 'Success');
