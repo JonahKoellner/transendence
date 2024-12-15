@@ -26,7 +26,7 @@
     <div *ngIf="friends.length === 0" class="no-items">You have no friends yet.</div>
     <ul class="friends-list">
       <li *ngFor="let friend of friends | paginate: { itemsPerPage: itemsPerPageFriends, currentPage: pFriends, id: 'friendsPagination'  }" class="friend-card">
-        <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" class="avatar" loading="lazy"/>
+        <img [src]="apiurl + friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" class="avatar" loading="lazy"/>
         <div class="friend-info">
           <h5>{{ friend.display_name || friend.username }}</h5>
           <small>Username: {{ friend.username }}</small>

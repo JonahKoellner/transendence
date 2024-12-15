@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
+import { environment } from 'src/environment';
 
 @Component({
   selector: 'app-friend-list',
@@ -31,6 +32,8 @@ export class FriendListComponent {
 
   pBlockedUsers: number = 1; // Current page
   itemsPerPageBlockedUsers: number = 25; // Items per page
+
+  public apiurl = environment.apiUrl;
 
 
   constructor(private friendService: FriendService,private profileService: ProfileService, private toastr: ToastrService) { }
