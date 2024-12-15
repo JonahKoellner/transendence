@@ -41,7 +41,7 @@ export class ProfileComponent implements OnInit {
   itemsPerPageCursus: number = 1; // Items per page
 
   pProjects: number = 1; // Current page
-  itemsPerPageProjects: number = 5; // Items per page
+  itemsPerPageProjects: number = 3; // Items per page
 
   selectedImages: {
     avatar?: ImageSelection;

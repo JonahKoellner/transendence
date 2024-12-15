@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let room of rooms">
+        <tr *ngFor="let room of rooms | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }">
           <td>{{ room.room_id }}</td>
           <td>{{ room.player_one }}</td>
           <td>
@@ -31,6 +31,13 @@
             <span *ngIf="room.all_ready">Game Starting</span>
           </td>
         </tr>
+        <pagination-controls
+        (pageChange)="pGames = $event"
+        id="itemsPerPageGames"
+        class="custom-pagination games-pagination"
+        [directionLinks]="true"
+        [autoHide]="true">
+        </pagination-controls>
       </tbody>
     </table>
   </div>
