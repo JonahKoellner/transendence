@@ -25,7 +25,7 @@
     <h2>Your Friends</h2>
     <div *ngIf="friends.length === 0" class="no-items">You have no friends yet.</div>
     <ul class="friends-list">
-      <li *ngFor="let friend of friends" class="friend-card">
+      <li *ngFor="let friend of friends | paginate: { itemsPerPage: itemsPerPageFriends, currentPage: pFriends, id: 'friendsPagination'  }" class="friend-card">
         <img [src]="friend.avatar || 'assets/default_avatar.png'" alt="{{ friend.username }}" class="avatar" loading="lazy"/>
         <div class="friend-info">
           <h5>{{ friend.display_name || friend.username }}</h5>
@@ -38,6 +38,14 @@
           <a class="btn-profile" [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
         </div>
       </li>
+      <pagination-controls 
+      (pageChange)="pFriends = $event" 
+      id="friendsPagination"
+      class="custom-pagination friends-pagination"
+      [maxSize]="25"
+      [directionLinks]="true"
+      [autoHide]="true">
+      </pagination-controls>
     </ul>
   </div>
 
@@ -46,7 +54,7 @@
     <h2>Your Friend Requests</h2>
     <div *ngIf="friendRequests.length === 0" class="no-items">No friend requests at the moment.</div>
     <ul class="friends-list">
-      <li *ngFor="let request of friendRequests" class="friend-card">
+      <li *ngFor="let request of friendRequests | paginate: { itemsPerPage: itemsPerPageFriendRequests, currentPage: pFriendRequests, id: 'friendRequestsPagination'  }" class="friend-card">
         <div class="friend-info">
           <h5>{{ request.sender_username }} <small>sent {{ request.receiver_username }} a Friend Request</small></h5>
           <small>Status: {{ request.status }}</small>
@@ -60,6 +68,14 @@
           </button>
         </div>
       </li>
+      <pagination-controls 
+      (pageChange)="pFriendRequests = $event" 
+      id="friendRequestsPagination"
+      class="custom-pagination friend-request-pagination"
+      [maxSize]="25"
+      [directionLinks]="true"
+      [autoHide]="true">
+      </pagination-controls>
     </ul>
   </div>
 
@@ -68,7 +84,7 @@
     <h2>Blocked Users</h2>
     <div *ngIf="blockedUsers.length === 0" class="no-items">No users blocked at the moment.</div>
     <ul class="friends-list">
-      <li *ngFor="let blockedUser of blockedUsers" class="friend-card">
+      <li *ngFor="let blockedUser of blockedUsers | paginate: { itemsPerPage: itemsPerPageBlockedUsers, currentPage: pBlockedUsers, id: 'blockedUsersPagination'  }" class="friend-card">
         <img [src]="blockedUser.avatar || 'assets/default_avatar.png'" alt="{{ blockedUser.username }}" class="avatar" loading="lazy" />
         <div class="friend-info">
           <h5>{{ blockedUser.display_name || blockedUser.username }}</h5>
@@ -77,6 +93,14 @@
         <button class="btn-unblock" (click)="unblockUser(blockedUser.id)">Unblock</button>
       </li>
     </ul>
+    <pagination-controls
+    (pageChange)="pBlockedUsers = $event"
+    id="blockedUsersPagination"
+    class="custom-pagination blocked-users-pagination"
+    [maxSize]="25"
+    [directionLinks]="true"
+    [autoHide]="true">
+    </pagination-controls>
   </div>
 
   <div *ngIf="activeTab === 'search_users'">

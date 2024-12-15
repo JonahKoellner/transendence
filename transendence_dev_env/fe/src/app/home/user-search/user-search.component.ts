@@ -15,6 +15,9 @@ export class UserSearchComponent {
   successMessage: string = '';
   isLoading: boolean = false;
 
+  pUsers: number = 1; // Current page
+  itemsPerPageUsers: number = 50; // Items per page
+
   constructor(private userService: ProfileService, private friendService: FriendService, private toastr: ToastrService) { }
 
   searchUsers(): void {
@@ -36,6 +39,9 @@ export class UserSearchComponent {
         this.toastr.error('Error searching users.', 'Error');
       }
     );
+  }
+  onPageChangeFriends(page: number) {
+    this.pUsers = page;
   }
 
   sendFriendRequest(userId: number): void {

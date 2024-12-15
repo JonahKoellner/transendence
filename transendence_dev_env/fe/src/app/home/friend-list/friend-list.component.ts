@@ -23,6 +23,15 @@ export class FriendListComponent {
   isDragging = false;
   dragOffset = { x: 0, y: 0 };
 
+  pFriends: number = 1; // Current page
+  itemsPerPageFriends: number = 25; // Items per page
+
+  pFriendRequests: number = 1; // Current page
+  itemsPerPageFriendRequests: number = 25; // Items per page
+
+  pBlockedUsers: number = 1; // Current page
+  itemsPerPageBlockedUsers: number = 25; // Items per page
+
 
   constructor(private friendService: FriendService,private profileService: ProfileService, private toastr: ToastrService) { }
 
@@ -30,6 +39,18 @@ export class FriendListComponent {
 
     this.initData();
     this.loadCurrentUser();
+  }
+
+  onPageChangeFriends(page: number) {
+    this.pFriends = page;
+  }
+
+  onPageChangeFriendRequests(page: number) {
+    this.pFriendRequests = page;
+  }
+
+  onPageChangeBlockedUsers(page: number) {
+    this.pBlockedUsers = page;
   }
 
   loadCurrentUser(): void {
