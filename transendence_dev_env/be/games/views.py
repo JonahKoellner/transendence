@@ -253,9 +253,9 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
     def get_games_by_user(self, request, user_id=None):
         """
-        Custom endpoint to retrieve all games where a specific user (user_id) is either player1 or player2.
+        Custom endpoint to retrieve all games where a specific user (user_id) is a player.
         """
-        games = Game.objects.filter(models.Q(player1_id=user_id) | models.Q(player2_id=user_id))
+        games = Game.objects.filter(models.Q(player1_id=user_id) | models.Q(player2_id=user_id) | models.Q(player3_id=user_id) | models.Q(player4_id=user_id))
         serializer = self.get_serializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -277,7 +277,9 @@ class GameViewSet(viewsets.ModelViewSet):
             "friends": [friend.username for friend in friends_users],
             "game_participants": {
                 "player1": game.player1.username,
-                "player2": game.player2.username if game.player2 else "AI"
+                "player2": game.player2.username if game.player2 else "AI",
+                "player3": game.player3.username if game.player3 else None,
+                "player4": game.player4.username if game.player4 else None
             }
         }
         # Check if the user is a participant or a friend of a participant

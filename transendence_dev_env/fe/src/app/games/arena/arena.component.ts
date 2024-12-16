@@ -67,6 +67,9 @@ export class ArenaComponent implements OnInit, OnDestroy {
       player2: { id: 0, username: this.player2Name },
       player3: { id: 0, username: this.player3Name },
       player4: { id: 0, username: this.player4Name },
+      player2_name_pvp_local: this.player2Name,
+      player3_name_pvp_local: this.player3Name,
+      player4_name_pvp_local: this.player4Name,
       start_time: new Date().toISOString(),
       scores: {
         player1: 0,
@@ -81,7 +84,9 @@ export class ArenaComponent implements OnInit, OnDestroy {
       end_time: undefined,
       winner: null,
       score_player1: 0,
-      score_player2: 0
+      score_player2: 0,
+      score_player3: 0,
+      score_player4: 0
     };
 
     this.gameService.createGame(newGame).subscribe( (game) => {
@@ -152,7 +157,9 @@ export class ArenaComponent implements OnInit, OnDestroy {
       },
       winner: '',
       score_player1: 0,
-      score_player2: 0
+      score_player2: 0,
+      score_player3: 0,
+      score_player4: 0
     };
 
     this.currentGame.rounds.push(newRound);
@@ -176,6 +183,10 @@ export class ArenaComponent implements OnInit, OnDestroy {
     if (currentRound.scores) {
       currentRound.scores[player]++;
     }
+    currentRound.score_player1 = currentRound.scores?.player1 || 0;
+    currentRound.score_player2 = currentRound.scores?.player2 || 0;
+    currentRound.score_player3 = currentRound.scores?.player3 || 0;
+    currentRound.score_player4 = currentRound.scores?.player4 || 0;
     this.logs.push(`Round ${currentRound.round_number}: ${playerName} scored.`);
 
     this.checkRoundCompletion(currentRound);
@@ -236,6 +247,10 @@ export class ArenaComponent implements OnInit, OnDestroy {
         end_time: this.currentGame.end_time,
         duration: this.currentGame.duration,
         is_completed: true,
+        score_player1: this.currentGame.scores?.player1,
+        score_player2: this.currentGame.scores?.player2,
+        score_player3: this.currentGame.scores?.player3,
+        score_player4: this.currentGame.scores?.player4,
         winner: this.currentGame.winner,
         scores: this.currentGame.scores,
         moves_log: this.currentGame.moves_log,

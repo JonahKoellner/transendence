@@ -21,6 +21,8 @@ export interface Round {
   end_time?: string;
   score_player1: number;
   score_player2: number;
+  score_player3?: number;
+  score_player4?: number;
   scores?: {
     player1: number;
     player2: number;
@@ -42,6 +44,8 @@ export interface Game {
   duration?: number;
   score_player1: number;
   score_player2: number;
+  score_player3?: number;
+  score_player4?: number;
   winner?: Player | null;
   is_completed: boolean;
   moves_log: MoveLog[];
