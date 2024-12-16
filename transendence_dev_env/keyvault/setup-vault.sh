@@ -139,4 +139,18 @@ kill $VAULT_PID
 echo "Vault setup complete. Ready for use."
 
 # Restart Vault in the foreground
-exec vault server -config=/vault/config/config.hcl
+vault server -config=/vault/config/config.hcl &
+VAULT_PID=$!
+
+# Wait for Vault to become ready
+echo "Waiting for Vault to restart..."
+sleep 5
+
+# Unseal Vault after restart
+echo "Unsealing Vault after restart..."
+for KEY in $UNSEAL_KEYS; do
+  vault operator unseal $KEY
+done
+
+# Keep Vault running in the foreground
+wait $VAULT_PID
