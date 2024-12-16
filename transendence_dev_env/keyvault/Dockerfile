@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        wget \
        unzip \
        curl \
+       jq \
        ca-certificates \
        gnupg \
        openssl && \
@@ -40,12 +41,12 @@ COPY setup-vault.sh /usr/local/bin/setup-vault.sh
 RUN chmod +x /usr/local/bin/setup-vault.sh
 
 # Generate self-signed TLS certificates
-RUN openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
-    -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=vault.local" \
-    -keyout /vault/config/tls/vault.key \
-    -out /vault/config/tls/vault.crt && \
-    chmod 600 /vault/config/tls/vault.key && \
-    chmod 644 /vault/config/tls/vault.crt
+# RUN openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
+#     -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=vault.local" \
+#     -keyout /vault/config/tls/vault.key \
+#     -out /vault/config/tls/vault.crt && \
+#     chmod 600 /vault/config/tls/vault.key && \
+#     chmod 644 /vault/config/tls/vault.crt
 
 # Expose Vault ports
 EXPOSE 8200
