@@ -359,12 +359,11 @@ class UserViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
 
     def get_serializer_class(self):
-        # Use UserProfileSerializer for detailed views and UserDetailSerializer for others
         if self.action in ['update', 'partial_update']:
-            return UserDetailSerializer
+            return UserProfileSerializer
         elif self.action == 'retrieve':
             return UserProfileSerializer
-        return UserDetailSerializer
+        return UserDetailSerializer  # Use for other actions if necessary
 
     def list(self, request, *args, **kwargs):
         """

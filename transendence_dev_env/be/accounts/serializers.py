@@ -234,7 +234,7 @@ class TokenSerializer(serializers.Serializer):
     access = serializers.CharField()
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    display_name = serializers.CharField(source='profile.display_name', required=False, allow_blank=True)
+    display_name = serializers.CharField(source='profile.display_name', required=False)
     avatar = serializers.ImageField(source='profile.avatar', required=False)
     is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
     is_2fa_enabled  = serializers.BooleanField(source='profile.is_2fa_enabled')
@@ -275,33 +275,63 @@ class UserDetailSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level', 'achievements',
+        fields = ['id', 'username', 'email', 'display_name', 'avatar', 'is_online', 'xp', 'is_2fa_enabled', 'level', 'xp_for_next_level',
             'paddleskin_color', 'paddleskin_image', 'achievements',
             'ballskin_color', 'ballskin_image',
             'gamebackground_color', 'gamebackground_wallpaper', 'is_ft_authenticated']
     
     
     def update(self, instance, validated_data):
-        # Update User fields if they are included
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.save()
+        profile_data = validated_data.pop('profile', {})
 
-        # Update Profile fields
-        profile_data = validated_data.get('profile', {})
+        # Extract deletion flags
+        avatar_to_delete = validated_data.pop('avatar_to_delete', False)
+        paddleskin_image_to_delete = validated_data.pop('paddleskin_image_to_delete', False)
+        ballskin_image_to_delete = validated_data.pop('ballskin_image_to_delete', False)
+        gamebackground_wallpaper_to_delete = validated_data.pop('gamebackground_wallpaper_to_delete', False)
+
         profile = instance.profile
 
-        # Update display_name if present
-        if 'display_name' in profile_data:
-            profile.display_name = profile_data['display_name']
-        
-        # Update avatar if present
-        if 'avatar' in profile_data:
-            profile.avatar = profile_data['avatar']
-        
-        # Save the profile instance
-        profile.save()
+        # Handle avatar deletion
+        if avatar_to_delete and profile.avatar:
+            profile.avatar.delete(save=False)
+            profile.avatar = None
 
+        # Handle paddleskin image deletion
+        if paddleskin_image_to_delete and profile.paddleskin_image:
+            profile.paddleskin_image.delete(save=False)
+            profile.paddleskin_image = None
+
+        # Handle ballskin image deletion
+        if ballskin_image_to_delete and profile.ballskin_image:
+            profile.ballskin_image.delete(save=False)
+            profile.ballskin_image = None
+
+        # Handle game background wallpaper deletion
+        if gamebackground_wallpaper_to_delete and profile.gamebackground_wallpaper:
+            profile.gamebackground_wallpaper.delete(save=False)
+            profile.gamebackground_wallpaper = None
+
+        # Update other profile fields within a transaction
+        with transaction.atomic():
+            # Update profile fields
+            for attr, value in profile_data.items():
+                setattr(profile, attr, value)
+            
+            # Check if display name has changed
+            if 'display_name' in profile_data and profile_data['display_name'] != profile.display_name:
+                profile.display_name_changed = True
+            
+            profile.save()
+            
+            # After saving the profile, check for achievements
+            check_achievements(instance)
+
+        # Update User fields if any (e.g., email)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
         return instance
 
     def get_xp_for_next_level(self, obj):
@@ -347,7 +377,6 @@ class NotificationSerializer(serializers.ModelSerializer):
             'is_read',
             'data',
             'room_id',
-            'game_type'
         ]
 
     def get_room_id(self, obj):
