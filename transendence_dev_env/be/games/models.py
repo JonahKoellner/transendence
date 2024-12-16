@@ -131,7 +131,6 @@ class Tournament(models.Model):
     final_winner_type = models.CharField(max_length=50, blank=True, null=True)
     all_participants = models.JSONField(blank=True, null=True) # lets replace this with participants ManyToManyField
     participants = models.ManyToManyField(User, related_name='tournaments')
-    eliminated_participants = models.ManyToManyField(User, related_name='eliminated_from_tournaments', blank=True)
     players_only = models.JSONField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     start_time = models.DateTimeField()
@@ -155,6 +154,17 @@ class Tournament(models.Model):
         blank=True,
         null=True
     )
+
+    def get_eliminated_participants(self):
+        """
+        Returns the list of eliminated participants based on match outcomes.
+        """
+        active_participants = set(self.participants.all())
+        for round_obj in self.rounds.all():
+            for match in round_obj.matches.all():
+                if match.winner:
+                    active_participants.discard(User.objects.get(username=match.winner))
+        return self.participants.exclude(id__in=[p.id for p in active_participants])
 
 class BaseLobby(models.Model):
     room_id = models.CharField(max_length=10, unique=True)
