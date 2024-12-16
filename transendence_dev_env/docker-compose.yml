@@ -86,6 +86,31 @@ services:
       # - elasticsearch-service-token:/usr/share/kibana/service_token
       - ./data/elk-shared:/usr/share/kibana/shared
 
+  hashicorpvault:
+    container_name: hashicorpvault
+    build:
+      context: ./keyvault
+      dockerfile: Dockerfile
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./data/vault-data:/vault/data
+    depends_on:
+      logstash:
+        condition: service_healthy
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"  # Default root token for testing
+    networks:
+      - webnet
+      - app-net
+      - elk-net
+      - host-bridge
+    logging:
+      driver: "gelf"
+      options:
+        # gelf-address: "udp://172.25.9.10:5240"
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
 
   nginx:
@@ -219,4 +244,6 @@ volumes:
   # elasticsearch-service-token:
   #   driver: local
   elk-shared:
+    driver: local
+  vault-data:
     driver: local
