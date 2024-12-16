@@ -87,6 +87,105 @@ class BaseLobby(models.Model):
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)]) 
     round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
 
+class PlayerCustomization(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customization")
+    paddle_color = models.CharField(max_length=7, default="#FFFFFF")
+    paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)
+    def __str__(self):
+        return f"{self.user.username} Customization"
+
+class TournamentLobby(BaseLobby):
+    host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
+    guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
+    is_host_ready = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="tournament_lobbies")
+
+    guest_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
+
+    host_customization = models.OneToOneField(
+        PlayerCustomization,
+        on_delete=models.CASCADE,
+        related_name="hosted_tournament_lobby",
+        null=True,
+        blank=True
+    )
+    guest_customizations = models.ManyToManyField(
+        PlayerCustomization,
+        related_name="tournament_lobbies",
+        blank=True
+    )
+
+    def is_full(self):
+        return self.guests.count() >= 32 # might need to adjust, is the host counted? if yes need to subtract 1
+
+    def all_ready(self):
+        return self.is_host_ready and all(self.guest_ready_states.get(str(guest.id), False) for guest in self.guests.all())
+
+    def set_ready_status(self, user, is_ready):
+        """ Set the ready status for the host or guest based on the user. """
+        if user == self.host:
+            self.is_host_ready = is_ready
+        elif user in self.guests.all():
+            if not self.guest_ready_states:
+                self.guest_ready_states = {}
+            self.guest_ready_states[str(user.id)] = is_ready
+        self.save()
+
+    def set_customization(self, user, paddle_color=None, paddle_image=None):
+        """ Set the paddle customization for the host or the guests. """
+        if user == self.host:
+            if not self.host_customization:
+                self.host_customization = PlayerCustomization(user=user)
+            self.host_customization.paddle_color = paddle_color or self.host_customization.paddle_color
+            self.host_customization.paddle_image = paddle_image or self.host_customization.paddle_image
+            self.host_customization.save()
+        elif user in self.guests.all():
+            customization, created = PlayerCustomization.objects.get_or_create(user=user)
+            customization.paddle_color = paddle_color or customization.paddle_color
+            customization.paddle_image = paddle_image or customization.paddle_image
+            customization.save()
+        else:
+            raise ValueError("User is not the host or a guest in this lobby.")
+
+    def get_customization(self, user):
+        """ Get the paddle customization for the host or the guests. """
+        if user == self.host:
+            return self.host_customization
+        elif user in self.guests.all():
+            return self.guest_customizations.get(user=user)
+        return None
+
+    def get_lobby_state(self):
+        """Return the lobby state with serialized customizations."""
+        state = {
+            "is_host_ready": self.is_host_ready,
+            "all_ready": self.all_ready(),
+            "host_name": self.host.username if self.host else None,
+            "host_customization": {
+                "paddle_color": self.host_customization.paddle_color if self.host_customization else None,
+                "paddle_image": self.host_customization.paddle_image.url if self.host_customization and self.host_customization.paddle_image else None,
+            },
+            "guest_customizations": [
+                {
+                    "username": guest.username,
+                    "paddle_color": customization.paddle_color,
+                    "paddle_image": customization.paddle_image.url if customization.paddle_image else None,
+                }
+                for guest in self.guests.all()
+                if (customization := self.get_customization(guest))  # Ensure customization exists
+            ],
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat(),
+            "max_rounds": self.max_rounds,
+            "round_score_limit": self.round_score_limit,
+            "room_id": self.room_id,
+        }
+        return state
+
+    def get_host_name(self):
+        return self.host.username if self.host else "Waiting for host"
+
 class Lobby(BaseLobby):
     # room_id = models.CharField(max_length=10, unique=True)
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_lobbies")
