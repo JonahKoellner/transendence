@@ -700,6 +700,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.ball_size_modifier = 1
         self.ball_speed_modifier = 1
         self.active_power_ups = []
+        self.expire_power_ups = []
         self.POWER_UPS = ["enlargePaddle", "shrinkPaddle", "slowBall", "fastBall", "teleportBall", "shrinkBall", "growBall"]
         self.game_lock = Lock()
         self.game_manager_channel = None  # Initialize game manager channel
@@ -934,12 +935,12 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
 
         elif action in ["keydown", "keyup"]:
             await self.handle_key_event(action, content)
-                
+
     async def handle_key_event(self, action, content):
         key = content.get("key")
         user_id = content.get("user_id")
         max_speed = 10
-        
+
         # Determine speed based on keydown/keyup
         if action == "keydown":
             if key == "KeyW":
@@ -976,13 +977,15 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 self.right_paddle_speed = speed
 
     async def game_loop(self):
-        tick_count = 0
+        self.tick_count = 0
+        spawn_interval = int(60 * self.powerup_spawn_rate)
         while self.game_in_progress:
             await self.game_tick()
-            tick_count += 1
-            if (tick_count % (60 * self.powerup_spawn_rate) == 0):
+            self.tick_count += 1
+            if (self.tick_count % (spawn_interval) == 0):
                 self.generate_power_up()
-                tick_count = 0
+            if (self.tick_count % 60 == 0):
+                self.check_power_up_expiration()
             await asyncio.sleep(1 / 60)
 
     def update_paddle_position(self, paddle, speed):
@@ -991,45 +994,33 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         elif paddle == "right":
             self.right_paddle_y = max(0, min(self.right_paddle_y + speed, 500 - (60 * self.paddle_size_modifier)))
 
-    def enlarge_paddle(self, reset_toggle=True):
-        if (self.paddle_size_modifier < 2):
-            self.paddle_size_modifier += 0.5
-            if not reset_toggle:
-                Timer(3, self.shrink_paddle, [False]).start()
+    def enlarge_paddle(self):
+        self.paddle_size_modifier *= 1.5
+        self.expire_power_ups.append({"type": "enlargePaddle", "time_left": 5})
 
-    def shrink_paddle(self, reset_toggle=True):
-        if (self.paddle_size_modifier > 0.2):
-            self.paddle_size_modifier -= 0.5
-            if not reset_toggle:
-                Timer(3, self.enlarge_paddle, [False]).start()
+    def shrink_paddle(self):
+        self.paddle_size_modifier *= 0.5
+        self.expire_power_ups.append({"type": "shrinkPaddle", "time_left": 5})
 
-    def shrink_ball(self, reset_toggle=True):
-        if (self.ball_size_modifier > 0.2):
-            self.ball_size_modifier -= 0.5
-            if not reset_toggle:
-                Timer(3, self.grow_ball, [False]).start()
-    
-    def grow_ball(self, reset_toggle=True):
-        if (self.ball_size_modifier < 2):
-            self.ball_size_modifier += 0.5
-            if not reset_toggle:
-                Timer(3, self.shrink_ball, [False]).start()
+    def shrink_ball(self):
+        self.ball_size_modifier *= 0.5
+        self.expire_power_ups.append({"type": "shrinkBall", "time_left": 5})
 
-    def slow_ball(self, reset_toggle=True):
-        if (self.ball_speed_modifier > 0.25):
-            self.ball_speed_modifier -= 0.5
-            if not reset_toggle:
-                Timer(3, self.fast_ball, [False]).start()
+    def grow_ball(self):
+        self.ball_size_modifier *= 1.5
+        self.expire_power_ups.append({"type": "growBall", "time_left": 5})
 
-    def fast_ball(self, reset_toggle=True):
-        if (self.ball_speed_modifier < 2):
-            self.ball_speed_modifier += 0.5
-            if not reset_toggle:
-                Timer(3, self.slow_ball, [False]).start()
+    def slow_ball(self):
+        self.ball_speed_modifier *= 0.5
+        self.expire_power_ups.append({"type": "slowBall", "time_left": 5})
+
+    def fast_ball(self):
+        self.ball_speed_modifier *= 1.5
+        self.expire_power_ups.append({"type": "fastBall", "time_left": 5})
 
     def teleport_ball(self):
-        self.ball_x = random.randint(30 * self.ball_size_modifier, 1000 - 30 * self.ball_size_modifier)
-        self.ball_y = random.randint(30 * self.ball_size_modifier, 500 - 30 * self.ball_size_modifier)
+        self.ball_x = random.randint(int(30 * self.ball_size_modifier), int(1000 - 30 * self.ball_size_modifier))
+        self.ball_y = random.randint(int(30 * self.ball_size_modifier), int(500 - 30 * self.ball_size_modifier))
 
     def generate_power_up(self):
         power_up = random.choice(self.POWER_UPS)
@@ -1053,6 +1044,29 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         elif (power_up == "growBall"):
             self.grow_ball()
 
+    def check_power_up_expiration(self):
+        for power_up in list(self.expire_power_ups):
+            power_up['time_left'] -= 1
+            if power_up['time_left'] <= 0:
+                if power_up['type'] == "enlargePaddle":
+                    self.paddle_size_modifier *= 0.5
+                elif power_up['type'] == "shrinkPaddle":
+                    self.paddle_size_modifier *= 1.5
+                elif power_up['type'] == "slowBall":
+                    self.ball_speed_modifier *= 1.5
+                elif power_up['type'] == "fastBall":
+                    self.ball_speed_modifier *= 0.5
+                elif power_up['type'] == "shrinkBall":
+                    self.ball_size_modifier *= 1.5
+                elif power_up['type'] == "growBall":
+                    self.ball_size_modifier *= 0.5
+                self.expire_power_ups.remove(power_up)
+
+    def enforce_modifier_bounds(self):
+        self.paddle_size_modifier = max(0.25, min(self.paddle_size_modifier, 3.375))
+        self.ball_size_modifier = max(0.25, min(self.ball_size_modifier, 3.375))
+        self.ball_speed_modifier = max(0.25, min(self.ball_speed_modifier, 3.375))
+
     async def game_tick(self):
         async with self.game_lock:
 
@@ -1065,13 +1079,13 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.ball_y += self.ball_direction_y * (self.ball_speed * self.ball_speed_modifier)
 
             # Handle collisions with top/bottom walls
-            if self.ball_y <= 0 or self.ball_y >= 500:
+            if self.ball_y - 15 * self.ball_size_modifier <= 0 or self.ball_y + 15 * self.ball_size_modifier >= 500:
                 self.ball_direction_y *= -1
 
             # Paddle collision handling
-            if self.ball_x - 15 * self.ball_size_modifier <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
+            if self.ball_x - (15 * self.ball_size_modifier) <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + (60 * self.paddle_size_modifier):
                 self.ball_direction_x *= -1
-            elif self.ball_x + 15 * self.ball_size_modifier >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
+            elif self.ball_x + (15 * self.ball_size_modifier) >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + (60 * self.paddle_size_modifier):
                 self.ball_direction_x *= -1
 
             # Power-up logic
@@ -1085,13 +1099,15 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                     self.activate_power_up(power_up_type)
                     self.active_power_ups.remove(power_up)
 
+            self.enforce_modifier_bounds()
+
             # Scoring logic
             scoring_player = None
-            if self.ball_x <= 0:
+            if self.ball_x - 15 * self.ball_size_modifier <= 0:
                 self.right_score += 1
                 scoring_player = 'right'
                 await self.reset_ball()
-            elif self.ball_x >= 1000:
+            elif self.ball_x + 15 * self.ball_size_modifier >= 1000:
                 self.left_score += 1
                 scoring_player = 'left'
                 await self.reset_ball()
@@ -1311,7 +1327,15 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         # Reset ball position to the center
         self.ball_x = 500
         self.ball_y = 250
-        
+
+        # Reset size and speed modifiers
+        self.ball_speed_modifier = 1
+        self.ball_size_modifier = 1
+        self.paddle_size_modifier = 1
+
+        # Clear active power-ups to prevent stacking between rounds
+        self.expire_power_ups.clear()
+
         # Randomly set the ball direction to left or right
         self.ball_direction_x = -1 if random.random() < 0.5 else 1
         
@@ -1320,7 +1344,6 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         
         # Increase ball speed by 1.05x each reset, capping at 100
         self.ball_speed = min(self.ball_speed * 1.05, 100) if hasattr(self, 'ball_speed') else 5
-
 
     async def game_started(self, event):
         await self.send_json({"type": "game_started"})

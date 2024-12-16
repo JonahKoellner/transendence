@@ -154,7 +154,7 @@ class ChaosLobby(BaseLobby):
     # created_at = models.DateTimeField(auto_now_add=True)
     # max_rounds = models.IntegerField(default=3)  # New field for max rounds
     # round_score_limit = models.IntegerField(default=3)  # New field for round score limit
-    powerup_spawn_rate = models.IntegerField(default=10)  # New field for round score limit
+    powerup_spawn_rate = models.FloatField(default=10)  # New field for round score limit
     host_paddle_color = models.CharField(max_length=7, default="#FFFFFF")
     guest_paddle_color = models.CharField(max_length=7, default="#FFFFFF")
     host_paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)

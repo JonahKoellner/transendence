@@ -163,6 +163,8 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
    * Draws the entire game state on the canvas.
    */
   drawGame() {
+    console.log('Game state:', this.gameState);
+
     // Draw background
     this.drawBackground();
 
@@ -177,6 +179,7 @@ export class GameDisplayChaosComponent implements AfterViewInit, OnChanges {
 
     // Draw right paddle
     this.drawPaddle(990, this.gameState.right_paddle_y, 'right');
+
   }
 
   drawPowerUps() {
