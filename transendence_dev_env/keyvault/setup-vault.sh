@@ -27,13 +27,14 @@ O = Dis
 CN = vault.local
 
 [v3_req]
-keyUsage = keyEncipherment, dataEncipherment
+keyUsage = critical, digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 
 [alt_names]
 DNS.1 = localhost
 DNS.2 = vault.local
+DNS.3 = vault
 IP.1 = 127.0.0.1
 IP.2 = 0.0.0.0
 EOF
@@ -54,8 +55,6 @@ cp $CERT_CRT /usr/local/share/ca-certificates/
 echo "Making certificate trusted" && update-ca-certificates || (echo "ERROR trusting cert." && exit 1)
 
 VAULT_INIT_FILE=/vault/data/init.json
-SECRET_PATH="secret/data/my-secret"
-SECRET_DATA='{"data": {"username": "admin", "password": "supersecret"}}'
 
 # Start Vault in the background
 vault server -config=/vault/config/config.hcl &
@@ -91,15 +90,47 @@ export VAULT_TOKEN=$VAULT_ROOT_TOKEN
 echo "Enabling Userpass authentication method..."
 vault auth enable userpass
 
-# Create a Userpass user
-#TODO: 
+# Create a custom policy
+cat <<EOF > my_policy.hcl
+path "secret/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "sys/mounts" {
+  capabilities = ["read"]
+}
+
+path "sys/mounts/*" {
+  capabilities = ["read"]
+}
+EOF
+
+# Write the policy to Vault
+echo "Writing policy 'my_policy'..."
+vault policy write my_policy my_policy.hcl
+
+# Create a Userpass user with the custom policy
 UI_USERNAME="admin"
 UI_PASSWORD="ui-password"
 echo "Creating UI user: $UI_USERNAME"
-vault write auth/userpass/users/$UI_USERNAME password=$UI_PASSWORD policies=default
+vault write auth/userpass/users/$UI_USERNAME \
+  password=$UI_PASSWORD \
+  policies=my_policy
 
+# Unset VAULT_TOKEN to use the admin user's token instead of the root token
+unset VAULT_TOKEN
 
-# Write a secret
+# Set VAULT_CACERT to the CA certificate
+export VAULT_CACERT=$CERT_CRT
+
+# Write a secret using the admin user's token
+echo "Logging in as $UI_USERNAME..."
+vault login -method=userpass username=$UI_USERNAME password=$UI_PASSWORD
+
+SECRET_PATH="secret/my-secret"
+SECRET_DATA="test.username=admin test.password=supersecret"
+
+# # Write a secret
 # echo "Storing secret at $SECRET_PATH..."
 # vault kv put $SECRET_PATH $SECRET_DATA
 
