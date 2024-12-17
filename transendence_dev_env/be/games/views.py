@@ -261,7 +261,9 @@ class TournamentViewSet(viewsets.ModelViewSet):
     """
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
-    
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
     def calculate_tournament_xp(self, tournament, player):
         """
         Calculate advanced XP for a player based on their performance, progression, tournament type,
