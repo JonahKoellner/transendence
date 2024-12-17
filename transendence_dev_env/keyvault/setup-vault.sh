@@ -108,15 +108,15 @@ echo "Writing policy 'my_policy'..."
 vault policy write my_policy my_policy.hcl
 
 # Create a Userpass user with the custom policy
-UI_USERNAME="admin"
-UI_PASSWORD="ui-password"
-echo "Creating UI user: $UI_USERNAME"
-vault write auth/userpass/users/$UI_USERNAME \
+# UI_USERNAME="admin"
+# UI_PASSWORD="ui-password"
+echo "Creating UI user: $UI_USER"
+vault write auth/userpass/users/$UI_USER \
   password=$UI_PASSWORD \
   policies=my_policy
 
 # Set VAULT_TOKEN to the admin user's token
-export VAULT_TOKEN=$(vault login -method=userpass username=$UI_USERNAME password=$UI_PASSWORD -format=json | jq -r '.auth.client_token')
+export VAULT_TOKEN=$(vault login -method=userpass username=$UI_USER password=$UI_PASSWORD -format=json | jq -r '.auth.client_token')
 
 # Write a secret
 vault kv put secret/my-secret test.username=admin test.password=supersecret

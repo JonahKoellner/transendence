@@ -22,7 +22,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     env_file:
-      - .env
+      - ./elk/.env
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
       # - elasticsearch-service-token:/usr/share/elasticsearch/service_token
@@ -45,7 +45,7 @@ services:
       - "5431:5431"
       - "5959:5959"
     env_file:
-      - .env
+      - ./elk/.env
     volumes:
       #- ./elk/logstash/pipeline:/usr/share/logstash/pipeline
       - ./data/elk-shared:/usr/share/logstash/shared
@@ -76,7 +76,7 @@ services:
     #   - ELASTICSEARCH_PASSWORD=elapwd
       # - KIBANA_USER_PASSWORD=kibanapassword
     env_file:
-      - .env
+      - ./elk/.env
     depends_on:
       - elasticsearch
     networks:
@@ -98,9 +98,11 @@ services:
     depends_on:
       logstash:
         condition: service_healthy
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: "root"  # Default root token for testing
-      VAULT_ADDR: https://0.0.0.0:8200
+    env_file:
+      - ./keyvault/.env
+    # environment:
+      # VAULT_DEV_ROOT_TOKEN_ID: "root"  # Default root token for testing
+      # VAULT_ADDR: https://0.0.0.0:8200
       # VAULT_SKIP_VERIFY: "true"
     networks:
       - webnet

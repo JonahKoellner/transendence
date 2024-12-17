@@ -4,11 +4,19 @@ generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand
 
 generate_passwords:
 	@echo "Generating passwords..."
-	@echo "ELASTIC_PASSWORD=$(call generate-password)" > .env
-	@echo "KIBANA_ENCRYPTION_KEY=$(call generate-password)" >> .env
-	@echo "ELASTIC_ADMIN_PASSWORD=$(call generate-password)" >> .env
-	@echo "ELASTIC_LOGSTASH_PASSWORD=$(call generate-password)" >> .env
+	@echo "ELASTIC_PASSWORD=$(call generate-password)" > ./elk/.env
+	@echo "KIBANA_ENCRYPTION_KEY=$(call generate-password)" >> ./elk/.env
+	@echo "ELASTIC_ADMIN_PASSWORD=$(call generate-password)" >> ./elk/.env
+	@echo "ELASTIC_LOGSTASH_PASSWORD=$(call generate-password)" >> ./elk/.env
 	@echo "Passwords generated and stored in .env file."
+	
+	@echo "Generating hashicorp keyvaul password..."
+	@echo "UI_USER=ADMIN" > ./keyvault/.env
+	@echo "UI_PASSWORD=$(call generate-password)" >> ./keyvault/.env
+	@echo "VAULT_ADDR=https://0.0.0.0:8200" >> ./keyvault/.env
+	@echo "Passwords generated and stored in ./keyvault/.env file."
+
+
 
 addHost:
 	@if ! grep -q '^DOMAIN=' be/.env; then \
@@ -61,7 +69,8 @@ logs:
 # Clear everything and remove the volumes
 clean: down
 	@echo "Removing .env"
-	@rm .env
+	@rm ./elk/.env
+	@rm ./keyvault/.env
 	@docker system prune -af
 	@docker volume ls -q | xargs -r docker volume rm
 
