@@ -11,7 +11,7 @@ from django.db import models
 from datetime import timedelta
 from django.db.models import Avg, Max, Min, Count, Sum, Q, F, Case, When, IntegerField, FloatField, OuterRef, Subquery
 import calendar
-from django.contrib.auth.models import User 
+from django.contrib.auth.models import User
 from accounts.serializers import UserProfileSerializer
 from accounts.models import Profile
 from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome
@@ -20,7 +20,12 @@ from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
 import random
 import string
-from django.db import transaction 
+from django.db import transaction
+
+
+def generate_room_id(length=6):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -31,7 +36,7 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = GameSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    
+
     def calculate_xp_gain(self, game, player, is_winner=False):
         """
         Calculate the XP gain for a player based on game factors.
@@ -81,7 +86,7 @@ class GameViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         return Game.objects.filter(models.Q(player1=user) | models.Q(player2=user))
-    
+
     def perform_create(self, serializer):
         data = self.request.data
         game_mode = data.get('game_mode')
@@ -183,7 +188,7 @@ class GameViewSet(viewsets.ModelViewSet):
 
         else:
             serializer.save()
-            
+
     @action(detail=False, methods=['get'], url_path='all-games')
     def all_games(self, request):
         """
@@ -193,7 +198,7 @@ class GameViewSet(viewsets.ModelViewSet):
         games = Game.objects.all()
         serializer = self.get_serializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-            
+
 
     @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
     def get_games_by_user(self, request, user_id=None):
@@ -231,7 +236,7 @@ class GameViewSet(viewsets.ModelViewSet):
         if game.player1 == user or game.player2 == user or \
         game.player1 in friends_users or (game.player2 in friends_users if game.player2 else False):
             serializer = self.get_serializer(game)
-            
+
             # Include debug information in the response
             response_data = serializer.data
             response_data['debug_info'] = debug_info
@@ -252,7 +257,6 @@ class GameViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
-
 
 class TournamentViewSet(viewsets.ModelViewSet):
     """
@@ -305,7 +309,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
             total_matches = tournament.rounds.filter(matches__player1=player.username).count() \
                             + tournament.rounds.filter(matches__player2=player.username).count()
             total_wins = tournament.rounds.filter(matches__winner=player.username).count()
-            
+
             win_ratio = total_wins / max(1, total_matches)
             if win_ratio > 0.8:
                 consistency_bonus = 200
@@ -401,7 +405,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tournament = serializer.save()
-        
+
         # Serialize the tournament instance to include the ID in the response
         response_serializer = self.get_serializer(tournament)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -458,7 +462,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(tournaments, many=True)
             return Response(serializer.data)
         return Response({"error": "Participant parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
     def get_tournaments_by_user(self, request, user_id=None):
         """
@@ -486,12 +490,6 @@ class TournamentViewSet(viewsets.ModelViewSet):
         # Serialize and return the results
         serializer = self.get_serializer(tournaments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-
-        
-        
-def generate_room_id(length=6):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 class LobbyViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -1053,7 +1051,6 @@ class ArenaLobbyViewSet(viewsets.ViewSet):
 
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
-
 
 class StatsViewSet(viewsets.ViewSet):
     """
