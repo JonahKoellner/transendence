@@ -7,6 +7,15 @@ import { Game, GameService } from 'src/app/games/game.service';
 import { Tournament } from 'src/app/games/tournament/local/start/start.component';
 import { Achievement, ProfileService, UserProfile } from 'src/app/profile.service';
 
+interface UserStats {
+  games_played_over_time: { month: string; count: number }[];
+  win_loss_ratio: { wins: number; losses: number };
+  game_modes_distribution: { [mode: string]: number };
+  time_spent_playing_over_time: { month: string; total_minutes: number }[];
+  tournaments_stats: { participated: number; won: number };
+  preferred_playing_times: { hour: string; count: number }[];
+}
+
 @Component({
   selector: 'app-user-details',
   templateUrl: './user-details.component.html',
@@ -45,6 +54,10 @@ export class UserDetailsComponent implements OnInit {
 
   pTournaments: number = 1; // Current page
   itemsPerPageTournaments: number = 5; // Items per page
+
+  chartData: UserStats | null = null;
+
+
   constructor(
     private route: ActivatedRoute,
     private profileService: ProfileService,
@@ -74,6 +87,7 @@ export class UserDetailsComponent implements OnInit {
         this.user = data;
         // Load game history, tournament history, and leaderboard
         this.loadUserStats(data.id);
+        this.loadChartData(data.id);
       },
       (error) => {
         this.errorMessage = error;
@@ -82,6 +96,17 @@ export class UserDetailsComponent implements OnInit {
       }
     );
   }
+
+  loadChartData(userId: number) {
+    this.profileService.getUserStats(userId).subscribe(
+      (data) => {
+        this.chartData = data;
+      }, (error) => {
+        console.error('Error loading user stats:', error);
+      }
+    );
+  }
+
 
   private hexToRgba(hex: any, alpha: number): string {
     if (typeof hex !== 'string') {

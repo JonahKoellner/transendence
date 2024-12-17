@@ -73,6 +73,11 @@ export class ProfileService {
   getAchievements(): Observable<any> {
     return this.http.get<any>(`${this.base}achievements/`, { withCredentials: true });
   }
+  
+  getUserStats(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}user-stats/${userId}/`, { withCredentials: true });
+  }
+
   deleteAccount(password: string): Observable<any> {
     const options = {
       body: { password },

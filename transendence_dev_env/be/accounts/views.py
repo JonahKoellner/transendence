@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db import transaction
+from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError
 import random
@@ -25,9 +26,9 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
+from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement, Profile
 from django.db import models
-from django.db.models import Q
+from django.db.models import Count, Q, F, Sum
 import be.settings as besettings
 from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby
 from django.utils import timezone
@@ -1001,3 +1002,183 @@ class AchievementListView(APIView):
         achievements = Achievement.objects.all()
         serializer = AchievementSerializer(achievements, many=True, context={'request': request})
         return Response(serializer.data)
+    
+    
+class UserStatsView(APIView):
+    """
+    API view to retrieve user statistics for display on the user detail page.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, user_id):
+        """
+        Handle GET request to retrieve user statistics.
+        """
+        try:
+            # Permission check: Only the user themselves or admins can access the stats
+            if request.user.id != user_id and not request.user.is_staff:
+                return Response(
+                    {"detail": "You do not have permission to perform this action."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Fetch the user profile with related user data
+            profile = get_object_or_404(Profile.objects.select_related('user'), user__id=user_id)
+
+            # Current date
+            today = timezone.now().date()
+
+            # Define the date range (last 12 months)
+            start_date = today - timedelta(days=365)
+
+            # Helper function to generate last 12 month labels accurately
+            def get_last_12_months():
+                months = []
+                year = today.year
+                month = today.month
+                for _ in range(12):
+                    months.append(f"{year}-{month:02}")
+                    month -= 1
+                    if month == 0:
+                        month = 12
+                        year -= 1
+                return sorted(months)
+
+            # 1. Games Played Over Time (Last 12 Months)
+            games_played = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                start_time__date__gte=start_date
+            ).annotate(month=F('start_time__month'), year=F('start_time__year')) \
+             .values('year', 'month') \
+             .annotate(count=Count('id')) \
+             .order_by('year', 'month')
+
+            # Organize data per month
+            games_played_dict = {}
+            for entry in games_played:
+                month_year = f"{entry['year']}-{entry['month']:02}"
+                games_played_dict[month_year] = entry['count']
+
+            # Generate last 12 months
+            last_12_months = get_last_12_months()
+            games_played_final = []
+            for month in last_12_months:
+                games_played_final.append({
+                    "month": month,
+                    "count": games_played_dict.get(month, 0)
+                })
+
+            # 2. Win/Loss Ratio
+            total_wins = Game.objects.filter(winner=profile.user).count()
+            total_losses = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                ~Q(winner=profile.user)
+            ).count()
+
+            win_loss_ratio = {
+                "wins": total_wins,
+                "losses": total_losses
+            }
+
+            # 3. Game Modes Distribution
+            game_modes = Game.GAME_MODES
+            game_mode_distribution = {}
+            for mode, _ in game_modes:
+                count = Game.objects.filter(game_mode=mode).filter(
+                    Q(player1=profile.user) |
+                    Q(player2=profile.user) |
+                    Q(player3=profile.user) |
+                    Q(player4=profile.user)
+                ).count()
+                game_mode_distribution[mode] = count
+
+            # 4. Time Spent Playing Over Time (Last 12 Months)
+            time_spent = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                start_time__date__gte=start_date,
+                duration__isnull=False
+            ).annotate(month=F('start_time__month'), year=F('start_time__year')) \
+             .values('year', 'month') \
+             .annotate(total_minutes=Sum('duration')) \
+             .order_by('year', 'month')
+
+            # Organize data per month
+            time_spent_dict = {}
+            for entry in time_spent:
+                month_year = f"{entry['year']}-{entry['month']:02}"
+                time_spent_dict[month_year] = entry['total_minutes']
+
+            # Prepare final data
+            time_spent_final = []
+            for month in last_12_months:
+                time_spent_final.append({
+                    "month": month,
+                    "total_minutes": time_spent_dict.get(month, 0)
+                })
+
+            # 5. Tournaments Participated vs. Won
+            tournaments_participated = Tournament.objects.filter(
+                host=profile.user
+            ).count()
+            tournaments_won = Tournament.objects.filter(
+                final_winner=profile.user
+            ).count()
+
+            tournaments_stats = {
+                "participated": tournaments_participated,
+                "won": tournaments_won
+            }
+
+            # 6. Preferred Playing Times Over the Day (Last 12 Months)
+            preferred_playing_times = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                start_time__date__gte=start_date
+            ).annotate(hour=F('start_time__hour')) \
+             .values('hour') \
+             .annotate(count=Count('id')) \
+             .order_by('hour')
+
+            # Organize data per hour
+            playing_times_dict = {hour: 0 for hour in range(24)}
+            for entry in preferred_playing_times:
+                playing_times_dict[entry['hour']] = entry['count']
+
+            # Prepare data for chart
+            preferred_playing_times_final = []
+            for hour in range(24):
+                preferred_playing_times_final.append({
+                    "hour": f"{hour}:00 - {hour}:59",
+                    "count": playing_times_dict[hour]
+                })
+
+            # Prepare final JSON response
+            data = {
+                "games_played_over_time": games_played_final,
+                "win_loss_ratio": win_loss_ratio,
+                "game_modes_distribution": game_mode_distribution,
+                "time_spent_playing_over_time": time_spent_final,
+                "tournaments_stats": tournaments_stats,
+                "preferred_playing_times": preferred_playing_times_final
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in UserStatsView GET: {e}")
+            return Response(
+                {"detail": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
