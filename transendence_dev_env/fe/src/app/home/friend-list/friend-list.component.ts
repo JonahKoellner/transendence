@@ -19,7 +19,13 @@ export class FriendListComponent {
   selectedFriendId: number | null = null;
   selectedFriendUsername: string | null = null;
   currentUser: UserProfile | null = null;
+  userToBlock: string = '';
+  userToRemove: string = '';
+  showRemoveFriendDialog: boolean = false;
+  showBlockUserDialog: boolean = false;
 
+  userToRemoveId: number | null = null;
+  userToBlockId: number | null = null;
   chatWindowPosition = { x: 100, y: 100 };
   isDragging = false;
   dragOffset = { x: 0, y: 0 };
@@ -170,32 +176,6 @@ export class FriendListComponent {
     );
   }
 
-  removeFriend(userId: number): void {
-    this.friendService.removeFriend(userId).subscribe(
-      () => {
-        this.friends = this.friends.filter(friend => friend.id !== userId);
-        this.initData();
-      },
-      (error) => {
-        this.toastr.error('Failed to remove friend.', 'Error');
-        this.error = 'Failed to remove friend.';
-      }
-    );
-  }
-
-  blockUser(userId: number): void {
-    this.friendService.blockUser(userId).subscribe(
-      () => {
-        this.friends = this.friends.filter(friend => friend.id !== userId);
-        this.initData();
-      },
-      (error) => {
-        this.toastr.error('Failed to block user.', 'Error');
-        this.error = 'Failed to block user.';
-      }
-    );
-  }
-
   openChat(friendId: number, friendUsername: string): void {
     this.selectedFriendId = friendId;
     this.selectedFriendUsername = friendUsername;
@@ -239,5 +219,80 @@ export class FriendListComponent {
   @HostListener('window:mouseup')
   onMouseUp(): void {
     this.isDragging = false;
+  }
+
+
+  onCloseRemoveFriendDialog(result: string): void {
+    if (result === 'accepted' && this.userToRemoveId !== null) {
+      this.executeRemoveFriend(this.userToRemoveId);
+      this.showRemoveFriendDialog = false;
+      this.userToRemoveId = null;
+      this.userToRemove = '';
+    } else {
+      this.showRemoveFriendDialog = false;
+      this.userToRemoveId = null;
+      this.userToRemove = '';
+    }
+  }
+
+  onCloseBlockFriendDialog(result: string): void {
+    if (result === 'accepted' && this.userToBlockId !== null) {
+      this.executeBlockUser(this.userToBlockId);
+      this.showBlockUserDialog = false;
+      this.userToBlockId = null;
+      this.userToBlock = '';
+    } else {
+      this.showBlockUserDialog = false;
+      this.userToBlockId = null;
+      this.userToBlock = '';
+    }
+  }
+
+  removeFriend(userId: number, username: string): void {
+    this.userToRemoveId = userId;
+    this.showRemoveFriendDialog = true;
+    this.userToRemove = username;
+    console.log('removeFriend', userId, username);
+  }
+
+  blockUser(userId: number, username: string): void {
+    this.userToBlockId = userId;
+    this.showBlockUserDialog = true;
+    this.userToBlock = username;
+  }
+
+  // Add methods to perform the actual actions
+  executeRemoveFriend(userId: number): void {
+    this.friendService.removeFriend(userId).subscribe(
+      () => {
+        this.friends = this.friends.filter(friend => friend.id !== userId);
+        this.initData();
+        this.showRemoveFriendDialog = false;
+        this.userToRemoveId = null;
+      },
+      (error) => {
+        this.toastr.error('Failed to remove friend.', 'Error');
+        this.error = 'Failed to remove friend.';
+        this.showRemoveFriendDialog = false;
+        this.userToRemoveId = null;
+      }
+    );
+  }
+
+  executeBlockUser(userId: number): void {
+    this.friendService.blockUser(userId).subscribe(
+      () => {
+        this.friends = this.friends.filter(friend => friend.id !== userId);
+        this.initData();
+        this.showBlockUserDialog = false;
+        this.userToBlockId = null;
+      },
+      (error) => {
+        this.toastr.error('Failed to block user.', 'Error');
+        this.error = 'Failed to block user.';
+        this.showBlockUserDialog = false;
+        this.userToBlockId = null;
+      }
+    );
   }
 }

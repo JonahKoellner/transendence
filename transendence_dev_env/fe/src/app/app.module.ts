@@ -76,6 +76,8 @@ import { ImpressumComponent } from './home/impressum/impressum.component';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
+import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.component';
+import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -141,7 +143,9 @@ import { ToastrModule } from 'ngx-toastr';
     GameRoomsArenaComponent,
     GameRoomArenaComponent,
     GameDisplayArenaComponent,
-    ImpressumComponent
+    ImpressumComponent,
+    RemoveFriendComponent,
+    BlockFriendComponent
   ],
   imports: [
     BrowserModule,

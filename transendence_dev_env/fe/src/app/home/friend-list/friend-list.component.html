@@ -32,8 +32,8 @@
           <small>Username: {{ friend.username }}</small>
         </div>
         <div class="actions">
-          <button class="btn-remove" (click)="removeFriend(friend.id)">Remove</button>
-          <button class="btn-block" (click)="blockUser(friend.id)">Block</button>
+          <button class="btn-remove" (click)="removeFriend(friend.id, friend.username)">Remove</button>
+          <button class="btn-block" (click)="blockUser(friend.id, friend.username)">Block</button>
           <button class="btn-chat" (click)="openChat(friend.id, friend.username)">Chat</button>
           <a class="btn-profile" [routerLink]="['/profile/user-details/', friend.id]">Account Page</a>
         </div>
@@ -110,6 +110,18 @@
   </div>
 
 </div>
+
+<app-remove-friend
+*ngIf="showRemoveFriendDialog && userToRemove"
+[userToRemove]="userToRemove"
+(close)="onCloseRemoveFriendDialog($event)"
+></app-remove-friend>
+
+<app-block-friend
+*ngIf="showBlockUserDialog && userToBlock"
+[userToBlock]="userToBlock"
+(close)="onCloseBlockFriendDialog($event)"
+></app-block-friend>
 
 <div
   *ngIf="selectedFriendId && selectedFriendUsername"

@@ -1,0 +1,27 @@
+<div class="dialog-overlay game-invite-dialog">
+    <div class="dialog-content">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h3 class="modal-title">Remove Friend</h3>
+        <button class="close-button" (click)="onDecline()" aria-label="Close Remove Friend Dialog">
+          <!-- SVG for Close Icon -->
+          <svg viewBox="0 0 24 24">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="modal-body game-invite">
+        <p>Do you really want to remove {{userToRemove}} as a friend?</p>
+      </div>
+      
+      <!-- Dialog Actions -->
+      <div class="dialog-actions">
+        <button class="btn btn-outline-secondary" (click)="onDecline()">Decline</button>
+        <button class="btn btn-primary" (click)="onAccept()">Accept</button>
+      </div>
+    </div>
+  </div>
+  
