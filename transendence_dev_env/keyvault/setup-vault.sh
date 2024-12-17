@@ -90,21 +90,19 @@ export VAULT_TOKEN=$VAULT_ROOT_TOKEN
 echo "Enabling Userpass authentication method..."
 vault auth enable userpass
 
+# Enable kv secrest engine at secret/ path
+vault secrets enable -path=secret kv-v2
+
+
 # Create a custom policy
 cat <<EOF > my_policy.hcl
-path "secret/*" {
+path "secret/data/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
-
-path "sys/mounts" {
-  capabilities = ["read"]
-}
-
-path "sys/mounts/*" {
-  capabilities = ["read"]
+path "secret/metadata/*" {
+  capabilities = ["list"]
 }
 EOF
-
 # Write the policy to Vault
 echo "Writing policy 'my_policy'..."
 vault policy write my_policy my_policy.hcl
@@ -117,22 +115,18 @@ vault write auth/userpass/users/$UI_USERNAME \
   password=$UI_PASSWORD \
   policies=my_policy
 
-# Unset VAULT_TOKEN to use the admin user's token instead of the root token
-unset VAULT_TOKEN
+# Set VAULT_TOKEN to the admin user's token
+export VAULT_TOKEN=$(vault login -method=userpass username=$UI_USERNAME password=$UI_PASSWORD -format=json | jq -r '.auth.client_token')
+
+# Write a secret
+vault kv put secret/my-secret test.username=admin test.password=supersecret
 
 # Set VAULT_CACERT to the CA certificate
 export VAULT_CACERT=$CERT_CRT
 
-# Write a secret using the admin user's token
-echo "Logging in as $UI_USERNAME..."
-vault login -method=userpass username=$UI_USERNAME password=$UI_PASSWORD
-
-SECRET_PATH="secret/my-secret"
-SECRET_DATA="test.username=admin test.password=supersecret"
-
-# # Write a secret
-# echo "Storing secret at $SECRET_PATH..."
-# vault kv put $SECRET_PATH $SECRET_DATA
+# # Write a secret using the admin user's token
+# echo "Logging in as $UI_USERNAME..."
+# vault login -method=userpass username=$UI_USERNAME password=$UI_PASSWORD
 
 # Kill Vault background process
 kill $VAULT_PID
