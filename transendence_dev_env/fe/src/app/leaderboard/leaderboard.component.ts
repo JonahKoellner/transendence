@@ -3,6 +3,7 @@
 import { Component, OnInit } from '@angular/core';
 import { GameService, GlobalStats, LeaderboardEntry } from '../games/game.service';
 import { ToastrService } from 'ngx-toastr';
+import { ProfileService } from '../profile.service';
 
 @Component({
   selector: 'app-leaderboard',
@@ -19,6 +20,7 @@ export class LeaderboardComponent implements OnInit {
 
   // Define property to hold global stats
   globalStats: GlobalStats | null = null;
+  chartData: any = null;
 
   // Loading indicators
   isLoading: boolean = false;
@@ -27,10 +29,23 @@ export class LeaderboardComponent implements OnInit {
   // Active Tab
   activeTab: 'leaderboards' | 'charts' = 'leaderboards';
 
-  constructor(private gameService: GameService, private toastr: ToastrService) { }
+  constructor(private gameService: GameService, private toastr: ToastrService, private profileService: ProfileService) { }
 
   ngOnInit(): void {
     this.fetchGlobalStats();
+    this.loadGlobalCharts();
+  }
+
+  loadGlobalCharts(): void {
+    this.profileService.getGlobalStats().subscribe({
+      next: (data: GlobalStats) => {
+        this.chartData = data;
+      },
+      error: (err: any) => {
+        this.toastr.error('Failed to load global statistics. Please try again later.', 'Error');
+        this.error = 'Failed to load global statistics. Please try again later.';
+      }
+    });
   }
 
   /**
@@ -59,5 +74,4 @@ export class LeaderboardComponent implements OnInit {
       }
     });
   }
-
 }

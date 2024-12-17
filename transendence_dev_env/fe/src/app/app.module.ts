@@ -79,6 +79,7 @@ import { ToastrModule } from 'ngx-toastr';
 import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.component';
 import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
 import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
+import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/charts-global-details.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -147,7 +148,8 @@ import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-
     ImpressumComponent,
     RemoveFriendComponent,
     BlockFriendComponent,
-    ChartsUserDetailsComponent
+    ChartsUserDetailsComponent,
+    ChartsGlobalDetailsComponent
   ],
   imports: [
     BrowserModule,

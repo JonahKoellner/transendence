@@ -5,16 +5,10 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <button
-      [class.active]="activeTab === 'leaderboards'"
-      (click)="activeTab = 'leaderboards'"
-    >
+    <button [class.active]="activeTab === 'leaderboards'" (click)="activeTab = 'leaderboards'">
       Leaderboards
     </button>
-    <button
-      [class.active]="activeTab === 'charts'"
-      (click)="activeTab = 'charts'"
-    >
+    <button [class.active]="activeTab === 'charts'" (click)="activeTab = 'charts'">
       Charts
     </button>
   </div>
@@ -212,11 +206,8 @@
     <!-- Charts Tab Content -->
     <div *ngIf="activeTab === 'charts'" class="charts-section">
       <h2>Global Statistics Charts</h2>
-      <!-- Placeholder for Chart.js Diagrams -->
       <div class="charts-container">
-        <p>Charts will be displayed here.</p>
-        <!-- Example: You can replace this with your actual Chart.js components -->
-        <!-- <canvas id="myChart"></canvas> -->
+        <app-charts-global-details [chartData]="chartData!"></app-charts-global-details>
       </div>
     </div>
 

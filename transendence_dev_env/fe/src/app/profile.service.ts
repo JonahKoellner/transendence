@@ -78,6 +78,10 @@ export class ProfileService {
     return this.http.get<any>(`${this.base}user-stats/${userId}/`, { withCredentials: true });
   }
 
+  getGlobalStats(): Observable<any> {
+    return this.http.get<any>(`${this.base}global-stats/`, { withCredentials: true });
+  }
+
   deleteAccount(password: string): Observable<any> {
     const options = {
       body: { password },

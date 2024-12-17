@@ -28,7 +28,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement, Profile
 from django.db import models
-from django.db.models import Count, Q, F, Sum
+from django.db.models import Count, Q, F, Sum, Avg
 import be.settings as besettings
 from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby
 from django.utils import timezone
@@ -1178,6 +1178,124 @@ class UserStatsView(APIView):
 
         except Exception as e:
             logger.error(f"Error in UserStatsView GET: {e}")
+            return Response(
+                {"detail": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+class GlobalStatsView(APIView):
+    """
+    API view to retrieve global statistics for display on the global dashboard.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """
+        Handle GET request to retrieve global statistics.
+        """
+        try:
+            # Current date
+            today = timezone.now().date()
+
+            # Define the date range (last 12 months)
+            start_date = today - timedelta(days=365)
+
+            # Helper function to generate last 12 month labels accurately
+            def get_last_12_months():
+                months = []
+                year = today.year
+                month = today.month
+                for _ in range(12):
+                    months.append(f"{year}-{month:02}")
+                    month -= 1
+                    if month == 0:
+                        month = 12
+                        year -= 1
+                return sorted(months)
+
+            last_12_months = get_last_12_months()
+
+            # 1. Games Played per Mode
+            games_per_mode = Game.objects.values('game_mode').annotate(count=Count('id')).order_by('-count')
+            games_per_mode_data = {entry['game_mode']: entry['count'] for entry in games_per_mode}
+
+            # 2. Peak Playing Times (Games started per hour)
+            games_per_hour = Game.objects.extra(select={'hour': 'EXTRACT(HOUR FROM start_time)'}).values('hour').annotate(count=Count('id')).order_by('hour')
+            games_per_hour_dict = {int(entry['hour']): entry['count'] for entry in games_per_hour}
+
+            # Initialize all hours with zero counts
+            peak_playing_times = [{"hour": f"{hour}:00 - {hour}:59", "count": games_per_hour_dict.get(hour, 0)} for hour in range(24)]
+
+            # 3. Game Modes Popularity
+            # Similar to Games Played per Mode but expressed as percentages
+            total_games = Game.objects.count()
+            game_modes_popularity = [
+                {
+                    "mode": entry['game_mode'],
+                    "percentage": round((entry['count'] / total_games) * 100, 2) if total_games > 0 else 0
+                }
+                for entry in games_per_mode
+            ]
+
+            # 4. Games Played Globally Over Time (Last 12 Months)
+            games_over_time = Game.objects.filter(start_time__date__gte=start_date) \
+                .annotate(month=F('start_time__month'), year=F('start_time__year')) \
+                .values('year', 'month') \
+                .annotate(count=Count('id')) \
+                .order_by('year', 'month')
+
+            # Organize data per month
+            games_over_time_dict = {}
+            for entry in games_over_time:
+                month_year = f"{entry['year']}-{entry['month']:02}"
+                games_over_time_dict[month_year] = entry['count']
+
+            games_played_over_time = [games_over_time_dict.get(month, 0) for month in last_12_months]
+
+            # 5. Global Win/Loss Ratio
+            total_wins = Game.objects.filter(winner__isnull=False).count()  # Assuming 'winner' is set when a game is won
+            total_losses = Game.objects.filter(winner__isnull=True).count()  # Assuming 'winner' is null when a game is lost or tied
+            # Alternatively, define loss based on game outcomes if available
+
+            win_loss_ratio = {
+                "wins": total_wins,
+                "losses": total_losses
+            }
+
+            # 6. Average Game Duration per Mode
+            avg_duration_per_mode = Game.objects.values('game_mode').annotate(average_duration=Avg('duration')).order_by('-average_duration')
+            avg_duration_data = {entry['game_mode']: round(entry['average_duration'], 2) if entry['average_duration'] else 0 for entry in avg_duration_per_mode}
+
+            # Prepare final JSON response
+            data = {
+                "games_played_per_mode": {
+                    "labels": list(games_per_mode_data.keys()),
+                    "data": list(games_per_mode_data.values())
+                },
+                "peak_playing_times": {
+                    "labels": [entry["hour"] for entry in peak_playing_times],
+                    "data": [entry["count"] for entry in peak_playing_times]
+                },
+                "game_modes_popularity": {
+                    "labels": [entry["mode"] for entry in game_modes_popularity],
+                    "data": [entry["percentage"] for entry in game_modes_popularity]
+                },
+                "games_played_over_time": {
+                    "labels": last_12_months,
+                    "data": games_played_over_time
+                },
+                "win_loss_ratio": win_loss_ratio,
+                "average_game_duration_per_mode": {
+                    "labels": list(avg_duration_data.keys()),
+                    "data": list(avg_duration_data.values())
+                }
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in GlobalStatsView GET: {e}")
             return Response(
                 {"detail": "An unexpected error occurred."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
