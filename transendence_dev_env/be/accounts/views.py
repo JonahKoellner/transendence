@@ -997,6 +997,7 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
 
 class AchievementListView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request):
         achievements = Achievement.objects.all()
