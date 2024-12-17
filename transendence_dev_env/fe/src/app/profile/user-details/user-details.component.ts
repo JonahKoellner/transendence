@@ -132,6 +132,7 @@ export class UserDetailsComponent implements OnInit {
         };
 
         this.gameHistory = games;
+        console.log('Game history:', this.gameHistory);
         this.filteredGameHistory = games;
 
         this.tournamentHistory = tournaments;

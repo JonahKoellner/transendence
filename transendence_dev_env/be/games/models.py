@@ -360,6 +360,8 @@ class Game(models.Model):
     )
 
     player2_name_pvp_local = models.CharField(max_length=100, blank=True, null=True)
+    player3_name_pvp_local = models.CharField(max_length=100, blank=True, null=True)
+    player4_name_pvp_local = models.CharField(max_length=100, blank=True, null=True)
 
     game_mode = models.CharField(max_length=20, choices=GAME_MODES)
     start_time = models.DateTimeField(auto_now_add=True)
