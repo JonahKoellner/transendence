@@ -1016,12 +1016,6 @@ class UserStatsView(APIView):
         Handle GET request to retrieve user statistics.
         """
         try:
-            # Permission check: Only the user themselves or admins can access the stats
-            if request.user.id != user_id and not request.user.is_staff:
-                return Response(
-                    {"detail": "You do not have permission to perform this action."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
 
             # Fetch the user profile with related user data
             profile = get_object_or_404(Profile.objects.select_related('user'), user__id=user_id)
