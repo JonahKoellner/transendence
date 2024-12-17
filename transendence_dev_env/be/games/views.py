@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status, serializers
+from rest_framework import viewsets, status, serializers
 from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer
 from django.db.models.functions import ExtractMonth
 from django.utils import timezone
