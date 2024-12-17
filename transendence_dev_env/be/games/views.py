@@ -852,6 +852,8 @@ class ChaosLobbyViewSet(viewsets.ViewSet):
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
 
 class ArenaLobbyViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     @action(detail=False, methods=['post'])
     def create_room(self, request):
