@@ -1059,8 +1059,8 @@ class StatsViewSet(viewsets.ViewSet):
     """
     A viewset for retrieving user-specific and global statistics.
     """
-
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     @action(detail=True, methods=['get'], url_path='user-stats')
     def user_stats(self, request, pk=None):
