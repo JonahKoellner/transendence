@@ -494,7 +494,9 @@ def generate_room_id(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 class LobbyViewSet(viewsets.ViewSet):
-    
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
     @action(detail=False, methods=['post'])
     def create_room(self, request):
         room_id = generate_room_id()
