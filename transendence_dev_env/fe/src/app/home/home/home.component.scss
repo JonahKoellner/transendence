@@ -266,22 +266,30 @@
       line-height: 1.6;
     }
 
-    .community-button {
-      background-color: #61BA50;
-      color: #ffffff;
-      padding: 0.8rem 2rem;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-
-      &:hover {
-        background-color: #45A049;
-        transform: scale(1.05);
+    .community-buttons {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: nowrap;
+      justify-content: center;
+      
+      .community-button {
+        background-color: #61BA50;
+        color: #ffffff;
+        padding: 0.8rem 2rem;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  
+        &:hover {
+          background-color: #45A049;
+          transform: scale(1.05);
+        }
       }
     }
+
   }
 
   /* Call to Action Section */

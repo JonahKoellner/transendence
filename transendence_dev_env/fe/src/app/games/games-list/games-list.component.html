@@ -46,9 +46,9 @@
             <p>
               <strong>Players:</strong>
               {{ game.player1.username }}
-              <span *ngIf="game.player2">vs {{ game.player2.username }}</span>
-              <span *ngIf="game.player3">vs {{ game.player3.username }}</span>
-              <span *ngIf="game.player4">vs {{ game.player4.username }}</span>
+              <span *ngIf="game.player2"> vs {{ game.player2.username }}</span>
+              <span *ngIf="game.player3"> vs {{ game.player3.username }}</span>
+              <span *ngIf="game.player4"> vs {{ game.player4.username }}</span>
             </p>
             <p><strong>Winner:</strong> {{ game.winner?.username || 'TBD' }}</p>
             <p><strong>Start:</strong> {{ game.start_time | date: 'short' }}</p>

@@ -29,11 +29,23 @@ export class HomeComponent {
       case 'online_pvp':
         this.router.navigate(['/games/online-pvp/rooms']);
         break;
-      case 'tournament': 
+      case 'local_tournament': 
         this.router.navigate(['/games/tournament/local/start']);
         break;
       case 'arena':
-        this.router.navigate(['/games']);
+        this.router.navigate(['/games/arena']);
+        break;
+      case 'online_arena':
+        this.router.navigate(['/games/online-arena/rooms']);
+        break;
+      case 'online_tournament':
+        this.router.navigate(['/games/tournament/online/rooms']);
+        break;
+      case 'chaos':
+        this.router.navigate(['/games/chaos']);
+        break;
+      case 'online_chaos':
+        this.router.navigate(['/games/online-pvp-chaos/rooms']);
         break;
     }
   }

@@ -22,11 +22,8 @@
       <li class="nav-item">
         <a class="nav-link" routerLink="/friends">Friends</a>
       </li>
-      <li class="nav-item" *ngIf="is2FaEnabled">
+      <li class="nav-item">
         <a class="nav-link" routerLink="/profile">Profile</a>
-      </li>
-      <li class="nav-item" *ngIf="!is2FaEnabled">
-        <a class="nav-link" routerLink="/profile">Profile (Not Verified)</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" (click)="logout()">Logout</a>

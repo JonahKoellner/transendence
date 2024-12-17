@@ -22,7 +22,11 @@
   <section class="community-section">
     <h2 class="section-title">Engage with the Community</h2>
     <p>Compete with top players, join tournaments, and see where you stand on the leaderboards. Show off your skills and climb to the top!</p>
-    <button class="community-button" (click)="navigateToLeaderboards()">View Leaderboards</button>
+    <div class="community-buttons">
+      <button class="community-button" (click)="navigateToLeaderboards()">View Leaderboards</button>
+      <button class="community-button" routerLink="/games/list">Game History</button>
+      <button class="community-button" routerLink="/games/tournament/local/list">Tournament History</button>
+    </div>
   </section>
 
     <!-- Featured Game Modes Section -->
@@ -128,7 +132,7 @@
             </div>
   
             <!-- Online Chaos Mode -->
-            <div class="game-mode-card" (click)="navigateToMode('online_pvp_chaos')">
+            <div class="game-mode-card" (click)="navigateToMode('online_chaos')">
               <div class="icon">
                 <svg viewBox="0 0 64 64">
                   <polygon points="32,4 40,24 60,24 44,36 52,56 32,44 12,56 20,36 4,24 24,24" fill="#D0021B" stroke="#D0021B" stroke-width="2"/>
@@ -172,10 +176,9 @@
   <!-- Call to Action Section -->
   <section class="cta-section">
     <h2 class="section-title">Explore More</h2>
-    <p>Check out your Game History, review your Statistics, or update your Profile to personalize your experience.</p>
+    <p>Learn more about the project, its creators, and its features.</p>
     <div class="cta-buttons">
-      <button class="cta-button-secondary" routerLink="/games/list">Game History</button>
-      <button class="cta-button-secondary" routerLink="/games/tournament/local/list">Tournament History</button>
+      <button class="cta-button-secondary" routerLink="/about">About</button>
     </div>
   </section>
 
@@ -184,7 +187,6 @@
     <div class="footer-content">
       <p>© 2024 Pong Arena. All rights reserved.</p>
       <div class="footer-links">
-        <a routerLink="/about" class="footer-link">About</a>
         <a routerLink="/privacy-policy" class="footer-link">Privacy Policy</a>
         <a routerLink="/disclaimer" class="footer-link">Disclaimer</a>
         <a routerLink="/tos" class="footer-link">Terms of Service</a>
