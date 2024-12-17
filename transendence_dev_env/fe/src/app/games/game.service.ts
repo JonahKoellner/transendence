@@ -290,14 +290,4 @@ export class GameService {
         })
       );
     }
-
-    getGameStats(gameId: string): Observable<any> {
-      const url = `${this.statsApiUrl}detailed-stats/${gameId}/`;
-      return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
-        catchError((error) => {
-          console.error('Error fetching global stats:', error);
-          return of({} as any);
-        })
-      );
-    }
 }

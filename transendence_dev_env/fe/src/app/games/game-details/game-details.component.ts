@@ -52,8 +52,9 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
   loadGameDetails(gameId: string): void {
     this.gameService.getGameById(parseInt(gameId, 10)).subscribe(
       (game) => { 
-        this.game = game; 
-        this.loadStats();
+        this.game = game;
+        this.cdr.detectChanges(); // Ensure view is updated
+        this.isLoading = false;
       },
       (error) => {
         this.toastr.error('Failed to load game details.', 'Error');
@@ -63,21 +64,6 @@ export class GameDetailsComponent implements OnInit, AfterViewInit {
     );
   }
 
-  loadStats(): void {
-    this.gameService.getGameStats(this.gameId).subscribe({
-      next: (data: any) => {
-        this.gameStats = data;
-        this.cdr.detectChanges(); // Ensure view is updated
-        // this.initCharts();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.toastr.error('Failed to load game statistics.', 'Error');
-        this.errorMessage = 'Failed to load game statistics.';
-        this.isLoading = false;
-      }
-    });
-  }
 
   initCharts(): void {
     if (!this.gameStats) {

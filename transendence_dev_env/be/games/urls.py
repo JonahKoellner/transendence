@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import GameViewSet, TournamentViewSet, LobbyViewSet, ChaosLobbyViewSet, ArenaLobbyViewSet, StatsViewSet, GameStatsViewSet
+from .views import GameViewSet, TournamentViewSet, LobbyViewSet, ChaosLobbyViewSet, ArenaLobbyViewSet, StatsViewSet
 
 router = DefaultRouter()
 router.register(r'games', GameViewSet, basename='game')
@@ -27,7 +27,6 @@ lobby_status_arena = ArenaLobbyViewSet.as_view({'get': 'room_status'})
 lobby_list_rooms_arena = ArenaLobbyViewSet.as_view({'get': 'list_rooms'})
 lobby_delete_arena = ArenaLobbyViewSet.as_view({'delete': 'delete_room'})
 
-game_stats = GameStatsViewSet.as_view({'get': 'retrieve'})
 
 urlpatterns = [
     path('lobby/create/', lobby_create, name="lobby-create"),
@@ -50,7 +49,5 @@ urlpatterns = [
     path('lobby_arena/status/<str:room_id>/', lobby_status_arena, name="lobby-status"),
     path('lobby_arena/rooms/', lobby_list_rooms_arena, name="lobby-list-rooms"),
     path('lobby_arena/delete/<str:room_id>/', lobby_delete_arena, name="lobby-delete"),
-
-    path('stats/detailed-stats/<int:pk>/', game_stats, name='game-stats'),
     path('', include(router.urls)),
 ]
