@@ -20,7 +20,7 @@ class GameSerializer(serializers.ModelSerializer):
         }
 
     def get_player2(self, obj):
-        if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP, Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+        if obj.game_mode in [Game.ONLINE_PVP, Game.ONLINE_CHAOS_PVP, Game.ONLINE_ARENA_PVP, Game.ARENA_PVP, Game.LOCAL_PVP, Game.CHAOS_PVP]:
             if obj.player2_name_pvp_local:
                 return {
                     "id": 0,
@@ -226,6 +226,12 @@ class UserStatsSerializer(serializers.Serializer):
     total_games_pve = serializers.IntegerField()
     total_games_pvp_local = serializers.IntegerField()
     total_games_pvp_online = serializers.IntegerField()
+    # New Game Modes
+    total_games_chaos_pve = serializers.IntegerField()
+    total_games_chaos_pvp = serializers.IntegerField()
+    total_games_online_chaos_pvp = serializers.IntegerField()
+    total_games_arena_pvp = serializers.IntegerField()
+    total_games_online_arena_pvp = serializers.IntegerField()
     total_games_won = serializers.IntegerField()
     total_games_lost = serializers.IntegerField()
     average_game_duration = serializers.FloatField()
@@ -245,6 +251,12 @@ class GlobalStatsSerializer(serializers.Serializer):
     total_pve_games = serializers.IntegerField()
     total_pvp_local_games = serializers.IntegerField()
     total_pvp_online_games = serializers.IntegerField()
+    # New Game Modes
+    total_chaos_pve_games = serializers.IntegerField()
+    total_chaos_pvp_games = serializers.IntegerField()
+    total_online_chaos_pvp_games = serializers.IntegerField()
+    total_arena_pvp_games = serializers.IntegerField()
+    total_online_arena_pvp_games = serializers.IntegerField()
     total_tournaments = serializers.IntegerField()
     completed_tournaments = serializers.IntegerField()
     average_games_per_user = serializers.FloatField()
@@ -258,13 +270,3 @@ class GlobalStatsSerializer(serializers.Serializer):
     leaderboard_most_games = LeaderboardEntrySerializer(many=True)
     leaderboard_most_tournament_wins = LeaderboardEntrySerializer(many=True)
     
-    
-class GameStatsSerializer(serializers.Serializer):
-    game_mode = serializers.CharField()
-    game_duration = serializers.FloatField()
-    win_loss_status = serializers.DictField()
-    rounds_info = serializers.ListField(child=serializers.DictField(), required=False)
-    moves_log = serializers.ListField(child=serializers.DictField(), required=False)
-    score_distribution = serializers.DictField()
-    game_status = serializers.CharField()
-    winner_info = serializers.DictField()

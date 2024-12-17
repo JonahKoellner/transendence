@@ -83,16 +83,35 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     def create_new_game_instance(self):
         logger.debug(f"Creating new game instance for players: {self.host} and {self.guest}")
         logger.debug(f"Game mode: {Game.ONLINE_PVP}")
-        self.game = Game.objects.create(
-            player1=self.host,
-            player2=self.guest,
-            game_mode=Game.ONLINE_PVP,
-            start_time=timezone.now(),
-            is_completed=False,
-            moves_log=[],
-            rounds=[],
-            player1_id=self.host.id,
-        )
+
+        game_mode = Game.ONLINE_PVP  # or determine dynamically based on lobby settings
+
+        # Initialize game creation parameters
+        game_params = {
+            'player1': self.host,
+            'game_mode': game_mode,
+            'start_time': timezone.now(),
+            'is_completed': False,
+            'moves_log': [],
+            'rounds': [],
+        }
+
+        # Handle player2 based on whether it's a real user or a placeholder
+        if self.guest and self.guest.id != 0:
+            game_params['player2'] = self.guest
+        else:
+            # Placeholder for player2
+            game_params['player2_name_pvp_local'] = "Player 2"
+
+        # Handle additional players if in arena modes
+        if game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+            # Example placeholders; adjust as needed
+            game_params['player3_name_pvp_local'] = "Player 3"
+            game_params['player4_name_pvp_local'] = "Player 4"
+
+        # Create the Game instance
+        self.game = Game.objects.create(**game_params)
+        logger.debug(f"Game created with ID: {self.game.id}")
 
     @database_sync_to_async
     def clear_existing_user_rooms(self):
@@ -764,16 +783,33 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
     def create_new_game_instance(self):
         logger.debug(f"Creating new game instance for players: {self.host} and {self.guest}")
         logger.debug(f"Game mode: {Game.ONLINE_CHAOS_PVP}")
-        self.game = Game.objects.create(
-            player1=self.host,
-            player2=self.guest,
-            game_mode=Game.ONLINE_CHAOS_PVP,
-            start_time=timezone.now(),
-            is_completed=False,
-            moves_log=[],
-            rounds=[],
-            player1_id=self.host.id,
-        )
+
+        # Initialize game creation parameters
+        game_params = {
+            'player1': self.host,
+            'game_mode': Game.ONLINE_CHAOS_PVP,
+            'start_time': timezone.now(),
+            'is_completed': False,
+            'moves_log': [],
+            'rounds': [],
+        }
+
+        # Handle player2 (guest)
+        if self.guest:
+            if self.guest.id != 0:
+                # Real user
+                game_params['player2'] = self.guest
+            else:
+                # Placeholder player2 is **not allowed** in ONLINE_CHAOS_PVP
+                logger.error("Attempted to create ONLINE_CHAOS_PVP game with placeholder player2.")
+                raise ValueError("Online Chaos PvP games require a valid guest user.")
+        else:
+            logger.error("No guest provided for ONLINE_CHAOS_PVP game.")
+            raise ValueError("Online Chaos PvP games require a guest user.")
+
+        # Create the Game instance with the appropriate parameters
+        self.game = Game.objects.create(**game_params)
+        logger.debug(f"Game created with ID: {self.game.id}")
 
     @database_sync_to_async
     def clear_existing_user_rooms(self):
@@ -1557,18 +1593,59 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
     def create_new_game_instance(self):
         logger.debug(f"Creating new game instance for players: {self.host}, {self.player_two}, {self.player_three}, {self.player_four}")
         logger.debug(f"Game mode: {Game.ONLINE_ARENA_PVP}")
-        self.game = Game.objects.create(
-            player1=self.host,
-            player2=self.player_two,
-            player3=self.player_three,
-            player4=self.player_four,
-            game_mode=Game.ONLINE_ARENA_PVP,
-            start_time=timezone.now(),
-            is_completed=False,
-            moves_log=[],
-            rounds=[],
-            player1_id=self.host.id,
-        )
+
+        # Initialize game creation parameters
+        game_params = {
+            'player1': self.host,
+            'game_mode': Game.ONLINE_ARENA_PVP,
+            'start_time': timezone.now(),
+            'is_completed': False,
+            'moves_log': [],
+            'rounds': [],
+        }
+
+        # Handle player2
+        if self.player_two:
+            if self.player_two.id != 0:
+                # Real user
+                game_params['player2'] = self.player_two
+            else:
+                # Placeholder player2 is **not allowed** in ONLINE_ARENA_PVP
+                logger.error("Attempted to create ONLINE_ARENA_PVP game with placeholder player2.")
+                raise ValueError("Online Arena PvP games require a valid player2 user.")
+        else:
+            logger.error("No player_two provided for ONLINE_ARENA_PVP game.")
+            raise ValueError("Online Arena PvP games require a player2 user.")
+
+        # Handle player3
+        if self.player_three:
+            if self.player_three.id != 0:
+                # Real user
+                game_params['player3'] = self.player_three
+            else:
+                # Placeholder player3 is **not allowed** in ONLINE_ARENA_PVP
+                logger.error("Attempted to create ONLINE_ARENA_PVP game with placeholder player3.")
+                raise ValueError("Online Arena PvP games require a valid player3 user.")
+        else:
+            logger.error("No player_three provided for ONLINE_ARENA_PVP game.")
+            raise ValueError("Online Arena PvP games require a player3 user.")
+
+        # Handle player4
+        if self.player_four:
+            if self.player_four.id != 0:
+                # Real user
+                game_params['player4'] = self.player_four
+            else:
+                # Placeholder player4 is **not allowed** in ONLINE_ARENA_PVP
+                logger.error("Attempted to create ONLINE_ARENA_PVP game with placeholder player4.")
+                raise ValueError("Online Arena PvP games require a valid player4 user.")
+        else:
+            logger.error("No player_four provided for ONLINE_ARENA_PVP game.")
+            raise ValueError("Online Arena PvP games require a player4 user.")
+
+        # Create the Game instance with the appropriate parameters
+        self.game = Game.objects.create(**game_params)
+        logger.debug(f"Game created with ID: {self.game.id}")
 
     @database_sync_to_async
     def clear_existing_user_rooms(self):

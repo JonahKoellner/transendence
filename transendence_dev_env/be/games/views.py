@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, status, serializers
-from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer,GameStatsSerializer
+from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer
 from django.db.models.functions import ExtractMonth
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
@@ -1052,7 +1052,7 @@ class StatsViewSet(viewsets.ViewSet):
     """
 
     permission_classes = [permissions.IsAuthenticated]
-    
+
     @action(detail=True, methods=['get'], url_path='user-stats')
     def user_stats(self, request, pk=None):
         """
@@ -1062,23 +1062,41 @@ class StatsViewSet(viewsets.ViewSet):
         user = request.user
         # Access control: Only the user themselves or admins can access the stats
         # if not (user.id == int(pk) or user.is_staff):
-        #     return Response({"error": "You do not have permission to view this user's stats."}, status=status.HTTP_403_FORBIDDEN)
+        #     return Response(
+        #         {"error": "You do not have permission to view this user's stats."},
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
         try:
             target_user = User.objects.select_related('profile').get(pk=pk)
             profile = target_user.profile
         except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Profile.DoesNotExist:
-            return Response({"error": "Profile not found for the user."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Profile not found for the user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
         # Aggregations for games
         games_played = Game.objects.filter(Q(player1=target_user) | Q(player2=target_user))
         total_games_played = games_played.count()
         total_games_pve = games_played.filter(game_mode=Game.PVE).count()
         total_games_pvp_local = games_played.filter(game_mode=Game.LOCAL_PVP).count()
         total_games_pvp_online = games_played.filter(game_mode=Game.ONLINE_PVP).count()
+        # New Game Modes
+        total_games_chaos_pve = games_played.filter(game_mode=Game.CHAOS_PVE).count()
+        total_games_chaos_pvp = games_played.filter(game_mode=Game.CHAOS_PVP).count()
+        total_games_online_chaos_pvp = games_played.filter(game_mode=Game.ONLINE_CHAOS_PVP).count()
+        total_games_arena_pvp = games_played.filter(game_mode=Game.ARENA_PVP).count()
+        total_games_online_arena_pvp = games_played.filter(game_mode=Game.ONLINE_ARENA_PVP).count()
+
         total_games_won = games_played.filter(winner=target_user).count()
         total_games_lost = total_games_played - total_games_won
         average_game_duration = games_played.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
+
         # Aggregations for tournaments
         tournaments_participated = Tournament.objects.filter(
             Q(host=target_user) | Q(all_participants__contains=[target_user.username])
@@ -1086,24 +1104,30 @@ class StatsViewSet(viewsets.ViewSet):
         total_tournaments_participated = tournaments_participated.count()
         total_tournaments_won = tournaments_participated.filter(final_winner=target_user.username).count()
         average_tournament_duration = tournaments_participated.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
+
         # Calculate Ranks
         # Enhanced Rank by XP considering both level and XP
         rank_by_xp = User.objects.filter(
             Q(profile__level__gt=profile.level) |
             Q(profile__level=profile.level, profile__xp__gt=profile.xp)
         ).count() + 1
+
         # Rank by Wins
         rank_by_wins = User.objects.annotate(
             total_wins=Count('games_won')
-        ).filter(total_wins__gte=total_games_won).count()
+        ).filter(total_wins__gt=total_games_won).count() + 1
+
         # Rank by Games Played
-                    # Users who have played more games
-        users_with_game_counts = Profile.objects.all()
-        rank_by_games_played = users_with_game_counts.filter(games_played__gte=total_games_played).count()
+        rank_by_games_played = Profile.objects.filter(games_played__gt=total_games_played).count() + 1
+
         # Rank by Tournament Wins
         rank_by_tournament_wins = User.objects.annotate(
-            tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__final_winner=F('username')))
-        ).filter(tournament_wins__gte=total_tournaments_won).count()
+            tournament_wins=Count(
+                'hosted_tournaments',
+                filter=Q(hosted_tournaments__final_winner=F('username'))
+            )
+        ).filter(tournament_wins__gt=total_tournaments_won).count() + 1
+
         data = {
             "user_id": target_user.id,
             "username": target_user.username,
@@ -1114,6 +1138,12 @@ class StatsViewSet(viewsets.ViewSet):
             "total_games_pve": total_games_pve,
             "total_games_pvp_local": total_games_pvp_local,
             "total_games_pvp_online": total_games_pvp_online,
+            # New Game Modes
+            "total_games_chaos_pve": total_games_chaos_pve,
+            "total_games_chaos_pvp": total_games_chaos_pvp,
+            "total_games_online_chaos_pvp": total_games_online_chaos_pvp,
+            "total_games_arena_pvp": total_games_arena_pvp,
+            "total_games_online_arena_pvp": total_games_online_arena_pvp,
             "total_games_won": total_games_won,
             "total_games_lost": total_games_lost,
             "average_game_duration": round(average_game_duration, 2),
@@ -1131,11 +1161,22 @@ class StatsViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'], url_path='global-stats')
     def global_stats(self, request):
+        """
+        Retrieve global statistics across all users.
+        Endpoint: /stats/global-stats/
+        """
         total_users = User.objects.count()
         total_games = Game.objects.count()
         total_pve_games = Game.objects.filter(game_mode=Game.PVE).count()
         total_pvp_local_games = Game.objects.filter(game_mode=Game.LOCAL_PVP).count()
         total_pvp_online_games = Game.objects.filter(game_mode=Game.ONLINE_PVP).count()
+        # New Game Modes
+        total_chaos_pve_games = Game.objects.filter(game_mode=Game.CHAOS_PVE).count()
+        total_chaos_pvp_games = Game.objects.filter(game_mode=Game.CHAOS_PVP).count()
+        total_online_chaos_pvp_games = Game.objects.filter(game_mode=Game.ONLINE_CHAOS_PVP).count()
+        total_arena_pvp_games = Game.objects.filter(game_mode=Game.ARENA_PVP).count()
+        total_online_arena_pvp_games = Game.objects.filter(game_mode=Game.ONLINE_ARENA_PVP).count()
+
         total_tournaments = Tournament.objects.count()
         completed_tournaments = Tournament.objects.filter(status='completed').count()
 
@@ -1191,7 +1232,6 @@ class StatsViewSet(viewsets.ViewSet):
 
         # Leaderboard by Most Games Played
         leaderboard_most_games_qs = Profile.objects.order_by('-games_played')[:10]
-
         leaderboard_most_games = [
             {
                 "rank": index + 1,
@@ -1204,9 +1244,11 @@ class StatsViewSet(viewsets.ViewSet):
         ]
 
         # Leaderboard by Most Tournament Wins
-        # Corrected the comparison to use 'username' instead of 'id'
         leaderboard_most_tournament_wins_qs = User.objects.annotate(
-            tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__final_winner=F('username')))
+            tournament_wins=Count(
+                'hosted_tournaments',
+                filter=Q(hosted_tournaments__final_winner=F('username'))
+            )
         ).order_by('-tournament_wins')[:10]
         leaderboard_most_tournament_wins = [
             {
@@ -1225,6 +1267,12 @@ class StatsViewSet(viewsets.ViewSet):
             "total_pve_games": total_pve_games,
             "total_pvp_local_games": total_pvp_local_games,
             "total_pvp_online_games": total_pvp_online_games,
+            # New Game Modes
+            "total_chaos_pve_games": total_chaos_pve_games,
+            "total_chaos_pvp_games": total_chaos_pvp_games,
+            "total_online_chaos_pvp_games": total_online_chaos_pvp_games,
+            "total_arena_pvp_games": total_arena_pvp_games,
+            "total_online_arena_pvp_games": total_online_arena_pvp_games,
             "total_tournaments": total_tournaments,
             "completed_tournaments": completed_tournaments,
             "average_games_per_user": round(average_games_per_user, 2),
@@ -1237,7 +1285,5 @@ class StatsViewSet(viewsets.ViewSet):
             "leaderboard_most_games": leaderboard_most_games,
             "leaderboard_most_tournament_wins": leaderboard_most_tournament_wins,
         }
-        serializer = GlobalStatsSerializer(data)
+        serializer = GlobalStatsSerializer(instance=data)  # Use instance instead of data
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    permission_classes = [permissions.IsAuthenticated]
