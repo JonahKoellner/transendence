@@ -78,6 +78,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
 import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.component';
 import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
+import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -145,7 +146,8 @@ import { BlockFriendComponent } from './dialogs/block-friend/block-friend.compon
     GameDisplayArenaComponent,
     ImpressumComponent,
     RemoveFriendComponent,
-    BlockFriendComponent
+    BlockFriendComponent,
+    ChartsUserDetailsComponent
   ],
   imports: [
     BrowserModule,

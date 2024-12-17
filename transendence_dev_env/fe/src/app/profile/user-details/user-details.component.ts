@@ -7,7 +7,7 @@ import { Game, GameService } from 'src/app/games/game.service';
 import { Tournament } from 'src/app/games/tournament/local/start/start.component';
 import { Achievement, ProfileService, UserProfile } from 'src/app/profile.service';
 
-interface UserStats {
+export interface UserStats {
   games_played_over_time: { month: string; count: number }[];
   win_loss_ratio: { wins: number; losses: number };
   game_modes_distribution: { [mode: string]: number };

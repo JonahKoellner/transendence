@@ -1,16 +1,16 @@
 <!-- src/app/user-details/user-details.component.html -->
 
 <div class="user-details-container">
-  
+
   <!-- Loading Spinner -->
   <div *ngIf="isLoading" class="loading-spinner">
     <div class="spinner"></div>
     <p>Loading user data...</p>
   </div>
-  
+
   <!-- User Details -->
   <div *ngIf="!isLoading && user" class="user-details">
-    
+
     <!-- Profile Card -->
     <div class="profile-card" [ngStyle]="profileBackgroundStyle">
       <!-- Online Status -->
@@ -19,326 +19,274 @@
           {{ user.is_online ? 'Online' : 'Offline' }}
         </span>
       </div>
-      
+
       <!-- Avatar -->
       <div class="avatar-container">
-        <img
-          *ngIf="user.profile?.avatar || user.avatar"
-          [src]="user.profile?.avatar || user.avatar"
-          alt="User Avatar"
-          class="avatar"
-          loading="lazy"
-          [ngClass]="{
+        <img *ngIf="user.profile?.avatar || user.avatar" [src]="user.profile?.avatar || user.avatar" alt="User Avatar"
+          class="avatar" loading="lazy" [ngClass]="{
             'online': user.is_online === true,
             'offline': user.is_online === false,
             'unknown': user.is_online === null || user.is_online === undefined
-          }"
-        />
+          }" />
         <!-- Level Badge -->
         <div class="level-badge">
           {{ user.level }}
         </div>
-      
-      <!-- Display Name and Email -->
-      <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
-      <!-- <p class="email"><strong>Email:</strong> {{ user.email }}</p> -->
-      <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg" alt="42 logo white" loading="lazy">
-    </div>
-    
-    <!-- Tab Controls -->
-    <div class="tab-controls">
-      <button 
-        (click)="activeTab = 'history'" 
-        [ngClass]="{'active-tab': activeTab === 'history'}">
-        History
-      </button>
-      <button 
-        (click)="activeTab = 'stats'" 
-        [ngClass]="{'active-tab': activeTab === 'stats'}">
-        Stats
-      </button>
-      <button 
-      (click)="activeTab = 'graphs'" 
-      [ngClass]="{'active-tab': activeTab === 'graphs'}">
-      Graphs
-    </button>
-    <button 
-    (click)="activeTab = 'achievements'" 
-    [ngClass]="{'active-tab': activeTab === 'achievements'}">
-    Achivements
-  </button>
-    </div>
-    
-    <!-- Tab Content -->
-    <div *ngIf="activeTab === 'history'" class="tab-content history-tab">
-      
-      <!-- Sub-Tab Controls -->
-      <div class="sub-tab-controls">
-        <button 
-          (click)="activeHistoryTab = 'games'" 
-          [ngClass]="{'active-sub-tab': activeHistoryTab === 'games'}">
-          Games
+
+        <!-- Display Name and Email -->
+        <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
+        <!-- <p class="email"><strong>Email:</strong> {{ user.email }}</p> -->
+        <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg"
+          alt="42 logo white" loading="lazy">
+      </div>
+
+      <!-- Tab Controls -->
+      <div class="tab-controls">
+        <button (click)="activeTab = 'history'" [ngClass]="{'active-tab': activeTab === 'history'}">
+          History
         </button>
-        <button 
-          (click)="activeHistoryTab = 'tournaments'" 
-          [ngClass]="{'active-sub-tab': activeHistoryTab === 'tournaments'}">
-          Tournaments
+        <button (click)="activeTab = 'stats'" [ngClass]="{'active-tab': activeTab === 'stats'}">
+          Stats
+        </button>
+        <button (click)="activeTab = 'graphs'" [ngClass]="{'active-tab': activeTab === 'graphs'}">
+          Graphs
+        </button>
+        <button (click)="activeTab = 'achievements'" [ngClass]="{'active-tab': activeTab === 'achievements'}">
+          Achivements
         </button>
       </div>
-      
-      <!-- Games History Section -->
-      <div *ngIf="activeHistoryTab === 'games'" class="history-section games-history">
-        <h3>Game History</h3>
-        
-        <!-- Filters -->
-        <div class="filters">
-          <input 
-            type="text" 
-            [(ngModel)]="gameSearchName" 
-            (input)="applyGameFilters()" 
-            placeholder="Search by player name" 
-            class="filter-input" />
-          
-          <div class="date-filters">
-            <label>
-              Start Date:
-              <input 
-                type="date" 
-                [(ngModel)]="gameStartDate" 
-                (change)="applyGameFilters()" />
-            </label>
-            <label>
-              End Date:
-              <input 
-                type="date" 
-                [(ngModel)]="gameEndDate" 
-                (change)="applyGameFilters()" />
-            </label>
-          </div>
-          
-          <select 
-            [(ngModel)]="gameSortOrder" 
-            (change)="applyGameFilters()" 
-            class="sort-select">
-            <option value="desc">Newest First</option>
-            <option value="asc">Oldest First</option>
-          </select>
+
+      <!-- Tab Content -->
+      <div *ngIf="activeTab === 'history'" class="tab-content history-tab">
+
+        <!-- Sub-Tab Controls -->
+        <div class="sub-tab-controls">
+          <button (click)="activeHistoryTab = 'games'" [ngClass]="{'active-sub-tab': activeHistoryTab === 'games'}">
+            Games
+          </button>
+          <button (click)="activeHistoryTab = 'tournaments'"
+            [ngClass]="{'active-sub-tab': activeHistoryTab === 'tournaments'}">
+            Tournaments
+          </button>
         </div>
-        
-        <!-- Games List -->
-        <div *ngIf="filteredGameHistory.length > 0; else noGamesTemplate" class="games-list">
-          <div *ngFor="let game of filteredGameHistory | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }" class="game-item">
-            <a [routerLink]="['/games/details/', game.id]" class="game-link">
-              <strong>{{ game.player1.username }}</strong> vs <strong>{{ game.player2.username || 'AI' }}</strong>
-              <strong *ngIf="game.player3?.username"> vs <strong>{{ game.player3?.username }}</strong></strong>
-              <strong *ngIf="game.player4?.username"> vs <strong>{{ game.player4?.username }}</strong></strong>
-            </a>
-            <p class="game-details">{{ game.game_mode }} | {{ game.score_player1 }} : {{ game.score_player2 }}<span *ngIf="game.game_mode == 'arena_pvp' || game.game_mode == 'online_arena_pvp'"> : {{game.score_player3}} : {{game.score_player4}}</span></p>
+
+        <!-- Games History Section -->
+        <div *ngIf="activeHistoryTab === 'games'" class="history-section games-history">
+          <h3>Game History</h3>
+
+          <!-- Filters -->
+          <div class="filters">
+            <input type="text" [(ngModel)]="gameSearchName" (input)="applyGameFilters()"
+              placeholder="Search by player name" class="filter-input" />
+
+            <div class="date-filters">
+              <label>
+                Start Date:
+                <input type="date" [(ngModel)]="gameStartDate" (change)="applyGameFilters()" />
+              </label>
+              <label>
+                End Date:
+                <input type="date" [(ngModel)]="gameEndDate" (change)="applyGameFilters()" />
+              </label>
+            </div>
+
+            <select [(ngModel)]="gameSortOrder" (change)="applyGameFilters()" class="sort-select">
+              <option value="desc">Newest First</option>
+              <option value="asc">Oldest First</option>
+            </select>
           </div>
-          <pagination-controls 
-            (pageChange)="pGames = $event" 
-            id="gamesPagination"
-            class="custom-pagination games-pagination"
-            [directionLinks]="true"
-            [autoHide]="true">
+
+          <!-- Games List -->
+          <div *ngIf="filteredGameHistory.length > 0; else noGamesTemplate" class="games-list">
+            <div
+              *ngFor="let game of filteredGameHistory | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }"
+              class="game-item">
+              <a [routerLink]="['/games/details/', game.id]" class="game-link">
+                <strong>{{ game.player1.username }}</strong> vs <strong>{{ game.player2.username || 'AI' }}</strong>
+                <strong *ngIf="game.player3?.username"> vs <strong>{{ game.player3?.username }}</strong></strong>
+                <strong *ngIf="game.player4?.username"> vs <strong>{{ game.player4?.username }}</strong></strong>
+              </a>
+              <p class="game-details">{{ game.game_mode }} | {{ game.score_player1 }} : {{ game.score_player2 }}<span
+                  *ngIf="game.game_mode == 'arena_pvp' || game.game_mode == 'online_arena_pvp'"> :
+                  {{game.score_player3}} : {{game.score_player4}}</span></p>
+            </div>
+            <pagination-controls (pageChange)="pGames = $event" id="gamesPagination"
+              class="custom-pagination games-pagination" [directionLinks]="true" [autoHide]="true">
             </pagination-controls>
+          </div>
+
+        </div>
+
+        <!-- Tournaments History Section -->
+        <div *ngIf="activeHistoryTab === 'tournaments'" class="history-section tournaments-history">
+          <h3>Tournament History</h3>
+
+          <!-- Filters -->
+          <div class="filters">
+            <input type="text" [(ngModel)]="tournamentSearchName" (input)="applyTournamentFilters()"
+              placeholder="Search by tournament name" class="filter-input" />
+
+            <div class="date-filters">
+              <label>
+                Start Date:
+                <input type="date" [(ngModel)]="tournamentStartDate" (change)="applyTournamentFilters()" />
+              </label>
+              <label>
+                End Date:
+                <input type="date" [(ngModel)]="tournamentEndDate" (change)="applyTournamentFilters()" />
+              </label>
+            </div>
+
+            <select [(ngModel)]="tournamentSortOrder" (change)="applyTournamentFilters()" class="sort-select">
+              <option value="desc">Newest First</option>
+              <option value="asc">Oldest First</option>
+            </select>
+          </div>
+
+          <!-- Tournaments List -->
+          <div *ngIf="filteredTournamentHistory.length > 0; else noTournamentsTemplate" class="tournaments-list">
+            <div
+              *ngFor="let tournament of filteredTournamentHistory | paginate: { itemsPerPage: itemsPerPageTournaments, currentPage: pTournaments, id: 'tournamentPagination'  }"
+              class="tournament-item">
+              <a [routerLink]="['/games/tournament/details', tournament.id]" class="tournament-link">
+                <strong>{{ tournament.name }}</strong>
+              </a>
+              <p class="tournament-details">{{ tournament.type }} | Status: {{ tournament.status }}</p>
+            </div>
+            <pagination-controls (pageChange)="pTournaments = $event" id="tournamentPagination"
+              class="custom-pagination tournament-pagination" [directionLinks]="true" [autoHide]="true">
+            </pagination-controls>
+          </div>
         </div>
 
       </div>
 
-      <!-- Tournaments History Section -->
-      <div *ngIf="activeHistoryTab === 'tournaments'" class="history-section tournaments-history">
-        <h3>Tournament History</h3>
-
-        <!-- Filters -->
-        <div class="filters">
-          <input 
-            type="text" 
-            [(ngModel)]="tournamentSearchName" 
-            (input)="applyTournamentFilters()" 
-            placeholder="Search by tournament name" 
-            class="filter-input" />
-          
-          <div class="date-filters">
-            <label>
-              Start Date:
-              <input 
-                type="date" 
-                [(ngModel)]="tournamentStartDate" 
-                (change)="applyTournamentFilters()" />
-            </label>
-            <label>
-              End Date:
-              <input 
-                type="date" 
-                [(ngModel)]="tournamentEndDate" 
-                (change)="applyTournamentFilters()" />
-            </label>
-          </div>
-          
-          <select 
-            [(ngModel)]="tournamentSortOrder" 
-            (change)="applyTournamentFilters()" 
-            class="sort-select">
-            <option value="desc">Newest First</option>
-            <option value="asc">Oldest First</option>
-          </select>
-        </div>
-        
-        <!-- Tournaments List -->
-        <div *ngIf="filteredTournamentHistory.length > 0; else noTournamentsTemplate" class="tournaments-list">
-          <div *ngFor="let tournament of filteredTournamentHistory | paginate: { itemsPerPage: itemsPerPageTournaments, currentPage: pTournaments, id: 'tournamentPagination'  }" class="tournament-item">
-            <a [routerLink]="['/games/tournament/details', tournament.id]" class="tournament-link">
-              <strong>{{ tournament.name }}</strong>
-            </a>
-            <p class="tournament-details">{{ tournament.type }} | Status: {{ tournament.status }}</p>
-          </div>
-          <pagination-controls 
-          (pageChange)="pTournaments = $event" 
-          id="tournamentPagination"
-          class="custom-pagination tournament-pagination"
-          [directionLinks]="true"
-          [autoHide]="true">
-          </pagination-controls>
-        </div>
-      </div>
-      
-    </div>
-        
-    <div *ngIf="activeTab === 'achievements'" class="tab-content achievements-tab">
-      <div class="achievements-container">
-        <h2>Achievements</h2>
-        <div class="achievements-grid">
-          <div
-            *ngFor="let achievement of achievements"
-            [ngClass]="{
+      <div *ngIf="activeTab === 'achievements'" class="tab-content achievements-tab">
+        <div class="achievements-container">
+          <h2>Achievements</h2>
+          <div class="achievements-grid">
+            <div *ngFor="let achievement of achievements" [ngClass]="{
               'achievement-card': true,
               'earned': userAchievementIds.has(achievement.id),
               'not-earned': !userAchievementIds.has(achievement.id)
-            }"
-          >
-            <!-- Achievement Image -->
-            <div class="achievement-image-container">
-              <img
-                *ngIf="achievement.image_url"
-                [src]="achievement.image_url"
-                [alt]="achievement.name + ' Image'"
-                loading="lazy"
-                class="achievement-image"
-              />
-              <i
-                *ngIf="!achievement.image_url"
-                class="bi"
-                [ngClass]="getAchievementIconClass(achievement)"
-                aria-hidden="true"
-              ></i>
-            </div>
-    
-            <div class="achievement-details">
-              <h3>{{ achievement.name }}</h3>
-              <p>{{ achievement.description }}</p>
-              <p class="achievement-points">XP Points: {{ achievement.points }}</p>
+            }">
+              <!-- Achievement Image -->
+              <div class="achievement-image-container">
+                <img *ngIf="achievement.image_url" [src]="achievement.image_url" [alt]="achievement.name + ' Image'"
+                  loading="lazy" class="achievement-image" />
+                <i *ngIf="!achievement.image_url" class="bi" [ngClass]="getAchievementIconClass(achievement)"
+                  aria-hidden="true"></i>
+              </div>
+
+              <div class="achievement-details">
+                <h3>{{ achievement.name }}</h3>
+                <p>{{ achievement.description }}</p>
+                <p class="achievement-points">XP Points: {{ achievement.points }}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    
-    <div *ngIf="activeTab === 'stats'" class="tab-content stats-tab">
-      <div *ngIf="userStats" class="user-stats-display">
-        <h3>{{ userStats.display_name || userStats.username  }}'s Statistics</h3>
-        
-        <div class="stats-grid">
-          <div class="stat-item">
-            <strong>User ID:</strong>
-            <span>{{ userStats.user_id }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Username:</strong>
-            <span>{{ userStats.username }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Level:</strong>
-            <span>{{ userStats.level }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>XP:</strong>
-            <span>{{ userStats.xp }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Games Played:</strong>
-            <span>{{ userStats.total_games_played }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total PvE Games:</strong>
-            <span>{{ userStats.total_games_pve }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Local PvP Games:</strong>
-            <span>{{ userStats.total_games_pvp_local }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Online PvP Games:</strong>
-            <span>{{ userStats.total_games_pvp_online }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Games Won:</strong>
-            <span>{{ userStats.total_games_won }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Games Lost:</strong>
-            <span>{{ userStats.total_games_lost }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Average Game Duration:</strong>
-            <span>{{ userStats.average_game_duration }} seconds</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Tournaments Participated:</strong>
-            <span>{{ userStats.total_tournaments_participated }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Total Tournaments Won:</strong>
-            <span>{{ userStats.total_tournaments_won }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Average Tournament Duration:</strong>
-            <span>{{ userStats.average_tournament_duration }} seconds</span>
-          </div>
-          <div class="stat-item">
-            <strong>Rank by XP:</strong>
-            <span>{{ userStats.rank_by_xp }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Rank by Wins:</strong>
-            <span>{{ userStats.rank_by_wins }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Rank by Games Played:</strong>
-            <span>{{ userStats.rank_by_games_played }}</span>
-          </div>
-          <div class="stat-item">
-            <strong>Rank by Tournament Wins:</strong>
-            <span>{{ userStats.rank_by_tournament_wins }}</span>
+
+      <div *ngIf="activeTab === 'graphs'" class="tab-content graphs-tab">
+        <app-charts-user-details [chartData]="chartData!"></app-charts-user-details>
+      </div>
+
+
+      <div *ngIf="activeTab === 'stats'" class="tab-content stats-tab">
+        <div *ngIf="userStats" class="user-stats-display">
+          <h3>{{ userStats.display_name || userStats.username }}'s Statistics</h3>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <strong>User ID:</strong>
+              <span>{{ userStats.user_id }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Username:</strong>
+              <span>{{ userStats.username }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Level:</strong>
+              <span>{{ userStats.level }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>XP:</strong>
+              <span>{{ userStats.xp }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Games Played:</strong>
+              <span>{{ userStats.total_games_played }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total PvE Games:</strong>
+              <span>{{ userStats.total_games_pve }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Local PvP Games:</strong>
+              <span>{{ userStats.total_games_pvp_local }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Online PvP Games:</strong>
+              <span>{{ userStats.total_games_pvp_online }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Games Won:</strong>
+              <span>{{ userStats.total_games_won }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Games Lost:</strong>
+              <span>{{ userStats.total_games_lost }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Average Game Duration:</strong>
+              <span>{{ userStats.average_game_duration }} seconds</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Tournaments Participated:</strong>
+              <span>{{ userStats.total_tournaments_participated }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Total Tournaments Won:</strong>
+              <span>{{ userStats.total_tournaments_won }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Average Tournament Duration:</strong>
+              <span>{{ userStats.average_tournament_duration }} seconds</span>
+            </div>
+            <div class="stat-item">
+              <strong>Rank by XP:</strong>
+              <span>{{ userStats.rank_by_xp }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Rank by Wins:</strong>
+              <span>{{ userStats.rank_by_wins }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Rank by Games Played:</strong>
+              <span>{{ userStats.rank_by_games_played }}</span>
+            </div>
+            <div class="stat-item">
+              <strong>Rank by Tournament Wins:</strong>
+              <span>{{ userStats.rank_by_tournament_wins }}</span>
+            </div>
           </div>
         </div>
+
+        <!-- No Stats Message -->
+        <div *ngIf="!userStats" class="no-stats">
+          <p>No statistics available for this user.</p>
+        </div>
       </div>
-      
-      <!-- No Stats Message -->
-      <div *ngIf="!userStats" class="no-stats">
-        <p>No statistics available for this user.</p>
-      </div>
+
+      <!-- No Games or Tournaments Templates -->
+      <ng-template #noGamesTemplate>
+        <p class="alert-info">This user has no game history.</p>
+      </ng-template>
+      <ng-template #noTournamentsTemplate>
+        <p class="alert-info">This user has no tournament history.</p>
+      </ng-template>
+
     </div>
-    
-    <!-- No Games or Tournaments Templates -->
-    <ng-template #noGamesTemplate>
-      <p class="alert-info">This user has no game history.</p>
-    </ng-template>
-    <ng-template #noTournamentsTemplate>
-      <p class="alert-info">This user has no tournament history.</p>
-    </ng-template>
-    
+
   </div>
-  
-</div>

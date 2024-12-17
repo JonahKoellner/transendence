@@ -1,0 +1,44 @@
+<!-- src/app/user-details/user-details.component.html -->
+
+<div class="charts-container">
+    <!-- 1. Games Played Over Time -->
+    <div class="chart">
+        <canvas baseChart [data]="gamesPlayedLineChartData" [options]="gamesPlayedLineChartOptions"
+            [type]="gamesPlayedLineChartType">
+        </canvas>
+    </div>
+
+    <!-- 2. Win/Loss Ratio -->
+    <div class="chart">
+        <canvas baseChart [data]="winLossPieChartData" [options]="winLossPieChartOptions" [type]="winLossPieChartType">
+        </canvas>
+    </div>
+
+    <!-- 3. Game Modes Distribution -->
+    <div class="chart">
+        <canvas baseChart [data]="gameModesBarChartData" [options]="gameModesBarChartOptions"
+            [type]="gameModesBarChartType">
+        </canvas>
+    </div>
+
+    <!-- 4. Time Spent Playing Over Time -->
+    <div class="chart">
+        <canvas baseChart [data]="timeSpentLineChartData" [options]="timeSpentLineChartOptions"
+            [type]="timeSpentLineChartType">
+        </canvas>
+    </div>
+
+    <!-- 5. Tournaments Stats -->
+    <div class="chart">
+        <canvas baseChart [data]="tournamentsDoughnutChartData" [options]="tournamentsDoughnutChartOptions"
+            [type]="tournamentsDoughnutChartType">
+        </canvas>
+    </div>
+
+    <!-- 6. Preferred Playing Times -->
+    <div class="chart">
+        <canvas baseChart [data]="preferredTimesBarChartData" [options]="preferredTimesBarChartOptions"
+            [type]="preferredTimesBarChartType">
+        </canvas>
+    </div>
+</div>
