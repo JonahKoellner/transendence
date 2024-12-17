@@ -194,93 +194,6 @@ class GameViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
             
-    @action(detail=False, methods=['get'], url_path='user-stats')
-    def user_statistics(self, request):
-        user = request.user
-        games = Game.objects.filter(Q(player1=user) | Q(player2=user))
-        total_games = games.count()
-
-        # PvE and PvP breakdown
-        pve_games = games.filter(game_mode=Game.PVE)
-        pvp_games = games.exclude(game_mode=Game.PVE)
-        total_pve_games = pve_games.count()
-        total_pvp_games = pvp_games.count()
-        
-        # Basic stats
-        wins = games.filter(winner=user).count()
-        win_rate = (wins / total_games) * 100 if total_games > 0 else 0
-        losses = total_games - wins
-        average_duration = games.aggregate(avg_duration=Avg('duration'))['avg_duration']
-        scores = [game.score_player1 if game.player1 == user else game.score_player2 for game in games]
-        avg_score_per_game = sum(scores) / total_games if total_games > 0 else 0
-
-        # Win streaks (current and max)
-        current_streak = 0
-        max_streak = 0
-        for game in games.order_by('-start_time'):
-            if game.winner == user:
-                current_streak += 1
-                max_streak = max(max_streak, current_streak)
-            else:
-                current_streak = 0
-
-        # Monthly performance for the last year
-        start_date = timezone.now() - timedelta(days=365)
-        monthly_performance = {}
-        for month in range(1, 13):
-            month_games = games.filter(start_time__month=month, start_time__gte=start_date)
-            month_wins = month_games.filter(winner=user).count()
-            monthly_performance[calendar.month_name[month]] = {
-                'games': month_games.count(),
-                'win_rate': (month_wins / month_games.count() * 100) if month_games else 0
-            }
-
-        # First-move win rate
-        first_move_games = games.filter(moves_log__0__player=user.username)  # Games where user made the first move
-        first_move_wins = first_move_games.filter(winner=user).count()
-        first_move_win_rate = (first_move_wins / first_move_games.count() * 100) if first_move_games else 0
-
-        # Average moves per game
-        total_moves = sum(len(game.moves_log or []) for game in games)
-        avg_moves_per_game = total_moves / total_games if total_games > 0 else 0
-
-        # Round-wise analysis
-        total_rounds = sum(len(game.rounds or []) for game in games)
-        avg_score_per_round = sum(scores) / total_rounds if total_rounds > 0 else 0
-        max_score_round = max((round['score_player1'] if user == game.player1 else round['score_player2']
-                            for game in games for round in game.rounds or []), default=0)
-
-        # Performance by time of day
-        performance_by_time = {}
-        for hour in range(24):
-            hour_games = games.filter(start_time__hour=hour)
-            hour_wins = hour_games.filter(winner=user).count()
-            performance_by_time[hour] = {
-                'games': hour_games.count(),
-                'win_rate': (hour_wins / hour_games.count() * 100) if hour_games else 0
-            }
-
-        # Construct data dictionary with all statistics
-        data = {
-            'total_games': total_games,
-            'pve_games': total_pve_games,
-            'pvp_games': total_pvp_games,
-            'wins': wins,
-            'losses': losses,
-            'win_rate': win_rate,
-            'average_duration': average_duration,
-            'avg_score_per_game': avg_score_per_game,
-            'max_win_streak': max_streak,
-            'current_win_streak': current_streak,
-            'monthly_performance': monthly_performance,
-            'first_move_win_rate': first_move_win_rate,
-            'avg_moves_per_game': avg_moves_per_game,
-            'avg_score_per_round': avg_score_per_round,
-            'max_score_round': max_score_round,
-            'performance_by_time': performance_by_time,
-        }
-
-        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
     def get_games_by_user(self, request, user_id=None):
@@ -1139,6 +1052,82 @@ class StatsViewSet(viewsets.ViewSet):
     """
 
     permission_classes = [permissions.IsAuthenticated]
+    
+    @action(detail=True, methods=['get'], url_path='user-stats')
+    def user_stats(self, request, pk=None):
+        """
+        Retrieve statistics for a specific user by user ID.
+        Endpoint: /stats/{user_id}/user-stats/
+        """
+        user = request.user
+        # Access control: Only the user themselves or admins can access the stats
+        # if not (user.id == int(pk) or user.is_staff):
+        #     return Response({"error": "You do not have permission to view this user's stats."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            target_user = User.objects.select_related('profile').get(pk=pk)
+            profile = target_user.profile
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Profile.DoesNotExist:
+            return Response({"error": "Profile not found for the user."}, status=status.HTTP_404_NOT_FOUND)
+        # Aggregations for games
+        games_played = Game.objects.filter(Q(player1=target_user) | Q(player2=target_user))
+        total_games_played = games_played.count()
+        total_games_pve = games_played.filter(game_mode=Game.PVE).count()
+        total_games_pvp_local = games_played.filter(game_mode=Game.LOCAL_PVP).count()
+        total_games_pvp_online = games_played.filter(game_mode=Game.ONLINE_PVP).count()
+        total_games_won = games_played.filter(winner=target_user).count()
+        total_games_lost = total_games_played - total_games_won
+        average_game_duration = games_played.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
+        # Aggregations for tournaments
+        tournaments_participated = Tournament.objects.filter(
+            Q(host=target_user) | Q(all_participants__contains=[target_user.username])
+        )
+        total_tournaments_participated = tournaments_participated.count()
+        total_tournaments_won = tournaments_participated.filter(final_winner=target_user.username).count()
+        average_tournament_duration = tournaments_participated.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
+        # Calculate Ranks
+        # Enhanced Rank by XP considering both level and XP
+        rank_by_xp = User.objects.filter(
+            Q(profile__level__gt=profile.level) |
+            Q(profile__level=profile.level, profile__xp__gt=profile.xp)
+        ).count() + 1
+        # Rank by Wins
+        rank_by_wins = User.objects.annotate(
+            total_wins=Count('games_won')
+        ).filter(total_wins__gte=total_games_won).count()
+        # Rank by Games Played
+                    # Users who have played more games
+        users_with_game_counts = Profile.objects.all()
+        rank_by_games_played = users_with_game_counts.filter(games_played__gte=total_games_played).count()
+        # Rank by Tournament Wins
+        rank_by_tournament_wins = User.objects.annotate(
+            tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__final_winner=F('username')))
+        ).filter(tournament_wins__gte=total_tournaments_won).count()
+        data = {
+            "user_id": target_user.id,
+            "username": target_user.username,
+            "display_name": profile.display_name,
+            "level": profile.level,
+            "xp": profile.xp,
+            "total_games_played": total_games_played,
+            "total_games_pve": total_games_pve,
+            "total_games_pvp_local": total_games_pvp_local,
+            "total_games_pvp_online": total_games_pvp_online,
+            "total_games_won": total_games_won,
+            "total_games_lost": total_games_lost,
+            "average_game_duration": round(average_game_duration, 2),
+            "total_tournaments_participated": total_tournaments_participated,
+            "total_tournaments_won": total_tournaments_won,
+            "average_tournament_duration": round(average_tournament_duration, 2),
+            # Ranking Fields
+            "rank_by_xp": rank_by_xp,
+            "rank_by_wins": rank_by_wins,
+            "rank_by_games_played": rank_by_games_played,
+            "rank_by_tournament_wins": rank_by_tournament_wins,
+        }
+        serializer = UserStatsSerializer(instance=data)  # Use instance instead of data
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='global-stats')
     def global_stats(self, request):

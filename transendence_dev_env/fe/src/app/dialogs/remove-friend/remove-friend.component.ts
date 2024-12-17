@@ -1,8 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
-import { NotificationService } from 'src/app/notifications/notification.service';
-
 @Component({
   selector: 'app-remove-friend',
   templateUrl: './remove-friend.component.html',
