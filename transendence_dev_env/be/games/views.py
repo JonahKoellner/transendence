@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, serializers
 from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer,GameStatsSerializer
 from django.db.models.functions import ExtractMonth
 from django.utils import timezone
@@ -83,17 +83,49 @@ class GameViewSet(viewsets.ModelViewSet):
         return Game.objects.filter(models.Q(player1=user) | models.Q(player2=user))
     
     def perform_create(self, serializer):
-        data = serializer.validated_data
+        data = self.request.data
         game_mode = data.get('game_mode')
 
-        if game_mode == (Game.LOCAL_PVP or Game.CHAOS_PVP) and data.get('player2', {}).get('id') == 0:
-            # Local PvP with placeholder name
-            player2_name_pvp_local = data.get('player2', {}).get('username')
-            serializer.save(player1=self.request.user, player2_name_pvp_local=player2_name_pvp_local)
+        save_kwargs = {'player1': self.request.user}
+
+        # Handle player2
+        player2 = data.get('player2', {})
+        if player2.get('id') == 0:
+            save_kwargs['player2_name_pvp_local'] = player2.get('username', 'Player 2')
         else:
-            # Regular PvP or PvE game
-            serializer.save(player1=self.request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                user2 = User.objects.get(id=player2.get('id'))
+                save_kwargs['player2'] = user2
+            except User.DoesNotExist:
+                raise serializers.ValidationError({"player2": "Invalid user id."})
+
+        # Handle player3 and player4 for arena modes
+        if game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+            # Handle player3
+            player3 = data.get('player3', {})
+            if player3.get('id') == 0:
+                save_kwargs['player3_name_pvp_local'] = player3.get('username', 'Player 3')
+            elif player3.get('id') is not None:
+                try:
+                    user3 = User.objects.get(id=player3.get('id'))
+                    save_kwargs['player3'] = user3
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({"player3": "Invalid user id."})
+
+            # Handle player4
+            player4 = data.get('player4', {})
+            if player4.get('id') == 0:
+                save_kwargs['player4_name_pvp_local'] = player4.get('username', 'Player 4')
+            elif player4.get('id') is not None:
+                try:
+                    user4 = User.objects.get(id=player4.get('id'))
+                    save_kwargs['player4'] = user4
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({"player4": "Invalid user id."})
+
+        # Save the game instance
+        game = serializer.save(**save_kwargs)
+        return Response(GameSerializer(game).data, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
         instance = self.get_object()

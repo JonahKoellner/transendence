@@ -20,57 +20,65 @@ class GameSerializer(serializers.ModelSerializer):
         }
 
     def get_player2(self, obj):
-        # Check for local PvP placeholder name first
-        if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP, Game.ARENA_PVP] and obj.player2_name_pvp_local:
-            return {
-                "id": 0,  # Placeholder ID for non-existent users
-                "username": obj.player2_name_pvp_local
-            }
-        elif obj.is_against_ai():  # AI case for PVE and CHAOS_PVE
+        if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP, Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+            if obj.player2_name_pvp_local:
+                return {
+                    "id": 0,
+                    "username": obj.player2_name_pvp_local
+                }
+            elif obj.player2:
+                return {
+                    "id": obj.player2.id,
+                    "username": obj.player2.username
+                }
+        elif obj.is_against_ai():
             return {
                 "id": 0,
                 "username": "AI"
             }
-        elif isinstance(obj.player2, User):  # player2 is a real user
-            return {
-                "id": obj.player2.id,
-                "username": obj.player2.username
-            }
-        return None  # No player2 set and not AI scenario
+        return None
 
     def get_player3(self, obj):
         if obj.game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
-            if obj.player3:
-                return {"id": obj.player3.id, "username": obj.player3.username}
-            elif obj.player3_name_pvp_local:
-                return {"id": 0, "username": obj.player3_name_pvp_local}
+            if obj.player3_name_pvp_local:
+                return {
+                    "id": 0,
+                    "username": obj.player3_name_pvp_local
+                }
+            elif obj.player3:
+                return {
+                    "id": obj.player3.id,
+                    "username": obj.player3.username
+                }
         return None
 
     def get_player4(self, obj):
         if obj.game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
-            if obj.player4:
-                return {"id": obj.player4.id, "username": obj.player4.username}
-            elif obj.player4_name_pvp_local:
-                return {"id": 0, "username": obj.player4_name_pvp_local}
+            if obj.player4_name_pvp_local:
+                return {
+                    "id": 0,
+                    "username": obj.player4_name_pvp_local
+                }
+            elif obj.player4:
+                return {
+                    "id": obj.player4.id,
+                    "username": obj.player4.username
+                }
         return None
 
     def get_winner(self, obj):
-        # If a winner is explicitly set, return that user
         if obj.winner:
             return {
                 "id": obj.winner.id,
                 "username": obj.winner.username
             }
 
-        # If no explicit winner is set, handle AI or local PVP placeholders as before
         if obj.is_against_ai() and obj.score_player1 < obj.score_player2:
-            # AI wins
             return {
                 "id": 0,
                 "username": "AI"
             }
 
-        # For local PVP or Chaos PVP, if player2_name_pvp_local exists and score_player2 is higher
         if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local and obj.score_player1 < obj.score_player2:
             return {
                 "id": 0,
@@ -79,24 +87,26 @@ class GameSerializer(serializers.ModelSerializer):
 
         if obj.game_mode == Game.ARENA_PVP:
             scores = [obj.score_player1, obj.score_player2, obj.score_player3, obj.score_player4]
-            winners = [score for score in scores if score == max(scores)]
-            if (len(winners) == 1):
-                if obj.score_player1 == winners[0]:
+            max_score = max(scores)
+            winners = [i for i, score in enumerate(scores, start=1) if score == max_score]
+            if len(winners) == 1:
+                winner_num = winners[0]
+                if winner_num == 1:
                     return {
                         "id": obj.player1.id,
                         "username": obj.player1.username
                     }
-                elif obj.score_player2 == winners[0]:
+                elif winner_num == 2:
                     return {
                         "id": 0,
                         "username": obj.player2_name_pvp_local
                     }
-                elif obj.score_player3 == winners[0]:
+                elif winner_num == 3:
                     return {
                         "id": 0,
                         "username": obj.player3_name_pvp_local
                     }
-                elif obj.score_player4 == winners[0]:
+                elif winner_num == 4:
                     return {
                         "id": 0,
                         "username": obj.player4_name_pvp_local
@@ -107,7 +117,7 @@ class GameSerializer(serializers.ModelSerializer):
                     "username": "Tie"
                 }
 
-        return None  # No winner determined
+        return None
 
 
 class MatchSerializer(serializers.ModelSerializer):
