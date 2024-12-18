@@ -123,15 +123,18 @@ class Round(models.Model):
             start_time=timezone.now()
         )
 
-class Tournament(models.Model):
+class Participant(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    is_bot = models.BooleanField(default=False)
+    def __str__(self):
+        return self.user.username if not self.is_bot else "AI"
+
+class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=TournamentType.choices)
     rounds = models.ManyToManyField(Round, related_name='tournaments')
     final_winner = models.CharField(max_length=255, blank=True, null=True)
     final_winner_type = models.CharField(max_length=50, blank=True, null=True)
-    all_participants = models.JSONField(blank=True, null=True) # lets replace this with participants ManyToManyField
-    participants = models.ManyToManyField(User, related_name='tournaments')
-    players_only = models.JSONField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(blank=True, null=True)
@@ -142,11 +145,17 @@ class Tournament(models.Model):
     winner_determination_method_message = models.TextField(blank=True, null=True)
     tiebreaker_method = models.CharField(max_length=50, choices=TiebreakerMethod.choices, blank=True, null=True)
     winner_tie_resolved = models.BooleanField(default=False)
+    
     host = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='hosted_tournaments'
     )
+    class Meta:
+        abstract = True
+
+class OnlineTournament(BaseTournament):
+    participants = models.ManyToManyField(Participant, related_name='tournaments')
     current_round = models.ForeignKey(
         Round,
         on_delete=models.SET_NULL,
@@ -155,16 +164,9 @@ class Tournament(models.Model):
         null=True
     )
 
-    def get_eliminated_participants(self):
-        """
-        Returns the list of eliminated participants based on match outcomes.
-        """
-        active_participants = set(self.participants.all())
-        for round_obj in self.rounds.all():
-            for match in round_obj.matches.all():
-                if match.winner:
-                    active_participants.discard(User.objects.get(username=match.winner))
-        return self.participants.exclude(id__in=[p.id for p in active_participants])
+class Tournament(BaseTournament):
+    all_participants = models.JSONField(blank=True, null=True)
+    players_only = models.JSONField(blank=True, null=True)
 
 class BaseLobby(models.Model):
     room_id = models.CharField(max_length=10, unique=True)
