@@ -1,6 +1,5 @@
 from rest_framework import viewsets, status, serializers
 from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer
-from django.db.models.functions import ExtractMonth
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -8,15 +7,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import models
-from datetime import timedelta
-from django.db.models import Avg, Max, Min, Count, Sum, Q, F, Case, When, IntegerField, FloatField, OuterRef, Subquery
-import calendar
+from django.db.models import Avg, Count, Sum, Q, F
 from django.contrib.auth.models import User
-from accounts.serializers import UserProfileSerializer
 from accounts.models import Profile
-from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome
-from django.db.models.functions import Abs
-from django.db.models.functions import Cast
+from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome
 from .serializers import TournamentSerializer
 import random
 import string

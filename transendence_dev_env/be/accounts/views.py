@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework.response import Response
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -10,20 +10,16 @@ from django.db import transaction
 from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError
-import random
 from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
-    TokenSerializer, UserProfileSerializer, NotificationSerializer,
+    NotificationSerializer,
     UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
     FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     SendArenaGameInviteSerializer, SendChaosGameInviteSerializer
 )
-from .utils import create_notification, update_profile_with_transaction
-from django.http import JsonResponse
+from .utils import create_notification
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement, Profile
@@ -40,7 +36,7 @@ from django.utils.encoding import force_bytes
 logger = logging.getLogger('accounts')
 from anymail.message import AnymailMessage
 from django.conf import settings
-from django.urls import reverse
+
 class PasswordResetRequestView(APIView):
     """
     Handle password reset requests by sending an email with a reset link.
