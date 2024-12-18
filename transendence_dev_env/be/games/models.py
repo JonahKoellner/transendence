@@ -63,7 +63,13 @@ class Participant(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     is_bot = models.BooleanField(default=False)
     def __str__(self):
-        return self.user.username if not self.is_bot else "AI"
+        return f"{self.user.username} (ID: {self.user.id})" if not self.is_bot and self.user else "AI (ID: 0)"
+    @property
+    def username(self):
+        return self.user.username if self.user else "AI"
+    @property
+    def user_id(self):
+        return self.user.id if self.user else 0
 
 class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
