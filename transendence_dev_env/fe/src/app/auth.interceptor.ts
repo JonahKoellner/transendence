@@ -1,89 +1,107 @@
 import { Injectable } from '@angular/core';
-import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpEvent,
+  HttpInterceptor,
+  HttpHandler,
+  HttpRequest,
+  HttpErrorResponse
+} from '@angular/common/http';
 import { AuthService } from './auth.service';
-import { Observable, Subject, throwError } from 'rxjs';
-import { catchError, switchMap, filter, take } from 'rxjs/operators';
-import { CookieConsentService } from './services/cookie-consent.service';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
+import {
+  catchError,
+  filter,
+  finalize,
+  switchMap,
+  take
+} from 'rxjs/operators';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  private refreshTokenSubject: Subject<string | null> = new Subject<string | null>();
+  private isRefreshing = false;
+  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
-  constructor(private authService: AuthService, private cookieConsent: CookieConsentService) {}
+  constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-
-    if (req.url.includes('api.intra.42.fr')) {
-      return next.handle(req);
-    }
-
+    // Clone the request to add the authentication token, if available
+    let authReq = req;
     const accessToken = this.authService.getAccessToken();
 
     if (accessToken && !this.authService.jwtHelper.isTokenExpired(accessToken)) {
-      req = this.addTokenToRequest(req, accessToken);
+      authReq = this.addTokenToRequest(req, false);
     }
 
-    return next.handle(req).pipe(
+    // Handle the request
+    return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        console.error('Interceptor caught error:', error);
-
-        // 401 error handling with refresh token logic
+        // Check if error is due to unauthorized access
         if (error.status === 401 && error.error.message !== '2FA revalidation required') {
-          if (!this.authService.refreshInProgress) {
-            this.authService.refreshInProgress = true;
-            this.refreshTokenSubject.next(null); // Reset the subject for new refresh
-
-            return this.authService.refreshTokenIfNeeded().pipe(
-              switchMap((newAccessToken) => {
-                this.authService.refreshInProgress = false;
-                if (newAccessToken) {
-                  this.refreshTokenSubject.next(newAccessToken);
-                  req = this.addTokenToRequest(req, newAccessToken);
-                  return next.handle(req);
-                } else {
-                  this.authService.logout(error.error.message);
-                  return throwError('Failed to refresh token');
-                }
-              }),
-              catchError((refreshError) => {
-                this.authService.refreshInProgress = false;
-                this.authService.logout(error.error.message);
-                return throwError(refreshError);
-              })
-            );
-          } else {
-            // Queue other requests during refresh process
-            return this.refreshTokenSubject.pipe(
-              filter((token) => token != null),
-              take(1),
-              switchMap((token) => {
-                req = this.addTokenToRequest(req, token!);
-                return next.handle(req);
-              })
-            );
-          }
+          return this.handle401Error(authReq, next);
         } else if (error.status === 401 && error.error.message === '2FA revalidation required') {
           this.authService.logout(error.error.message);
         } else if (error.status === 402 || error.status === 403) {
           this.authService.logout(error.error.message);
         }
 
-        return throwError(error);
+        return throwError(() => error);
       })
     );
   }
 
-  private addTokenToRequest(req: HttpRequest<any>, token: string): HttpRequest<any> {
-
-    if (req.url.includes('api.intra.42.fr')) {
-      return req;
-    }
-
+  private addTokenToRequest(req: HttpRequest<any>, with_creds: boolean): HttpRequest<any> {
+    let token = this.authService.getAccessToken();
+    console.debug('Adding token to request, token: ', token);
     return req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
       },
-      withCredentials: true,
+      withCredentials: with_creds,
     });
+  }
+
+  private handle401Error(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // If refreshTokenSubject has a value, a refresh is already in progress
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
+
+      return this.authService.refreshTokenIfNeeded().pipe(
+        switchMap((newToken: string | null) => {
+          this.isRefreshing = false;
+
+          if (newToken) {
+            console.log('Token refreshed successfully');
+            // this.authService.setAccessToken(newToken);
+            this.refreshTokenSubject.next(newToken);
+            // Retry the failed request with the new token
+            return next.handle(this.addTokenToRequest(req, false));
+          } else {
+            console.log('Failed to refresh token');
+            // If we didn't get a new token, logout the user
+            this.authService.logout('Failed to refresh token');
+            return throwError(() => new Error('Failed to refresh token'));
+          }
+        }),
+        catchError((err) => {
+          console.log('Error refreshing token:', err);
+          // If there's an error during refresh, logout the user
+          this.isRefreshing = false;
+          this.authService.logout('Failed to refresh token');
+          return throwError(() => err);
+        })
+      );
+    } else {
+      // If refresh is in progress, queue the requests
+      console.log('Refresh token in progress, queuing request');
+      return this.refreshTokenSubject.pipe(
+        filter(token => token != null),
+        take(1),
+        switchMap((token) => {
+          // Retry the failed request with the new token
+          return next.handle(this.addTokenToRequest(req, false));
+        })
+      );
+    }
   }
 }

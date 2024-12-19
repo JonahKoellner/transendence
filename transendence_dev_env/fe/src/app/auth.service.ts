@@ -16,7 +16,7 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
   public refreshInProgress = false;
-  
+
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
@@ -54,7 +54,7 @@ export class AuthService {
   verifyOTP(otp_code: string): Observable<any> {
     const accessToken = localStorage.getItem('access_token') || localStorage.getItem('temp_token');
     if (!accessToken) throw new Error('Access token is missing');
-  
+
     return this.http.post(`${this.apiUrl}/accounts/verify-otp/`, { otp_code }, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
@@ -69,9 +69,11 @@ export class AuthService {
   }
 
   // Store the access token in local storage
-  private storeTokens(accessToken: string, refreshToken: string): void {
+  private storeTokens(accessToken: string, refreshToken?: string): void {
     localStorage.setItem('access_token', accessToken);
-    document.cookie = `refresh_token=${refreshToken}; path=/; SameSite=Lax; Secure=False`;
+    if (refreshToken) {  // this won't work because its a HttpOnly cookie!
+      document.cookie = `refresh_token=${refreshToken}; path=/; SameSite=Lax; Secure=False`;
+    }
   }
 
   // Get the access token
@@ -79,9 +81,15 @@ export class AuthService {
     const token = localStorage.getItem('access_token');
     return token;
   }
-  public getRefreshToken(): string | null {
-    return this.getCookie('refresh_token');
+
+  public setAccessToken(token: string): void {
+    // Store the new access token
+    localStorage.setItem('access_token', token);
   }
+
+  // public getRefreshToken(): string | null {  this doesn't work!
+  //   return this.getCookie('refresh_token');
+  // }
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('access_token');
@@ -154,27 +162,22 @@ export class AuthService {
   }
 
   refreshTokenIfNeeded(): Observable<string | null> {
-    const refreshToken = this.getCookie('refresh_token');
-
-    if (!refreshToken) {
-      console.warn('Refresh token is missing. Logging out...');
-      this.clearAll();
-      this.logout();
-      return of(null);
-    }
-    // console.log("Refreshing with rf token: ",refreshToken)
+    console.debug('Refreshing JWT token...');
     // Prevent multiple refresh calls if a refresh is already in progress
     if (this.refreshInProgress) {
+      console.error('Refresh token process already in progress');
       return throwError('Refresh token process already in progress');
     }
 
     this.refreshInProgress = true;
 
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, { refresh: refreshToken }, { withCredentials: true }).pipe(
+    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response && response.access) {
-          this.storeTokens(response.access, response.refresh || refreshToken);
+          console.debug('Token refreshed successfully, new token: ', response.access);
+          this.storeTokens(response.access);
           this.websocketService.connectNotifications(response.access);
+          this.refreshInProgress = false; // idk maybe its useful
         } else {
           console.warn('Failed to refresh token, logging out');
           this.clearAll();
@@ -216,11 +219,11 @@ export class AuthService {
   // Method to enable 2FA
   enable2FA(): Observable<any> {
     const accessToken = localStorage.getItem('access_token');  // Get JWT access token
-  
+
     if (!accessToken) {
       throw new Error('Access token is missing');
     }
-  
+
     return this.http.post(`${this.apiUrl}/accounts/enable-2fa/`, {}, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
@@ -241,11 +244,11 @@ export class AuthService {
   // Method to disable 2FA
   disable2FA(): Observable<any> {
     const accessToken = localStorage.getItem('access_token');  // Get JWT access token
-  
+
     if (!accessToken) {
       throw new Error('Access token is missing');
     }
-  
+
     return this.http.post(`${this.apiUrl}/accounts/disable-2fa/`, {}, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
