@@ -12,12 +12,12 @@ export class AuthGuard implements CanActivate {
     // Check if the user is authenticated (JWT token is valid)
     if (!this.authService.isAuthenticated()) {
       // console.log('Not authenticated, redirecting to /login');
-      this.router.navigate(['/login']);
-      return false;
+      // this.router.navigate(['/login']);
+      return true;
     }
 
     // console.log('Access granted by AuthGuard');
     return true;
   }
-  
+
 }
