@@ -51,7 +51,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private addTokenToRequest(req: HttpRequest<any>, with_creds: boolean): HttpRequest<any> {
     let token = this.authService.getAccessToken();
-    console.debug('Adding token to request, token: ', token);
+    // console.debug('Adding token to request, token: ', token);
     return req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
@@ -71,20 +71,20 @@ export class AuthInterceptor implements HttpInterceptor {
           this.isRefreshing = false;
 
           if (newToken) {
-            console.log('Token refreshed successfully');
+            // console.log('Token refreshed successfully');
             // this.authService.setAccessToken(newToken);
             this.refreshTokenSubject.next(newToken);
             // Retry the failed request with the new token
             return next.handle(this.addTokenToRequest(req, false));
           } else {
-            console.log('Failed to refresh token');
+            console.error('Failed to refresh token');
             // If we didn't get a new token, logout the user
             this.authService.logout('Failed to refresh token');
             return throwError(() => new Error('Failed to refresh token'));
           }
         }),
         catchError((err) => {
-          console.log('Error refreshing token:', err);
+          console.error('Error refreshing token:', err);
           // If there's an error during refresh, logout the user
           this.isRefreshing = false;
           this.authService.logout('Failed to refresh token');
@@ -93,7 +93,7 @@ export class AuthInterceptor implements HttpInterceptor {
       );
     } else {
       // If refresh is in progress, queue the requests
-      console.log('Refresh token in progress, queuing request');
+      // console.log('Refresh token in progress, queuing request');
       return this.refreshTokenSubject.pipe(
         filter(token => token != null),
         take(1),

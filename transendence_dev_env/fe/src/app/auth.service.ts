@@ -162,7 +162,7 @@ export class AuthService {
   }
 
   refreshTokenIfNeeded(): Observable<string | null> {
-    console.debug('Refreshing JWT token...');
+    // console.debug('Refreshing JWT token...');
     // Prevent multiple refresh calls if a refresh is already in progress
     if (this.refreshInProgress) {
       console.error('Refresh token process already in progress');
@@ -174,7 +174,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
       tap((response: any) => {
         if (response && response.access) {
-          console.debug('Token refreshed successfully, new token: ', response.access);
+          // console.debug('Token refreshed successfully, new token: ', response.access);
           this.storeTokens(response.access);
           this.websocketService.connectNotifications(response.access);
           this.refreshInProgress = false; // idk maybe its useful
