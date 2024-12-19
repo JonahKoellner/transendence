@@ -132,11 +132,11 @@ class PlayerCustomization(models.Model):
 
 class TournamentLobby(models.Model):
     room_id = models.CharField(max_length=10, unique=True)
-    is_active = models.BooleanField(default=True)
+    active_lobby = models.BooleanField(default=True)
+    active_tournament = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
-    is_host_ready = models.BooleanField(default=False)
     tournament = models.ForeignKey(
         OnlineTournament,
         on_delete=models.CASCADE,
@@ -163,8 +163,8 @@ class TournamentLobby(models.Model):
     def is_full(self):
         return self.guests.count() >= 32 # might need to adjust, is the host counted? if yes need to subtract 1
 
-    def all_ready(self):
-        return self.is_host_ready and all(self.guest_ready_states.get(str(guest.id), False) for guest in self.guests.all())
+    def all_ready(self): # host cannot be ready or not, because host decides when the game starts
+        return all(self.guest_ready_states.get(str(guest.id), False) for guest in self.guests.all())
 
     def set_ready_status(self, user, is_ready):
         """ Set the ready status for the host or guest based on the user. """

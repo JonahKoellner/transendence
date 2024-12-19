@@ -1098,7 +1098,6 @@ class ArenaLobbyViewSet(viewsets.ViewSet):
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
 
-#online tournament lobby viewset
 class TournamentLobbyViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
@@ -1109,7 +1108,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
 
         #make sure the host is not in any other rooms / hosts any other rooms
         self.remove_user_from_other_rooms(host)
-        TournamentLobby.objects.filter(host=host, is_active=True).delete()
+        TournamentLobby.objects.filter(host=host, active_lobby=True).delete()
 
         # Create the tournament lobby
         lobby = TournamentLobby.objects.create(
@@ -1127,7 +1126,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
         user = request.user
 
         try:
-            lobby = TournamentLobby.objects.get(room_id=room_id, is_active=True)
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
 
             if user == lobby.host:
                 return Response({"detail": "You are already the host."}, status=status.HTTP_200_OK)
@@ -1167,10 +1166,13 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
 
             return Response({
                 "room_id": room_id,
-                "is_active": lobby.is_active,
+                "active_lobby": lobby.active_lobby,
+                "active_tournament": lobby.active_tournament,
                 "host": lobby.host.username,
-                "guests": [guest.username for guest in lobby.guests.all()],
-                # "guests": UserProfile.objects.filter(user__in=lobby.guests.all()),
+                "guests": [{
+                    "username": guest.username,
+                    "is_ready": lobby.guest_ready_states.get(str(guest.id), False)
+                } for guest in lobby.guests.all()],
                 "player_count": lobby.guests.count()+1,
                 "all_ready": lobby.all_ready(),
                 "is_full": lobby.is_full(),
@@ -1182,10 +1184,11 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def list_rooms(self, request):
         """Returns a list of all active tournament lobbies."""
-        lobbies = TournamentLobby.objects.filter(is_active=True)
+        lobbies = TournamentLobby.objects.filter(active_lobby=True)
         data = [
             {
                 "room_id": lobby.room_id,
+                "active_tournament": lobby.active_tournament,
                 "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
                 "host": lobby.host.username,
                 "guest_count": lobby.guests.count(),
@@ -1198,7 +1201,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
     def delete_room(self, request, room_id=None):
         """Deletes a lobby if the requesting user is the host."""
         try:
-            lobby = TournamentLobby.objects.get(room_id=room_id, is_active=True)
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
 
             if request.user != lobby.host:
                 return Response({"detail": "Only the host can delete this room."}, status=status.HTTP_403_FORBIDDEN)
