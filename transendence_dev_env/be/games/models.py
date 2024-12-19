@@ -137,7 +137,13 @@ class TournamentLobby(models.Model):
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
     is_host_ready = models.BooleanField(default=False)
-    tournament = models.ForeignKey(OnlineTournament, on_delete=models.CASCADE, related_name="tournament_lobbies")
+    tournament = models.ForeignKey(
+        OnlineTournament,
+        on_delete=models.CASCADE,
+        related_name="tournament_lobbies",
+        null=True,
+        blank=True
+    )
 
     guest_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
 

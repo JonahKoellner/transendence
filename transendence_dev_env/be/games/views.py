@@ -1107,7 +1107,8 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
         room_id = generate_room_id()
         host = request.user
 
-        # Clear any existing hosted lobbies by the user
+        #make sure the host is not in any other rooms / hosts any other rooms
+        self.remove_user_from_other_rooms(host)
         TournamentLobby.objects.filter(host=host, is_active=True).delete()
 
         # Create the tournament lobby
@@ -1116,7 +1117,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
             host=host,
         )
 
-        return Response({"room_id": room_id, "message": "Tournament lobby created"}, status=status.HTTP_201_CREATED)
+        return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])
     @transaction.atomic
@@ -1146,28 +1147,37 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
 
         except TournamentLobby.DoesNotExist:
             return Response({"detail": "Lobby not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    @action(detail=False, methods=['post'])
-    def set_ready(self, request):
-        """Updates the ready status for a user."""
-        room_id = request.data.get("room_id")
-        is_ready = request.data.get("is_ready", False)
-
-        try:
-            lobby = TournamentLobby.objects.get(room_id=room_id, is_active=True)
-
-            if request.user == lobby.host:
-                lobby.is_host_ready = is_ready
-            elif request.user in lobby.guests.all():
-                lobby.guest_ready_states[request.user.id] = is_ready
-            else:
-                return Response({"detail": "You are not part of this lobby."}, status=status.HTTP_400_BAD_REQUEST)
-
+    
+    def remove_user_from_other_rooms(self, user):
+        """Removes the user from any rooms they are currently in."""
+        # Remove user from any room where they are a guest.
+        lobbies = TournamentLobby.objects.filter(guests=user)
+        for lobby in lobbies:
+            lobby.guests.remove(user)
+            lobby.guest_ready_states.pop(user.id, None)
             lobby.save()
-            return Response({"detail": "Ready status updated."}, status=status.HTTP_200_OK)
+
+    def room_status(self, request, room_id=None):
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id)
+
+            # Host's profile
+
+            # profile of each guest
+
+            return Response({
+                "room_id": room_id,
+                "is_active": lobby.is_active,
+                "host": lobby.host.username,
+                "guests": [guest.username for guest in lobby.guests.all()],
+                # "guests": UserProfile.objects.filter(user__in=lobby.guests.all()),
+                "player_count": lobby.guests.count()+1,
+                "all_ready": lobby.all_ready(),
+                "is_full": lobby.is_full(),
+            }, status=status.HTTP_200_OK)
 
         except TournamentLobby.DoesNotExist:
-            return Response({"detail": "Lobby not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'])
     def list_rooms(self, request):
@@ -1176,7 +1186,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
         data = [
             {
                 "room_id": lobby.room_id,
-                "tournament": lobby.tournament.name,
+                "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
                 "host": lobby.host.username,
                 "guest_count": lobby.guests.count(),
             }
