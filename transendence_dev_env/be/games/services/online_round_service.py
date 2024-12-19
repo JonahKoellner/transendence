@@ -1,9 +1,9 @@
-from ..models import Round, Match, TournamentType
+from ..models import OnlineRound, Match, TournamentType
 from django.utils import timezone
 
 class RoundService:
     @staticmethod
-    def generate_matches(round_instance: Round, participants, tournament_type, round_index=0):
+    def generate_matches(round_instance: OnlineRound, participants, tournament_type, round_index=0):
         if tournament_type == TournamentType.SINGLE_ELIMINATION:
             RoundService.generate_single_elimination_matches(round_instance, participants)
         elif tournament_type == TournamentType.ROUND_ROBIN:
@@ -12,7 +12,9 @@ class RoundService:
             raise ValueError(f"Unknown tournament type: {tournament_type}")
 
     @staticmethod
-    def generate_single_elimination_matches(round_instance: Round, participants):
+    def generate_single_elimination_matches(round_instance: OnlineRound, participants):
+        if not participants or len(participants) < 1:
+            raise ValueError("Insufficient participants for single elimination round.")
         for i in range(0, len(participants), 2):
             player1 = participants[i]
             player2 = participants[i+1] if i+1 < len(participants) else None
@@ -21,7 +23,7 @@ class RoundService:
         round_instance.save()
 
     @staticmethod
-    def generate_round_robin_matches(round_instance: Round, participants, round_index):
+    def generate_round_robin_matches(round_instance: OnlineRound, participants, round_index):
         num_players = len(participants)
         matchups = round_instance.matchups or {}
 
