@@ -20,7 +20,7 @@ from django.db.models.functions import Cast
 from .serializers import TournamentSerializer
 import random
 import string
-from django.db import transaction 
+from django.db import transaction
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -1160,10 +1160,6 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
         try:
             lobby = TournamentLobby.objects.get(room_id=room_id)
 
-            # Host's profile
-
-            # profile of each guest
-
             return Response({
                 "room_id": room_id,
                 "active_lobby": lobby.active_lobby,
@@ -1176,6 +1172,11 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
                 "player_count": lobby.guests.count()+1,
                 "all_ready": lobby.all_ready(),
                 "is_full": lobby.is_full(),
+                "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
+                "max_rounds": lobby.max_rounds,
+                "round_score_limit": lobby.round_score_limit,
+                "initial_stage": lobby.initial_stage,
+                "tournament_type": lobby.tournament_type,
             }, status=status.HTTP_200_OK)
 
         except TournamentLobby.DoesNotExist:
@@ -1192,10 +1193,29 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
                 "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
                 "host": lobby.host.username,
                 "guest_count": lobby.guests.count(),
+                "tournament_type": lobby.tournament_type,
             }
             for lobby in lobbies
         ]
         return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'])
+    def set_ready(self, request):
+        room_id = request.data.get("room_id")
+        is_ready = request.data.get("ready", False)
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+            user = request.user
+
+            # Use the lobby's method to set ready status
+            if user in lobby.guests.all():
+                lobby.set_ready_status(user, is_ready)
+                return Response({"detail": "Updated ready status"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Not part of this lobby"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except ArenaLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['delete'], url_path='delete/(?P<room_id>[^/.]+)')
     def delete_room(self, request, room_id=None):

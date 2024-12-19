@@ -137,6 +137,10 @@ class TournamentLobby(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
+    max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    initial_stage = models.CharField(max_length=50, choices=Stage.choices, default=Stage.SEMI_FINALS) # semi finals, because its the stage with the lowest number of participants
+    tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     tournament = models.ForeignKey(
         OnlineTournament,
         on_delete=models.CASCADE,

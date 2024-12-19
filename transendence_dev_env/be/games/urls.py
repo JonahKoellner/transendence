@@ -29,6 +29,7 @@ lobby_delete_arena = ArenaLobbyViewSet.as_view({'delete': 'delete_room'})
 
 tournament_lobby_create = TournamentLobbyViewSet.as_view({'post': 'create_room'})
 tournament_lobby_join = TournamentLobbyViewSet.as_view({'post': 'join_room'})
+tournament_lobby_ready = TournamentLobbyViewSet.as_view({'post': 'set_ready'})
 tournament_lobby_delete = TournamentLobbyViewSet.as_view({'delete': 'delete_room'})
 tournament_lobby_list_rooms = TournamentLobbyViewSet.as_view({'get': 'list_rooms'})
 tournament_lobby_status = TournamentLobbyViewSet.as_view({'get': 'room_status'})
@@ -57,6 +58,7 @@ urlpatterns = [
 
     path('tournament_lobby/create/', tournament_lobby_create, name="tournament-lobby-create"),
     path('tournament_lobby/join/', tournament_lobby_join, name="tournament-lobby-join"),
+    path('tournament_lobby/ready/', tournament_lobby_ready, name="tournament-lobby-set-ready"),
     path('tournament_lobby/delete/<str:room_id>/', tournament_lobby_delete, name="tournament-lobby-delete"),
     path('tournament_lobby/status/<str:room_id>/', tournament_lobby_status, name="tournament-lobby-status"),
     path('tournament_lobby/rooms/', tournament_lobby_list_rooms, name="tournament-lobby-list-rooms"),
