@@ -324,8 +324,10 @@ class VerifyOTPView(APIView):
 
 class TokenRefreshView(SimpleJWTTokenRefreshView):
     def post(self, request, *args, **kwargs):
+        logger.debug("got JWT refresh request")
         refresh_token = request.COOKIES.get('refresh_token')
         if not refresh_token:
+            logger.debug("no refresh token found in TokenRefreshView")
             return Response({"message": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
         
         serializer = self.get_serializer(data={'refresh': refresh_token})
@@ -339,6 +341,7 @@ class TokenRefreshView(SimpleJWTTokenRefreshView):
         
         # Update refresh token cookie if rotated
         if api_settings.ROTATE_REFRESH_TOKENS and new_refresh_token:
+            logger.debug("rotating JWT refresh token")
             response.set_cookie(
                 'refresh_token',
                 new_refresh_token,
@@ -347,6 +350,7 @@ class TokenRefreshView(SimpleJWTTokenRefreshView):
                 secure=False,
                 samesite='Lax' if besettings.DEBUG else 'None'
             )
+        logger.debug(f"Sending new access token: {response_data}")
         return response
 
 class UserViewSet(viewsets.ModelViewSet):
