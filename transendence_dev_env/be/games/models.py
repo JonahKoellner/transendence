@@ -87,7 +87,7 @@ class BaseTournament(models.Model):
     winner_determination_method_message = models.TextField(blank=True, null=True)
     tiebreaker_method = models.CharField(max_length=50, choices=TiebreakerMethod.choices, blank=True, null=True)
     winner_tie_resolved = models.BooleanField(default=False)
-    
+
     host = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -97,11 +97,17 @@ class BaseTournament(models.Model):
         abstract = True
 
 class OnlineTournament(BaseTournament):
-    participants = models.ManyToManyField(Participant, related_name='tournaments')
+    participants = models.ManyToManyField(Participant, related_name='online_tournaments')
+    rounds = models.ManyToManyField(Round, related_name='online_tournaments')
+    host = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='hosted_online_tournaments'
+    )
     current_round = models.ForeignKey(
         Round,
         on_delete=models.SET_NULL,
-        related_name='current_tournaments',
+        related_name='current_online_tournaments',
         blank=True,
         null=True
     )
@@ -124,12 +130,14 @@ class PlayerCustomization(models.Model):
     def __str__(self):
         return f"{self.user.username} Customization"
 
-class TournamentLobby(BaseLobby):
+class TournamentLobby(models.Model):
+    room_id = models.CharField(max_length=10, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
     is_host_ready = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="tournament_lobbies")
+    tournament = models.ForeignKey(OnlineTournament, on_delete=models.CASCADE, related_name="tournament_lobbies")
 
     guest_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
 
