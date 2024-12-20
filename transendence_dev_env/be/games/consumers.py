@@ -1,6 +1,8 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby, ChaosLobby, ArenaLobby, Game
+from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineRound, Stage
+from .services.round_service import RoundService
+from .services.tournament_lobby_service import TournamentLobbyService
 from django.contrib.auth.models import User 
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -2277,3 +2279,124 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
             lobby.is_player_four_ready = False
         lobby.save()
         return temp
+
+# consumer to handle tournament lobby settings, ready status and game start
+class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.room_group_name = f"tournament_lobby_{self.room_id}"
+        self.user = self.scope['user']
+
+        # Authenticate user
+        if self.user.is_anonymous:
+            await self.close()
+            return
+
+        # Add the user to the channel group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+        # Load the lobby and broadcast the current state
+        self.lobby = await self.get_lobby(self.room_id)
+        await self.broadcast_lobby_state()
+
+    async def disconnect(self, close_code):
+        # Remove the user from the channel group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        # Handle user leaving the lobby
+        await self.handle_user_disconnect()
+
+    async def receive_json(self, content):
+        action = content.get("action")
+
+        try:
+            if action == "set_ready":
+                is_ready = content.get("is_ready", False)
+                await self.update_ready_status(self.user, is_ready)
+            elif action == "update_settings":
+                new_settings = content.get("settings", {})
+                await self.update_lobby_settings(new_settings)
+            elif action == "start_tournament":
+                    await TournamentLobbyService.start_tournament(self.lobby, self.user)
+        except Exception as e:
+            await self.send_json({
+                "type": "error",
+                "message": str(e)
+            })
+        await self.broadcast_lobby_state()
+
+    @database_sync_to_async
+    def get_lobby(self, room_id):
+        return TournamentLobby.objects.get(room_id=room_id)
+
+    @database_sync_to_async
+    def update_ready_status(self, user, is_ready):
+        if user == self.lobby.host:
+            self.lobby.is_host_ready = is_ready
+        elif user in self.lobby.guests.all():
+            self.lobby.guest_ready_states[str(user.id)] = is_ready
+        self.lobby.save()
+
+    @database_sync_to_async
+    def update_lobby_settings(self, new_settings):
+        # Update lobby settings based on the provided input
+        if "max_rounds" in new_settings:
+            self.lobby.max_rounds = new_settings["max_rounds"]
+        if "round_score_limit" in new_settings:
+            self.lobby.round_score_limit = new_settings["round_score_limit"]
+        if "tournament_type" in new_settings:
+            self.lobby.tournament_type = new_settings["tournament_type"]
+        self.lobby.save()
+
+    @database_sync_to_async
+    def start_tournament(self):
+        # ensure that this is called from host
+        if self.user != self.lobby.host:
+            raise Exception("Only the host can start the tournament.")
+        # Ensure all players are ready
+        if not self.lobby.all_ready():
+            raise Exception("Not all players are ready to start the tournament.")
+
+        # Create the tournament instance
+        tournament = OnlineTournament.objects.create(
+            name=f"Tournament {self.lobby.room_id}",
+            type=self.lobby.tournament_type,
+            host=self.lobby.host,
+            start_time=timezone.now(),
+            status="ongoing"
+        )
+        tournament.participants.set(self.lobby.guests.all())
+        self.lobby.tournament = tournament
+        self.lobby.save()
+
+    async def broadcast_lobby_state(self):
+        lobby_state = await database_sync_to_async(self.lobby.get_lobby_state)()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "lobby_state",
+                **lobby_state
+            }
+        )
+
+    async def lobby_state(self, event):
+        await self.send_json({
+            "type": "lobby_state",
+            "state": event["lobby_state"]
+        })
+
+    @database_sync_to_async
+    def handle_user_disconnect(self):
+        # Remove the user from the lobby
+        if self.user == self.lobby.host:
+            self.lobby.delete()
+        elif self.user in self.lobby.guests.all():
+            self.lobby.guests.remove(self.user)
+        self.lobby.save()

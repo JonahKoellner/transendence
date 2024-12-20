@@ -1,8 +1,54 @@
-from django.test import TestCase
+from django.test import TransactionTestCase, TestCase
 from django.contrib.auth.models import User
-from .models import OnlineRound, Match, Participant, TournamentType
-from .services.online_round_service import RoundService
+from .models import OnlineTournament, Participant, TournamentType, TournamentLobby, OnlineRound
+from .services.tournament_lobby_service import TournamentLobbyService
+from .services.round_service import RoundService
 from django.utils import timezone
+from channels.db import database_sync_to_async
+from asgiref.sync import sync_to_async
+
+class TournamentLobbyServiceTest(TransactionTestCase):
+    @database_sync_to_async
+    def setUp(self):
+        # Create test users
+        self.user1 = User.objects.create(username="Player1")
+        self.user2 = User.objects.create(username="Player2")
+        self.user3 = User.objects.create(username="Player3")
+        self.user4 = User.objects.create(username="Player4")
+
+        # Create participants
+        self.participant1 = Participant.objects.create(user=self.user1)
+        self.participant2 = Participant.objects.create(user=self.user2)
+        self.participant3 = Participant.objects.create(user=self.user3)
+        self.participant4 = Participant.objects.create(user=self.user4)
+
+        # Create a lobby instance
+        self.lobby = TournamentLobby.objects.create(
+            room_id="test_room",
+            host=self.user1,
+            tournament_type=TournamentType.SINGLE_ELIMINATION
+        )
+        self.lobby.guests.add(self.user2, self.user3, self.user4)
+
+    @database_sync_to_async
+    def test_start_tournament(self):
+        # Start the tournament
+        sync_to_async(TournamentLobbyService.start_tournament)(self.lobby, self.user1)
+
+        # Fetch the tournament
+        tournament = OnlineTournament.objects.get(name="Test Tournament")
+
+        # Assert the correct number of participants
+        participants = list(tournament.participants.all())
+        self.assertEqual(len(participants), 4)
+
+        # Assert the correct number of rounds
+        rounds = list(tournament.rounds.all())
+        self.assertEqual(len(rounds), 1)
+
+        # Assert the correct number of matches
+        matches = list(rounds[0].matches.all())
+        self.assertEqual(len(matches), 2)
 
 class RoundServiceTest(TestCase):
     def setUp(self):
@@ -51,25 +97,8 @@ class RoundServiceTest(TestCase):
         self.assertEqual(match1.player2, "Player2")
         self.assertEqual(match2.player1, "Player3")
         self.assertEqual(match2.player2, "Player4")
-        
-    def test_generate_round_robin_matches(self):
-        # Generate matches for the first round
-        RoundService.generate_round_robin_matches(self.round, self.participants, round_index=0)
 
-        # Fetch matches
-        matches = self.round.matches.all()
-
-        # Assert the correct number of matches
-        self.assertEqual(matches.count(), 2)
-
-        # Assert the correct matchups
-        match1 = matches[0]
-        match2 = matches[1]
-        self.assertEqual(match1.player1, "Player1")
-        self.assertEqual(match1.player2, "Player2")
-        self.assertEqual(match2.player1, "Player1")
-        self.assertEqual(match2.player2, "Player3")
-        
+    @database_sync_to_async
     def test_generate_round_robin_matches(self):
         # Generate matches for the first round
         RoundService.generate_round_robin_matches(self.round, self.participants, round_index=0)
@@ -89,6 +118,7 @@ class RoundServiceTest(TestCase):
         self.assertEqual(match2.player2, "Player3")
 
 	# TODO when only one player in a match the player wins instantly
+    @database_sync_to_async
     def test_single_elimination_with_insufficient_participants(self):
         participants = [self.participant1]  # Only one participant
 
@@ -113,4 +143,4 @@ class RoundServiceTest(TestCase):
             
     def test_empty_participants(self):
         with self.assertRaises(ValueError):
-            RoundService.generate_single_elimination_matches(self.round, [])
+            RoundService.generate_matches(self.round, [], TournamentType.SINGLE_ELIMINATION)
