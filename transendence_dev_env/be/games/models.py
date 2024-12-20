@@ -58,8 +58,9 @@ class Round(models.Model):
 
 class OnlineRound(Round):
     matchups = models.JSONField(default=dict)
+    winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
 
-class Participant(models.Model):
+class Participant(models.Model): # TODO maybe kill, because everything works and assumes ai, if user is none
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     is_bot = models.BooleanField(default=False)
     def __str__(self):
@@ -78,7 +79,6 @@ class BaseTournament(models.Model):
     final_winner = models.CharField(max_length=255, blank=True, null=True)
     final_winner_type = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    start_time = models.DateTimeField()
     end_time = models.DateTimeField(blank=True, null=True)
     duration = models.IntegerField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=[
@@ -98,7 +98,7 @@ class BaseTournament(models.Model):
 
 class OnlineTournament(BaseTournament):
     participants = models.ManyToManyField(Participant, related_name='online_tournaments')
-    rounds = models.ManyToManyField(Round, related_name='online_tournaments')
+    rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
     host = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -111,8 +111,13 @@ class OnlineTournament(BaseTournament):
         blank=True,
         null=True
     )
+    tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
+    
+    def get_participants(self):
+        return [self.host] + list(self.participants.select_related('user').all())
 
 class Tournament(BaseTournament):
+    start_time = models.DateTimeField()
     all_participants = models.JSONField(blank=True, null=True)
     players_only = models.JSONField(blank=True, null=True)
 
@@ -207,23 +212,21 @@ class TournamentLobby(models.Model):
     def get_lobby_state(self):
         """Return the lobby state with serialized customizations."""
         state = {
-            "is_host_ready": self.is_host_ready,
-            "all_ready": self.all_ready(),
-            "host_name": self.host.username if self.host else None,
-            "host_customization": {
-                "paddle_color": self.host_customization.paddle_color if self.host_customization else None,
-                "paddle_image": self.host_customization.paddle_image.url if self.host_customization and self.host_customization.paddle_image else None,
+            "host": {
+                "username": self.host.username,
+                "ready_state": self.is_host_ready,
             },
-            "guest_customizations": [
+            "guests": [
                 {
                     "username": guest.username,
-                    "paddle_color": customization.paddle_color,
-                    "paddle_image": customization.paddle_image.url if customization.paddle_image else None,
+                    "ready_state": self.guest_ready_states.get(str(guest.id), False)
                 }
                 for guest in self.guests.all()
-                if (customization := self.get_customization(guest))  # Ensure customization exists
             ],
-            "is_active": self.is_active,
+            "all_ready": self.all_ready(),
+            "is_full": self.is_full(),
+            "active_lobby": self.active_lobby,
+            "active_tournament": self.active_tournament,
             "created_at": self.created_at.isoformat(),
             "max_rounds": self.max_rounds,
             "round_score_limit": self.round_score_limit,
@@ -231,7 +234,7 @@ class TournamentLobby(models.Model):
         }
         return state
 
-    def get_current_participants(self):
+    def get_participants(self):
         return [self.host] + list(self.guests.all())
 
     def get_host_name(self):
