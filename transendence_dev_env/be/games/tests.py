@@ -8,7 +8,7 @@ from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 
 class TournamentLobbyServiceTest(TransactionTestCase):
-    @database_sync_to_async
+    
     def setUp(self):
         # Create test users
         self.user1 = User.objects.create(username="Player1")
@@ -29,17 +29,19 @@ class TournamentLobbyServiceTest(TransactionTestCase):
             tournament_type=TournamentType.SINGLE_ELIMINATION
         )
         self.lobby.guests.add(self.user2, self.user3, self.user4)
+        for player in self.lobby.get_participants():
+            self.lobby.set_ready_status(player, True)
 
-    @database_sync_to_async
+    
     def test_start_tournament(self):
         # Start the tournament
-        sync_to_async(TournamentLobbyService.start_tournament)(self.lobby, self.user1)
+        TournamentLobbyService.start_tournament(self.lobby, self.user1)
 
         # Fetch the tournament
-        tournament = OnlineTournament.objects.get(name="Test Tournament")
+        tournament = OnlineTournament.objects.get(tournament_type=TournamentType.SINGLE_ELIMINATION)
 
         # Assert the correct number of participants
-        participants = list(tournament.participants.all())
+        participants = tournament.get_participants()
         self.assertEqual(len(participants), 4)
 
         # Assert the correct number of rounds
@@ -98,7 +100,7 @@ class RoundServiceTest(TestCase):
         self.assertEqual(match2.player1, "Player3")
         self.assertEqual(match2.player2, "Player4")
 
-    @database_sync_to_async
+    
     def test_generate_round_robin_matches(self):
         # Generate matches for the first round
         RoundService.generate_round_robin_matches(self.round, self.participants, round_index=0)
@@ -112,13 +114,15 @@ class RoundServiceTest(TestCase):
         # Assert the correct matchups
         match1 = matches[0]
         match2 = matches[1]
+        print(match1.player1, match1.player2) # TODO find out why p1+p4 and p2+p3 gets matched.
+        print(match2.player1, match2.player2)
         self.assertEqual(match1.player1, "Player1")
         self.assertEqual(match1.player2, "Player2")
         self.assertEqual(match2.player1, "Player1")
         self.assertEqual(match2.player2, "Player3")
 
 	# TODO when only one player in a match the player wins instantly
-    @database_sync_to_async
+    
     def test_single_elimination_with_insufficient_participants(self):
         participants = [self.participant1]  # Only one participant
 

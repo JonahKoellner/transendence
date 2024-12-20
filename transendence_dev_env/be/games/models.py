@@ -60,18 +60,6 @@ class OnlineRound(Round):
     matchups = models.JSONField(default=dict)
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
 
-class Participant(models.Model): # TODO maybe kill, because everything works and assumes ai, if user is none
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
-    is_bot = models.BooleanField(default=False)
-    def __str__(self):
-        return f"{self.user.username} (ID: {self.user.id})" if not self.is_bot and self.user else "AI (ID: 0)"
-    @property
-    def username(self):
-        return self.user.username if self.user else "AI"
-    @property
-    def user_id(self):
-        return self.user.id if self.user else 0
-
 class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=TournamentType.choices)
@@ -97,7 +85,7 @@ class BaseTournament(models.Model):
         abstract = True
 
 class OnlineTournament(BaseTournament):
-    participants = models.ManyToManyField(Participant, related_name='online_tournaments')
+    participants = models.ManyToManyField(User, related_name='online_tournaments')
     rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
     host = models.ForeignKey(
         User,
@@ -114,7 +102,7 @@ class OnlineTournament(BaseTournament):
     tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     
     def get_participants(self):
-        return [self.host] + list(self.participants.select_related('user').all())
+        return [self.host] + list(self.participants.all())
 
 class Tournament(BaseTournament):
     start_time = models.DateTimeField()

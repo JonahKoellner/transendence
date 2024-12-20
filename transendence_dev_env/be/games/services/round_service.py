@@ -15,7 +15,6 @@ class RoundService:
             raise ValueError(f"Unknown tournament type: {tournament_type}")
 
     @staticmethod
-    @database_sync_to_async
     def generate_single_elimination_matches(round_instance: OnlineRound, participants):
         for i in range(0, len(participants), 2):
             player1 = participants[i]
@@ -25,7 +24,6 @@ class RoundService:
         round_instance.save()
 
     @staticmethod
-    @database_sync_to_async
     def generate_round_robin_matches(round_instance: OnlineRound, participants, round_index):
         num_players = len(participants)
         matchups = round_instance.matchups or {}
@@ -54,7 +52,6 @@ class RoundService:
         round_instance.save()
 
     @staticmethod
-    @database_sync_to_async
     def create_match(player1, player2):
         return Match.objects.create(
             player1=player1.username if player1 else "AI",

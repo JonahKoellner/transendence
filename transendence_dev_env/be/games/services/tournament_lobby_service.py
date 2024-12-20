@@ -7,31 +7,30 @@ from random import shuffle
 
 class TournamentLobbyService:
     @staticmethod
-    async def start_tournament(lobby, user):
+    def start_tournament(lobby, user):
         if user != lobby.host:
             raise PermissionError("Only the host can start the tournament.")
-        if not await database_sync_to_async(lobby.all_ready)():
+        if not lobby.all_ready():
             raise ValueError("Not all players are ready.")
 
-        tournament = await database_sync_to_async(OnlineTournament.objects.create)(
+        tournament = OnlineTournament.objects.create(
             name=f"Tournament {lobby.room_id}",
             type=lobby.tournament_type,
             host=lobby.host,
             status="ongoing"
         )
-        await database_sync_to_async(tournament.participants.set)(lobby.guests.all())
+        tournament.participants.set(lobby.guests.all())
         lobby.tournament = tournament
-        await database_sync_to_async(lobby.save)()
+        lobby.save()
 
-        await TournamentLobbyService.create_next_round(tournament, round_number=0)
+        TournamentLobbyService.create_next_round(tournament, round_number=0)
 
     @staticmethod
-    @database_sync_to_async
     def create_next_round(tournament, round_number):
         """ Creates round and matchups for the given round number """
         if round_number == 0:
             # First round: get all participants from the lobby
-            participants = list([tournament.host] + tournament.participants.select_related('user').all())
+            participants = list([tournament.host] + list(tournament.participants.all()))
         else:
             # Subsequent rounds: get winners from the previous round
             previous_round = tournament.rounds.filter(round_number=round_number-1).first()
@@ -44,6 +43,7 @@ class TournamentLobbyService:
         current_round = OnlineRound.objects.create(
             round_number=round_number,
             stage=RoundService.get_round_stage(len(participants), tournament.type),
+            start_time=timezone.now() # TODO set real start time, idk if thats correct rn
         )
         if current_round:
             # Generate matches for the current round
@@ -51,7 +51,6 @@ class TournamentLobbyService:
         tournament.rounds.add(current_round)
 
     @staticmethod
-    @database_sync_to_async
     def record_match_result(match_id, winner_id):
         match = Match.objects.get(id=match_id)
         match.winner = User.objects.get(id=winner_id)
@@ -77,7 +76,6 @@ class TournamentLobbyService:
             tournament.save()
 
     @staticmethod
-    @database_sync_to_async
     def handle_user_disconnect(user, lobby):
         if user == lobby.host:
             lobby.delete()
@@ -86,6 +84,5 @@ class TournamentLobbyService:
         lobby.save()
 
     @staticmethod
-    @database_sync_to_async
     def get_lobby_state(lobby):
         return lobby.get_lobby_state()
