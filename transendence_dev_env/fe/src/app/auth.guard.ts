@@ -11,6 +11,8 @@ export class AuthGuard implements CanActivate {
   canActivate(): boolean {
     // Check if the user is authenticated (JWT token is valid)
     if (!this.authService.isAuthenticated()) {
+      // this.authService.refreshTokenIfNeeded();  we should somehow try to refresh the token in here
+
       // console.log('Not authenticated, redirecting to /login');
       // this.router.navigate(['/login']);
       return true;
