@@ -164,7 +164,7 @@ export class AuthService {
   refreshTokenIfNeeded(): Observable<string | null> {
     // console.debug('Refreshing JWT token...');
     // Prevent multiple refresh calls if a refresh is already in progress
-    if (this.refreshInProgress) {
+    if (this.refreshInProgress) {  // could get triggered if we have two call one by Interceptor and one by AuthGuard
       console.error('Refresh token process already in progress');
       return throwError('Refresh token process already in progress');
     }
