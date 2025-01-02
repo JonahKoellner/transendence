@@ -76,6 +76,10 @@ import { ImpressumComponent } from './home/impressum/impressum.component';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
+import { LobbyComponent as OnlineTournamentLobbyComponent } from './games/tournament/online/lobby/lobby.component';
+import { OnlineComponent as OnlineTournamentComponent } from './games/tournament/online/online.component';
+import { CreateRoomComponent as OnlineTournamentCreateRoomComponent } from './games/tournament/online/create-room/create-room.component';
+import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/tournament/online/join-room/join-room.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -141,7 +145,11 @@ import { ToastrModule } from 'ngx-toastr';
     GameRoomsArenaComponent,
     GameRoomArenaComponent,
     GameDisplayArenaComponent,
-    ImpressumComponent
+    ImpressumComponent,
+    OnlineTournamentLobbyComponent,
+    OnlineTournamentComponent,
+    OnlineTournamentCreateRoomComponent,
+    OnlineTournamentJoinRoomComponent
   ],
   imports: [
     BrowserModule,

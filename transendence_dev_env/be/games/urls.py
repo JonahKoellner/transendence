@@ -59,9 +59,9 @@ urlpatterns = [
     path('tournament_lobby/create/', tournament_lobby_create, name="tournament-lobby-create"),
     path('tournament_lobby/join/', tournament_lobby_join, name="tournament-lobby-join"),
     path('tournament_lobby/ready/', tournament_lobby_ready, name="tournament-lobby-set-ready"),
-    path('tournament_lobby/delete/<str:room_id>/', tournament_lobby_delete, name="tournament-lobby-delete"),
     path('tournament_lobby/status/<str:room_id>/', tournament_lobby_status, name="tournament-lobby-status"),
     path('tournament_lobby/rooms/', tournament_lobby_list_rooms, name="tournament-lobby-list-rooms"),
+    path('tournament_lobby/delete/<str:room_id>/', tournament_lobby_delete, name="tournament-lobby-delete"),
 
     path('', include(router.urls)),
 ]
