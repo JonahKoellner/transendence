@@ -76,10 +76,11 @@ import { ImpressumComponent } from './home/impressum/impressum.component';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
-import { LobbyComponent as OnlineTournamentLobbyComponent } from './games/tournament/online/lobby/lobby.component';
 import { OnlineComponent as OnlineTournamentComponent } from './games/tournament/online/online.component';
 import { CreateRoomComponent as OnlineTournamentCreateRoomComponent } from './games/tournament/online/create-room/create-room.component';
 import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/tournament/online/join-room/join-room.component';
+import { GameRoomsComponent as OnlineTournamentRoomsComponent } from './games/tournament/online/game-rooms/game-rooms.component';
+import { GameRoomComponent as OnlineTournamentGameRoomComponent } from './games/tournament/online/game-room/game-room.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -146,10 +147,11 @@ import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/
     GameRoomArenaComponent,
     GameDisplayArenaComponent,
     ImpressumComponent,
-    OnlineTournamentLobbyComponent,
     OnlineTournamentComponent,
     OnlineTournamentCreateRoomComponent,
-    OnlineTournamentJoinRoomComponent
+    OnlineTournamentJoinRoomComponent,
+    OnlineTournamentRoomsComponent,
+    OnlineTournamentGameRoomComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,58 @@
+<div class="game-room">
+  <header>
+    <h2>Tournament Lobby</h2>
+    <p>Room ID: {{ roomId }}</p>
+    <button (click)="copyLinkToClipboard()" class="copy-link-btn">Copy Invite Link</button>
+  </header>
+
+  <section class="settings" *ngIf="lobbyState">
+    <h3>Settings</h3>
+    <div *ngIf="isHost">
+      <label>
+        Max Rounds:
+        <input #maxRoundsInput type="number" [value]="lobbyState.max_rounds" (change)="updateSettings(maxRoundsInput.value)" />
+      </label>
+      <label>
+        Round Score Limit:
+        <input #roundLimitInput type="number" [value]="lobbyState.round_score_limit" (change)="updateSettings(undefined, roundLimitInput.value)" />
+      </label>
+      <label>
+        Tournament Type:
+        <select #tournamentTypeSelect [value]="lobbyState.tournament_type" (change)="updateSettings(undefined, undefined, tournamentTypeSelect.value)">
+          <option value="Single Elimination">Single Elimination</option>
+          <option value="Round Robin">Round Robin</option>
+        </select>
+      </label>
+    </div>
+    <div *ngIf="!isHost">
+      <p>Max Rounds: {{ lobbyState.max_rounds }}</p>
+      <p>Round Score Limit: {{ lobbyState.round_score_limit }}</p>
+      <p>Tournament Type: {{ lobbyState.tournament_type }}</p>
+    </div>
+  </section>
+
+  <section class="players" *ngIf="lobbyState">
+    <h3>Players</h3>
+    <ul>
+      <li>
+        <strong>Host:</strong> {{ lobbyState.host.username }}
+        <span [class.ready]="lobbyState.host.ready_state" [class.not-ready]="!lobbyState.host.ready_state">
+          {{ lobbyState.host.ready_state ? 'Ready' : 'Not Ready' }}
+        </span>
+      </li>
+      <li *ngFor="let guest of lobbyState.guests">
+        <strong>Guest:</strong> {{ guest.username }}
+        <span [class.ready]="guest.ready_state" [class.not-ready]="!guest.ready_state">
+          {{ guest.ready_state ? 'Ready' : 'Not Ready' }}
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="actions">
+    <button *ngIf="isHost" (click)="startTournament()" [disabled]="!lobbyState?.all_ready">Start Tournament</button>
+    <button *ngIf="!isHost" (click)="toggleReadyStatus()">
+      {{ getCurrentUserReadyStatus() ? 'Unready' : 'Ready' }}
+    </button>
+  </section>
+</div>

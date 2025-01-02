@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, delay, Observable, retryWhen, Subject, tap } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
-import { GameSettings } from '../games/tournament/online/create-room/create-room.component';
+// import { GameSettings } from '../games/tournament/online/create-room/create-room.component';
 import { Router } from '@angular/router';
 import { environment } from 'src/environment';
 
@@ -14,6 +14,7 @@ export class TournamentLobbyService {
   private socket$!: WebSocketSubject<any>;
   public messages$ = new Subject<any>();
   private isConnected = new BehaviorSubject<boolean>(false);
+  private currentRoomId: string | null = null;
 
   constructor(private http: HttpClient, private authService: AuthService, private router: Router) {}
 
@@ -22,6 +23,7 @@ export class TournamentLobbyService {
       this.disconnect();
     }
     if (this.socket$ && this.isConnected.value) return;
+    this.currentRoomId = roomId;
     const token = this.authService.getAccessToken(); // Assuming a method to get the access token
     this.socket$ = webSocket(environment.wsUrl + `/lobby/${roomId}/?token=${token}`);
 
@@ -46,16 +48,25 @@ export class TournamentLobbyService {
     );
   }
 
-  private reconnectIfNeeded(msg: any) {
-    this.connect(msg.room_id); // Attempt to reconnect
-    this.isConnected.pipe(
-      tap(connected => {
-        if (connected) {
-          this.socket$.next(msg); // Send message after reconnecting
-        }
-      })
-    ).subscribe();
+  // private reconnectIfNeeded(msg: any) {
+  //   this.connect(msg.room_id); // Attempt to reconnect
+  //   this.isConnected.pipe(
+  //     tap(connected => {
+  //       if (connected) {
+  //         this.socket$.next(msg); // Send message after reconnecting
+  //       }
+  //     })
+  //   ).subscribe();
+  // }
+
+  private reconnect() {
+    setTimeout(() => {
+      if (!this.isConnected.value && this.currentRoomId) {
+        this.connect(this.currentRoomId);
+      }
+    }, 5000);
   }
+  
 
   sendMessage(msg: any) {
     if (this.socket$) {
@@ -73,8 +84,8 @@ export class TournamentLobbyService {
     this.disconnect();
   }
 
-  createRoom(settings: GameSettings): Observable<{ room_id: string }> {
-    return this.http.post<{ room_id: string }>(environment.apiUrl + '/games/tournament_lobby/create/', settings);
+  createRoom(): Observable<{ room_id: string }> {
+    return this.http.post<{ room_id: string }>(environment.apiUrl + '/games/tournament_lobby/create/', {});
   }
 
   joinRoom(roomId: string): Observable<any> {

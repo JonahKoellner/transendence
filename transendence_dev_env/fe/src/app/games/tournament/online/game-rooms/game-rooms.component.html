@@ -1,0 +1,49 @@
+<div class="game-rooms">
+    <h2>Available Rooms</h2>
+    <div *ngIf="rooms.length; else noRooms">
+      <table>
+        <thead>
+          <tr>
+            <th>Room ID</th>
+            <th>Host</th>
+            <th>Players</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let room of rooms | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }">
+            <td>{{ room.room_id }}</td>
+            <td>{{ room.player_one }}</td>
+            <td>
+              <ul>
+                <li>{{ room.player_two || 'Waiting for player 2' }}</li>
+                <li>{{ room.player_three || 'Waiting for player 3' }}</li>
+                <li>{{ room.player_four || 'Waiting for player 4' }}</li>
+              </ul>
+            </td>
+            <td>
+              {{ room.all_ready ? 'Ready to Start' : room.is_full ? 'Waiting for Ready' : 'Open' }}
+            </td>
+            <td>
+              <a [routerLink]="['/games/online-tournament/game-room', room.room_id]"
+                 *ngIf="!room.all_ready">Join</a>
+              <span *ngIf="room.all_ready">Game Starting</span>
+            </td>
+          </tr>
+          <pagination-controls
+          (pageChange)="pGames = $event"
+          id="itemsPerPageGames"
+          class="custom-pagination games-pagination"
+          [directionLinks]="true"
+          [autoHide]="true">
+          </pagination-controls>
+        </tbody>
+      </table>
+    </div>
+  
+    <ng-template #noRooms>
+      <p>No available rooms at the moment. Create one to start a game!</p>
+    </ng-template>
+  </div>
+  
