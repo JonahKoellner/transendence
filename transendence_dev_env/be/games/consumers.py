@@ -2288,7 +2288,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.user = self.scope['user']
 
         # Authenticate user
-        if self.user.is_anonymous:
+        if isinstance(self.user, AnonymousUser):
             await self.close()
             return
 
