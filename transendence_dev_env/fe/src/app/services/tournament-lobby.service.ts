@@ -25,7 +25,7 @@ export class TournamentLobbyService {
     if (this.socket$ && this.isConnected.value) return;
     this.currentRoomId = roomId;
     const token = this.authService.getAccessToken(); // Assuming a method to get the access token
-    this.socket$ = webSocket(environment.wsUrl + `/lobby/${roomId}/?token=${token}`);
+    this.socket$ = webSocket(environment.wsUrl + `/tournament-lobby/${roomId}/?token=${token}`);
 
     this.socket$.subscribe(
       (msg) => {this.messages$.next(msg)},
@@ -93,7 +93,7 @@ export class TournamentLobbyService {
   }
 
   getRoomStatus(roomId: string): Observable<any> {
-    return this.http.get(environment.apiUrl + `/games/tournament_lobby/status/${roomId}`);
+    return this.http.get(environment.apiUrl + `/games/tournament_lobby/status/${roomId}/`);
   }
 
   setReadyStatus(roomId: string, isReady: boolean, userId: number): Observable<any> {
@@ -105,6 +105,6 @@ export class TournamentLobbyService {
   }
 
   deleteRoom(roomId: string): Observable<any> {
-    return this.http.delete(environment.apiUrl + `/games/tournament_lobby/delete/${roomId}`);
+    return this.http.delete(environment.apiUrl + `/games/tournament_lobby/delete/${roomId}/`);
   }
 }

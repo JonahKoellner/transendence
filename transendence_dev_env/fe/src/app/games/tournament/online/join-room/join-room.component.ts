@@ -17,7 +17,7 @@ export class JoinRoomComponent {
   joinRoom() {
     this.lobbyService.joinRoom(this.roomId).subscribe(() => {
       this.joined = true;
-      this.router.navigate([`/games/online-pvp/game-room/${this.roomId}`]); 
+      this.router.navigate([`/games/online-tournament/game-room/${this.roomId}`]); 
     });
   }
 }

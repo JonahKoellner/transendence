@@ -165,9 +165,9 @@ class TournamentLobby(models.Model):
 
     def set_ready_status(self, user, is_ready):
         """ Set the ready status for the host or guest based on the user. """
-        if user == self.host:
-            self.is_host_ready = is_ready
-        elif user in self.guests.all():
+        # if user == self.host:
+        #     self.is_host_ready = is_ready
+        if user in self.guests.all():
             if not self.guest_ready_states:
                 self.guest_ready_states = {}
             self.guest_ready_states[str(user.id)] = is_ready
@@ -200,10 +200,7 @@ class TournamentLobby(models.Model):
     def get_lobby_state(self):
         """Return the lobby state with serialized customizations."""
         state = {
-            "host": {
-                "username": self.host.username,
-                "ready_state": self.is_host_ready,
-            },
+            "host": self.host.username,
             "guests": [
                 {
                     "username": guest.username,

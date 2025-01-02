@@ -10,6 +10,7 @@ from django.contrib.auth.models import AnonymousUser
 import asyncio
 import random
 import math
+import json
 from asyncio import Lock
 from django.utils import timezone
 from threading import Timer
@@ -2338,9 +2339,9 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def update_ready_status(self, user, is_ready):
-        if user == self.lobby.host:
-            self.lobby.is_host_ready = is_ready
-        elif user in self.lobby.guests.all():
+        # if user == self.lobby.host:
+        #     self.lobby.is_host_ready = is_ready
+        if user in self.lobby.guests.all():
             self.lobby.guest_ready_states[str(user.id)] = is_ready
         self.lobby.save()
 
@@ -2378,6 +2379,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
 
     async def broadcast_lobby_state(self):
         lobby_state = await database_sync_to_async(self.lobby.get_lobby_state)()
+        # lobby_state = await self.get_lobby_state()
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -2387,10 +2389,31 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def lobby_state(self, event):
-        await self.send_json({
-            "type": "lobby_state",
-            "state": event["lobby_state"]
-        })
+        """
+        Handle the 'lobby_state' WebSocket message type.
+        """
+        # Extract the lobby state from the event
+        lobby_state = {
+            "host": event.get("host"),
+            "guests": event.get("guests", []),
+            "all_ready": event.get("all_ready", False),
+            "is_full": event.get("is_full", False),
+            "active_lobby": event.get("active_lobby", False),
+            "active_tournament": event.get("active_tournament", False),
+            "created_at": event.get("created_at"),
+            "max_rounds": event.get("max_rounds"),
+            "round_score_limit": event.get("round_score_limit"),
+            "room_id": event.get("room_id"),
+        }
+
+        # Send the lobby state to the WebSocket client
+        await self.send(
+            text_data=json.dumps({
+                "type": "lobby_state",
+                "lobby_state": lobby_state
+            })
+        )
+        
 
     @database_sync_to_async
     def handle_user_disconnect(self):
