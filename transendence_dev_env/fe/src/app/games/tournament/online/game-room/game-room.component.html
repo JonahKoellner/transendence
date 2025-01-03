@@ -5,12 +5,16 @@
     <button (click)="copyLinkToClipboard()" class="copy-link-btn">Copy Invite Link</button>
   </header>
 
-  <!-- Tournament Type Selection as Buttons -->
+  <!-- Tournament Type Selection -->
   <div class="tournament-type-selection">
     <h3>Select Tournament Type:</h3>
     <div class="type-buttons">
-      <button *ngFor="let type of tournamentTypes" [class.selected]="type.type === tournamentType"
-        (click)="selectTournamentType(type)">
+      <button
+        *ngFor="let type of tournamentTypes"
+        [class.selected]="type.type === tournamentType"
+        [disabled]="!isHost"
+        (click)="selectTournamentType(type)"
+      >
         {{ type.type }}
       </button>
     </div>
@@ -18,24 +22,23 @@
       <small>Select a Tournament Style</small>
     </div>
   </div>
-  <br>
   <p *ngIf="tournamentDescription" class="description">{{ tournamentDescription }}</p>
-  <!-- Player Count Selection as Buttons -->
+
+  <!-- Player Count Selection -->
   <div *ngIf="playerCountOptions.length > 0" class="player-count-selection">
     <h3>Select Player Count:</h3>
+    <p>maxPlayerCount: {{ maxPlayerCount }}</p>
     <div class="count-buttons">
-      <button *ngFor="let count of playerCountOptions" [class.selected]="count === maxPlayerCount"
-        (click)="selectMaxPlayerCount(count)">
+      <button
+        *ngFor="let count of playerCountOptions"
+        [class.selected]="count === maxPlayerCount"
+        [disabled]="!isHost"
+        (click)="selectMaxPlayerCount(count)"
+      >
         {{ count }}
       </button>
     </div>
   </div>
-
-  <section class="settings" *ngIf="lobbyState && !isHost">
-    <h3>Settings</h3>
-    <p>Tournament Type: {{ lobbyState.tournament_type }}</p>
-      <p>Max Player Count: {{ lobbyState.max_player_count }}</p>
-  </section>
 
   <section class="players" *ngIf="lobbyState">
     <h3>Players</h3>

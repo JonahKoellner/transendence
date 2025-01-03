@@ -86,3 +86,25 @@ class TournamentLobbyService:
     @staticmethod
     def get_lobby_state(lobby):
         return lobby.get_lobby_state()
+    
+    @staticmethod
+    def adjust_max_player_count(lobby):
+        """Ensures max_player_count is valid based on the game mode and player count."""
+        player_count = lobby.guests.count() + 1  # Including the host
+        allowed_counts = TournamentLobbyService.get_allowed_player_counts(lobby.tournament_type)
+
+        # Determine the smallest valid max_player_count >= current player count
+        valid_counts = [count for count in allowed_counts if count >= player_count]
+        if valid_counts and lobby.max_player_count not in valid_counts: #TODO decide whether the host should even be able to decide on tournament size
+            lobby.max_player_count = valid_counts[0]
+        #TODO be sure that never max_player_count < player_count, otherwise add edge case handling
+        lobby.save()
+
+    @staticmethod
+    def get_allowed_player_counts(tournament_type):
+        """Returns allowed player counts for the given game mode."""
+        game_modes = {
+            "Single Elimination": [4, 8, 16, 32],
+            "Round Robin": [4, 6, 8, 10, 12],
+        }
+        return game_modes.get(tournament_type, [])

@@ -2348,12 +2348,13 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def update_lobby_settings(self, new_settings):
         # Update lobby settings based on the provided input
-        if "player_count" in new_settings:
-            self.lobby.player_count = new_settings["player_count"]
+        if "max_player_count" in new_settings:
+            self.lobby.max_player_count = new_settings["max_player_count"]
         # if "round_score_limit" in new_settings:
             # self.lobby.round_score_limit = new_settings["round_score_limit"]
         if "tournament_type" in new_settings:
             self.lobby.tournament_type = new_settings["tournament_type"]
+        TournamentLobbyService.adjust_max_player_count(self.lobby)
         self.lobby.save()
 
     @database_sync_to_async
@@ -2404,7 +2405,8 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             "player_count": event.get("player_count"),
             # "round_score_limit": event.get("round_score_limit"),
             "room_id": event.get("room_id"),
-            "tournament_type": event.get("tournament_type")
+            "tournament_type": event.get("tournament_type"),
+            "max_player_count": event.get("max_player_count")
         }
 
         # Send the lobby state to the WebSocket client
@@ -2423,4 +2425,5 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.lobby.delete()
         elif self.user in self.lobby.guests.all():
             self.lobby.guests.remove(self.user)
+            TournamentLobbyService.adjust_max_player_count(self.lobby)
         self.lobby.save()

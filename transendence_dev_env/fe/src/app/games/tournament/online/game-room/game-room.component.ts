@@ -291,15 +291,17 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     }
   }
 
+  selectTournamentType(type: any): void {
+    if (this.isHost && this.lobbyState) {
+      this.lobbyState.tournament_type = type.type;
+      this.updateSettings(undefined, type.type);
+    }
+  }
+  
   selectMaxPlayerCount(count: number): void {
-    if (this.lobbyState) {
+    if (this.isHost && this.lobbyState) {
       this.lobbyState.max_player_count = count;
       this.updateSettings(count, undefined);
     }
-  }
-
-  selectTournamentType(type: any): void {
-    if (!this.lobbyState) { return; }
-    this.lobbyState.tournament_type = type.type;
   }
 }
