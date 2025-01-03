@@ -5,10 +5,12 @@ import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
 import { forkJoin } from 'rxjs';
 
-//TODO: ui looks like shit
 //TODO: start_tournament button is not deactivated when not everybody is ready
 //TODO: friend list / friends in general
 //TODO: invite
+//TODO: ui looks like shit
+
+//TODO: make LobbyState non nullable, instead initialize prooperly?
 
 interface LobbyState {
   host: string;
@@ -18,8 +20,8 @@ interface LobbyState {
   active_lobby: boolean;
   active_tournament: boolean;
   created_at: string;
-  max_rounds: number;
-  round_score_limit: number;
+  max_player_count: number;
+  // round_score_limit: number;
   room_id: string;
   tournament_type: string;
 }
@@ -32,10 +34,22 @@ interface LobbyState {
 export class GameRoomComponent implements OnInit, OnDestroy {
   roomId: string = '';
   lobbyState: LobbyState | null = null;
-  isHost: boolean = false;
+  // isHost: boolean = false;
   currentUser: string = ''; // Replace with actual logic to fetch the logged-in user
   isReady: boolean = false;
   userProfile: UserProfile | null = null;
+  tournamentTypes = [
+    { 
+      type: 'Single Elimination',
+      description: 'Players compete in single-elimination matches. Losers are eliminated, and winners advance until a champion is crowned.',
+      allowedCounts: [4, 8, 16, 32]
+    },
+    { 
+      type: 'Round Robin',
+      description: 'Each player competes against every other player. The player with the most wins is the champion.',
+      allowedCounts: [4, 6, 8, 10, 12]
+    }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -65,8 +79,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         console.log('Assigned lobby state', this.lobbyState)
         
         // Set isHost only once after both are fetched
-        this.isHost = this.userProfile?.username === this.lobbyState?.host;
-        console.log('IsHost:', this.isHost);
+        // this.isHost = this.userProfile?.username === this.lobbyState?.host;
+        // console.log('IsHost:', this.isHost);
       },
       error: (err) => {
         this.toastr.error('Failed to load game room data.', 'Error');
@@ -87,6 +101,49 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         (err) => this.toastr.error('Failed to delete the room.', 'Error')
       );
     }
+  }
+
+  // Getters for binding in HTML
+  get host(): string {
+    return this.lobbyState?.host || '';
+  }
+
+  get guests(): Array<{ username: string; ready_state: boolean }> {
+    return this.lobbyState?.guests || [];
+  }
+
+  get allReady(): boolean {
+    return this.lobbyState?.all_ready || false;
+  }
+
+  get maxPlayerCount(): number {
+    return this.lobbyState?.max_player_count || 0;
+  }
+
+  get tournamentType(): string {
+    return this.lobbyState?.tournament_type || '';
+  }
+
+  get isHost(): boolean {
+    return this.userProfile?.username === this.host;
+  }
+
+  get isFull(): boolean {
+    return this.lobbyState?.is_full || false;
+  }
+
+  get tournamentDescription(): string {
+    const selectedType = this.tournamentTypes.find(type => type.type === this.tournamentType);
+    return selectedType ? selectedType.description : '';
+  }
+
+  get playerCountOptions(): number[] {
+    const selectedType = this.tournamentTypes.find(type => type.type === this.tournamentType);
+    return selectedType ? selectedType.allowedCounts : [];
+  }
+
+  get maxPlayers(): number {
+    return this.lobbyState?.max_player_count || 0;
   }
 
   private joinRoom(): void {
@@ -180,16 +237,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     });
   }
 
-  updateSettings(maxRounds?: string, roundScoreLimit?: string, tournamentType?: string): void {
+  updateSettings(max_player_count?: number, tournament_type?: string): void {
     if (!this.isHost) {
       this.toastr.error('Only the host can update settings.', 'Permission Denied');
       return;
     }
   
     const settings: any = {};
-    if (maxRounds) settings.max_rounds = Number(maxRounds);
-    if (roundScoreLimit) settings.round_score_limit = Number(roundScoreLimit);
-    if (tournamentType) settings.tournament_type = tournamentType;
+    if (max_player_count) settings.max_player_count = max_player_count;
+    // if (roundScoreLimit) settings.round_score_limit = Number(roundScoreLimit);
+    if (tournament_type) settings.tournament_type = tournament_type;
   
     this.lobbyService.sendMessage({
       action: 'update_settings',
@@ -224,5 +281,25 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     }).catch(err => {
       this.toastr.error('Failed to copy link to clipboard!', 'Error');
     });
+  }
+
+  onTournamentTypeChange(): void {
+    if (this.lobbyState) {
+      const selectedType = this.tournamentTypes.find(type => type.type === this.lobbyState?.tournament_type);
+      this.lobbyState.tournament_type = selectedType ? selectedType.type : '';
+      this.updateSettings(undefined, this.lobbyState.tournament_type);
+    }
+  }
+
+  selectMaxPlayerCount(count: number): void {
+    if (this.lobbyState) {
+      this.lobbyState.max_player_count = count;
+      this.updateSettings(count, undefined);
+    }
+  }
+
+  selectTournamentType(type: any): void {
+    if (!this.lobbyState) { return; }
+    this.lobbyState.tournament_type = type.type;
   }
 }

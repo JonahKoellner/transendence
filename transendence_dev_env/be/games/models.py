@@ -131,7 +131,8 @@ class TournamentLobby(models.Model):
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
-    round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    # round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    max_player_count = models.IntegerField(default=4, validators=[MinValueValidator(4), MaxValueValidator(32)])
     initial_stage = models.CharField(max_length=50, choices=Stage.choices, default=Stage.SEMI_FINALS) # semi finals, because its the stage with the lowest number of participants
     tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     tournament = models.ForeignKey(
@@ -158,7 +159,7 @@ class TournamentLobby(models.Model):
     )
 
     def is_full(self):
-        return self.guests.count() >= 32 # might need to adjust, is the host counted? if yes need to subtract 1
+        return self.guests.count() >= self.max_player_count
 
     def all_ready(self): # host cannot be ready or not, because host decides when the game starts
         return all(self.guest_ready_states.get(str(guest.id), False) for guest in self.guests.all())
@@ -214,7 +215,8 @@ class TournamentLobby(models.Model):
             "active_tournament": self.active_tournament,
             "created_at": self.created_at.isoformat(),
             "max_rounds": self.max_rounds,
-            "round_score_limit": self.round_score_limit,
+            # "round_score_limit": self.round_score_limit,
+            "max_player_count": self.max_player_count,
             "room_id": self.room_id,
             "tournament_type": self.tournament_type
         }

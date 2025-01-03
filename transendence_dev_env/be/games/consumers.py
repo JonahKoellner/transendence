@@ -51,7 +51,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.round_start_time = timezone.now()
 
         # Get settings from lobby
-        self.max_rounds = self.lobby.max_rounds
+        self.player_count = self.lobby.player_count
         self.round_score_limit = self.lobby.round_score_limit
 
         # Initialize rounds data
@@ -399,7 +399,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.current_round += 1
 
         # Check if the game should end
-        if self.current_round > self.max_rounds:
+        if self.current_round > self.player_count:
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
@@ -730,7 +730,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.round_start_time = timezone.now()
 
         # Get settings from lobby
-        self.max_rounds = self.lobby.max_rounds
+        self.player_count = self.lobby.player_count
         self.round_score_limit = self.lobby.round_score_limit
         self.powerup_spawn_rate = self.lobby.powerup_spawn_rate
 
@@ -1174,7 +1174,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.current_round += 1
 
         # Check if the game should end
-        if self.current_round > self.max_rounds:
+        if self.current_round > self.player_count:
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
@@ -1523,7 +1523,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.round_start_time = timezone.now()
 
         # Get settings from lobby
-        self.max_rounds = self.lobby.max_rounds
+        self.player_count = self.lobby.player_count
         self.round_score_limit = self.lobby.round_score_limit
 
         # Initialize rounds data
@@ -1916,7 +1916,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.current_round += 1
 
         # Check if the game should end
-        if self.current_round > self.max_rounds:
+        if self.current_round > self.player_count:
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
@@ -2348,10 +2348,10 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def update_lobby_settings(self, new_settings):
         # Update lobby settings based on the provided input
-        if "max_rounds" in new_settings:
-            self.lobby.max_rounds = new_settings["max_rounds"]
-        if "round_score_limit" in new_settings:
-            self.lobby.round_score_limit = new_settings["round_score_limit"]
+        if "player_count" in new_settings:
+            self.lobby.player_count = new_settings["player_count"]
+        # if "round_score_limit" in new_settings:
+            # self.lobby.round_score_limit = new_settings["round_score_limit"]
         if "tournament_type" in new_settings:
             self.lobby.tournament_type = new_settings["tournament_type"]
         self.lobby.save()
@@ -2401,8 +2401,8 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             "active_lobby": event.get("active_lobby", False),
             "active_tournament": event.get("active_tournament", False),
             "created_at": event.get("created_at"),
-            "max_rounds": event.get("max_rounds"),
-            "round_score_limit": event.get("round_score_limit"),
+            "player_count": event.get("player_count"),
+            # "round_score_limit": event.get("round_score_limit"),
             "room_id": event.get("room_id"),
             "tournament_type": event.get("tournament_type")
         }

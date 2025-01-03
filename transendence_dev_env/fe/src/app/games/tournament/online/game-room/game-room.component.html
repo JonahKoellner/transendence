@@ -5,30 +5,36 @@
     <button (click)="copyLinkToClipboard()" class="copy-link-btn">Copy Invite Link</button>
   </header>
 
-  <section class="settings" *ngIf="lobbyState">
+  <!-- Tournament Type Selection as Buttons -->
+  <div class="tournament-type-selection">
+    <h3>Select Tournament Type:</h3>
+    <div class="type-buttons">
+      <button *ngFor="let type of tournamentTypes" [class.selected]="type.type === tournamentType"
+        (click)="selectTournamentType(type)">
+        {{ type.type }}
+      </button>
+    </div>
+    <div *ngIf="!tournamentType" class="text-danger">
+      <small>Select a Tournament Style</small>
+    </div>
+  </div>
+  <br>
+  <p *ngIf="tournamentDescription" class="description">{{ tournamentDescription }}</p>
+  <!-- Player Count Selection as Buttons -->
+  <div *ngIf="playerCountOptions.length > 0" class="player-count-selection">
+    <h3>Select Player Count:</h3>
+    <div class="count-buttons">
+      <button *ngFor="let count of playerCountOptions" [class.selected]="count === maxPlayerCount"
+        (click)="selectMaxPlayerCount(count)">
+        {{ count }}
+      </button>
+    </div>
+  </div>
+
+  <section class="settings" *ngIf="lobbyState && !isHost">
     <h3>Settings</h3>
-    <div *ngIf="isHost">
-      <label>
-        Max Rounds:
-        <input #maxRoundsInput type="number" [value]="lobbyState.max_rounds" (change)="updateSettings(maxRoundsInput.value)" />
-      </label>
-      <label>
-        Round Score Limit:
-        <input #roundLimitInput type="number" [value]="lobbyState.round_score_limit" (change)="updateSettings(undefined, roundLimitInput.value)" />
-      </label>
-      <label>
-        Tournament Type:
-        <select #tournamentTypeSelect [value]="lobbyState.tournament_type" (change)="updateSettings(undefined, undefined, tournamentTypeSelect.value)">
-          <option value="Single Elimination">Single Elimination</option>
-          <option value="Round Robin">Round Robin</option>
-        </select>
-      </label>
-    </div>
-    <div *ngIf="!isHost">
-      <p>Max Rounds: {{ lobbyState.max_rounds }}</p>
-      <p>Round Score Limit: {{ lobbyState.round_score_limit }}</p>
-      <p>Tournament Type: {{ lobbyState.tournament_type }}</p>
-    </div>
+    <p>Tournament Type: {{ lobbyState.tournament_type }}</p>
+      <p>Max Player Count: {{ lobbyState.max_player_count }}</p>
   </section>
 
   <section class="players" *ngIf="lobbyState">

@@ -1134,7 +1134,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
             if user in lobby.guests.all():
                 return Response({"detail": "You are already a participant."}, status=status.HTTP_200_OK)
 
-            if len(lobby.guests.all()) >= 31: # max participants is 32 -> 1 host + 31 guests
+            if len(lobby.guests.all()) >= lobby.max_player_count:
                 return Response({"detail": "Lobby is full."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Add the user as a guest
@@ -1173,8 +1173,9 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
                 "all_ready": lobby.all_ready(),
                 "is_full": lobby.is_full(),
                 "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
-                "max_rounds": lobby.max_rounds,
-                "round_score_limit": lobby.round_score_limit,
+                "max_player_count": lobby.max_player_count,
+                # "max_rounds": lobby.max_rounds,
+                # "round_score_limit": lobby.round_score_limit,
                 "initial_stage": lobby.initial_stage,
                 "tournament_type": lobby.tournament_type,
             }, status=status.HTTP_200_OK)
@@ -1189,11 +1190,13 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
         data = [
             {
                 "room_id": lobby.room_id,
+                "active_lobby": lobby.active_lobby,
                 "active_tournament": lobby.active_tournament,
                 "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
                 "host": lobby.host.username,
-                "guest_count": lobby.guests.count(),
+                "player_count": lobby.guests.count()+1,
                 "tournament_type": lobby.tournament_type,
+                "max_player_count": lobby.max_player_count,
             }
             for lobby in lobbies
         ]
