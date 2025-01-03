@@ -101,8 +101,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         () => {
           this.toastr.info('Room deleted successfully.', 'Info')
           this.router.navigate(['/games/online-tournament/rooms']);
-        },
-        (err) => this.toastr.error('Failed to delete the room.', 'Error')
+        }
       );
     }
   }
@@ -220,11 +219,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);
     }
+    if (this.host === "") {
+      this.router.navigate(['/games/online-tournament/rooms']);
+    }
+    this.fetchRoomStatus();
   }
 
   private handleAlert(msg: any): void {
     if (msg.user_role === 'host') {
       this.toastr.error('The host has left the room.', 'Error');
+      this.router.navigate(['/games/online-tournament/rooms']);
     } else if (msg.user_role === 'guest') {
       this.toastr.info(`Player ${msg.username} has left the room.`, 'Info');
     }

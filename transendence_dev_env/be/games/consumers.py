@@ -51,7 +51,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.round_start_time = timezone.now()
 
         # Get settings from lobby
-        self.player_count = self.lobby.player_count
+        self.max_rounds = self.lobby.max_rounds
         self.round_score_limit = self.lobby.round_score_limit
 
         # Initialize rounds data
@@ -399,7 +399,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         self.current_round += 1
 
         # Check if the game should end
-        if self.current_round > self.player_count:
+        if self.current_round > self.max_rounds:
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
@@ -730,7 +730,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.round_start_time = timezone.now()
 
         # Get settings from lobby
-        self.player_count = self.lobby.player_count
+        self.max_rounds = self.lobby.max_rounds
         self.round_score_limit = self.lobby.round_score_limit
         self.powerup_spawn_rate = self.lobby.powerup_spawn_rate
 
@@ -1174,7 +1174,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.current_round += 1
 
         # Check if the game should end
-        if self.current_round > self.player_count:
+        if self.current_round > self.max_rounds:
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
@@ -1523,7 +1523,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.round_start_time = timezone.now()
 
         # Get settings from lobby
-        self.player_count = self.lobby.player_count
+        self.max_rounds = self.lobby.max_rounds
         self.round_score_limit = self.lobby.round_score_limit
 
         # Initialize rounds data
@@ -1916,7 +1916,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         self.current_round += 1
 
         # Check if the game should end
-        if self.current_round > self.player_count:
+        if self.current_round > self.max_rounds:
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
@@ -2310,9 +2310,32 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        
+        if await self.is_user_host():
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "alert",
+                    "message": "The host has left the lobby. The lobby has been closed.",
+                    "user_role": "host"
+                }
+            )
+            await self.delete_lobby()
+        else:
+            # remove user
+            await self.handle_user_disconnect()
+            # send alert to other users
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "alert",
+                    "message": f"{self.user.username} has left the lobby.",
+                    "user_role": "guest"
+                }
+            )
 
         # Handle user leaving the lobby
-        await self.handle_user_disconnect()
+        # await self.handle_user_disconnect()
 
     async def receive_json(self, content):
         action = content.get("action")
@@ -2421,9 +2444,17 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def handle_user_disconnect(self):
         # Remove the user from the lobby
-        if self.user == self.lobby.host:
-            self.lobby.delete()
-        elif self.user in self.lobby.guests.all():
+        if self.user in self.lobby.guests.all():
             self.lobby.guests.remove(self.user)
-            TournamentLobbyService.adjust_max_player_count(self.lobby)
         self.lobby.save()
+
+    @database_sync_to_async
+    def delete_lobby(self):
+        """Delete the lobby if the host disconnects."""
+        Lobby.objects.filter(room_id=self.room_id).delete()
+        
+    @database_sync_to_async
+    def is_user_host(self):
+        """Check if the disconnecting user is the host."""
+        lobby = Lobby.objects.get(room_id=self.room_id)
+        return self.user == lobby.host
