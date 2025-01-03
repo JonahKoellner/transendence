@@ -177,7 +177,6 @@ services:
     logging:
       driver: "gelf"
       options:
-        # gelf-address: "udp://172.25.9.10:5240"
         gelf-address: "udp://host.docker.internal:5240"
         tag: "{{.Name}}"
     volumes:

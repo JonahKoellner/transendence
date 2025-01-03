@@ -118,15 +118,15 @@ vault write auth/userpass/users/$UI_USER \
 # Set VAULT_TOKEN to the admin user's token
 export VAULT_TOKEN=$(vault login -method=userpass username=$UI_USER password=$UI_PASSWORD -format=json | jq -r '.auth.client_token')
 
-# Write a secret
-vault kv put secret/my-secret test.username=admin test.password=supersecret
-
 # Set VAULT_CACERT to the CA certificate
 export VAULT_CACERT=$CERT_CRT
 
-# # Write a secret using the admin user's token
-# echo "Logging in as $UI_USERNAME..."
-# vault login -method=userpass username=$UI_USERNAME password=$UI_PASSWORD
+# Write a secret
+vault kv put secret/my-secret test.username=admin test.password=supersecret
+
+# Read the secret
+echo "Retrieving secret from \$SECRET_PATH..."
+vault kv get secret/my-secret
 
 # Kill Vault background process
 kill $VAULT_PID

@@ -865,3 +865,4 @@ class AchievementListView(APIView):
         achievements = Achievement.objects.all()
         serializer = AchievementSerializer(achievements, many=True, context={'request': request})
         return Response(serializer.data)
+    
