@@ -49,7 +49,7 @@
   <section class="actions">
     <button *ngIf="isHost" (click)="startTournament()" [disabled]="!lobbyState?.all_ready">Start Tournament</button>
     <button *ngIf="!isHost" (click)="toggleReadyStatus()">
-      {{ getCurrentUserReadyStatus() ? 'Unready' : 'Ready' }}
+      {{ isReady ? 'Unready' : 'Ready' }}
     </button>
   </section>
 </div>

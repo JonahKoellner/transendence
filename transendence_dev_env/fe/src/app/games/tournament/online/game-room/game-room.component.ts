@@ -5,9 +5,10 @@ import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
 import { forkJoin } from 'rxjs';
 
-//TODO: ready works only one way, not able to toggle
 //TODO: ui looks like shit
 //TODO: start_tournament button is not deactivated when not everybody is ready
+//TODO: friend list / friends in general
+//TODO: invite
 
 interface LobbyState {
   host: string;
@@ -33,6 +34,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   lobbyState: LobbyState | null = null;
   isHost: boolean = false;
   currentUser: string = ''; // Replace with actual logic to fetch the logged-in user
+  isReady: boolean = false;
   userProfile: UserProfile | null = null;
 
   constructor(
@@ -159,16 +161,17 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   toggleReadyStatus(): void {
-    const isReady = !this.getCurrentUserReadyStatus();
-    this.lobbyService.setReadyStatus(this.roomId, isReady, this.getCurrentUserId()).subscribe({
+    this.isReady = !this.isReady;
+    console.log('isReady:', this.isReady);
+    this.lobbyService.setReadyStatus(this.roomId, this.isReady, this.getCurrentUserId()).subscribe({
       next: () => {
         this.lobbyService.sendMessage({
           action: 'set_ready',
           room_id: this.roomId,
-          is_ready: isReady,
+          is_ready: this.isReady,
           user_id: this.getCurrentUserId(),
         });
-        this.toastr.success(`You are now ${isReady ? 'ready' : 'not ready'}.`, 'Status Updated');
+        this.toastr.success(`You are now ${this.isReady ? 'ready' : 'not ready'}.`, 'Status Updated');
       },
       error: (err) => {
         this.toastr.error('Failed to update ready status.', 'Error');
@@ -212,15 +215,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private getCurrentUserId(): number {
     // Replace with logic to fetch the current user's ID
     return 1;
-  }
-
-  public getCurrentUserReadyStatus(): boolean {
-    if (this.lobbyState) {
-      if (this.isHost) return true; // host has no ready state, therefore returning true always
-      const guest = this.lobbyState.guests.find((g) => g.username === this.currentUser);
-      return guest ? guest.ready_state : false;
-    }
-    return false;
   }
 
   copyLinkToClipboard(): void {
