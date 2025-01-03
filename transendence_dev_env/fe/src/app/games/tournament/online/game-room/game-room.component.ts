@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
@@ -94,13 +94,27 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // TODO (if message subscription added) unsubscribe from messagesubscription
     this.lobbyService.disconnect();
     if (this.isHost) {
       this.lobbyService.deleteRoom(this.roomId).subscribe(
-        () => this.toastr.info('Room deleted successfully.', 'Info'),
+        () => {
+          this.toastr.info('Room deleted successfully.', 'Info')
+          this.router.navigate(['/games/online-tournament/rooms']);
+        },
         (err) => this.toastr.error('Failed to delete the room.', 'Error')
       );
     }
+  }
+
+  // Listen to the window before unload event to detect page leave actions
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler(event: Event) {
+    if (this.isHost) {
+      // Trigger room deletion if the user is the host
+      this.lobbyService.deleteRoom(this.roomId).subscribe();
+    }
+    this.lobbyService.disconnect(); // Ensure disconnection on page leave
   }
 
   // Getters for binding in HTML
