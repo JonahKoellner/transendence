@@ -216,6 +216,7 @@ class TournamentLobby(models.Model):
             "max_rounds": self.max_rounds,
             "round_score_limit": self.round_score_limit,
             "room_id": self.room_id,
+            "tournament_type": self.tournament_type
         }
         return state
 

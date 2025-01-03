@@ -2404,6 +2404,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             "max_rounds": event.get("max_rounds"),
             "round_score_limit": event.get("round_score_limit"),
             "room_id": event.get("room_id"),
+            "tournament_type": event.get("tournament_type")
         }
 
         # Send the lobby state to the WebSocket client

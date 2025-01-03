@@ -1,10 +1,16 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
+import { forkJoin } from 'rxjs';
+
+//TODO: ready works only one way, not able to toggle
+//TODO: ui looks like shit
+//TODO: start_tournament button is not deactivated when not everybody is ready
 
 interface LobbyState {
-  host: { username: string; ready_state: boolean };
+  host: string;
   guests: Array<{ username: string; ready_state: boolean }>;
   all_ready: boolean;
   is_full: boolean;
@@ -27,12 +33,16 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   lobbyState: LobbyState | null = null;
   isHost: boolean = false;
   currentUser: string = ''; // Replace with actual logic to fetch the logged-in user
+  userProfile: UserProfile | null = null;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private toastr: ToastrService,
-    private lobbyService: TournamentLobbyService
+    private lobbyService: TournamentLobbyService,
+    private userProfileService: ProfileService,
   ) {}
+
 
   ngOnInit(): void {
     // Fetch the room ID from the route
@@ -41,6 +51,27 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       this.toastr.error('Invalid room ID.', 'Error');
       return;
     }
+
+    // Fetch both userProfile and lobbyState in parallel
+    forkJoin({
+      userProfile: this.userProfileService.getProfile(),
+      lobbyState: this.lobbyService.getRoomStatus(this.roomId),
+    }).subscribe({
+      next: ({ userProfile, lobbyState }: { userProfile: UserProfile; lobbyState: LobbyState }) => {
+        this.userProfile = userProfile;
+        this.lobbyState = lobbyState;
+        console.log('Assigned lobby state', this.lobbyState)
+        
+        // Set isHost only once after both are fetched
+        this.isHost = this.userProfile?.username === this.lobbyState?.host;
+        console.log('IsHost:', this.isHost);
+      },
+      error: (err) => {
+        this.toastr.error('Failed to load game room data.', 'Error');
+        console.error(err);
+        this.router.navigate(['/games/online-tournament/rooms']);
+      },
+    });
 
     // Join the room and connect to WebSocket
     this.joinRoom();
@@ -60,6 +91,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.lobbyService.joinRoom(this.roomId).subscribe({
       next: () => {
         this.lobbyService.connect(this.roomId);
+        
+        // Fetch the initial room state
+        this.fetchRoomStatus();
 
         // Listen for WebSocket messages
         this.lobbyService.messages$.subscribe({
@@ -70,8 +104,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           },
         });
 
-        // Fetch the initial room state
-        this.fetchRoomStatus();
       },
       error: (err) => {
         this.toastr.error('Failed to join the room.', 'Error');
@@ -83,8 +115,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private fetchRoomStatus(): void {
     this.lobbyService.getRoomStatus(this.roomId).subscribe({
       next: (data: LobbyState) => {
-        this.lobbyState = data;
-        this.isHost = this.lobbyState.host.username === this.currentUser;
+        if (data) {
+          this.lobbyState = data;
+        }
       },
       error: (err) => {
         this.toastr.error('Failed to fetch room status.', 'Error');
@@ -96,8 +129,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private handleWebSocketMessage(msg: any): void {
     switch (msg.type) {
       case 'lobby_state':
-        this.lobbyState = msg.state;
-        this.isHost = this.lobbyState?.host.username === this.currentUser;
+        console.log('assigning new lobbyState', msg)
+        this.lobbyState = msg.lobby_state;
         break;
       case 'ready_status':
         if (this.lobbyState) {
@@ -183,7 +216,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   public getCurrentUserReadyStatus(): boolean {
     if (this.lobbyState) {
-      if (this.isHost) return this.lobbyState.host.ready_state;
+      if (this.isHost) return true; // host has no ready state, therefore returning true always
       const guest = this.lobbyState.guests.find((g) => g.username === this.currentUser);
       return guest ? guest.ready_state : false;
     }

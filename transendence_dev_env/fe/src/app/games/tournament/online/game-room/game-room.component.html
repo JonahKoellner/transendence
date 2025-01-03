@@ -35,10 +35,7 @@
     <h3>Players</h3>
     <ul>
       <li>
-        <strong>Host:</strong> {{ lobbyState.host.username }}
-        <span [class.ready]="lobbyState.host.ready_state" [class.not-ready]="!lobbyState.host.ready_state">
-          {{ lobbyState.host.ready_state ? 'Ready' : 'Not Ready' }}
-        </span>
+        <strong>Host:</strong> {{ lobbyState.host }}
       </li>
       <li *ngFor="let guest of lobbyState.guests">
         <strong>Guest:</strong> {{ guest.username }}
