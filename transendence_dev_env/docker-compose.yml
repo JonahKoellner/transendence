@@ -94,7 +94,7 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - ./data/vault-data:/vault/data
+      - ./data/vault-data:/usr/local/data
     depends_on:
       logstash:
         condition: service_healthy
@@ -182,6 +182,7 @@ services:
     volumes:
       - ./be:/app  # Bind mount for the Django app code
       - ./static:/app/static  # Static files directory
+      - ./data/vault-data:/home/vault-data
 
   db:
     container_name: db

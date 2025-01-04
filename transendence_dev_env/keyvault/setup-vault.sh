@@ -35,6 +35,7 @@ subjectAltName = @alt_names
 DNS.1 = localhost
 DNS.2 = vault.local
 DNS.3 = vault
+DNS.4 = hashicorpvault
 IP.1 = 127.0.0.1
 IP.2 = 0.0.0.0
 EOF
@@ -53,6 +54,8 @@ echo "Certificates generated successfully."
 
 cp $CERT_CRT /usr/local/share/ca-certificates/
 echo "Making certificate trusted" && update-ca-certificates || (echo "ERROR trusting cert." && exit 1)
+
+cp $CERT_CRT /usr/local/data/
 
 VAULT_INIT_FILE=/vault/data/init.json
 
@@ -118,6 +121,9 @@ vault write auth/userpass/users/$UI_USER \
 # Set VAULT_TOKEN to the admin user's token
 export VAULT_TOKEN=$(vault login -method=userpass username=$UI_USER password=$UI_PASSWORD -format=json | jq -r '.auth.client_token')
 
+# Share VAULT_TOKEN with other service
+echo "$VAULT_TOKEN" > /usr/local/data/vault_token.tok
+
 # Set VAULT_CACERT to the CA certificate
 export VAULT_CACERT=$CERT_CRT
 
@@ -145,6 +151,8 @@ echo "Unsealing Vault after restart..."
 for KEY in $UNSEAL_KEYS; do
   vault operator unseal $KEY
 done
+
+echo "testing end"
 
 # Keep Vault running in the foreground
 wait $VAULT_PID
