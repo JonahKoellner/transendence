@@ -301,6 +301,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
     this.lobbyService.sendMessage({ action: 'start_tournament' });
     this.toastr.info('Tournament is starting...', 'Info');
+    //TODO navigate to tournament screen
   }
 
   private getCurrentUserId(): number {
