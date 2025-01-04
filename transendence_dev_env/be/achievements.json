@@ -435,7 +435,7 @@
       "points": 25,
       "criteria_type": "action",
       "criteria_expression": "game_duration >= 60",
-      "image_url": "https://cdn.discordapp.com/attachments/996815434475114547/1317535946476097556/106490.png?ex=675f0a78&is=675db8f8&hm=5389a778e531ea9c5bbc9006217a3d42894928d32090d14ab4a8182fbe551dd7&"
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/2b9bc8d174faffdb2f95e8dd56c4d48940f3d17ffe20fdd9c615f18e41ba096a.webp"
     }
   },
   {
@@ -447,7 +447,7 @@
       "points": 25,
       "criteria_type": "action",
       "criteria_expression": "game_duration <= 5 and game_won == True",
-      "image_url": "https://cdn.discordapp.com/attachments/996815434475114547/1317535482585808947/c95108965a467be414f9c751592935889187.png?ex=675f0a09&is=675db889&hm=51a33139b3011438a7703967b717a1dd2e9ce340af87c34a9cdff41d3d2b68a0&"
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/cc2469612008022efe15c4259582f505e97caf5743c3da35fc82ded57f4db8c5.webp"
     }
   }
 ]
