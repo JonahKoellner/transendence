@@ -25,13 +25,7 @@ class TiebreakerMethod(models.TextChoices):
     MOST_WINS = 'Most Wins'
     RANDOM_SELECTION = 'Random Selection'
 
-class Match(models.Model):
-    player1 = models.CharField(max_length=255)
-    player1_type = models.CharField(max_length=50)
-    player2 = models.CharField(max_length=255)
-    player2_type = models.CharField(max_length=50)
-    winner = models.CharField(max_length=255, blank=True, null=True)
-    winner_type = models.CharField(max_length=50, blank=True, null=True)
+class BaseMatch(models.Model):
     outcome = models.CharField(max_length=50, choices=MatchOutcome.choices, blank=True, null=True)
     player1_score = models.IntegerField(blank=True, null=True)
     player2_score = models.IntegerField(blank=True, null=True)
@@ -43,10 +37,26 @@ class Match(models.Model):
     status = models.CharField(max_length=50, choices=[
         ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed'), ('failed', 'Failed')
     ])
+    class Meta:
+        abstract = True
 
-class Round(models.Model):
+class Match(BaseMatch):
+    player1 = models.CharField(max_length=255)
+    player1_type = models.CharField(max_length=50)
+    player2 = models.CharField(max_length=255)
+    player2_type = models.CharField(max_length=50)
+    winner = models.CharField(max_length=255, blank=True, null=True)
+    winner_type = models.CharField(max_length=50, blank=True, null=True)
+
+class OnlineMatch(BaseMatch):
+    room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
+    match_id = models.CharField(max_length=10, unique=True)
+    player1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player1', blank=True, null=True)
+    player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player2', blank=True, null=True)
+    winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_won', blank=True, null=True)
+
+class BaseRound(models.Model):
     round_number = models.IntegerField()
-    matches = models.ManyToManyField(Match, related_name='rounds')
     stage = models.CharField(max_length=50, choices=Stage.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     start_time = models.DateTimeField()
@@ -55,8 +65,15 @@ class Round(models.Model):
     status = models.CharField(max_length=50, choices=[
         ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed')
     ])
+    class Meta:
+        abstract = True
 
-class OnlineRound(Round):
+class Round(BaseRound):
+    matches = models.ManyToManyField(Match, related_name='rounds')
+
+class OnlineRound(BaseRound):
+    room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
+    matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
     matchups = models.JSONField(default=dict)
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
 
@@ -75,39 +92,30 @@ class BaseTournament(models.Model):
     winner_determination_method_message = models.TextField(blank=True, null=True)
     tiebreaker_method = models.CharField(max_length=50, choices=TiebreakerMethod.choices, blank=True, null=True)
     winner_tie_resolved = models.BooleanField(default=False)
-
-    host = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='hosted_tournaments'
-    )
     class Meta:
         abstract = True
 
 class OnlineTournament(BaseTournament):
+    room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
     participants = models.ManyToManyField(User, related_name='online_tournaments')
     rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
-    host = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='hosted_online_tournaments'
-    )
-    current_round = models.ForeignKey(
-        Round,
-        on_delete=models.SET_NULL,
-        related_name='current_online_tournaments',
-        blank=True,
-        null=True
-    )
     tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
-    
+    current_round = models.IntegerField(default=1)
+    total_rounds = models.IntegerField(default=2, validators=[MinValueValidator(1), MaxValueValidator(5)])
     def get_participants(self):
-        return [self.host] + list(self.participants.all())
+        return self.participants.all()
+    
+    # TODO get winner, ...
 
 class Tournament(BaseTournament):
     start_time = models.DateTimeField()
     all_participants = models.JSONField(blank=True, null=True)
     players_only = models.JSONField(blank=True, null=True)
+    host = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='hosted_tournaments'
+    )
 
 class BaseLobby(models.Model):
     room_id = models.CharField(max_length=10, unique=True)
@@ -115,6 +123,7 @@ class BaseLobby(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)]) 
     round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    #TODO make this class abstract?? so it wont have its own object in db
 
 class PlayerCustomization(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customization")
@@ -131,6 +140,7 @@ class TournamentLobby(models.Model):
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    total_rounds = models.IntegerField(default=2, validators=[MinValueValidator(1), MaxValueValidator(5)])
     # round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
     max_player_count = models.IntegerField(default=4, validators=[MinValueValidator(4), MaxValueValidator(32)])
     initial_stage = models.CharField(max_length=50, choices=Stage.choices, default=Stage.SEMI_FINALS) # semi finals, because its the stage with the lowest number of participants

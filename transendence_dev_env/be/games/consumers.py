@@ -2396,7 +2396,8 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             type=self.lobby.tournament_type,
             host=self.lobby.host,
             start_time=timezone.now(),
-            status="ongoing"
+            status="ongoing",
+            room_id = self.lobby.room_id
         )
         tournament.participants.set(self.lobby.guests.all())
         self.lobby.tournament = tournament
