@@ -3,14 +3,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 
-//TODO: start_tournament button is not deactivated when not everybody is ready
 //TODO: friend list / friends in general
 //TODO: invite
 //TODO: ui looks like shit
-
-//TODO: make LobbyState non nullable, instead initialize prooperly?
 
 interface LobbyState {
   host: string;
@@ -34,7 +31,7 @@ interface LobbyState {
 export class GameRoomComponent implements OnInit, OnDestroy {
   roomId: string = '';
   lobbyState: LobbyState | null = null;
-  // isHost: boolean = false;
+  private messageSubscription!: Subscription;
   currentUser: string = ''; // Replace with actual logic to fetch the logged-in user
   isReady: boolean = false;
   userProfile: UserProfile | null = null;
@@ -94,7 +91,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // TODO (if message subscription added) unsubscribe from messagesubscription
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+    }
     this.lobbyService.disconnect();
     if (this.isHost) {
       this.lobbyService.deleteRoom(this.roomId).subscribe(
@@ -168,28 +167,42 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.fetchRoomStatus();
 
         // Listen for WebSocket messages
-        this.lobbyService.messages$.subscribe({
+        this.messageSubscription = this.lobbyService.messages$.subscribe({
           next: (msg) => this.handleWebSocketMessage(msg),
           error: (err) => {
-            this.toastr.error('WebSocket connection failed.', 'Error');
-            console.error(err);
+            this.toastr.error('An error occurred while fetching room status. Redirecting you to the lobby.', 'Error');
+            this.router.navigate(['/games/online-tournament/rooms']);
           },
         });
 
       },
       error: (err) => {
-        this.toastr.error('Failed to join the room.', 'Error');
-        console.error(err);
+        this.toastr.error('An error occurred while joining the room. Redirecting you to the lobby.', 'Error');
+        this.router.navigate(['/games/online-tournament/rooms']);
       },
     });
   }
 
   private fetchRoomStatus(): void {
+    console.log('Fetching room status')
     this.lobbyService.getRoomStatus(this.roomId).subscribe({
       next: (data: LobbyState) => {
         if (data) {
           this.lobbyState = data;
         }
+        console.log('Assigned lobby state in fetchRoomStatus', this.lobbyState)
+        this.userProfileService.getProfile().subscribe(
+          (profile) => {
+            this.userProfile = profile;
+            if (this.host === '') {
+              this.router.navigate(['/games/online-tournament/rooms']);
+            }
+          },
+          (error) => {
+            this.toastr.error('An error occurred while fetching user profile. Redirecting you to the lobby.', 'Error');
+            this.router.navigate(['/games/online-tournament/rooms']);
+          }
+        );
       },
       error: (err) => {
         this.toastr.error('Failed to fetch room status.', 'Error');
@@ -214,6 +227,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.toastr.success('The game has started!', 'Success');
         break;
       case 'alert':
+        console.log('Alert message', msg);
         this.handleAlert(msg);
         break;
       default:
@@ -222,7 +236,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (this.host === "") {
       this.router.navigate(['/games/online-tournament/rooms']);
     }
-    this.fetchRoomStatus();
+    if (msg.type !== 'lobby_state') {
+      this.fetchRoomStatus();
+    }
   }
 
   private handleAlert(msg: any): void {

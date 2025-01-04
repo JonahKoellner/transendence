@@ -4,8 +4,6 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
 
-// TODO do something different so python doesnt raise exceptions to hell (should be able to look at other room creations)
-
 @Component({
   selector: 'app-create-room',
   templateUrl: './create-room.component.html',

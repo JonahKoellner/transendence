@@ -2324,6 +2324,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         else:
             # remove user
             await self.handle_user_disconnect()
+            await self.broadcast_lobby_state()
             # send alert to other users
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -2444,17 +2445,23 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def handle_user_disconnect(self):
         # Remove the user from the lobby
-        if self.user in self.lobby.guests.all():
-            self.lobby.guests.remove(self.user)
-        self.lobby.save()
+        lobby = TournamentLobby.objects.get(room_id=self.room_id)
+        if self.user in lobby.guests.all():
+            lobby.guests.remove(self.user)
+            # Remove the user's ready state
+            if str(self.user.id) in lobby.guest_ready_states:
+                del lobby.guest_ready_states[str(self.user.id)]
+            # Remove the user's customization
+            lobby.guest_customizations.filter(user=self.user).delete()
+            lobby.save()
 
     @database_sync_to_async
     def delete_lobby(self):
         """Delete the lobby if the host disconnects."""
-        Lobby.objects.filter(room_id=self.room_id).delete()
+        TournamentLobby.objects.filter(room_id=self.room_id).delete()
         
     @database_sync_to_async
     def is_user_host(self):
         """Check if the disconnecting user is the host."""
-        lobby = Lobby.objects.get(room_id=self.room_id)
+        lobby = TournamentLobby.objects.get(room_id=self.room_id)
         return self.user == lobby.host

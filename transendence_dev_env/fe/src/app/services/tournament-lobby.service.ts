@@ -14,7 +14,6 @@ export class TournamentLobbyService {
   private socket$!: WebSocketSubject<any>;
   public messages$ = new Subject<any>();
   private isConnected = new BehaviorSubject<boolean>(false);
-  private currentRoomId: string | null = null;
 
   constructor(private http: HttpClient, private authService: AuthService, private router: Router) {}
 
@@ -23,7 +22,6 @@ export class TournamentLobbyService {
       this.disconnect();
     }
     if (this.socket$ && this.isConnected.value) return;
-    this.currentRoomId = roomId;
     const token = this.authService.getAccessToken(); // Assuming a method to get the access token
     this.socket$ = webSocket(environment.wsUrl + `/tournament-lobby/${roomId}/?token=${token}`);
 
@@ -48,23 +46,15 @@ export class TournamentLobbyService {
     );
   }
 
-  // private reconnectIfNeeded(msg: any) {
-  //   this.connect(msg.room_id); // Attempt to reconnect
-  //   this.isConnected.pipe(
-  //     tap(connected => {
-  //       if (connected) {
-  //         this.socket$.next(msg); // Send message after reconnecting
-  //       }
-  //     })
-  //   ).subscribe();
-  // }
-
-  private reconnect() {
-    setTimeout(() => {
-      if (!this.isConnected.value && this.currentRoomId) {
-        this.connect(this.currentRoomId);
-      }
-    }, 5000);
+  private reconnectIfNeeded(msg: any) {
+    this.connect(msg.room_id); // Attempt to reconnect
+    this.isConnected.pipe(
+      tap(connected => {
+        if (connected) {
+          this.socket$.next(msg); // Send message after reconnecting
+        }
+      })
+    ).subscribe();
   }
   
 
