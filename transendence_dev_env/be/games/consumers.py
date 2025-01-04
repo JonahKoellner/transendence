@@ -2465,4 +2465,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     def is_user_host(self):
         """Check if the disconnecting user is the host."""
         lobby = TournamentLobby.objects.get(room_id=self.room_id)
+        if not lobby:
+            raise Exception("Lobby does not exist.")
         return self.user == lobby.host

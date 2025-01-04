@@ -376,7 +376,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         # Opponent type factor: more XP for winning against players than bots
         total_wins = 0
         bot_wins = 0
-        for match in tournament.rounds.filter(matches__winner=player.username):
+        for match in tournament.rounds.filter(matches__winner=player.username): #TODO match var is actually a round object, fix this
             total_wins += 1
             if match.player1_type == 'Bot' or match.player2_type == 'Bot':
                 bot_wins += 1

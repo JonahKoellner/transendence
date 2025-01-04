@@ -115,7 +115,7 @@ class RoundService:
             #return None to indicate automatic win.
             return OnlineMatch.objects.create(
                 match_id=generate_match_id(),
-                room_id=room_id,  # or generate a separate room code if needed
+                room_id=room_id,
                 player1=player1,
                 player2=None,
                 status="completed",
@@ -126,7 +126,7 @@ class RoundService:
         else:
             return OnlineMatch.objects.create(
                 match_id=generate_match_id(),
-                room_id=room_id,  # or generate a separate room code if needed
+                room_id=room_id,
                 player1=player1,
                 player2=player2,
                 status="pending",
@@ -153,7 +153,6 @@ class RoundService:
             elif participant_count <= 32:
                 return Stage.PRELIMINARIES
             else:
-                # You could keep going, or default to "Preliminaries"
                 return Stage.PRELIMINARIES
         else:
             raise ValueError(f"Unknown tournament type: {tournament_type}")

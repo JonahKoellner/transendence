@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { NavigationStart, ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
@@ -35,6 +35,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   currentUser: string = ''; // Replace with actual logic to fetch the logged-in user
   isReady: boolean = false;
   userProfile: UserProfile | null = null;
+  private navigationSubscription!: Subscription;
+  private goingToTournament: boolean = false; // to detect next route -> not leave the lobby if its the tournament
   tournamentTypes = [
     { 
       type: 'Single Elimination',
@@ -65,6 +67,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.navigationSubscription = this.router.events.subscribe(event => { // to not delete lobby when going to tournament tree
+      if (event instanceof NavigationStart) {
+        if (event.url.startsWith('/games/online-tournament/tournament-tree')) {
+          this.goingToTournament = true;
+        }
+      }
+    });
     // Fetch both userProfile and lobbyState in parallel
     forkJoin({
       userProfile: this.userProfileService.getProfile(),
@@ -74,10 +83,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         this.userProfile = userProfile;
         this.lobbyState = lobbyState;
         console.log('Assigned lobby state', this.lobbyState)
-        
-        // Set isHost only once after both are fetched
-        // this.isHost = this.userProfile?.username === this.lobbyState?.host;
-        // console.log('IsHost:', this.isHost);
       },
       error: (err) => {
         this.toastr.error('Failed to load game room data.', 'Error');
@@ -91,11 +96,15 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.navigationSubscription) {
+      this.navigationSubscription.unsubscribe();
+    }
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
+    console.log('goingToTournament:', this.goingToTournament)
     this.lobbyService.disconnect();
-    if (this.isHost) {
+    if (this.isHost && !this.goingToTournament) { // only delete room if not navigating to the tournament tree
       this.lobbyService.deleteRoom(this.roomId).subscribe(
         () => {
           this.toastr.info('Room deleted successfully.', 'Info')
@@ -302,6 +311,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.lobbyService.sendMessage({ action: 'start_tournament' });
     this.toastr.info('Tournament is starting...', 'Info');
     //TODO navigate to tournament screen
+    this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
   }
 
   private getCurrentUserId(): number {

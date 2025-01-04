@@ -21,6 +21,7 @@ import { CreateRoomComponent as OnlineTournamentCreateRoomComponent } from './ga
 import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/tournament/online/join-room/join-room.component';
 import { GameRoomsComponent as OnlineTournamentRoomsComponent } from './games/tournament/online/game-rooms/game-rooms.component';
 import { GameRoomComponent as OnlineTournamentGameRoomComponent } from './games/tournament/online/game-room/game-room.component';
+import { TournamentTreeComponent } from './games/tournament/online/tournament-tree/tournament-tree.component';
 import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.component';
 import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
 import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
@@ -93,6 +94,7 @@ const routes: Routes = [
   { path: 'games/online-pvp-chaos/game-room/:roomId', component: GameRoomChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
   { path: 'games/online-tournament/game-room/:roomId', component: OnlineTournamentGameRoomComponent, canActivate: [AuthGuard] },
+  { path: 'games/online-tournament/tournament-tree/:roomId', component: TournamentTreeComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },

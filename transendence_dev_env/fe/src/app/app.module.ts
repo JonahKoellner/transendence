@@ -82,6 +82,7 @@ import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/
 import { GameRoomsComponent as OnlineTournamentRoomsComponent } from './games/tournament/online/game-rooms/game-rooms.component';
 import { GameRoomComponent as OnlineTournamentGameRoomComponent } from './games/tournament/online/game-room/game-room.component';
 import { TournamentMatchComponent } from './games/tournament/online/tournament-match/tournament-match.component';
+import { TournamentTreeComponent } from './games/tournament/online/tournament-tree/tournament-tree.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -154,6 +155,7 @@ import { TournamentMatchComponent } from './games/tournament/online/tournament-m
     OnlineTournamentRoomsComponent,
     OnlineTournamentGameRoomComponent,
     TournamentMatchComponent,
+    TournamentTreeComponent,
   ],
   imports: [
     BrowserModule,
