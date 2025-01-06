@@ -32,7 +32,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   roomId: string = '';
   lobbyState: LobbyState | null = null;
   private messageSubscription!: Subscription;
-  currentUser: string = ''; // Replace with actual logic to fetch the logged-in user
   isReady: boolean = false;
   userProfile: UserProfile | null = null;
   private navigationSubscription!: Subscription;
@@ -263,13 +262,12 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   toggleReadyStatus(): void {
     this.isReady = !this.isReady;
     console.log('isReady:', this.isReady);
-    this.lobbyService.setReadyStatus(this.roomId, this.isReady, this.getCurrentUserId()).subscribe({
+      this.lobbyService.setReadyStatus(this.roomId, this.isReady).subscribe({
       next: () => {
         this.lobbyService.sendMessage({
           action: 'set_ready',
           room_id: this.roomId,
           is_ready: this.isReady,
-          user_id: this.getCurrentUserId(),
         });
         this.toastr.success(`You are now ${this.isReady ? 'ready' : 'not ready'}.`, 'Status Updated');
       },
@@ -312,11 +310,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.toastr.info('Tournament is starting...', 'Info');
     //TODO navigate to tournament screen
     this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
-  }
-
-  private getCurrentUserId(): number {
-    // Replace with logic to fetch the current user's ID
-    return 1;
   }
 
   copyLinkToClipboard(): void {

@@ -86,7 +86,7 @@ class OnlineRound(BaseRound):
     room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
     matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
-    #TODO add start_time nullable and blank
+    #TODO add start_time nullable and blank to override the start time from baseround because we dont know the start time upon creation. alternative: just update start time
     
     def end_round(self):
         for match in self.matches.all():
@@ -155,6 +155,7 @@ def get_tournament_state(self):
         participants_data = [
             {
                 "username": participant.username,
+                "id": participant.id,
                 "is_ready": self.participants_ready_states.get(str(participant.id), False)
             }
             for participant in self.participants.all()
@@ -171,7 +172,6 @@ def get_tournament_state(self):
             "final_winner": self.final_winner.username if self.final_winner else None,
         }
         return tournament_state
-
 
 class Tournament(BaseTournament):
     start_time = models.DateTimeField()

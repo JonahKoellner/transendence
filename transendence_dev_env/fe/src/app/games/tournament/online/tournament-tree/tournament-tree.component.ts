@@ -1,5 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { NavigationStart, ActivatedRoute, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { ProfileService, UserProfile } from 'src/app/profile.service';
+import { TournamentService } from 'src/app/services/tournament.service';
+import { Subscription } from 'rxjs';
 
 enum TournamentType {
   SINGLE_ELIMINATION = 'Single Elimination',
@@ -16,41 +20,42 @@ enum Stage {
 }
 
 interface Match {
-  matchId: string;
-  roomId: string;
-  player1: string;
-  player2: string;
-  player1Score: number;
-  player2Score: number;
-  winner?: string; // need no matchOutcome, bcs winner only set when match complete, no tie, just play until one wins
-  state: 'pending' | 'ongoing' | 'completed';
+  match_id: string;
+  player1: string | null;
+  player2: string | null;
+  player1_score: number | null;
+  player2_score: number | null;
+  winner?: string | null;
+  status: 'pending' | 'ongoing' | 'completed';
+  start_time: string | null;
+  end_time: string | null;
 }
 
 interface Round {
-  roomId: string;
-  roundName: string;
-  roundIndex: number;
-  state: 'pending' | 'ongoing' | 'completed';
-  matches: (Match)[];
-  winners?: string[];
-  //maybe add: players, winners
+  round_number: number;
+  stage: Stage;
+  status: 'pending' | 'ongoing' | 'completed';
+  matches: Match[];
+  winners: string[];
+  start_time: string | null;
+  end_time: string | null;
 }
 
 interface Player {
-  playerId: string;
-  playerName: string;
+  username: string;
+  id: string;
+  is_ready: boolean;
 }
 
 interface Tournament {
-  roomId: string;
-  tournamentName: string;
-  tournamentType: string;
-  state: 'pending' | 'ongoing' | 'completed';
-  rounds: (Round | null)[];
-  players: Player[];
-  currentRound: number;
-  totalRounds: number;
-  winner?: Player;
+  room_id: string;
+  name: string;
+  type: TournamentType;
+  status: 'pending' | 'ongoing' | 'completed';
+  rounds: Round[];
+  participants: Player[];
+  round_robin_scores: Record<string, number>;
+  final_winner?: string | null;
 }
 
 @Component({
@@ -58,114 +63,83 @@ interface Tournament {
   templateUrl: './tournament-tree.component.html',
   styleUrls: ['./tournament-tree.component.scss']
 })
-export class TournamentTreeComponent implements OnInit {
+export class TournamentTreeComponent implements OnInit, OnDestroy {
   tournament: Tournament | null = null;
   roomId: string = '';
+  private messageSubscription!: Subscription;
 
-  constructor(private router: Router, private route: ActivatedRoute) { }
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private toastr: ToastrService,
+  ) { }
 
   //try to get the connection to backend and display the tournament tree
   ngOnInit(): void {
     this.roomId = this.route.snapshot.params['roomId'] || '';
+    if (!this.roomId) {
+      this.toastr.error('Invalid room id', 'Error');
+      return ;
+    }
+
+    //join tournament and build up websocket connection
+    this.tournamentService.join
+
+
+
     this.tournament = this.dummyData();
-    //TODO connect to tournament websocket to get tournament data.
-    //TODO display the tournament tree
-    //TODO send ready message to backend so the first game can start
-    // games will jsut overlay over the tournament tree
   }
 
   dummyData(): Tournament {
     console.log('dummyData');
     return {
-      roomId: '123',
-      tournamentName: 'Tournament 1',
-      tournamentType: TournamentType.SINGLE_ELIMINATION,
-      state: 'ongoing',
+      room_id: '123',
+      name: 'Tournament 1',
+      type: TournamentType.SINGLE_ELIMINATION,
+      status: 'ongoing',
       rounds: [
         {
-          roomId: '123',
-          roundName: Stage.PRELIMINARIES,
-          roundIndex: 1,
-          state: 'completed',
+          round_number: 1,
+          stage: Stage.PRELIMINARIES,
+          status: 'completed',
           matches: [
             {
-              matchId: '1',
-              roomId: '123',
+              match_id: '1',
               player1: 'Player 1',
               player2: 'Player 2',
-              player1Score: 2,
-              player2Score: 1,
+              player1_score: 2,
+              player2_score: 1,
               winner: 'Player 1',
-              state: 'completed'
+              status: 'completed',
+              start_time: '2024-01-01T12:00:00Z',
+              end_time: '2024-01-01T12:30:00Z',
             },
             {
-              matchId: '2',
-              roomId: '123',
+              match_id: '2',
               player1: 'Player 3',
               player2: 'Player 4',
-              player1Score: 1,
-              player2Score: 2,
+              player1_score: 1,
+              player2_score: 2,
               winner: 'Player 4',
-              state: 'completed'
-            }
-          ]
+              status: 'completed',
+              start_time: '2024-01-01T13:00:00Z',
+              end_time: '2024-01-01T13:30:00Z',
+            },
+          ],
+          winners: ['Player 1', 'Player 4'],
+          start_time: '2024-01-01T12:00:00Z',
+          end_time: '2024-01-01T14:00:00Z',
         },
-        {
-          roomId: '123',
-          roundName: Stage.QUARTER_FINALS,
-          roundIndex: 2,
-          state: 'ongoing',
-          matches: [
-            {
-              matchId: '3',
-              roomId: '123',
-              player1: 'Player 1',
-              player2: 'Player 4',
-              player1Score: 0,
-              player2Score: 0,
-              state: 'ongoing'
-            }
-          ]
-        },
-        {
-          roomId: '123',
-          roundName: Stage.SEMI_FINALS,
-          roundIndex: 3,
-          state: 'pending',
-          matches: [
-            {
-              matchId: '4',
-              roomId: '123',
-              player1: 'Player 1',
-              player2: 'Player 4',
-              player1Score: 0,
-              player2Score: 0,
-              state: 'pending'
-            }
-          ]
-        },
-        null
       ],
-      players: [
-        {
-          playerId: '1',
-          playerName: 'Player 1'
-        },
-        {
-          playerId: '2',
-          playerName: 'Player 2'
-        },
-        {
-          playerId: '3',
-          playerName: 'Player 3'
-        },
-        {
-          playerId: '4',
-          playerName: 'Player 4'
-        }
+      participants: [
+        { username: 'Player 1', id:'1', is_ready: true },
+        { username: 'Player 2', id:'2', is_ready: true },
+        { username: 'Player 3', id:'3', is_ready: false },
+        { username: 'Player 4', id:'4', is_ready: true },
       ],
-      currentRound: 2,
-      totalRounds: 4,
+      round_robin_scores: { 'Player 1': 3, 'Player 2': 2, 'Player 3': 1, 'Player 4': 4 },
+      final_winner: null,
     };
   }
 }

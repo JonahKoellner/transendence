@@ -86,8 +86,8 @@ export class TournamentLobbyService {
     return this.http.get(environment.apiUrl + `/games/tournament_lobby/status/${roomId}/`);
   }
 
-  setReadyStatus(roomId: string, isReady: boolean, userId: number): Observable<any> {
-    return this.http.post(environment.apiUrl + '/games/tournament_lobby/ready/', { room_id: roomId, is_ready: isReady, user_id: userId });
+  setReadyStatus(roomId: string, isReady: boolean): Observable<any> {
+    return this.http.post(environment.apiUrl + '/games/tournament_lobby/ready/', { room_id: roomId, is_ready: isReady });
   }
 
   getAllRooms(): Observable<any[]> {

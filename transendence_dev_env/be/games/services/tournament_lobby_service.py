@@ -51,7 +51,7 @@ class TournamentLobbyService:
 
         # Determine the smallest valid max_player_count >= current player count
         valid_counts = [count for count in allowed_counts if count >= player_count]
-        if valid_counts and lobby.max_player_count not in valid_counts: #TODO decide whether the host should even be able to decide on tournament size
+        if valid_counts and lobby.max_player_count not in valid_counts:
             lobby.max_player_count = valid_counts[0]
         #TODO be sure that never max_player_count < player_count, otherwise add edge case handling
         lobby.save()
