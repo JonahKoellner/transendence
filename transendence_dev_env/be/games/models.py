@@ -90,14 +90,10 @@ class OnlineRound(BaseRound):
     #TODO add start_time nullable and blank
     
     def end_round(self):
-        print(f'matchcount in populate winners: {self.matches.count()}')
         for match in self.matches.all():
-            print(f'match: {match.player1} vs {match.player2} score: {match.player1_score} - {match.player2_score}')
             if match.winner == None:
                 raise ValueError("Match result is incomplete.")
             self.winners.add(match.winner)
-            print(f'won a match in {self.room_id}: {match.winner}')
-        print(f'winners in {self.room_id}: {self.winners.all()}')
         self.end_time = timezone.now()
         self.duration = (self.end_time - self.start_time).total_seconds()
         self.status = 'completed'

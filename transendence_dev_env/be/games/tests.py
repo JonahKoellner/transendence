@@ -122,12 +122,14 @@ class OnlineTournamentTestCase(TransactionTestCase):
 
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
         tournament = self.lobby.tournament
-        first_round = tournament.rounds.first()
+        first_round = tournament.rounds.filter(round_number=1).first()
 
         # With 3 participants in single-elimination, 
         # we typically create 1 match for two players, 
         # and the third gets an instant advance
         matches = first_round.matches.all()
+        self.assertEqual(tournament.participants.count(), 3, "should be 3 participants")
+        # self.assertEqual()
         self.assertEqual(matches.count(), 2, "Two matches, because the third player gets the advance in the match itself.")
         self.assertEqual(first_round.matches.filter(status="completed").count(), 1, "One match should be completed.")
 
@@ -207,7 +209,6 @@ class OnlineTournamentTestCase(TransactionTestCase):
             match.record_match_result()
         first_round.end_round()
         first_round.save()
-        print('this round robin test fails')
         # We can call something akin to `round_finished`:
         # If your code expects a certain approach for round-robin, do that here.
         TournamentService.next_round(tournament)
@@ -233,8 +234,6 @@ class OnlineTournamentTestCase(TransactionTestCase):
         third_round.end_round()
         third_round.save()
         TournamentService.next_round(tournament) # called to make the fourth round, if its done, it will set the tournament to completed
-        print('round robin test final round next_round behavior')
-        print(f'total_rounds {tournament.total_rounds} should be equal to current_round {tournament.current_round}')
 
     def test_cannot_start_tournament_if_not_all_ready(self):
         # Mark user4 as not ready

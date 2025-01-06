@@ -55,8 +55,6 @@ class TournamentService:
             raise ValueError("Insufficient participants for match.")
         if not round_instance:
             raise ValueError(f"No round found for the current round number. {tournament.current_round}")
-        
-        print(f'new_matchups participants: {participants}')
 
         if tournament.type == TournamentType.SINGLE_ELIMINATION:
             RoundService.populate_single_elimination_matches(round_instance, participants)
