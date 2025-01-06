@@ -127,8 +127,10 @@ echo "$VAULT_TOKEN" > /usr/local/data/vault_token.tok
 # Set VAULT_CACERT to the CA certificate
 export VAULT_CACERT=$CERT_CRT
 
+echo "42API key: $API_KEY42"
+
 # Write a secret
-vault kv put secret/my-secret test.username=admin test.password=supersecret
+vault kv put secret/my-secret apiKey.42=$API_KEY42
 
 # Read the secret
 echo "Retrieving secret from \$SECRET_PATH..."
@@ -151,8 +153,6 @@ echo "Unsealing Vault after restart..."
 for KEY in $UNSEAL_KEYS; do
   vault operator unseal $KEY
 done
-
-echo "testing end"
 
 # Keep Vault running in the foreground
 wait $VAULT_PID

@@ -23,6 +23,15 @@ addHost:
         echo "DOMAIN=$$(hostname)" >> be/.env; \
     fi
 
+ask42APIKey:
+	@read -p "Enter the value for API_KEY42: " my_variable; \
+    if grep -q '^API_KEY42=' ./keyvault/.env; then \
+        sed -i 's/^API_KEY42=.*/API_KEY42=$$my_variable/' ./keyvault/.env; \
+    else \
+        echo "API_KEY42=$$my_variable" >> ./keyvault/.env; \
+    fi; \
+    echo "API_KEY42 stored in ./keyvault/.env file."
+
 # Docker Compose file
 COMPOSE_FILE := docker-compose.yml
 
@@ -43,11 +52,11 @@ help:
 	@echo "  clean             Clean everything and remove the volumes"
 
 # Build and start all services interactively
-up: generate_passwords addHost
+up: generate_passwords addHost ask42APIKey
 	docker-compose -f $(COMPOSE_FILE) up --build
 
 # Build and start all services in detached mode
-start: generate_passwords addHost
+start: generate_passwords addHost ask42APIKey
 	docker-compose -f $(COMPOSE_FILE) up --build -d
 
 # Stop all running services
