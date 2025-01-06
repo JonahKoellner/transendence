@@ -1134,7 +1134,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
             if user in lobby.guests.all():
                 return Response({"detail": "You are already a participant."}, status=status.HTTP_200_OK)
 
-            if len(lobby.guests.all()) >= lobby.max_player_count:
+            if len(lobby.guests.all()) >= lobby.max_player_count: # at most max players -1 because of host
                 return Response({"detail": "Lobby is full."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Add the user as a guest

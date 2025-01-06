@@ -85,7 +85,6 @@ class Round(BaseRound):
 class OnlineRound(BaseRound):
     room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
     matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
-    matchups = models.JSONField(default=dict)
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
     #TODO add start_time nullable and blank
     
@@ -116,17 +115,63 @@ class BaseTournament(models.Model):
         abstract = True
 
 class OnlineTournament(BaseTournament):
-    room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
+    room_id = models.CharField(max_length=10, unique=True) # RoomId from the tournament lobby
     participants = models.ManyToManyField(User, related_name='online_tournaments')
     final_winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='online_tournaments_won', blank=True, null=True)
     rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
     current_round = models.IntegerField(default=1)
     total_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])
     round_robin_scores = models.JSONField(default=dict) # store user with score
+    participants_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
     def get_participants(self):
         return list(self.participants.all())
-    
-    # TODO get winner, ...
+
+def get_tournament_state(self):
+        rounds_data = []
+        for round_instance in self.rounds.all():
+            rounds_data.append({
+                "round_number": round_instance.round_number,
+                "stage": round_instance.stage,
+                "matches": [
+                    {
+                        "match_id": match.match_id,
+                        "player1": match.player1.username if match.player1 else None,
+                        "player2": match.player2.username if match.player2 else None,
+                        "player1_score": match.player1_score if match.player1_score is not None else None,
+                        "player2_score": match.player2_score if match.player2_score is not None else None,
+                        "winner": match.winner.username if match.winner else None,
+                        "status": match.status,
+                        "start_time": match.start_time.isoformat() if match.start_time else None,
+                        "end_time": match.end_time.isoformat() if match.end_time else None,
+                    }
+                    for match in round_instance.matches.all()
+                ],
+                "winners": [winner.username for winner in round_instance.winners.all()],
+                "status": round_instance.status,
+                "start_time": round_instance.start_time.isoformat() if round_instance.start_time else None,
+                "end_time": round_instance.end_time.isoformat() if round_instance.end_time else None,
+            })
+
+        participants_data = [
+            {
+                "username": participant.username,
+                "is_ready": self.participants_ready_states.get(str(participant.id), False)
+            }
+            for participant in self.participants.all()
+        ]
+
+        tournament_state = {
+            "room_id": self.room_id,
+            "name": self.name,
+            "type": self.type,
+            "status": self.status,
+            "rounds": rounds_data,
+            "participants": participants_data,
+            "round_robin_scores": self.round_robin_scores,
+            "final_winner": self.final_winner.username if self.final_winner else None,
+        }
+        return tournament_state
+
 
 class Tournament(BaseTournament):
     start_time = models.DateTimeField()

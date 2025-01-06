@@ -1,7 +1,6 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineRound, Stage
-from .services.round_service import RoundService
+from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament
 from .services.tournament_lobby_service import TournamentLobbyService
 from django.contrib.auth.models import User 
 from django.db import transaction
@@ -2335,9 +2334,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
 
-        # Handle user leaving the lobby
-        # await self.handle_user_disconnect()
-
     async def receive_json(self, content):
         action = content.get("action")
 
@@ -2468,3 +2464,93 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         if not lobby:
             raise Exception("Lobby does not exist.")
         return self.user == lobby.host
+    
+class TournamentConsumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.room_group_name = f"tournament_{self.room_id}"
+        self.user = self.scope['user']
+        
+        # Authenticate user
+        if isinstance(self.user, AnonymousUser):
+            await self.close()
+            return
+        
+        # Add the user to the channel group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
+        
+        # Load the tournament and broadcast the initial state
+        self.tournament = await self.get_tournament(self.room_id)
+        await self.broadcast_tournament()
+        
+    async def disconnect(self, close_code):
+        # Remove the user from the channel group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+        
+        
+        await self.handle_user_disconnect()
+        await self.broadcast_tournament()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "alert",
+                "message": f"{self.user.username} has left the tournament.",
+                "user_role": "guest"
+            }
+        )
+
+    async def receive_json(self, content):
+        action = content.get("action")
+        if action == "ready":
+            is_ready = content.get("is_ready", False)
+            await self.update_ready_status(self.user, is_ready)
+
+
+    async def handle_user_disconnect(self):
+        tournament = OnlineTournament.objects.get(room_id=self.room_id)
+        if self.user in tournament.participants.all():
+            tournament.participants.remove(self.user)
+            if str(self.user.id) in tournament.participant_ready_states:
+                del tournament.participant_ready_states[str(self.user.id)]
+            tournament.save()
+        
+    
+    async def broadcast_tournament(self):
+        tournament_state = await database_sync_to_async(self.tournament.get_tournament_state)()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "tournament_state",
+                **tournament_state
+            }
+        )
+    
+    async def tournament_state(self, event):
+        tournament_state = {
+            "room_id": event.get("room_id"),
+            "name": event.get("name"),
+            "type": event.get("type"),
+            "status": event.get("status"),
+            "rounds": event.get("rounds"),
+            "participants": event.get("participants"),
+            "round_robin_scores": event.get("round_robin_scores"),
+            "final_winner": event.get("final_winner"),
+        }
+        await self.send(
+            text_data=json.dumps({
+                "type": "tournament_state",
+                "tournament_state": tournament_state
+            })
+        )
+
+    async def update_ready_status(self, user, is_ready):
+        if user in self.tournament.participants.all():
+            self.tournament.participant_ready_states[str(user.id)] = is_ready
+        self.tournament.save()
