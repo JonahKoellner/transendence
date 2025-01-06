@@ -9,7 +9,7 @@ import { environment } from 'src/environment';
 @Injectable({
   providedIn: 'root',
 })
-export class TournamentMatchService {
+export class GameDisplayService {
   private socket$!: WebSocketSubject<any>;
   public messages$ = new Subject<any>();
   private isConnected = new BehaviorSubject<boolean>(false);
@@ -23,7 +23,7 @@ export class TournamentMatchService {
     if (this.socket$ && this.isConnected.value) return;
     const token = this.authService.getAccessToken();
     // Replace your existing connection logic with the new URL
-    this.socket$ = webSocket(environment.wsUrl + `/tournament-match/${matchId}/?token=${token}`); //TODO see if thats the correct ws URL
+    this.socket$ = webSocket(environment.wsUrl + `/game-display/${matchId}/?token=${token}`); //TODO see if thats the correct ws URL
 
     this.socket$.subscribe(
       (msg) => {
@@ -70,6 +70,6 @@ export class TournamentMatchService {
 
   joinMatch(matchId: string): Observable<any> {
     // Possibly just a GET or POST to tell server “I’m in”
-    return this.http.post(environment.apiUrl + '/games/tournament-match/join/', { matchId: matchId });
+    return this.http.post(environment.apiUrl + '/games/game-display/join/', { matchId: matchId });
   }
 }
