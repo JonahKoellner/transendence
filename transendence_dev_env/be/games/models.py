@@ -76,13 +76,12 @@ class OnlineRound(BaseRound):
     matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
     matchups = models.JSONField(default=dict)
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
+    #TODO add start_time nullable and blank 
 
 class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=TournamentType.choices)
     rounds = models.ManyToManyField(Round, related_name='tournaments')
-    final_winner = models.CharField(max_length=255, blank=True, null=True)
-    final_winner_type = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(blank=True, null=True)
     duration = models.IntegerField(blank=True, null=True)
@@ -98,10 +97,11 @@ class BaseTournament(models.Model):
 class OnlineTournament(BaseTournament):
     room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
     participants = models.ManyToManyField(User, related_name='online_tournaments')
+    final_winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='online_tournaments_won', blank=True, null=True)
     rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
-    tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
+    # tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     current_round = models.IntegerField(default=1)
-    total_rounds = models.IntegerField(default=2, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    total_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])
     def get_participants(self):
         return self.participants.all()
     
@@ -111,6 +111,8 @@ class Tournament(BaseTournament):
     start_time = models.DateTimeField()
     all_participants = models.JSONField(blank=True, null=True)
     players_only = models.JSONField(blank=True, null=True)
+    final_winner = models.CharField(max_length=255, blank=True, null=True)
+    final_winner_type = models.CharField(max_length=50, blank=True, null=True)
     host = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

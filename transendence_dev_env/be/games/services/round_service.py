@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from ..models import (
     OnlineRound,
     OnlineMatch,
+    OnlineTournament,
     TournamentType,
     Stage
 )
@@ -18,141 +19,129 @@ def generate_match_id() -> str:
 
 class RoundService:
     @staticmethod
-    def generate_matches(round_instance: OnlineRound, participants, tournament_type, round_index=0):
+    def generate_rounds(tournament: OnlineTournament):
         """
-        Create matches in the given `round_instance` (OnlineRound)
+        Generate a list of OnlineRound objects based on the total_rounds
+        and the tournament_type. Returns a list of OnlineRound objects.
+        """
+        stages = [stage for stage in Stage if stage != Stage.ROUND_ROBIN_STAGE] # dont count round robin stage
+        stages.reverse()
+        rounds = []
+        for i in range(tournament.total_rounds):
+            stage = stages[i % len(stages)] if tournament.type == TournamentType.SINGLE_ELIMINATION else Stage.ROUND_ROBIN_STAGE
+            round_instance = OnlineRound.objects.create(
+                round_number=tournament.total_rounds-i,
+                stage=stage,
+                room_id=tournament.room_id,
+                start_time=timezone.now() # should not be now maybe
+            )
+            matches = RoundService.create_matches(round_instance, len(tournament.participants.all()))
+            round_instance.matches.set(matches)
+            rounds.append(round_instance)
+        return rounds
+
+    @staticmethod
+    def create_matches(round_instance: OnlineRound, player_count):
+        if round_instance.stage == Stage.ROUND_ROBIN_STAGE:
+            match_count = player_count // 2 #if player_count % 2 == 0 else (player_count // 2) + 1
+        else:
+            match_count = {
+                Stage.PRELIMINARIES: 16,
+                Stage.QUALIFIERS: 8,
+                Stage.QUARTER_FINALS: 4,
+                Stage.SEMI_FINALS: 2,
+                Stage.GRAND_FINALS: 1,
+            }.get(round_instance.stage, 0)
+        matches = []
+        for i in range(match_count):
+            match = OnlineMatch.objects.create(
+                match_id=generate_match_id(),
+                room_id=round_instance.room_id,
+                status="pending",
+                start_time=timezone.now()
+            )
+            matches.append(match)
+        return matches
+
+    @staticmethod
+    def populate_matchups(tournament: OnlineTournament):
+        """
+        Populate matches in the given `round_instance` (OnlineRound)
         based on the tournament_type and the participant list.
         `participants` should be a list of Django User objects.
         """
+        participants = list(tournament.participants.all())
+        round_instance = tournament.rounds.filter(round_number=tournament.current_round).first()
+        
         if not participants or len(participants) == 0:
             raise ValueError("Insufficient participants for match.")
+        if not round_instance:
+            raise ValueError(f"No round found for the current round number. {tournament.current_round}")
 
-        if tournament_type == TournamentType.SINGLE_ELIMINATION:
-            RoundService.generate_single_elimination_matches(round_instance, participants)
-        elif tournament_type == TournamentType.ROUND_ROBIN:
-            RoundService.generate_round_robin_matches(round_instance, participants, round_index)
+        if tournament.type == TournamentType.SINGLE_ELIMINATION:
+            RoundService.populate_single_elimination_matches(round_instance, participants)
+        elif tournament.type == TournamentType.ROUND_ROBIN:
+            RoundService.populate_round_robin_matches(round_instance, participants, tournament.current_round-1)
         else:
-            raise ValueError(f"Unknown tournament type: {tournament_type}")
+            raise ValueError(f"Unknown tournament type: {tournament.type}")
 
     @staticmethod
-    def generate_single_elimination_matches(round_instance: OnlineRound, participants):
+    def populate_single_elimination_matches(round_instance: OnlineRound, participants):
         """
-        Pairs up participants in sets of two. If there's an odd one out,
-        you can either:
-          1) Let them automatically advance (a 'bye'),
-          2) Assign them an 'AI' or dummy opponent,
-          3) Or handle it however your rules dictate.
+        Populate existing matches in the round_instance with participants in pairs.
         """
+        matches = list(round_instance.matches.all())
+        if not matches:
+            raise ValueError("No matches available to populate in this round.")
+
+        match_index = 0
         for i in range(0, len(participants), 2):
             player1 = participants[i]
             player2 = participants[i + 1] if i + 1 < len(participants) else None
+            if match_index >= len(matches):
+                raise ValueError(f"Not enough matches to populate all participants.")
 
-            match = RoundService.create_online_match(player1, player2, round_instance.room_id)
-            round_instance.matches.add(match)
+            match = matches[match_index]
+            match.player1 = player1
+            match.player2 = player2
+            match.status = "pending" if player2 else "completed"
+            match.start_time = timezone.now()
+            match.end_time = timezone.now() if not player2 else None
+            match.winner = player1 if not player2 else None
+            match.save()
 
-        round_instance.save()
+            match_index += 1
 
     @staticmethod
-    def generate_round_robin_matches(round_instance: OnlineRound, participants, round_index):
+    def populate_round_robin_matches(round_instance: OnlineRound, participants, round_index):
         """
-        Implements a simple round-robin scheduling approach.
-        'matchups' is stored in the OnlineRound's JSONField so we don't
-        repeat the same pair in subsequent calls.
+        Populate existing matches in the round_instance using a round-robin schedule.
         """
-        num_players = len(participants)
-        matchups = round_instance.matchups or {}
+        matches = list(round_instance.matches.all())
+        if not matches:
+            raise ValueError("No matches available to populate in this round.")
 
+        num_players = len(participants)
         if num_players < 2:
             raise ValueError("Round-robin requires at least 2 participants.")
 
-        # First player is 'fixed', rotate the others (standard round-robin approach).
         first_player = participants[0]
         rotated_players = participants[1:]
-        # Perform the rotation based on round_index.
         rotated_players = rotated_players[round_index:] + rotated_players[:round_index]
 
-        matches_created = 0
-
-        # In round-robin, each round typically has num_players//2 matches
-        # if num_players is even. If odd, you often use a 'bye'.
+        match_index = 0
         for i in range(num_players // 2):
             player1 = first_player if i == 0 else rotated_players[i - 1]
             player2 = rotated_players[-i - 1]
 
-            # Generate a matchup key to avoid duplicates:
-            # sort by ID to keep it consistent.
-            id1, id2 = player1.id, player2.id
-            if id1 > id2:
-                id1, id2 = id2, id1
-            matchup_key = f"{id1}:{id2}"
+            if match_index >= len(matches):
+                raise ValueError("Not enough matches to populate all participants.")
 
-            # Check if this pair already played
-            if matchups.get(matchup_key):
-                # Already played each other. Move on.
-                continue
+            match = matches[match_index]
+            match.player1 = player1
+            match.player2 = player2
+            match.status = "pending"
+            match.start_time = timezone.now()
+            match.save()
 
-            match = RoundService.create_online_match(player1, player2, round_instance.room_id)
-            matchups[matchup_key] = True
-            round_instance.matches.add(match)
-            matches_created += 1
-
-        if matches_created == 0:
-            raise ValueError("No matches could be created. Possibly all pairs have played or participants list is incorrect.")
-
-        round_instance.matchups = matchups
-        round_instance.save()
-
-    @staticmethod
-    def create_online_match(player1: User, player2: User, room_id: str):
-        """
-        Creates a new OnlineMatch with 'pending' status.
-        If player2 is None, we treat it as 'AI' or an automatic bye.
-        Adjust this logic as desired.
-        """
-        if not player1:
-            raise ValueError("player1 cannot be None in this tournament flow.")
-        elif not player2:
-            #return None to indicate automatic win.
-            return OnlineMatch.objects.create(
-                match_id=generate_match_id(),
-                room_id=room_id,
-                player1=player1,
-                player2=None,
-                status="completed",
-                start_time=timezone.now(),
-                end_time=timezone.now(),
-                winner=player1,
-            )
-        else:
-            return OnlineMatch.objects.create(
-                match_id=generate_match_id(),
-                room_id=room_id,
-                player1=player1,
-                player2=player2,
-                status="pending",
-                start_time=timezone.now()
-            )
-
-    @staticmethod
-    def get_round_stage(participant_count, tournament_type):
-        """
-        Returns the appropriate Stage for a given participant_count
-        in the context of SINGLE_ELIMINATION or ROUND_ROBIN.
-        """
-        if tournament_type == TournamentType.ROUND_ROBIN:
-            return Stage.ROUND_ROBIN_STAGE
-        elif tournament_type == TournamentType.SINGLE_ELIMINATION:
-            if participant_count <= 2:
-                return Stage.GRAND_FINALS
-            elif participant_count <= 4:
-                return Stage.SEMI_FINALS
-            elif participant_count <= 8:
-                return Stage.QUARTER_FINALS
-            elif participant_count <= 16:
-                return Stage.QUALIFIERS
-            elif participant_count <= 32:
-                return Stage.PRELIMINARIES
-            else:
-                return Stage.PRELIMINARIES
-        else:
-            raise ValueError(f"Unknown tournament type: {tournament_type}")
+            match_index += 1

@@ -27,7 +27,6 @@ class OnlineTournamentTestCase(TransactionTestCase):
             room_id="test123",
             host=self.user_host,
             tournament_type=TournamentType.SINGLE_ELIMINATION,
-            total_rounds=2,  # might be overridden by logic in start_tournament
         )
         # Add guests
         self.lobby.guests.add(self.user2, self.user3, self.user4)
@@ -36,12 +35,20 @@ class OnlineTournamentTestCase(TransactionTestCase):
         for p in self.lobby.get_participants():
             self.lobby.set_ready_status(p, True)
 
+    def test_calc_max_rounds(self):
+        """test the calc_max_rounds method"""
+        self.assertEqual(TournamentLobbyService.calc_max_rounds(4, TournamentType.SINGLE_ELIMINATION), 2)
+        self.assertEqual(TournamentLobbyService.calc_max_rounds(3, TournamentType.SINGLE_ELIMINATION), 2)
+        self.assertEqual(TournamentLobbyService.calc_max_rounds(1, TournamentType.SINGLE_ELIMINATION), 1, "1 player should have 1 round that is instantly won")
+        self.assertEqual(TournamentLobbyService.calc_max_rounds(4, TournamentType.ROUND_ROBIN), 3)
+
     def test_start_tournament_single_elimination(self):
         """
         Verifies that we can start a single-elimination tournament from the lobby
         and that it creates the correct initial round & matches.
         """
         # Host starts the tournament
+        print("trololol")
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
 
         # Fetch the newly created tournament
@@ -61,8 +68,9 @@ class OnlineTournamentTestCase(TransactionTestCase):
         self.assertEqual(tournament.total_rounds, expected_rounds)
 
         # Verify the first round was created (round_number=0 or 1, depending on your logic)
-        first_round = tournament.rounds.first()
+        first_round = tournament.rounds.filter(round_number=1).first()
         self.assertIsNotNone(first_round)
+        self.assertEqual(first_round.stage, Stage.SEMI_FINALS)
         self.assertIn(first_round, tournament.rounds.all())
         self.assertTrue(first_round.matches.exists(), "Should have matches in the first round.")
 
@@ -82,6 +90,7 @@ class OnlineTournamentTestCase(TransactionTestCase):
         self.lobby.save()
 
         # Start
+        print("Starting round-robin tournament")
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
         tournament = self.lobby.tournament
         self.assertIsNotNone(tournament, "Round Robin tournament should be created.")
@@ -94,9 +103,10 @@ class OnlineTournamentTestCase(TransactionTestCase):
         self.assertEqual(tournament.total_rounds, 3)
 
         # Check the first round
-        first_round = tournament.rounds.first()
+        first_round = tournament.rounds.filter(round_number=1).first()
         self.assertIsNotNone(first_round)
         matches = first_round.matches.all()
+        
         # In a round-robin, the first round with 4 players usually has 2 matches
         self.assertEqual(matches.count(), 2)
 
@@ -145,13 +155,14 @@ class OnlineTournamentTestCase(TransactionTestCase):
             # set an arbitrary winner (e.g. always user_host)
             match.winner = match.player1
             match.save()
-            first_round.winners.add(match.player1)
+            if match.winner:
+                first_round.winners.add(match.player1)
         first_round.save()
 
         # Now we simulate "round_finished". Usually the service or signal calls it.
         # For simplicity:
         # from .services.tournament_lobby_service import TournamentLobbyService
-        TournamentLobbyService.advance_to_next_round(first_round)
+        TournamentLobbyService.advance_to_next_round(tournament)
 
         # We expect the next round to exist with fewer participants (just the winners).
         all_rounds = tournament.rounds.all().order_by("round_number")
@@ -168,7 +179,7 @@ class OnlineTournamentTestCase(TransactionTestCase):
         second_round.save()
 
         # Advance again
-        TournamentLobbyService.advance_to_next_round(second_round)
+        TournamentLobbyService.advance_to_next_round(tournament)
 
         # The tournament should now be completed
         tournament.refresh_from_db()
@@ -191,16 +202,21 @@ class OnlineTournamentTestCase(TransactionTestCase):
         # Instead, each match can set a winner or increment scores. 
         for match in first_round.matches.all():
             match.status = "completed"
-            match.winner = self.user_host  # arbitrary
-            match.save()
+            match.player1_score = 1
+            match.player2_score = 0
+            TournamentLobbyService.record_match_result(match.id)
 
         # We can call something akin to `round_finished`:
         # If your code expects a certain approach for round-robin, do that here.
-        TournamentLobbyService.advance_to_next_round(first_round)
-
-        # Check that we have a second round 
-        second_round = OnlineRound.objects.filter(round_number=1).last()  # or round_number=2 if your indexing is +1
+        TournamentLobbyService.advance_to_next_round(tournament)
+        second_round = OnlineRound.objects.filter(round_number=2).last()
         self.assertIsNotNone(second_round)
+        self.assertIsNotNone(second_round.matches.first().player1, "Should have populated the next round.")
+        
+        TournamentLobbyService.advance_to_next_round(tournament) 
+        third_round = OnlineRound.objects.filter(round_number=3).last()
+        self.assertIsNotNone(third_round)
+        self.assertIsNotNone(third_round.matches.first().player1, "Should have populated the next round.")
         # Likely we do more matches. Round-robin often has N-1 rounds total for N=4 => 3 rounds. 
         # You can continue or just assert that the second round got created.
 
@@ -233,7 +249,7 @@ class OnlineTournamentTestCase(TransactionTestCase):
 
 class RoundServiceUnitTest(TestCase):
     """
-    More focused tests for RoundService's match generation logic.
+    Tests for RoundService's match population logic.
     """
     def setUp(self):
         self.user1 = User.objects.create(username="Player1")
@@ -243,46 +259,92 @@ class RoundServiceUnitTest(TestCase):
 
         self.round = OnlineRound.objects.create(
             round_number=1,
-            stage=Stage.PRELIMINARIES,
+            stage=Stage.SEMI_FINALS,
             status='pending',
             start_time=timezone.now(),
             room_id="test123"
         )
+        # Pre-create matches with null values for player1 and player2
+        self.match1 = OnlineMatch.objects.create(room_id="test123", match_id="match1", status="pending", start_time=timezone.now())
+        self.match2 = OnlineMatch.objects.create(room_id="test1234", match_id="match2", status="pending", start_time=timezone.now())
 
-    def test_generate_single_elimination_matches_4players(self):
+        self.tournament = OnlineTournament.objects.create(
+            name="TestTournament",
+            type=TournamentType.SINGLE_ELIMINATION,
+            status="ongoing",
+            room_id="test1234",
+            total_rounds=1
+        )
+        self.tournament.participants.set([self.user1, self.user2, self.user3, self.user4])
+
+    def test_generate_rounds(self):
+        rounds = RoundService.generate_rounds(self.tournament)
+        self.assertEqual(len(rounds), 1)
+
+    def test_populate_single_elimination_matches_4players(self):
         participants = [self.user1, self.user2, self.user3, self.user4]
-        RoundService.generate_single_elimination_matches(self.round, participants)
+        matches = RoundService.create_matches(self.round, len(participants))
+        self.round.matches.set(matches)
+        RoundService.populate_single_elimination_matches(self.round, participants)
 
         matches = self.round.matches.all()
         self.assertEqual(matches.count(), 2)
-        # They should be "player1 vs player2" and "player3 vs player4"
-        # (or some order) depending on how you coded it.
 
-    def test_generate_single_elimination_matches_odd_number(self):
+        # Validate the matches were populated correctly
+        match1 = matches[0]
+        match2 = matches[1]
+
+        self.assertEqual(match1.player1, self.user1)
+        self.assertEqual(match1.player2, self.user2)
+        self.assertEqual(match2.player1, self.user3)
+        self.assertEqual(match2.player2, self.user4)
+
+    def test_populate_single_elimination_matches_odd_number(self):
         participants = [self.user1, self.user2, self.user3]  # 3 participants
-        RoundService.generate_single_elimination_matches(self.round, participants)
+        matches = RoundService.create_matches(self.round, len(participants))
+        self.round.matches.set(matches)
+        RoundService.populate_single_elimination_matches(self.round, participants)
         matches = self.round.matches.all()
-        # 3 players => 1 match, and 1 'bye' 
+
         self.assertEqual(matches.count(), 2)
 
-        # Possibly check if that match is completed automatically if you treat it as a bye. 
-        # Or if you create a second "bye" match with winner=player3, etc.
+        # Validate the first match is between two players
+        match1 = matches[0]
+        self.assertEqual(match1.player1, self.user1)
+        self.assertEqual(match1.player2, self.user2)
+        self.assertEqual(match1.status, "pending")
 
-    def test_generate_round_robin_matches(self):
+        # Validate the second match is a "bye"
+        match2 = matches[1]
+        self.assertEqual(match2.player1, self.user3)
+        self.assertIsNone(match2.player2)
+        self.assertEqual(match2.status, "completed")
+        self.assertEqual(match2.winner, self.user3)
+
+    def test_populate_round_robin_matches(self):
         participants = [self.user1, self.user2, self.user3, self.user4]
-        RoundService.generate_round_robin_matches(self.round, participants, round_index=0)
+        self.round.stage = Stage.ROUND_ROBIN_STAGE
+        matches = RoundService.create_matches(self.round, len(participants))
+        self.round.matches.set(matches)
+        self.assertEqual(self.round.matches.count(), 2)
+        
+        # Populate round-robin matches for round_index=0
+        RoundService.populate_round_robin_matches(self.round, participants, 0)
         matches = self.round.matches.all()
-        # Typically 2 matches in the first round for 4 players
+        self.assertIsNotNone(matches)
         self.assertEqual(matches.count(), 2)
 
-        # Check for no duplicates if we call it again with round_index=1
-        RoundService.generate_round_robin_matches(self.round, participants, round_index=1)
-        matches2 = self.round.matches.all()
-        # More matches, but none should be duplicates from the first round
-        self.assertGreater(matches2.count(), 2)
-        # Could also verify the JSONField "matchups" logic
 
-    def test_generate_matches_invalid_tournament_type(self):
-        participants = [self.user1, self.user2]
+        # Validate the matchups for round 1
+        match1 = matches[0]
+        match2 = matches[1]
+
+        self.assertEqual(match1.player1, self.user1)
+        self.assertEqual(match1.player2, self.user4)  # Based on round-robin logic
+        self.assertEqual(match2.player1, self.user2)
+        self.assertEqual(match2.player2, self.user3)
+
+    def test_populate_matchups_invalid_tournament_type(self):
+        self.tournament.type = "invalid"
         with self.assertRaises(ValueError):
-            RoundService.generate_matches(self.round, participants, "InvalidType")
+            RoundService.populate_matchups(self.tournament)

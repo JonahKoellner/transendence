@@ -1,4 +1,4 @@
-from ..models import OnlineTournament, OnlineMatch, OnlineRound, TournamentLobby
+from ..models import OnlineTournament, OnlineMatch, OnlineRound, TournamentLobby, MatchOutcome
 from .round_service import RoundService
 from django.utils import timezone
 from channels.db import database_sync_to_async
@@ -13,7 +13,7 @@ class TournamentLobbyService:
             raise PermissionError("Only the host can start the tournament.")
         if not lobby.all_ready():
             raise ValueError("Not all players are ready.")
-
+        print(lobby.tournament_type)
         tournament = OnlineTournament.objects.create(
             name=f"Tournament {lobby.room_id}",
             type=lobby.tournament_type,
@@ -23,71 +23,48 @@ class TournamentLobbyService:
         tournament.participants.set(list(lobby.guests.all()) + [lobby.host])
         tournament.total_rounds = TournamentLobbyService.calc_max_rounds(len(tournament.participants.all()), lobby.tournament_type)
         tournament.save()
+        rounds = RoundService.generate_rounds(tournament) # generates rounds and matches
+        tournament.rounds.set(rounds)
+        tournament.save()
         lobby.tournament = tournament
         lobby.save()
 
-        TournamentLobbyService.create_next_round(tournament, round_number=1)
+        RoundService.populate_matchups(tournament)
 
     @staticmethod
-    def create_next_round(tournament, round_number):
-        """ Creates round and matchups for the given round number """
-        if round_number == 1:
-            # First round: get all participants from the lobby
-            participants = tournament.participants.all()
-        else:
-            # Subsequent rounds: get winners from the previous round
-            previous_round = tournament.rounds.filter(round_number=round_number-1).first()
-            if previous_round:
-                participants = list(previous_round.winners.all())
-            else:
-                raise ValueError(f"No round found for round number {round_number-1}")
-    
-        # Get the current round
-        current_round = OnlineRound.objects.create(
-            round_number=round_number,
-            stage=RoundService.get_round_stage(len(participants), tournament.type),
-            start_time=timezone.now(), # TODO set real start time, idk if thats correct rn
-            room_id=tournament.room_id
-        )
-        if current_round:
-            # Generate matches for the current round
-            RoundService.generate_matches(current_round, participants, tournament.type, round_number)
-        tournament.rounds.add(current_round)
-
-    @staticmethod
-    def record_match_result(match_id, winner_id):
+    def record_match_result(match_id):
         match = OnlineMatch.objects.get(id=match_id)
         if not match.winner:
-            match.winner = User.objects.get(id=winner_id)
-        match.completed = True
-        match.save()
-
-        # Check if the round is complete
-        current_round = match.round_number
-        tournament = match.tournament
-        if not tournament.matches.filter(round_number=current_round, completed=False).exists():
-            TournamentLobbyService.advance_to_next_round(tournament, current_round)
+            if not match.player1_score or not match.player2_score:
+                raise ValueError("Match result is incomplete.")
+            else:
+                match.winner = match.player1 if match.player1_score > match.player2_score else match.player2
+                match.status = 'completed'
+                match.end_time = timezone.now()
+                match.outcome = MatchOutcome.FINISHED
+                match.save()
 
     @staticmethod
-    def advance_to_next_round(round_instance: OnlineRound):
+    def advance_to_next_round(tournament: OnlineTournament):
         """
         Called when a round has completed all matches.
         We check how many winners exist. If more than 1, create the next round.
         If exactly 1, the tournament is done.
         """
-        tournament = round_instance.online_tournaments.first()
-        if not tournament:
-            raise ValueError("Round is not linked to any OnlineTournament")
+        round_instance = tournament.rounds.filter(round_number=tournament.current_round).first()
+        if not round_instance:
+            raise ValueError("No round found for the current round number.")
 
         # Grab the winners
         winners = list(round_instance.winners.all())
-        if len(winners) <= 1:
-            # If there's exactly 1 winner, we have a champion (or 0, handle error).
+        if len(winners) == 1: # tournament done
             tournament.status = 'completed'
             if winners:
-                tournament.final_winner = winners[0].username
+                tournament.final_winner = winners[0]
             tournament.end_time = timezone.now()
             tournament.save()
+        elif len(winners) == 0:
+            raise ValueError("No winners found for the current round.")
         else:
             # We have multiple winners -> create next round
             next_round_number = round_instance.round_number + 1
@@ -130,7 +107,9 @@ class TournamentLobbyService:
     @staticmethod
     def calc_max_rounds(num_players: int, tournament_type: str) -> int:
         """Calculates the maximum number of rounds for a given number of players."""
-        if tournament_type == "Single Elimination":
+        if num_players == 1:
+            return 1 # to still make one match that is instantly won by the player
+        elif tournament_type == "Single Elimination":
             return math.ceil(math.log2(num_players))
         elif tournament_type == "Round Robin":
             return num_players - 1 if num_players % 2 == 0 else num_players
