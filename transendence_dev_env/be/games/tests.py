@@ -201,9 +201,9 @@ class OnlineTournamentTestCase(TransactionTestCase):
         # we might not have a single 'winner' for the round. 
         # Instead, each match can set a winner or increment scores. 
         for match in first_round.matches.all():
-            match.status = "completed"
             match.player1_score = 1
             match.player2_score = 0
+            match.save()
             TournamentLobbyService.record_match_result(match.id)
 
         # We can call something akin to `round_finished`:

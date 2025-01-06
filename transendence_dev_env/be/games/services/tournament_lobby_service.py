@@ -34,8 +34,9 @@ class TournamentLobbyService:
     @staticmethod
     def record_match_result(match_id):
         match = OnlineMatch.objects.get(id=match_id)
+        print(match.player1_score, match.player2_score)
         if not match.winner:
-            if not match.player1_score or not match.player2_score:
+            if match.player1_score is None or match.player2_score is None:
                 raise ValueError("Match result is incomplete.")
             else:
                 match.winner = match.player1 if match.player1_score > match.player2_score else match.player2
