@@ -7,6 +7,7 @@ from .models import (
 )
 from .services.tournament_lobby_service import TournamentLobbyService
 from .services.round_service import RoundService
+from .services.tournament_service import TournamentService
 import math
 
 class OnlineTournamentTestCase(TransactionTestCase):
@@ -48,7 +49,6 @@ class OnlineTournamentTestCase(TransactionTestCase):
         and that it creates the correct initial round & matches.
         """
         # Host starts the tournament
-        print("trololol")
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
 
         # Fetch the newly created tournament
@@ -90,7 +90,6 @@ class OnlineTournamentTestCase(TransactionTestCase):
         self.lobby.save()
 
         # Start
-        print("Starting round-robin tournament")
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
         tournament = self.lobby.tournament
         self.assertIsNotNone(tournament, "Round Robin tournament should be created.")
@@ -147,44 +146,45 @@ class OnlineTournamentTestCase(TransactionTestCase):
         """
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
         tournament = self.lobby.tournament
-        first_round = tournament.rounds.first()
+        first_round = tournament.rounds.filter(round_number=1).first()
 
         # Let's pretend we complete all matches in the first round
         for match in first_round.matches.all():
-            match.status = "completed"
-            # set an arbitrary winner (e.g. always user_host)
-            match.winner = match.player1
+            match.player1_score = 2
+            match.player2_score = 1
             match.save()
-            if match.winner:
-                first_round.winners.add(match.player1)
+            match.record_match_result()
+        first_round.end_round()
         first_round.save()
 
-        # Now we simulate "round_finished". Usually the service or signal calls it.
-        # For simplicity:
-        # from .services.tournament_lobby_service import TournamentLobbyService
-        TournamentLobbyService.advance_to_next_round(tournament)
+        self.assertEqual(tournament.current_round, 1, "we should be in the first round")
+        TournamentService.next_round(tournament)
 
         # We expect the next round to exist with fewer participants (just the winners).
         all_rounds = tournament.rounds.all().order_by("round_number")
         self.assertEqual(all_rounds.count(), 2, "Should have created the second round by now (semi-finals -> finals).")
-        second_round = all_rounds.last()
+        second_round = all_rounds.filter(round_number=2).first()
         self.assertTrue(second_round.matches.exists(), "Final round should have a match.")
 
         # Finish the final match
-        final_match = second_round.matches.first()
-        final_match.status = "completed"
-        final_match.winner = self.user_host
-        final_match.save()
-        second_round.winners.add(self.user_host)
+        for match in second_round.matches.all():
+            match.player1_score = 1
+            match.player2_score = 0
+            match.save()
+            match.record_match_result()
+        second_round.end_round()
         second_round.save()
 
+        self.assertEqual(tournament.current_round, 2, "we should be in the second round")
+        self.assertEqual(second_round.matches.count(), 1, "Final round should have 1 match.")
+        self.assertIsNotNone(second_round.winners.first(), "Should have a winner for the final round.")
         # Advance again
-        TournamentLobbyService.advance_to_next_round(tournament)
+        TournamentService.next_round(tournament)
 
         # The tournament should now be completed
         tournament.refresh_from_db()
         self.assertEqual(tournament.status, "completed")
-        self.assertEqual(tournament.final_winner, self.user_host.username)
+        self.assertEqual(tournament.final_winner, self.user_host)
 
     def test_round_robin_multiple_rounds(self):
         """
@@ -194,7 +194,7 @@ class OnlineTournamentTestCase(TransactionTestCase):
         self.lobby.save()
         TournamentLobbyService.start_tournament(self.lobby, self.user_host)
         tournament = self.lobby.tournament
-        first_round = tournament.rounds.first()
+        first_round = tournament.rounds.filter(round_number=1).first()
         self.assertIsNotNone(first_round)
 
         # Mark all matches in round 1 completed, but in round-robin,
@@ -204,21 +204,37 @@ class OnlineTournamentTestCase(TransactionTestCase):
             match.player1_score = 1
             match.player2_score = 0
             match.save()
-            TournamentLobbyService.record_match_result(match.id)
-
+            match.record_match_result()
+        first_round.end_round()
+        first_round.save()
+        print('this round robin test fails')
         # We can call something akin to `round_finished`:
         # If your code expects a certain approach for round-robin, do that here.
-        TournamentLobbyService.advance_to_next_round(tournament)
-        second_round = OnlineRound.objects.filter(round_number=2).last()
+        TournamentService.next_round(tournament)
+        second_round = tournament.rounds.filter(round_number=2).first()
         self.assertIsNotNone(second_round)
-        self.assertIsNotNone(second_round.matches.first().player1, "Should have populated the next round.")
-        
-        TournamentLobbyService.advance_to_next_round(tournament) 
-        third_round = OnlineRound.objects.filter(round_number=3).last()
+        for match in second_round.matches.all():
+            match.player1_score = 1
+            match.player2_score = 0
+            match.save()
+            match.record_match_result()
+        second_round.end_round()
+        second_round.save()
+    
+        TournamentService.next_round(tournament)
+        third_round = tournament.rounds.filter(round_number=3).first()
         self.assertIsNotNone(third_round)
         self.assertIsNotNone(third_round.matches.first().player1, "Should have populated the next round.")
-        # Likely we do more matches. Round-robin often has N-1 rounds total for N=4 => 3 rounds. 
-        # You can continue or just assert that the second round got created.
+        for match in third_round.matches.all():
+            match.player1_score = 1
+            match.player2_score = 0
+            match.save()
+            match.record_match_result()
+        third_round.end_round()
+        third_round.save()
+        TournamentService.next_round(tournament) # called to make the fourth round, if its done, it will set the tournament to completed
+        print('round robin test final round next_round behavior')
+        print(f'total_rounds {tournament.total_rounds} should be equal to current_round {tournament.current_round}')
 
     def test_cannot_start_tournament_if_not_all_ready(self):
         # Mark user4 as not ready
@@ -344,7 +360,7 @@ class RoundServiceUnitTest(TestCase):
         self.assertEqual(match2.player1, self.user2)
         self.assertEqual(match2.player2, self.user3)
 
-    def test_populate_matchups_invalid_tournament_type(self):
+    def test_new_matchups_invalid_tournament_type(self):
         self.tournament.type = "invalid"
         with self.assertRaises(ValueError):
-            RoundService.populate_matchups(self.tournament)
+            TournamentService.new_matchups(self.tournament, list(self.tournament.participants.all()))

@@ -64,28 +64,6 @@ class RoundService:
         return matches
 
     @staticmethod
-    def populate_matchups(tournament: OnlineTournament):
-        """
-        Populate matches in the given `round_instance` (OnlineRound)
-        based on the tournament_type and the participant list.
-        `participants` should be a list of Django User objects.
-        """
-        participants = list(tournament.participants.all())
-        round_instance = tournament.rounds.filter(round_number=tournament.current_round).first()
-        
-        if not participants or len(participants) == 0:
-            raise ValueError("Insufficient participants for match.")
-        if not round_instance:
-            raise ValueError(f"No round found for the current round number. {tournament.current_round}")
-
-        if tournament.type == TournamentType.SINGLE_ELIMINATION:
-            RoundService.populate_single_elimination_matches(round_instance, participants)
-        elif tournament.type == TournamentType.ROUND_ROBIN:
-            RoundService.populate_round_robin_matches(round_instance, participants, tournament.current_round-1)
-        else:
-            raise ValueError(f"Unknown tournament type: {tournament.type}")
-
-    @staticmethod
     def populate_single_elimination_matches(round_instance: OnlineRound, participants):
         """
         Populate existing matches in the round_instance with participants in pairs.

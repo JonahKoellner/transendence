@@ -55,6 +55,17 @@ class OnlineMatch(BaseMatch):
     player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player2', blank=True, null=True)
     winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_won', blank=True, null=True)
 
+    def record_match_result(self):
+        if self.winner == None:
+            if self.player1_score is None or self.player2_score is None:
+                raise ValueError("Match result is incomplete.")
+            else:
+                self.winner = self.player1 if self.player1_score > self.player2_score else self.player2
+                self.status = 'completed'
+                self.end_time = timezone.now()
+                self.outcome = MatchOutcome.FINISHED
+                self.save()
+
 class BaseRound(models.Model):
     round_number = models.IntegerField()
     stage = models.CharField(max_length=50, choices=Stage.choices)
@@ -76,7 +87,21 @@ class OnlineRound(BaseRound):
     matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
     matchups = models.JSONField(default=dict)
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
-    #TODO add start_time nullable and blank 
+    #TODO add start_time nullable and blank
+    
+    def end_round(self):
+        print(f'matchcount in populate winners: {self.matches.count()}')
+        for match in self.matches.all():
+            print(f'match: {match.player1} vs {match.player2} score: {match.player1_score} - {match.player2_score}')
+            if match.winner == None:
+                raise ValueError("Match result is incomplete.")
+            self.winners.add(match.winner)
+            print(f'won a match in {self.room_id}: {match.winner}')
+        print(f'winners in {self.room_id}: {self.winners.all()}')
+        self.end_time = timezone.now()
+        self.duration = (self.end_time - self.start_time).total_seconds()
+        self.status = 'completed'
+        self.save()
 
 class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
@@ -99,11 +124,11 @@ class OnlineTournament(BaseTournament):
     participants = models.ManyToManyField(User, related_name='online_tournaments')
     final_winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='online_tournaments_won', blank=True, null=True)
     rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
-    # tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     current_round = models.IntegerField(default=1)
     total_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    round_robin_scores = models.JSONField(default=dict) # store user with score
     def get_participants(self):
-        return self.participants.all()
+        return list(self.participants.all())
     
     # TODO get winner, ...
 
