@@ -231,7 +231,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           this.lobbyState.all_ready = msg.all_ready;
         }
         break;
-      case 'tournament_started': //TODO lobby gets deleted before i can navigate to the tournament
+      case 'tournament_start': //TODO lobby gets deleted before i can navigate to the tournament
+        console.log('Navigating to tournament tree');
         this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
         this.lobbyService.disconnect();
         break;
@@ -309,8 +310,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
     this.lobbyService.sendMessage({ action: 'start_tournament' });
     this.toastr.info('Tournament is starting...', 'Info');
-    //TODO navigate to tournament screen
-    this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
   }
 
   copyLinkToClipboard(): void {

@@ -2300,7 +2300,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         await self.accept()
 
         # Load the lobby and broadcast the current state
-        self.lobby = await self.get_lobby(self.room_id)
+        self.lobby = await database_sync_to_async(TournamentLobby.objects.get)(room_id=self.room_id)
         await self.broadcast_lobby_state()
 
     async def disconnect(self, close_code):
@@ -2340,16 +2340,20 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         try:
             if action == "set_ready":
                 is_ready = content.get("is_ready", False)
+                logger.info(f"User {self.user.username} is ready: {is_ready}")
                 await self.update_ready_status(self.user, is_ready)
             elif action == "update_settings":
                 new_settings = content.get("settings", {})
                 await self.update_lobby_settings(new_settings)
             elif action == "start_tournament":
-                    await self.send_json({
-                        "type": "tournament_started",
-                        "message": "Tournament has started."
-                    })
-                    await self.start_tournament()
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "type": "tournament_start",
+                            "message": "The Tournament has started. This lobby will be deleted.",
+                        }
+                    )
+                    await self.start_tournament_c()
         except Exception as e:
             await self.send_json({
                 "type": "error",
@@ -2357,26 +2361,28 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             })
         await self.broadcast_lobby_state()
 
+    async def tournament_start(self, event):
+        await self.send_json({
+            "type": "tournament_start",
+            "message": event["message"]
+        })
+
     @database_sync_to_async
-    def start_tournament(self):
+    def start_tournament_c(self):
         self.lobby.refresh_from_db()
         TournamentLobbyService.start_tournament(self.lobby, self.user)
         self.lobby.save()
 
     @database_sync_to_async
-    def get_lobby(self, room_id):
-        return TournamentLobby.objects.get(room_id=room_id)
-
-    @database_sync_to_async
     def update_ready_status(self, user, is_ready):
-        # if user == self.lobby.host:
-        #     self.lobby.is_host_ready = is_ready
+        self.lobby.refresh_from_db()
         if user in self.lobby.guests.all():
             self.lobby.guest_ready_states[str(user.id)] = is_ready
         self.lobby.save()
 
     @database_sync_to_async
     def update_lobby_settings(self, new_settings):
+        self.lobby.refresh_from_db()
         # Update lobby settings based on the provided input
         if "max_player_count" in new_settings:
             self.lobby.max_player_count = new_settings["max_player_count"]
@@ -2430,29 +2436,30 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def handle_user_disconnect(self):
         # Remove the user from the lobby
-        lobby = TournamentLobby.objects.get(room_id=self.room_id)
-        if self.user in lobby.guests.all():
-            lobby.guests.remove(self.user)
+        logger.info(f"Removing user {self.user.username} from the lobby.")
+        self.lobby.refresh_from_db()
+        if self.user in self.lobby.guests.all():
+            self.lobby.guests.remove(self.user)
             # Remove the user's ready state
-            if str(self.user.id) in lobby.guest_ready_states:
-                del lobby.guest_ready_states[str(self.user.id)]
+            if str(self.user.id) in self.lobby.guest_ready_states:
+                del self.lobby.guest_ready_states[str(self.user.id)]
             # Remove the user's customization
-            lobby.guest_customizations.filter(user=self.user).delete()
-            lobby.save()
+            self.lobby.guest_customizations.filter(user=self.user).delete()
+            self.lobby.save()
 
     @database_sync_to_async
     def delete_lobby(self):
         """Delete the lobby if the host disconnects."""
-        logger.error(f"Deleting lobby with room_id {self.room_id}.")
+        logger.info(f"Deleting tournamentlobby with room_id {self.room_id}.")
         TournamentLobby.objects.filter(room_id=self.room_id).delete()
         
     @database_sync_to_async
     def is_user_host(self):
         """Check if the disconnecting user is the host."""
-        lobby = TournamentLobby.objects.get(room_id=self.room_id)
-        if not lobby:
+        self.lobby.refresh_from_db()
+        if not self.lobby:
             raise Exception("Lobby does not exist.")
-        return self.user == lobby.host
+        return self.user == self.lobby.host
     
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -2496,12 +2503,13 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 "user_role": "guest"
             }
         )
+        logger.info(f"User {self.user.username} disconnected from tournament {self.room_id}.")
 
     async def receive_json(self, content):
         action = content.get("action")
         try:
             if action == "ready":
-                is_ready = content.get("is_ready", False)
+                is_ready = content.get("ready", False)
                 await self.update_ready_status(self.user, is_ready)
         except Exception as e:
             await self.send_json({
@@ -2512,15 +2520,16 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def handle_user_disconnect(self):
-        tournament = OnlineTournament.objects.get(room_id=self.room_id)
-        if self.user in tournament.participants.all():
-            tournament.participants.remove(self.user)
-            if str(self.user.id) in tournament.participants_ready_states:
-                del tournament.participants_ready_states[str(self.user.id)]
-            tournament.save()
+        self.tournament.refresh_from_db()
+        if self.user in self.tournament.participants.all():
+            self.tournament.participants.remove(self.user)
+            if str(self.user.id) in self.tournament.participants_ready_states:
+                del self.tournament.participants_ready_states[str(self.user.id)]
+            self.tournament.save()
         
     
     async def broadcast_tournament(self):
+        await database_sync_to_async(self.tournament.refresh_from_db)()
         tournament_state = await database_sync_to_async(self.tournament.get_tournament_state)()
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -2529,6 +2538,13 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 **tournament_state
             }
         )
+        
+    async def alert(self, event):
+        await self.send_json({
+            "type": "alert",
+            "message": event["message"],
+            "user_role": event["user_role"]  # Send the user role along with the message
+        })
     
     async def tournament_state(self, event):
         tournament_state = {
@@ -2549,9 +2565,10 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def update_ready_status(self, user, is_ready):
+        database_sync_to_async(self.tournament.refresh_from_db)()
         if user in self.tournament.participants.all():
             self.tournament.participant_ready_states[str(user.id)] = is_ready
-        self.tournament.save()
+        database_sync_to_async(self.tournament.save)()
         
     async def start_game(): ... # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
     
