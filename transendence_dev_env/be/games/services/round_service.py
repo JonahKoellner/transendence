@@ -10,6 +10,9 @@ from ..models import (
 )
 import uuid
 
+import logging
+logger = logging.getLogger('game_debug')
+
 def generate_match_id() -> str:
     """
     Generate a short unique match_id for OnlineMatch.
@@ -24,6 +27,7 @@ class RoundService:
         Generate a list of OnlineRound objects based on the total_rounds
         and the tournament_type. Returns a list of OnlineRound objects.
         """
+        logger.info(f'generate rounds total_rounds: {tournament.total_rounds}')
         stages = [stage for stage in Stage if stage != Stage.ROUND_ROBIN_STAGE] # dont count round robin stage
         stages.reverse()
         rounds = []

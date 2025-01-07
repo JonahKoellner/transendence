@@ -2550,14 +2550,11 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                         removed = False
                         if self.user == match.player1:
                             match.player1 = None
-                            match.winner = match.player2
                             removed = True
                         elif self.user == match.player2:
                             match.player2 = None
-                            match.winner = match.player1
                             removed = True
                         if removed:
-                            match.status = "completed"
                             match.save()
                             round.save()
                             break

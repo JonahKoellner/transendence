@@ -22,10 +22,12 @@ class TournamentLobbyService:
             name=f"Tournament {lobby.room_id}",
             type=lobby.tournament_type,
             status="ongoing",
-            room_id=lobby.room_id
+            room_id=lobby.room_id,
+            total_rounds = lobby.total_rounds
         )
         tournament.participants.set(list(lobby.guests.all()) + [lobby.host])
-        tournament.total_rounds = TournamentLobbyService.calc_max_rounds(len(tournament.participants.all()), lobby.tournament_type)
+        # tournament.total_rounds = TournamentLobbyService.calc_max_rounds(len(tournament.participants.all()), lobby.tournament_type)
+        logger.info(f'Total rounds {lobby.total_rounds}')
         tournament.save()
         rounds = RoundService.generate_rounds(tournament) # generates rounds and matches
         tournament.rounds.set(rounds)
