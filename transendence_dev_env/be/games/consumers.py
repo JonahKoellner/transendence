@@ -2309,8 +2309,8 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-        
         if await self.is_user_host():
+            logger.info('Host left the tournament lobby')
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -2333,6 +2333,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                     "user_role": "guest"
                 }
             )
+            
 
     async def receive_json(self, content):
         action = content.get("action")
@@ -2360,6 +2361,13 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                 "message": str(e)
             })
         await self.broadcast_lobby_state()
+
+    async def alert(self, event):
+        await self.send_json({
+            "type": "alert",
+            "message": event["message"],
+            "user_role": event["user_role"]
+        })
 
     async def tournament_start(self, event):
         await self.send_json({
@@ -2437,7 +2445,10 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     def handle_user_disconnect(self):
         # Remove the user from the lobby
         logger.info(f"Removing user {self.user.username} from the lobby.")
-        self.lobby.refresh_from_db()
+        try:
+            lobby = TournamentLobby.objects.get(room_id=self.room_id)
+        except TournamentLobby.DoesNotExist: # lobby already deleted, dont need to remove guest
+            return
         if self.user in self.lobby.guests.all():
             self.lobby.guests.remove(self.user)
             # Remove the user's ready state
@@ -2456,11 +2467,15 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def is_user_host(self):
         """Check if the disconnecting user is the host."""
-        self.lobby.refresh_from_db()
-        if not self.lobby:
-            raise Exception("Lobby does not exist.")
-        return self.user == self.lobby.host
-    
+        try:
+            lobby = TournamentLobby.objects.get(room_id=self.room_id)
+        except TournamentLobby.DoesNotExist:
+            return False
+        return self.user == lobby.host
+
+#TODO when is the tournament deleted? -> when there is no player connected to the tournament websocket anymore and the tournament is done. -> if everyone leaves the tournament will automatically be done.
+#TODO still shows the tournament lobby (probably doesnt get deleted) when the tournament is active -> delete lobby when tournament is active
+
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
@@ -2480,7 +2495,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         await self.accept()
         
         # Load the tournament and broadcast the initial state
-        self.tournament = await self.get_tournament(self.room_id)
+        self.tournament = await database_sync_to_async(OnlineTournament.objects.get)(room_id=self.room_id)
         logger.info(f"User {self.user.username} connected to tournament {self.room_id}.")
         await self.broadcast_tournament()
         
@@ -2529,7 +2544,6 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         
     
     async def broadcast_tournament(self):
-        await database_sync_to_async(self.tournament.refresh_from_db)()
         tournament_state = await database_sync_to_async(self.tournament.get_tournament_state)()
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -2540,13 +2554,15 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         )
         
     async def alert(self, event):
+        """handle the alert WebSocket message type."""
         await self.send_json({
             "type": "alert",
             "message": event["message"],
             "user_role": event["user_role"]  # Send the user role along with the message
         })
-    
+
     async def tournament_state(self, event):
+        """handle the 'tournament_state' WebSocket message type."""
         tournament_state = {
             "room_id": event.get("room_id"),
             "name": event.get("name"),
@@ -2571,10 +2587,3 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         database_sync_to_async(self.tournament.save)()
         
     async def start_game(): ... # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
-    
-    @database_sync_to_async
-    def get_tournament(self, room_id):
-        try:
-            return OnlineTournament.objects.get(room_id=room_id)
-        except OnlineTournament.DoesNotExist:
-            raise ObjectDoesNotExist(f"Tournament with room_id {room_id} does not exist.")

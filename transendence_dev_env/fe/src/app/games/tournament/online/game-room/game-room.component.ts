@@ -7,7 +7,6 @@ import { forkJoin, Subscription } from 'rxjs';
 
 //TODO: friend list / friends in general
 //TODO: invite
-//TODO: ui looks like shit
 
 interface LobbyState {
   host: string;
@@ -242,8 +241,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         break;
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);
+        if (this.host === "") {
     }
-    if (this.host === "") {
       this.router.navigate(['/games/online-tournament/rooms']);
     }
     if (msg.type !== 'lobby_state') {
@@ -253,12 +252,12 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   private handleAlert(msg: any): void {
     if (msg.user_role === 'host') {
-      this.toastr.error('The host has left the room.', 'Error');
+      this.toastr.error('The host has left the room. Redirecting you to the lobby', 'Error');
       this.router.navigate(['/games/online-tournament/rooms']);
     } else if (msg.user_role === 'guest') {
       this.toastr.info(`Player ${msg.username} has left the room.`, 'Info');
+      this.fetchRoomStatus();
     }
-    this.fetchRoomStatus();
   }
 
   toggleReadyStatus(): void {
