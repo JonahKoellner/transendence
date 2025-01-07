@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament
+from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineMatch
 from .services.tournament_lobby_service import TournamentLobbyService
 from django.contrib.auth.models import User 
 from django.db import transaction
@@ -13,6 +13,7 @@ import json
 from asyncio import Lock
 from django.utils import timezone
 from threading import Timer
+from asgiref.sync import sync_to_async
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -2607,3 +2608,220 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         database_sync_to_async(self.tournament.save)()
         
     async def start_game(): ... # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
+
+class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.game_in_progress = False
+
+        self.left_paddle_y = 250
+        self.right_paddle_y = 250
+        self.left_paddle_speed = 0
+        self.right_paddle_speed = 0
+
+        self.ball_x = 500
+        self.ball_y = 250
+        self.ball_direction_x = 1
+        self.ball_direction_y = 0.5
+        self.ball_speed = 5
+
+        self.left_score = 0
+        self.right_score = 0
+
+        self.game_lock = Lock()
+        self.game_loop_task = None
+        self.countdown_task = None
+        self.match_end_task = None
+
+        self.ready_status = {"left": False, "right": False}
+        self.left_user = None
+        self.right_user = None
+        self.match = None
+        self.room_id = None
+        self.match_id = None
+
+    async def connect(self):
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.match_id = self.scope['url_route']['kwargs']['match_id']
+        self.room_group_name = f'tournament_match_{self.room_id}_{self.match_id}'
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+
+        await self.channel_layer.group_send(
+            self.room_group_name, {
+                "type": "initial_state",
+                "data": self
+            }
+        )
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        if self.game_loop_task and not self.game_loop_task.done():
+            self.game_loop_task.cancel()
+            self.game_in_progress = False
+        if self.countdown_task and not self.countdown_task.done():
+            self.countdown_task.cancel()
+        if self.match_end_task and not self.match_end_task.done():
+            self.match_end_task.cancel()
+
+    async def receive_json(self, content):
+        action = content.get("action")
+        if action in ["keydown", "keyup"]:
+            await self.handle_key_event(action, content)
+        elif action == "set_ready":
+            user_id = content.get("user_id")
+            is_ready = content.get("is_ready", False)
+            self.ready_status[user_id] = is_ready
+            await self.broadcast_ready_state()
+
+            # If both sides are ready and game not started, begin countdown
+            if all(self.ready_status.values()) and not self.game_in_progress:
+                if not self.countdown_task or self.countdown_task.done():
+                    self.countdown_task = asyncio.create_task(self.start_countdown())
+            else:
+                # If someone unreadies, cancel any countdown in progress
+                if self.countdown_task and not self.countdown_task.done():
+                    self.countdown_task.cancel()
+                    self.countdown_task = None
+
+    async def handle_key_event(self, action, content):
+        key = content.get("key")
+        user_id = content.get("user_id", "")
+        max_speed = 10
+        if action == "keydown":
+            if key == "KeyW":
+                speed = -max_speed
+            elif key == "KeyS":
+                speed = max_speed
+            else:
+                speed = 0
+        else:
+            speed = 0
+
+        if user_id == "left":
+            self.left_paddle_speed = speed
+        elif user_id == "right":
+            self.right_paddle_speed = speed
+
+    async def start_countdown(self):
+        try:
+            for i in range(3, 0, -1):
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {"type": "countdown", "count": i}
+                )
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            return
+        if all(self.ready_status.values()) and not self.game_in_progress:
+            await self.start_game()
+
+    async def start_game(self):
+        self.game_in_progress = True
+        self.game_loop_task = asyncio.create_task(self.game_loop())
+        self.match_end_task = asyncio.create_task(self.match_timer())
+
+    async def match_timer(self):
+        try:
+            await asyncio.sleep(30)
+            await self.end_match()
+        except asyncio.CancelledError:
+            return
+
+    async def end_match(self):
+        self.game_in_progress = False
+        if self.game_loop_task and not self.game_loop_task.done():
+            self.game_loop_task.cancel()
+        await self.save_match_results()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "match_ended",
+                "left_score": self.left_score,
+                "right_score": self.right_score
+            }
+        )
+
+    async def game_loop(self):
+        while self.game_in_progress:
+            await self.game_tick()
+            await asyncio.sleep(1 / 60)
+
+    async def game_tick(self):
+        async with self.game_lock:
+            self.left_paddle_y = max(0, min(self.left_paddle_y + self.left_paddle_speed, 440))
+            self.right_paddle_y = max(0, min(self.right_paddle_y + self.right_paddle_speed, 440))
+            self.ball_x += self.ball_direction_x * self.ball_speed
+            self.ball_y += self.ball_direction_y * self.ball_speed
+
+            if self.ball_y <= 0 or self.ball_y >= 500:
+                self.ball_direction_y *= -1
+
+            if self.ball_x <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
+                self.ball_direction_x *= -1
+            if self.ball_x >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
+                self.ball_direction_x *= -1
+
+            if self.ball_x <= 0:
+                self.right_score += 1
+                await self.reset_ball()
+            elif self.ball_x >= 1000:
+                self.left_score += 1
+                await self.reset_ball()
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "game_state",
+                    "leftScore": self.left_score,
+                    "rightScore": self.right_score,
+                    "ball_x": self.ball_x,
+                    "ball_y": self.ball_y,
+                    "left_paddle_y": self.left_paddle_y,
+                    "right_paddle_y": self.right_paddle_y,
+                }
+            )
+
+    async def reset_ball(self):
+        self.ball_x = 500
+        self.ball_y = 250
+        self.ball_direction_x = -1 if random.random() < 0.5 else 1
+        self.ball_direction_y = (random.random() * 2 - 1) * 0.5
+
+    async def save_match_results(self):
+        await self._save_match_results_db(self.left_score, self.right_score)
+
+    @sync_to_async
+    def _save_match_results_db(self, left_score, right_score):
+        if not self.match:
+            try:
+                self.match = OnlineMatch.objects.get(match_id=self.match_id, room_id=self.room_id)
+            except OnlineMatch.DoesNotExist:
+                return
+
+        # Set the final scores
+        self.match.player1_score = left_score
+        self.match.player2_score = right_score
+
+        # record_match_result() handles winner, end_time, outcome, status, etc.
+        self.match.record_match_result()
+
+    async def game_state(self, event):
+        await self.send_json(event)
+
+    async def broadcast_ready_state(self):
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "ready_state", "ready_status": self.ready_status}
+        )
+
+    async def ready_state(self, event):
+        await self.send_json({"type": "ready_state", "ready_status": event["ready_status"]})
+
+    async def match_ended(self, event):
+        await self.send_json({
+            "type": "match_ended",
+            "left_score": event["left_score"],
+            "right_score": event["right_score"]
+        })
