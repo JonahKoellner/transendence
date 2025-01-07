@@ -2341,7 +2341,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         try:
             if action == "set_ready":
                 is_ready = content.get("is_ready", False)
-                logger.info(f"User {self.user.username} is ready: {is_ready}")
+                logger.debug(f"User {self.user.username} is ready: {is_ready}")
                 await self.update_ready_status(self.user, is_ready)
             elif action == "update_settings":
                 new_settings = content.get("settings", {})
@@ -2519,7 +2519,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 "user_role": "guest"
             }
         )
-        logger.info(f"User {self.user.username} disconnected from tournament {self.room_id}.")
+        logger.debug(f"User {self.user.username} disconnected from tournament {self.room_id}.")
 
     async def receive_json(self, content):
         action = content.get("action")
@@ -2546,7 +2546,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             for round in self.tournament.rounds.all(): # remove player from matches and replace with None
                 for match in round.matches.all():
                     if match.status == "pending":
-                        logger.info(f"Trying to remove {self.user.username} from match {match.id}")
+                        logger.debug(f"Trying to remove {self.user.username} from match {match.id}")
                         removed = False
                         if self.user == match.player1:
                             match.player1 = None
@@ -2555,6 +2555,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                             match.player2 = None
                             removed = True
                         if removed:
+                            match.winner = match.player1 if match.player1 != None else match.player2
                             match.save()
                             round.save()
                             break

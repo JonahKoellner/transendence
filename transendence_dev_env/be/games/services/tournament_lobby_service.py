@@ -13,7 +13,7 @@ logger = logging.getLogger('game_debug')
 class TournamentLobbyService:
     @staticmethod
     def start_tournament(lobby: TournamentLobby, user):
-        logger.info(f"Starting tournament {lobby.room_id} (tournamentlobbyservice)")
+        logger.debug(f"Starting tournament {lobby.room_id} (tournamentlobbyservice)")
         if user != lobby.host:
             raise PermissionError("Only the host can start the tournament.")
         if not lobby.all_ready():
@@ -23,19 +23,19 @@ class TournamentLobbyService:
             type=lobby.tournament_type,
             status="ongoing",
             room_id=lobby.room_id,
-            total_rounds = lobby.total_rounds
         )
         tournament.participants.set(list(lobby.guests.all()) + [lobby.host])
-        # tournament.total_rounds = TournamentLobbyService.calc_max_rounds(len(tournament.participants.all()), lobby.tournament_type)
-        logger.info(f'Total rounds {lobby.total_rounds}')
+        tournament.total_rounds = TournamentLobbyService.calc_max_rounds(len(tournament.participants.all()), lobby.tournament_type)
+        logger.debug(f'Total rounds {tournament.total_rounds}')
         tournament.save()
         rounds = RoundService.generate_rounds(tournament) # generates rounds and matches
         tournament.rounds.set(rounds)
         tournament.save()
-        TournamentService.new_matchups(tournament, tournament.participants.all())
+        if lobby.tournament_type == "Single Elimination":
+            TournamentService.new_matchups(tournament, tournament.participants.all())
+        tournament.save()
         lobby.tournament = tournament
         lobby.save()
-        raise ValueError("Tournament started.")
 
     @staticmethod
     def handle_user_disconnect(user, lobby):
