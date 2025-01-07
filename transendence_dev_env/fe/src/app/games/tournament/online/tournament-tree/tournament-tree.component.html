@@ -1,8 +1,9 @@
 <div class="tournament-tree">
+  <button (click)="onReadyClick()">Ready</button>
   <h1>Tournament Tree</h1>
   <div *ngIf="tournament">
     <!-- Single Elimination Bracket -->
-    <div *ngIf="tournament.type === 'Single Elimination'" class="single-elimination-bracket">
+    <div *ngIf="tournament.tournament_type === 'Single Elimination'" class="single-elimination-bracket">
       <div *ngFor="let round of tournament.rounds; let r = index" class="round">
         <ng-container *ngIf="round">
           <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
@@ -26,7 +27,7 @@
     </div>
 
     <!-- Round Robin Bracket -->
-    <div *ngIf="tournament.type === 'Round Robin'" class="round-robin-bracket">
+    <div *ngIf="tournament.tournament_type === 'Round Robin'" class="round-robin-bracket">
       <div class="round-robin-scores">
         <h3>Round Robin Scores</h3>
         <table>

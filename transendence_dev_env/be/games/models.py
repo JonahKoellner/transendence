@@ -4,6 +4,9 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+import logging
+logger = logging.getLogger('game_debug')
+
 class TournamentType(models.TextChoices):
     SINGLE_ELIMINATION = 'Single Elimination'
     ROUND_ROBIN = 'Round Robin'
@@ -126,7 +129,11 @@ class OnlineTournament(BaseTournament):
     def get_participants(self):
         return list(self.participants.all())
 
-def get_tournament_state(self):
+    def delete(self, *args, **kwargs):
+        logger.error(f"TournamentLobby with room_id {self.room_id} is being deleted.")
+        super().delete(*args, **kwargs)
+
+    def get_tournament_state(self):
         rounds_data = []
         for round_instance in self.rounds.all():
             rounds_data.append({
@@ -164,7 +171,7 @@ def get_tournament_state(self):
         tournament_state = {
             "room_id": self.room_id,
             "name": self.name,
-            "type": self.type,
+            "tournament_type": self.type,
             "status": self.status,
             "rounds": rounds_data,
             "participants": participants_data,
@@ -215,7 +222,7 @@ class TournamentLobby(models.Model):
     tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     tournament = models.ForeignKey(
         OnlineTournament,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL, # because tournament is still needed
         related_name="tournament_lobbies",
         null=True,
         blank=True

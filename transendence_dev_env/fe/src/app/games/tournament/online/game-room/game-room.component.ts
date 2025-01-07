@@ -231,8 +231,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           this.lobbyState.all_ready = msg.all_ready;
         }
         break;
-      case 'game_started':
-        this.toastr.success('The game has started!', 'Success');
+      case 'tournament_started': //TODO lobby gets deleted before i can navigate to the tournament
+        this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
+        this.lobbyService.disconnect();
         break;
       case 'alert':
         console.log('Alert message', msg);

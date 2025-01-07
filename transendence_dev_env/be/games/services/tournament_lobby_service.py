@@ -7,9 +7,13 @@ from django.contrib.auth.models import User
 from random import shuffle
 import math
 
+import logging
+logger = logging.getLogger('game_debug')
+
 class TournamentLobbyService:
     @staticmethod
     def start_tournament(lobby: TournamentLobby, user):
+        logger.info(f"Starting tournament {lobby.room_id} (tournamentlobbyservice)")
         if user != lobby.host:
             raise PermissionError("Only the host can start the tournament.")
         if not lobby.all_ready():
@@ -29,7 +33,7 @@ class TournamentLobbyService:
         TournamentService.new_matchups(tournament, tournament.participants.all())
         lobby.tournament = tournament
         lobby.save()
-        
+        raise ValueError("Tournament started.")
 
     @staticmethod
     def handle_user_disconnect(user, lobby):

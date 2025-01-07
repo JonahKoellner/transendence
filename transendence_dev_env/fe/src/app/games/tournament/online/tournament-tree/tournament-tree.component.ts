@@ -1,7 +1,6 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { NavigationStart, ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentService } from 'src/app/services/tournament.service';
 import { Subscription } from 'rxjs';
 
@@ -50,7 +49,7 @@ interface Player {
 interface Tournament {
   room_id: string;
   name: string;
-  type: TournamentType;
+  tournament_type: TournamentType;
   status: 'pending' | 'ongoing' | 'completed';
   rounds: Round[];
   participants: Player[];
@@ -68,78 +67,101 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   roomId: string = '';
   private messageSubscription!: Subscription;
 
-
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private toastr: ToastrService,
-  ) { }
+    private tournamentService: TournamentService
+  ) {}
 
-  //try to get the connection to backend and display the tournament tree
   ngOnInit(): void {
+    // Get the room ID from the route
     this.roomId = this.route.snapshot.params['roomId'] || '';
     if (!this.roomId) {
       this.toastr.error('Invalid room id', 'Error');
-      return ;
+      return;
     }
 
-    //join tournament and build up websocket connection
-    this.tournamentService.join
+    // Connect to the WebSocket
+    this.tournamentService.connect(this.roomId);
 
+    // Join the tournament room via WebSocket
+    this.tournamentService.sendMessage({ type: 'join', room_id: this.roomId });
 
-
-    this.tournament = this.dummyData();
+    // Subscribe to WebSocket messages
+    this.messageSubscription = this.tournamentService.messages$.subscribe({
+      next: (msg) => this.handleWebSocketMessage(msg),
+      error: (err) => {
+        this.toastr.error('An error occurred while fetching tournament data.', 'Error');
+        console.error(err);
+      },
+    });
   }
 
-  dummyData(): Tournament {
-    console.log('dummyData');
-    return {
-      room_id: '123',
-      name: 'Tournament 1',
-      type: TournamentType.SINGLE_ELIMINATION,
-      status: 'ongoing',
-      rounds: [
-        {
-          round_number: 1,
-          stage: Stage.PRELIMINARIES,
-          status: 'completed',
-          matches: [
-            {
-              match_id: '1',
-              player1: 'Player 1',
-              player2: 'Player 2',
-              player1_score: 2,
-              player2_score: 1,
-              winner: 'Player 1',
-              status: 'completed',
-              start_time: '2024-01-01T12:00:00Z',
-              end_time: '2024-01-01T12:30:00Z',
-            },
-            {
-              match_id: '2',
-              player1: 'Player 3',
-              player2: 'Player 4',
-              player1_score: 1,
-              player2_score: 2,
-              winner: 'Player 4',
-              status: 'completed',
-              start_time: '2024-01-01T13:00:00Z',
-              end_time: '2024-01-01T13:30:00Z',
-            },
-          ],
-          winners: ['Player 1', 'Player 4'],
-          start_time: '2024-01-01T12:00:00Z',
-          end_time: '2024-01-01T14:00:00Z',
-        },
-      ],
-      participants: [
-        { username: 'Player 1', id:'1', is_ready: true },
-        { username: 'Player 2', id:'2', is_ready: true },
-        { username: 'Player 3', id:'3', is_ready: false },
-        { username: 'Player 4', id:'4', is_ready: true },
-      ],
-      round_robin_scores: { 'Player 1': 3, 'Player 2': 2, 'Player 3': 1, 'Player 4': 4 },
-      final_winner: null,
-    };
+  ngOnDestroy(): void {
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+    }
+    this.tournamentService.disconnect();
   }
+
+  private handleWebSocketMessage(msg: any): void {
+    console.log('WebSocket message:', msg);
+    switch (msg.type) {
+      case 'tournament_state':
+        // Update tournament state
+        this.tournament = msg.tournament_state;
+        console.log('tournament:', this.tournament);
+        break;
+
+      // case 'round_update':
+      //   // Update specific round details
+      //   if (this.tournament) {
+      //     const roundIndex = this.tournament.rounds.findIndex(
+      //       (round) => round.round_number === msg.round.round_number
+      //     );
+      //     if (roundIndex !== -1) {
+      //       this.tournament.rounds[roundIndex] = msg.round;
+      //     }
+      //   }
+      //   break;
+
+      // case 'match_update': // TODO check later if we really implemented this
+      //   // Update specific match details
+      //   if (this.tournament) {
+      //     const round = this.tournament.rounds.find(
+      //       (round) => round.round_number === msg.round_number
+      //     );
+      //     if (round) {
+      //       const matchIndex = round.matches.findIndex(
+      //         (match) => match.match_id === msg.match.match_id
+      //       );
+      //       if (matchIndex !== -1) {
+      //         round.matches[matchIndex] = msg.match;
+      //       }
+      //     }
+      //   }
+      //   break;
+
+      // case 'participant_update': // TODO check later if we really implemented this
+      //   // Update participant readiness or other details
+      //   if (this.tournament) {
+      //     const participant = this.tournament.participants.find(
+      //       (p) => p.username === msg.participant.username
+      //     );
+      //     if (participant) {
+      //       participant.is_ready = msg.participant.is_ready;
+      //     }
+      //   }
+      //   break;
+
+      default:
+        console.warn('Unhandled WebSocket message type:', msg.type);
+    }
+  }
+
+  onReadyClick(): void {
+    this.tournamentService.sendReady(this.roomId);
+  }
+
 }
