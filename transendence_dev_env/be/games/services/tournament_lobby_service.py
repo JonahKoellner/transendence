@@ -50,27 +50,26 @@ class TournamentLobbyService:
         return lobby.get_lobby_state()
     
     @staticmethod
-    def adjust_max_player_count(lobby):
+    def adjust_max_player_count(lobby: TournamentLobby):
         """Ensures max_player_count is valid based on the game mode and player count."""
         player_count = lobby.guests.count() + 1  # Including the host
-        allowed_counts = TournamentLobbyService.get_allowed_player_counts(lobby.tournament_type)
 
-        # Determine the smallest valid max_player_count >= current player count
-        valid_counts = [count for count in allowed_counts if count >= player_count]
-        if valid_counts and lobby.max_player_count not in valid_counts:
-            lobby.max_player_count = valid_counts[0]
-        #TODO be sure that never max_player_count < player_count, otherwise add edge case handling
-        lobby.save()
-
-    @staticmethod
-    def get_allowed_player_counts(tournament_type):
-        """Returns allowed player counts for the given game mode."""
+        # Define allowed player counts for each tournament type
         game_modes = {
             "Single Elimination": [4, 8, 16, 32],
             "Round Robin": [4, 6, 8, 10, 12],
         }
-        return game_modes.get(tournament_type, [])
-    
+
+        # Get allowed player counts for the given tournament type
+        allowed_counts = game_modes.get(lobby.tournament_type, [])
+
+        # Determine the smallest valid max_player_count >= current player count
+        valid_counts = [count for count in allowed_counts if count >= player_count]
+        if valid_counts:
+            lobby.max_player_count = valid_counts[0]
+
+        lobby.save()
+
     @staticmethod
     def calc_max_rounds(num_players: int, tournament_type: str) -> int:
         """Calculates the maximum number of rounds for a given number of players."""

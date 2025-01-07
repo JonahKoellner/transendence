@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, status
-from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer,GameStatsSerializer
+from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer,GameStatsSerializer, TournamentSerializer
 from django.db.models.functions import ExtractMonth
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
@@ -14,13 +14,13 @@ import calendar
 from django.contrib.auth.models import User 
 from accounts.serializers import UserProfileSerializer
 from accounts.models import Profile
-from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby
+from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
-from .serializers import TournamentSerializer
 import random
 import string
 from django.db import transaction
+from .services.tournament_lobby_service import TournamentLobbyService
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -1140,6 +1140,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
             # Add the user as a guest
             lobby.guests.add(user)
             lobby.guest_ready_states[user.id] = False  # Initialize ready state
+            TournamentLobbyService.adjust_max_player_count(lobby)
             lobby.save()
 
             return Response({"detail": "Joined lobby successfully."}, status=status.HTTP_200_OK)

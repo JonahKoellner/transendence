@@ -2361,6 +2361,8 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                 "type": "error",
                 "message": str(e)
             })
+        if action != "set_ready" or action != "start_tournament":
+            await database_sync_to_async(TournamentLobbyService.adjust_max_player_count)(self.lobby)
         await self.broadcast_lobby_state()
 
     async def alert(self, event):
