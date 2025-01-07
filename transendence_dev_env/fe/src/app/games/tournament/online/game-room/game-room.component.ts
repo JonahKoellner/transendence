@@ -68,6 +68,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.navigationSubscription = this.router.events.subscribe(event => { // to not delete lobby when going to tournament tree
       if (event instanceof NavigationStart) {
         if (event.url.startsWith('/games/online-tournament/tournament-tree')) {
+          console.log('Going to tournament tree');
           this.goingToTournament = true;
         }
       }
@@ -94,13 +95,13 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    console.log('Destroying game room component, goingToTournament:', this.goingToTournament);
     if (this.navigationSubscription) {
       this.navigationSubscription.unsubscribe();
     }
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
-    console.log('goingToTournament:', this.goingToTournament)
     this.lobbyService.disconnect();
     if (this.isHost && !this.goingToTournament) { // only delete room if not navigating to the tournament tree
       this.lobbyService.deleteRoom(this.roomId).subscribe(
@@ -241,8 +242,8 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         break;
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);
-        if (this.host === "") {
     }
+    if (this.host === "") {
       this.router.navigate(['/games/online-tournament/rooms']);
     }
     if (msg.type !== 'lobby_state') {

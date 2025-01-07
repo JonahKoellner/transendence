@@ -2356,6 +2356,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                     )
                     await self.start_tournament_c()
         except Exception as e:
+            logger.error(f"Error processing action {action}: {e}")
             await self.send_json({
                 "type": "error",
                 "message": str(e)
@@ -2526,6 +2527,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             if action == "ready":
                 is_ready = content.get("ready", False)
                 await self.update_ready_status(self.user, is_ready)
+            if action == "get_tournament_state":
+                await self.broadcast_tournament()
         except Exception as e:
             await self.send_json({
                 "type": "error",
@@ -2540,9 +2543,26 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             self.tournament.participants.remove(self.user)
             if str(self.user.id) in self.tournament.participants_ready_states:
                 del self.tournament.participants_ready_states[str(self.user.id)]
+            for round in self.tournament.rounds.all(): # remove player from matches and replace with None
+                for match in round.matches.all():
+                    if match.status == "pending":
+                        logger.info(f"Trying to remove {self.user.username} from match {match.id}")
+                        removed = False
+                        if self.user == match.player1:
+                            match.player1 = None
+                            match.winner = match.player2
+                            removed = True
+                        elif self.user == match.player2:
+                            match.player2 = None
+                            match.winner = match.player1
+                            removed = True
+                        if removed:
+                            match.status = "completed"
+                            match.save()
+                            round.save()
+                            break
             self.tournament.save()
-        
-    
+
     async def broadcast_tournament(self):
         tournament_state = await database_sync_to_async(self.tournament.get_tournament_state)()
         await self.channel_layer.group_send(

@@ -71,7 +71,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private toastr: ToastrService,
-    private tournamentService: TournamentService
+    private tournamentService: TournamentService,
   ) {}
 
   ngOnInit(): void {
@@ -109,55 +109,23 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     console.log('WebSocket message:', msg);
     switch (msg.type) {
       case 'tournament_state':
-        // Update tournament state
         this.tournament = msg.tournament_state;
         console.log('tournament:', this.tournament);
         break;
-
-      // case 'round_update':
-      //   // Update specific round details
-      //   if (this.tournament) {
-      //     const roundIndex = this.tournament.rounds.findIndex(
-      //       (round) => round.round_number === msg.round.round_number
-      //     );
-      //     if (roundIndex !== -1) {
-      //       this.tournament.rounds[roundIndex] = msg.round;
-      //     }
-      //   }
-      //   break;
-
-      // case 'match_update': // TODO check later if we really implemented this
-      //   // Update specific match details
-      //   if (this.tournament) {
-      //     const round = this.tournament.rounds.find(
-      //       (round) => round.round_number === msg.round_number
-      //     );
-      //     if (round) {
-      //       const matchIndex = round.matches.findIndex(
-      //         (match) => match.match_id === msg.match.match_id
-      //       );
-      //       if (matchIndex !== -1) {
-      //         round.matches[matchIndex] = msg.match;
-      //       }
-      //     }
-      //   }
-      //   break;
-
-      // case 'participant_update': // TODO check later if we really implemented this
-      //   // Update participant readiness or other details
-      //   if (this.tournament) {
-      //     const participant = this.tournament.participants.find(
-      //       (p) => p.username === msg.participant.username
-      //     );
-      //     if (participant) {
-      //       participant.is_ready = msg.participant.is_ready;
-      //     }
-      //   }
-      //   break;
-
+      case 'alert':
+        this.toastr.info(msg.message, 'Alert');
+        this.updateTournamentState();
+        break;
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);
     }
+  }
+
+  private updateTournamentState(): void {
+    if (!this.tournament) {
+      return;
+    }
+    this.tournamentService.sendMessage({ type: 'get_tournament_state', room_id: this.roomId });
   }
 
   onReadyClick(): void {
