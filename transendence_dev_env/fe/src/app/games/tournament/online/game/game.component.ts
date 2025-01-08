@@ -1,5 +1,9 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild, EventEmitter, Output, Input } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { GameDisplayService } from 'src/app/services/game-display.service';
+import { Subscription } from 'rxjs';
+import { SettingsComponent } from 'src/app/settings/settings.component';
 
 interface GameSettings {
   paddleskin_color_left?: string;
@@ -13,15 +17,26 @@ interface GameSettings {
 }
 
 @Component({
-  selector: 'app-game-display',
-  templateUrl: './game-display.component.html',
-  styleUrls: ['./game-display.component.scss']
+  selector: 'app-game',
+  templateUrl: './game.component.html',
+  styleUrls: ['./game.component.scss']
 })
-export class GameDisplayComponent implements AfterViewInit, OnChanges {
-  @Input() gameState: any;
-  @Input() gameSettings!: GameSettings;
+export class GameComponent implements AfterViewInit {
+  @Output() gameEnd = new EventEmitter<void>();
   @ViewChild('gameCanvas') canvas!: ElementRef<HTMLCanvasElement>;
+  @Input() matchId: string = '';
+  private roomId: string = '';
   context!: CanvasRenderingContext2D;
+  private messageSubscription!: Subscription;
+
+  gameState: any = null;
+  //TODO make this right, currently use default values
+  gameSettings: GameSettings = {
+    paddleskin_color_left: 'white',
+    paddleskin_color_right: 'white',
+    ballskin_color: 'white',
+    gamebackground_color: 'black',
+  };
 
   // Image elements
   private paddleImageLeft: HTMLImageElement | null = null;
@@ -32,38 +47,74 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
   // Flags to check if images are loaded
   private imagesLoaded: boolean = false;
 
-  constructor(private toastr: ToastrService) { }
+  constructor(
+    private toastr: ToastrService,
+    private gameDisplayService: GameDisplayService,
+    private route: ActivatedRoute,
+  ) { }
+
+  ngOnInit(): void {
+    if (!this.matchId) {
+      this.toastr.error('Match ID not provided', 'Error');
+      this.handleGameEnd();
+    }
+    this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
+    this.gameDisplayService.connect(this.matchId, this.roomId);
+    this.gameDisplayService.messages$.subscribe((msg) => {
+      console.log('Received message:', msg);
+      if (msg.type === 'game_state') {
+        this.handleGameState(msg.data);
+      } else if (msg.type === 'game_end') {
+        this.handleGameEnd();
+      } else if (msg.type === 'game_settings') {
+        this.handleGameSettings(msg.settings);
+      }
+    });
+  }
 
   ngAfterViewInit() {
+    if (!this.canvas) {
+      console.error('Canvas not found');
+      return;
+    }
     const context = this.canvas.nativeElement.getContext('2d');
     if (context) {
       this.context = context;
-      this.loadImages().then(() => {
-        this.drawGame();
-      }).catch(err => {
-        this.toastr.error('Error loading images', 'Error');
-        this.drawGame(); // Fallback to colors if images fail to load
-      });
+      // if (this.imagesLoaded) {
+      this.drawGame();
+    // } else {
+    //   console.warn('Images not loaded yet, Game will be drawn when images are loaded');
     }
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['gameSettings']) {
-      this.loadImages().then(() => {
-        if (this.context) {
-          this.drawGame();
-        }
-      }).catch(err => {
-        this.toastr.error('Error loading images', 'Error');
-        if (this.context) {
-          this.drawGame(); // Fallback to colors if images fail to load
-        }
-      });
+  ngOnDestroy(): void {
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
     }
+    this.gameDisplayService.disconnect();
+  }
 
-    if (changes['gameState'] && this.context) {
+  private handleGameState(state: any): void {
+    this.gameState = state;
+    if (this.context) {
       this.drawGame();
     }
+  }
+
+  private handleGameEnd() {
+    this.gameEnd.emit();
+  }
+
+  private handleGameSettings(settings: GameSettings): void {
+    this.gameSettings = settings;
+
+    this.loadImages()
+    .then(() => {
+      console.log('Images loaded successfully!');
+    })
+    .catch((err) => {
+      this.toastr.error('Error loading images', 'Error');
+    });
   }
 
   /**
@@ -73,83 +124,57 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
   private loadImages(): Promise<void> {
     const promises: Promise<void>[] = [];
 
-    // Load left paddle image if provided
     if (this.gameSettings.paddleskin_image_left) {
-      promises.push(new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = this.gameSettings.paddleskin_image_left!;
-        img.onload = () => {
-          this.paddleImageLeft = img;
-          resolve();
-        }
-        img.onerror = () => {
-          this.toastr.warning('Failed to load Left PaddleSkin Image. Falling back to colour.', 'Warning');
-          resolve();
-        }
-      }));
+      promises.push(this.loadImage(this.gameSettings.paddleskin_image_left, (img) => (this.paddleImageLeft = img)));
     } else {
       this.paddleImageLeft = null;
     }
 
-    // Load right paddle image if provided
     if (this.gameSettings.paddleskin_image_right) {
-      promises.push(new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        img.src = this.gameSettings.paddleskin_image_right!;
-        img.onload = () => {
-          this.paddleImageRight = img;
-          resolve();
-        }
-        img.onerror = () => {;
-          this.toastr.warning('Failed to load Right PaddleSkin Image. Falling back to colour.', 'Warning');
-          resolve();
-        }
-      }));
+      promises.push(this.loadImage(this.gameSettings.paddleskin_image_right, (img) => (this.paddleImageRight = img)));
     } else {
       this.paddleImageRight = null;
     }
 
-    // Load ball image if provided
     if (this.gameSettings.ballskin_image) {
-      promises.push(new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        img.src = this.gameSettings.ballskin_image!;
-        img.onload = () => {
-          this.ballImage = img;
-          resolve();
-        }
-        img.onerror = () => {
-          this.toastr.warning('Failed to load Ball Skin Image. Falling back to colour.', 'Warning');
-          resolve();
-        }
-      }));
+      promises.push(this.loadImage(this.gameSettings.ballskin_image, (img) => (this.ballImage = img)));
     } else {
       this.ballImage = null;
     }
 
-    // Load background wallpaper if provided
     if (this.gameSettings.gamebackground_wallpaper) {
-      promises.push(new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        img.src = this.gameSettings.gamebackground_wallpaper!;
-        img.onload = () => {
-          this.backgroundImage = img;
-          resolve();
-        }
-        img.onerror = () => {
-          console.warn('Failed to load Background Image. Falling back to colour.');
-          resolve();
-        }
-      }));
+      promises.push(this.loadImage(this.gameSettings.gamebackground_wallpaper, (img) => (this.backgroundImage = img)));
     } else {
       this.backgroundImage = null;
     }
 
-    return Promise.all(promises).then(() => {
-      this.imagesLoaded = true;
-    }).catch(err => {
-      this.toastr.error('Error loading images', 'Error');
-      this.imagesLoaded = false;
+    return Promise.all(promises)
+      .then(() => {
+        this.imagesLoaded = true;
+      })
+      .catch((err) => {
+        this.imagesLoaded = false;
+        throw err;
+      });
+  }
+
+  /**
+   * Helper function to load an image.
+   * @param src Image source URL
+   * @param assignFn Callback to assign the loaded image
+   */
+  private loadImage(src: string, assignFn: (img: HTMLImageElement) => void): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        assignFn(img);
+        resolve();
+      };
+      img.onerror = () => {
+        this.toastr.warning(`Failed to load image from ${src}`, 'Warning');
+        resolve(); // Resolve even on error to avoid blocking
+      };
     });
   }
 

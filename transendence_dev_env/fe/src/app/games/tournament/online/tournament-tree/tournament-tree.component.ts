@@ -68,6 +68,8 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   roomId: string = '';
   private messageSubscription!: Subscription;
   userProfile: UserProfile | null = null;
+  gameInProgress: boolean = false;
+  matchId: string = '';
 
   constructor(
     private router: Router,
@@ -120,6 +122,12 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     this.tournamentService.disconnect();
   }
 
+  onGameEnd(): void {
+    console.log('Game ended, resetting state.')
+    this.gameInProgress = false;
+    this.matchId = '';
+  }
+
   private handleWebSocketMessage(msg: any): void {
     console.log('WebSocket message:', msg);
     switch (msg.type) {
@@ -128,9 +136,11 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
         console.log('tournament:', this.tournament);
         break;
       case 'join_match':
-        this.toastr.info(`You have joined match ${msg.match_id}.`, 'Info');
-        console.log(msg.match_id, msg.p1_id, msg.p2_id);
+        console.log(msg.match_id, msg.players.p1_id, msg.players.p2_id);
         console.log('own id:', this.userProfile?.id);
+        if (msg.players.p1_id === this.userProfile?.id || msg.players.p2_id === this.userProfile?.id) {
+          this.joinMatch(msg);
+        }
         break;
       case 'alert':
         this.toastr.info(msg.message, 'Alert');
@@ -139,6 +149,13 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);
     }
+  }
+
+  private joinMatch(msg: any): void {
+    this.matchId = msg.match_id;
+    this.gameInProgress = true;
+    this.toastr.info(`You have joined match ${msg.match_id}.`, 'Info');
+    console.log('joined match:', msg.match_id);
   }
 
   private updateTournamentState(): void {

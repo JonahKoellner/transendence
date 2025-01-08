@@ -1,6 +1,11 @@
 <div class="tournament-tree">
   <button (click)="onReadyClick()">Ready</button>
   <h1>Tournament Tree</h1>
+
+  <section class="game-view" *ngIf="gameInProgress">
+    <app-game [matchId]="matchId"></app-game>
+  </section>
+
   <div *ngIf="tournament">
     <!-- Single Elimination Bracket -->
     <div *ngIf="tournament.tournament_type === 'Single Elimination'" class="single-elimination-bracket">
