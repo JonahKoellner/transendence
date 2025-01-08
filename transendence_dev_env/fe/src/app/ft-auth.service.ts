@@ -247,9 +247,9 @@ export class FtAuthService {
 
   // Initiate the OAuth2 login flow
   login(): void {
+    this.redirectUri = `${window.location.origin}/auth/callback`;
     this.getFtSecrets().subscribe({ next: (secrets) => {
       this.ft_secrets = secrets;
-      this.redirectUri = `${window.location.origin}/auth/callback`;
       const params = new HttpParams()
         .set('client_id', this.ft_secrets.ft_uid)
         .set('redirect_uri', this.redirectUri)
@@ -264,9 +264,9 @@ export class FtAuthService {
   handleAuthCallback(): Observable<any> {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    this.redirectUri = `${window.location.origin}/auth/callback`;
     this.getFtSecrets().subscribe({ next: (secrets) => {
       this.ft_secrets = secrets;
-      this.redirectUri = `${window.location.origin}/auth/callback`;
       if (code) {
         const body = new HttpParams()
           .set('grant_type', 'authorization_code')
