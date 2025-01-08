@@ -131,7 +131,7 @@ export VAULT_CACERT=$CERT_CRT
 echo "ft secrets $ftUID $ftSecret"
 
 # Write ftUID and ftSecret
-vault kv put secret/ft_secrets ft.uid=${ftUID} ft.secret=${ftSecret}
+vault kv put secret/ft_secrets ft_uid=${ftUID} ft_secret=${ftSecret}
 
 # Write ftSecret
 # vault kv put secret/ft_secrets ft.secret=$ftSecret

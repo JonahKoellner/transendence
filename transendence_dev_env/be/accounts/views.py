@@ -861,6 +861,7 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
 
 class AchievementListView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request):
         achievements = Achievement.objects.all()
@@ -869,6 +870,7 @@ class AchievementListView(APIView):
     
 class HashiView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request):
             # Vault configuration
@@ -896,6 +898,6 @@ class HashiView(APIView):
             secret_data = secret_response['data']['data']
             # print(secret_data)
             logger.info(f'Successfully retrieved secret: {secret_data}')
-            return Response({'secret': secret_data})
+            return Response(secret_data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
