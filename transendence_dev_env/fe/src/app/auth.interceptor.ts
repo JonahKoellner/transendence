@@ -24,6 +24,11 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+
+    if (req.url.includes('api.intra.42.fr')) {
+      return next.handle(req);
+    }
+    
     // Clone the request to add the authentication token, if available
     let authReq = req;
     const accessToken = this.authService.getAccessToken();
