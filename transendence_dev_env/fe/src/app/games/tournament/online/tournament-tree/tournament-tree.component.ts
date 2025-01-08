@@ -86,7 +86,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     this.tournamentService.connect(this.roomId);
 
     // Join the tournament room via WebSocket
-    this.tournamentService.sendMessage({ type: 'join', room_id: this.roomId });
+    this.tournamentService.sendMessage({ action: 'join', room_id: this.roomId });
 
     // Subscribe to WebSocket messages
     this.messageSubscription = this.tournamentService.messages$.subscribe({
@@ -125,11 +125,11 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     if (!this.tournament) {
       return;
     }
-    this.tournamentService.sendMessage({ type: 'get_tournament_state', room_id: this.roomId });
+    this.tournamentService.sendMessage({ action: 'get_tournament_state', room_id: this.roomId });
   }
 
   onReadyClick(): void {
-    this.tournamentService.sendReady(this.roomId);
+    this.tournamentService.sendMessage({ action: 'ready', room_id: this.roomId });
   }
 
 }

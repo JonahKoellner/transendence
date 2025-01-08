@@ -44,10 +44,6 @@ export class TournamentService {
     }
   }
 
-  sendReady(roomId: string) {
-    this.socket$.next({type: 'ready', room_id: roomId});
-  }
-
   ngOnDestroy() {
     this.disconnect();
   }

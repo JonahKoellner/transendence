@@ -2527,13 +2527,12 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         action = content.get("action")
         try:
             if action == "ready":
-                is_ready = content.get("ready", False)
-                await self.update_ready_status(self.user, is_ready)
-                if is_ready:
-                    id = await self.check_start_game(self.user) # check if we can start a game for that user
-                    if id != -1:
-                        await self.start_game(id)
-            if action == "get_tournament_state":
+                logger.debug(f"User {self.user.username} is ready.")
+                await self.update_ready_status(self.user, True)
+                id = await self.check_start_game(self.user) # check if we can start a game for that user
+                if id != -1:
+                    await self.start_game(id)
+            elif action == "get_tournament_state":
                 await self.broadcast_tournament()
         except Exception as e:
             await self.send_json({
@@ -2604,11 +2603,12 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             })
         )
 
-    async def update_ready_status(self, user, is_ready):
-        database_sync_to_async(self.tournament.refresh_from_db)()
+    @database_sync_to_async
+    def update_ready_status(self, user, is_ready):
+        self.tournament.refresh_from_db()
         if user in self.tournament.participants.all():
-            self.tournament.participant_ready_states[str(user.id)] = is_ready
-        database_sync_to_async(self.tournament.save)()
+            self.tournament.participants_ready_states[str(user.id)] = is_ready
+        self.tournament.save()
 
         
     async def start_game(id: int): ...# TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
@@ -2621,8 +2621,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         #search for a game in the current round with that user and check if both players are ready
         round = self.tournament.rounds.get(round_number=self.tournament.current_round)
         match = round.matches.get(player1=user) or round.matches.get(player2=user) or None
-        if match:
-            if match.player1_ready and match.player2_ready:
+        if match and match.player1 and match.player2:
+            if self.tournament.participants_ready_states[str(match.player1.id)] and self.tournament.participants_ready_states[str(match.player2.id)]:
                 return match.id
         return -1
 
