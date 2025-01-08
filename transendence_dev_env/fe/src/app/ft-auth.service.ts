@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-
 export interface FtUser {
   id: number
   email: string
@@ -220,12 +219,17 @@ export interface CampusUser {
   updated_at: string
 }
 
+export interface FtSecrets {
+  ft_secret: string
+  ft_uid: string
+}
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class FtAuthService {
-  private clientId = environment.ft_uid;
+  private ft_secrets: FtSecrets = { ft_secret: '', ft_uid: '' };
   private redirectUri = `${window.location.origin}/auth/callback`;
   private authUrl = 'https://api.intra.42.fr/oauth/authorize';
   private tokenUrl = 'https://api.intra.42.fr/oauth/token';
@@ -234,66 +238,77 @@ export class FtAuthService {
   private tokenExpiresIn: Number | null = null;
   private refreshToken: string | null = null;
   private secretValidUntil: Number | null = null;
-
+  private base = environment.apiUrl + '/accounts/';
   constructor(private http: HttpClient, private router: Router) { }
+
+  getFtSecrets(): Observable<FtSecrets> {
+    return this.http.get<FtSecrets>(`${this.base}get-vault-secret/`);
+  }
 
   // Initiate the OAuth2 login flow
   login(): void {
-    const params = new HttpParams()
-      .set('client_id', this.clientId)
-      .set('redirect_uri', this.redirectUri)
-      .set('response_type', 'code')
-      .set('scope', 'public'); // Adjust scopes as needed
-
-    window.location.href = `${this.authUrl}?${params.toString()}`;
+    this.getFtSecrets().subscribe({ next: (secrets) => {
+      this.ft_secrets = secrets;
+      this.redirectUri = `${window.location.origin}/auth/callback`;
+      const params = new HttpParams()
+        .set('client_id', this.ft_secrets.ft_uid)
+        .set('redirect_uri', this.redirectUri)
+        .set('response_type', 'code')
+        .set('scope', 'public');
+  
+      window.location.href = `${this.authUrl}?${params.toString()}`;
+    } });
   }
 
   // Handle the OAuth2 callback and exchange code for access token
   handleAuthCallback(): Observable<any> {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-
-    if (code) {
-      // Exchange the authorization code for an access token
-      const body = new HttpParams()
-        .set('grant_type', 'authorization_code')
-        .set('client_id', this.clientId)
-        .set('client_secret', environment.ft_secret) // **Do not expose client_secret on frontend**
-        .set('code', code)
-        .set('redirect_uri', this.redirectUri);
-
-      const headers = new HttpHeaders({
-        'Content-Type': 'application/x-www-form-urlencoded'
-      });
-
-      return this.http.post<any>(this.tokenUrl, body.toString(), { headers }).pipe(
-        tap(response => {
-          this.accessToken = response.access_token;
-          this.tokenCreatedAt = response.created_at;
-          this.tokenExpiresIn = response.expires_in;
-          this.refreshToken = response.refresh_token;
-          this.secretValidUntil = response.secret_valid_until;
-          // Ideally, send the token to your backend to create a session
-          // For demonstration, we'll set the flag directly
-          // Replace with your user service logic
-          // Example:
-          // this.userService.setAuthenticated(true);
-          // Here, we'll use localStorage as a simple example
-          console.log('Access token:', this.accessToken);
-          console.log('response:', response);
-          localStorage.setItem('ft_access_token', this.accessToken!);
-          localStorage.setItem('ft_refresh_token', this.refreshToken!);
-          localStorage.setItem('ft_secret_valid_until', String(this.secretValidUntil!));
-          localStorage.setItem('ft_token_created_at', String(this.tokenCreatedAt!));
-          localStorage.setItem('ft_token_expires_in', String(this.tokenExpiresIn!));
-          this.router.navigate(['/profile']);
-        })
-      );
-    } else {
-      // Handle error or missing code
-      console.error('Authorization code not found');
-      return new Observable();
-    }
+    this.getFtSecrets().subscribe({ next: (secrets) => {
+      this.ft_secrets = secrets;
+      this.redirectUri = `${window.location.origin}/auth/callback`;
+      if (code) {
+        const body = new HttpParams()
+          .set('grant_type', 'authorization_code')
+          .set('client_id', this.ft_secrets.ft_uid)
+          .set('client_secret', this.ft_secrets.ft_secret)
+          .set('code', code)
+          .set('redirect_uri', this.redirectUri);
+  
+        const headers = new HttpHeaders({
+          'Content-Type': 'application/x-www-form-urlencoded'
+        });
+  
+        return this.http.post<any>(this.tokenUrl, body.toString(), { headers }).pipe(
+          tap(response => {
+            this.accessToken = response.access_token;
+            this.tokenCreatedAt = response.created_at;
+            this.tokenExpiresIn = response.expires_in;
+            this.refreshToken = response.refresh_token;
+            this.secretValidUntil = response.secret_valid_until;
+            // Ideally, send the token to your backend to create a session
+            // For demonstration, we'll set the flag directly
+            // Replace with your user service logic
+            // Example:
+            // this.userService.setAuthenticated(true);
+            // Here, we'll use localStorage as a simple example
+            console.log('Access token:', this.accessToken);
+            console.log('response:', response);
+            localStorage.setItem('ft_access_token', this.accessToken!);
+            localStorage.setItem('ft_refresh_token', this.refreshToken!);
+            localStorage.setItem('ft_secret_valid_until', String(this.secretValidUntil!));
+            localStorage.setItem('ft_token_created_at', String(this.tokenCreatedAt!));
+            localStorage.setItem('ft_token_expires_in', String(this.tokenExpiresIn!));
+            this.router.navigate(['/profile']);
+          })
+        );
+      } else {
+        // Handle error or missing code
+        console.error('Authorization code not found');
+        return new Observable();
+      }
+    } });
+    return new Observable();
   }
 
   // Check if the user is authenticated
