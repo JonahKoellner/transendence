@@ -2529,6 +2529,10 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             if action == "ready":
                 is_ready = content.get("ready", False)
                 await self.update_ready_status(self.user, is_ready)
+                if is_ready:
+                    id = await self.check_start_game(self.user) # check if we can start a game for that user
+                    if id != -1:
+                        await self.start_game(id)
             if action == "get_tournament_state":
                 await self.broadcast_tournament()
         except Exception as e:
@@ -2606,4 +2610,17 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             self.tournament.participant_ready_states[str(user.id)] = is_ready
         database_sync_to_async(self.tournament.save)()
         
-    async def start_game(): ... # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
+    async def start_game(id: int): ...# TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
+        
+    
+    
+    @database_sync_to_async
+    def check_start_game(self, user) -> int:
+        """check if we can start a game for that user (in the current round)"""
+        #search for a game in the current round with that user and check if both players are ready
+        round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+        match = round.matches.get(player1=user) or round.matches.get(player2=user) or None
+        if match:
+            if match.player1_ready and match.player2_ready:
+                return match.id
+        return -1
