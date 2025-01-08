@@ -13,7 +13,6 @@ import json
 from asyncio import Lock
 from django.utils import timezone
 from threading import Timer
-from asgiref.sync import sync_to_async
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -2342,7 +2341,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         try:
             if action == "set_ready":
                 is_ready = content.get("is_ready", False)
-                logger.info(f"User {self.user.username} is ready: {is_ready}")
+                logger.debug(f"User {self.user.username} is ready: {is_ready}")
                 await self.update_ready_status(self.user, is_ready)
             elif action == "update_settings":
                 new_settings = content.get("settings", {})
@@ -2362,6 +2361,8 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                 "type": "error",
                 "message": str(e)
             })
+        if action != "set_ready" or action != "start_tournament":
+            await database_sync_to_async(TournamentLobbyService.adjust_max_player_count)(self.lobby)
         await self.broadcast_lobby_state()
 
     async def alert(self, event):
@@ -2520,7 +2521,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 "user_role": "guest"
             }
         )
-        logger.info(f"User {self.user.username} disconnected from tournament {self.room_id}.")
+        logger.debug(f"User {self.user.username} disconnected from tournament {self.room_id}.")
 
     async def receive_json(self, content):
         action = content.get("action")
@@ -2528,6 +2529,10 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             if action == "ready":
                 is_ready = content.get("ready", False)
                 await self.update_ready_status(self.user, is_ready)
+                if is_ready:
+                    id = await self.check_start_game(self.user) # check if we can start a game for that user
+                    if id != -1:
+                        await self.start_game(id)
             if action == "get_tournament_state":
                 await self.broadcast_tournament()
         except Exception as e:
@@ -2547,18 +2552,16 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             for round in self.tournament.rounds.all(): # remove player from matches and replace with None
                 for match in round.matches.all():
                     if match.status == "pending":
-                        logger.info(f"Trying to remove {self.user.username} from match {match.id}")
+                        logger.debug(f"Trying to remove {self.user.username} from match {match.id}")
                         removed = False
                         if self.user == match.player1:
                             match.player1 = None
-                            match.winner = match.player2
                             removed = True
                         elif self.user == match.player2:
                             match.player2 = None
-                            match.winner = match.player1
                             removed = True
                         if removed:
-                            match.status = "completed"
+                            match.winner = match.player1 if match.player1 != None else match.player2
                             match.save()
                             round.save()
                             break
@@ -2606,9 +2609,24 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         if user in self.tournament.participants.all():
             self.tournament.participant_ready_states[str(user.id)] = is_ready
         database_sync_to_async(self.tournament.save)()
-        
-    async def start_game(): ... # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
 
+        
+    async def start_game(id: int): ...# TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
+        
+    
+    
+    @database_sync_to_async
+    def check_start_game(self, user) -> int:
+        """check if we can start a game for that user (in the current round)"""
+        #search for a game in the current round with that user and check if both players are ready
+        round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+        match = round.matches.get(player1=user) or round.matches.get(player2=user) or None
+        if match:
+            if match.player1_ready and match.player2_ready:
+                return match.id
+        return -1
+
+      
 class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2792,7 +2810,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def save_match_results(self):
         await self._save_match_results_db(self.left_score, self.right_score)
 
-    @sync_to_async
+    @database_sync_to_async
     def _save_match_results_db(self, left_score, right_score):
         if not self.match:
             try:

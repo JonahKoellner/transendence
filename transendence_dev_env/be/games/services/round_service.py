@@ -10,6 +10,9 @@ from ..models import (
 )
 import uuid
 
+import logging
+logger = logging.getLogger('game_debug')
+
 def generate_match_id() -> str:
     """
     Generate a short unique match_id for OnlineMatch.
@@ -24,6 +27,7 @@ class RoundService:
         Generate a list of OnlineRound objects based on the total_rounds
         and the tournament_type. Returns a list of OnlineRound objects.
         """
+        logger.debug(f'generate rounds total_rounds: {tournament.total_rounds}')
         stages = [stage for stage in Stage if stage != Stage.ROUND_ROBIN_STAGE] # dont count round robin stage
         stages.reverse()
         rounds = []
@@ -35,15 +39,20 @@ class RoundService:
                 room_id=tournament.room_id,
                 start_time=timezone.now() # should not be now maybe
             )
+            logger.debug(f'generate round for stage: {stage}')
             matches = RoundService.create_matches(round_instance, len(tournament.participants.all()))
             round_instance.matches.set(matches)
+            round_instance.save()
+            if stage == Stage.ROUND_ROBIN_STAGE:
+                RoundService.populate_round_robin_matches(round_instance, list(tournament.participants.all()), i)
+                logger.debug(f'Round {round_instance.round_number} matches: ' + ', '.join([f'{match.player1} vs {match.player2}' for match in matches]))
             rounds.append(round_instance)
         return rounds
 
     @staticmethod
     def create_matches(round_instance: OnlineRound, player_count):
         if round_instance.stage == Stage.ROUND_ROBIN_STAGE:
-            match_count = player_count // 2 #if player_count % 2 == 0 else (player_count // 2) + 1
+            match_count = player_count // 2 if player_count % 2 == 0 else (player_count // 2) + 1
         else:
             match_count = {
                 Stage.PRELIMINARIES: 16,
@@ -100,8 +109,9 @@ class RoundService:
             raise ValueError("No matches available to populate in this round.")
 
         num_players = len(participants)
-        if num_players < 2:
-            raise ValueError("Round-robin requires at least 2 participants.")
+        if num_players % 2 == 1: # append an empty player if odd number of players to assign all matches
+            participants.append(None)
+            num_players += 1
 
         first_player = participants[0]
         rotated_players = participants[1:]
@@ -118,8 +128,11 @@ class RoundService:
             match = matches[match_index]
             match.player1 = player1
             match.player2 = player2
-            match.status = "pending"
+            match.status = "pending" if player2 else "completed"
             match.start_time = timezone.now()
+            match.end_time = timezone.now() if not player2 else None
+            match.winner = None if player2 else player1
+            match.outcome = "Finished" if not player2 else None
             match.save()
 
             match_index += 1

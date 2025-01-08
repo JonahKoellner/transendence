@@ -26,13 +26,14 @@
 
   <!-- Player Count Selection -->
   <div *ngIf="playerCountOptions.length > 0" class="player-count-selection">
-    <h3>Select Player Count:</h3>
+    <h3>Player Count:</h3>
     <p>maxPlayerCount: {{ maxPlayerCount }}</p>
     <div class="count-buttons">
+      <!-- TODO: make this not a button -> just to see the current player count -->
       <button
         *ngFor="let count of playerCountOptions"
         [class.selected]="count === maxPlayerCount"
-        [disabled]="!isHost"
+        [disabled]="true"
         (click)="selectMaxPlayerCount(count)"
       >
         {{ count }}

@@ -13,7 +13,7 @@ logger = logging.getLogger('game_debug')
 class TournamentLobbyService:
     @staticmethod
     def start_tournament(lobby: TournamentLobby, user):
-        logger.info(f"Starting tournament {lobby.room_id} (tournamentlobbyservice)")
+        logger.debug(f"Starting tournament {lobby.room_id} (tournamentlobbyservice)")
         if user != lobby.host:
             raise PermissionError("Only the host can start the tournament.")
         if not lobby.all_ready():
@@ -22,18 +22,20 @@ class TournamentLobbyService:
             name=f"Tournament {lobby.room_id}",
             type=lobby.tournament_type,
             status="ongoing",
-            room_id=lobby.room_id
+            room_id=lobby.room_id,
         )
         tournament.participants.set(list(lobby.guests.all()) + [lobby.host])
         tournament.total_rounds = TournamentLobbyService.calc_max_rounds(len(tournament.participants.all()), lobby.tournament_type)
+        logger.debug(f'Total rounds {tournament.total_rounds}')
         tournament.save()
         rounds = RoundService.generate_rounds(tournament) # generates rounds and matches
         tournament.rounds.set(rounds)
         tournament.save()
-        TournamentService.new_matchups(tournament, tournament.participants.all())
+        if lobby.tournament_type == "Single Elimination":
+            TournamentService.new_matchups(tournament, tournament.participants.all())
+        tournament.save()
         lobby.tournament = tournament
         lobby.save()
-        raise ValueError("Tournament started.")
 
     @staticmethod
     def handle_user_disconnect(user, lobby):
@@ -48,27 +50,26 @@ class TournamentLobbyService:
         return lobby.get_lobby_state()
     
     @staticmethod
-    def adjust_max_player_count(lobby):
+    def adjust_max_player_count(lobby: TournamentLobby):
         """Ensures max_player_count is valid based on the game mode and player count."""
         player_count = lobby.guests.count() + 1  # Including the host
-        allowed_counts = TournamentLobbyService.get_allowed_player_counts(lobby.tournament_type)
 
-        # Determine the smallest valid max_player_count >= current player count
-        valid_counts = [count for count in allowed_counts if count >= player_count]
-        if valid_counts and lobby.max_player_count not in valid_counts:
-            lobby.max_player_count = valid_counts[0]
-        #TODO be sure that never max_player_count < player_count, otherwise add edge case handling
-        lobby.save()
-
-    @staticmethod
-    def get_allowed_player_counts(tournament_type):
-        """Returns allowed player counts for the given game mode."""
+        # Define allowed player counts for each tournament type
         game_modes = {
             "Single Elimination": [4, 8, 16, 32],
             "Round Robin": [4, 6, 8, 10, 12],
         }
-        return game_modes.get(tournament_type, [])
-    
+
+        # Get allowed player counts for the given tournament type
+        allowed_counts = game_modes.get(lobby.tournament_type, [])
+
+        # Determine the smallest valid max_player_count >= current player count
+        valid_counts = [count for count in allowed_counts if count >= player_count]
+        if valid_counts:
+            lobby.max_player_count = valid_counts[0]
+
+        lobby.save()
+
     @staticmethod
     def calc_max_rounds(num_players: int, tournament_type: str) -> int:
         """Calculates the maximum number of rounds for a given number of players."""

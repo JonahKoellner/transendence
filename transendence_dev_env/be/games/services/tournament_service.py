@@ -22,7 +22,12 @@ class TournamentService:
                     dict[winner.id] += 1
                 else:
                     dict[winner.id] = 1
-        if len(winners) == 1: # single elimination win
+            tournament.round_robin_scores = dict
+            tournament.save()
+
+        if len(winners) == 0:
+            raise ValueError("No winners found for the current round.")
+        elif len(winners) == 1: # single elimination win
             tournament.final_winner = winners[0]
             tournament.status = 'completed'
             tournament.end_time = timezone.now()
@@ -34,13 +39,12 @@ class TournamentService:
             tournament.status = 'completed'
             tournament.end_time = timezone.now()
             tournament.save()
-        elif len(winners) == 0:
-            raise ValueError("No winners found for the current round.")
         else:
-            new_participants = winners if tournament.type == TournamentType.SINGLE_ELIMINATION else tournament.get_participants()
             tournament.current_round += 1
             tournament.save()
-            TournamentService.new_matchups(tournament, new_participants)
+            if tournament.type == TournamentType.SINGLE_ELIMINATION:
+                new_participants = winners
+                TournamentService.new_matchups(tournament, new_participants)
             
     @staticmethod
     def new_matchups(tournament: OnlineTournament, participants):
@@ -58,7 +62,5 @@ class TournamentService:
 
         if tournament.type == TournamentType.SINGLE_ELIMINATION:
             RoundService.populate_single_elimination_matches(round_instance, participants)
-        elif tournament.type == TournamentType.ROUND_ROBIN:
-            RoundService.populate_round_robin_matches(round_instance, participants, tournament.current_round-1)
         else:
             raise ValueError(f"Unknown tournament type: {tournament.type}")

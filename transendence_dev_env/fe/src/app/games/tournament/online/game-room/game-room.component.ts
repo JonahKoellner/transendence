@@ -246,7 +246,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (this.host === "") {
       this.router.navigate(['/games/online-tournament/rooms']);
     }
-    if (msg.type !== 'lobby_state') {
+    if (msg.type !== 'lobby_state' && msg.type !== 'alert') {
       this.fetchRoomStatus();
     }
   }
