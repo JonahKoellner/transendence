@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { TournamentService } from 'src/app/services/tournament.service';
+import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { Subscription } from 'rxjs';
 
 enum TournamentType {
@@ -66,12 +67,14 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   tournament: Tournament | null = null;
   roomId: string = '';
   private messageSubscription!: Subscription;
+  userProfile: UserProfile | null = null;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private toastr: ToastrService,
     private tournamentService: TournamentService,
+    private userProfileService: ProfileService,
   ) {}
 
   ngOnInit(): void {
@@ -81,6 +84,18 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
       this.toastr.error('Invalid room id', 'Error');
       return;
     }
+
+    this.userProfileService.getProfile().subscribe({
+      next: (userProfile) => {
+        this.userProfile = userProfile;
+      },
+      error: (err) => {
+        this.toastr.error('An error occurred while fetching user data.', 'Error');
+        console.error(err);
+      },
+    })
+    console.log('userProfile:', this.userProfile);
+
 
     // Connect to the WebSocket
     this.tournamentService.connect(this.roomId);
@@ -111,6 +126,11 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
       case 'tournament_state':
         this.tournament = msg.tournament_state;
         console.log('tournament:', this.tournament);
+        break;
+      case 'join_match':
+        this.toastr.info(`You have joined match ${msg.match_id}.`, 'Info');
+        console.log(msg.match_id, msg.p1_id, msg.p2_id);
+        console.log('own id:', this.userProfile?.id);
         break;
       case 'alert':
         this.toastr.info(msg.message, 'Alert');

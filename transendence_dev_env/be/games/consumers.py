@@ -2530,7 +2530,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 logger.debug(f"User {self.user.username} is ready.")
                 await self.update_ready_status(self.user, True)
                 id = await self.check_start_game(self.user) # check if we can start a game for that user
-                if id != -1:
+                if id != None:
                     await self.start_game(id)
             elif action == "get_tournament_state":
                 await self.broadcast_tournament()
@@ -2610,24 +2610,64 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             self.tournament.participants_ready_states[str(user.id)] = is_ready
         self.tournament.save()
 
-        
-    async def start_game(id: int): ...# TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
-        
-    
-    
+    async def start_game(self, match_id): # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
+        logger.info('Starting game')
+        round = await database_sync_to_async(self.tournament.rounds.get)(round_number=self.tournament.current_round)
+        match = await self.get_match_for_round_and_id(round, match_id)
+        if match == None:
+            raise Exception("Match not found!")
+        p1 = match.player1
+        p2 = match.player2
+        if p1 == None or p2 == None:
+            raise Exception("Both players need to real players to start a game!")
+        logger.info("Sending message to start game")
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "join_match",
+                "match_id": match_id,
+                "p1_id": p1.id,
+                "p2_id": p2.id
+            }
+)
+
     @database_sync_to_async
-    def check_start_game(self, user) -> int:
+    def check_start_game(self, user):
         """check if we can start a game for that user (in the current round)"""
         #search for a game in the current round with that user and check if both players are ready
         round = self.tournament.rounds.get(round_number=self.tournament.current_round)
-        match = round.matches.get(player1=user) or round.matches.get(player2=user) or None
+        match = round.matches.filter(player1=user).first() or round.matches.filter(player2=user).first()
         if match and match.player1 and match.player2:
             dict = self.tournament.participants_ready_states
             id1 = match.player1.id
             id2 = match.player2.id
             if str(id1) in dict and str(id2) in dict and dict[str(id1)] and dict[str(id2)]:
-                return match.id
-        return -1
+                return match.match_id
+        logger.info(f"Could not start game for user {user.username}")
+
+    @database_sync_to_async
+    def get_match_for_round_and_id(self, round, match_id):
+        match = round.matches.filter(match_id=match_id).select_related('player1', 'player2').first()
+        return match
+    
+    async def join_match(self, event):
+        """
+        Handle the 'join_match' WebSocket message type.
+        This notifies the clients that they should join the game with the given match_id.
+        """
+        match_id = event["match_id"]
+        p1_id = event["p1_id"]
+        p2_id = event["p2_id"]
+
+        # Broadcast the message to the client that initiated the request
+        await self.send_json({
+            "type": "join_match",
+            "match_id": match_id,
+            "players": {
+                "p1_id": p1_id,
+                "p2_id": p2_id
+            }
+        })
 
       
 class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
