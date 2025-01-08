@@ -888,13 +888,13 @@ class HashiView(APIView):
         )
 
         # Path to the secret
-        secret_path = 'my-secret'
+        secret_path = 'ft_secrets'
 
         try:
             # Read the secret from Vault
             secret_response = client.secrets.kv.v2.read_secret_version(path=secret_path)
             secret_data = secret_response['data']['data']
-            print(secret_data)
+            # print(secret_data)
             logger.info(f'Successfully retrieved secret: {secret_data}')
             return Response({'secret': secret_data})
         except Exception as e:

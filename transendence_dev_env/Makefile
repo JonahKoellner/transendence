@@ -24,13 +24,22 @@ addHost:
     fi
 
 ask42APIKey:
-	@read -p "Enter the value for API_KEY42: " my_variable; \
-    if grep -q '^API_KEY42=' ./keyvault/.env; then \
-        sed -i 's/^API_KEY42=.*/API_KEY42=$$my_variable/' ./keyvault/.env; \
+	@read -p "Enter the value for ftUID: " ftUID; \
+    if grep -q '^ftUID=' ./keyvault/.env; then \
+        sed -i 's/^ftUID=.*/API_KEY42=$$my_variable/' ./keyvault/.env; \
     else \
-        echo "API_KEY42=$$my_variable" >> ./keyvault/.env; \
+        echo "ftUID=$$ftUID" >> ./keyvault/.env; \
     fi; \
-    echo "API_KEY42 stored in ./keyvault/.env file."
+    echo "ftUID stored in ./keyvault/.env file."
+
+	@read -p "Enter the value for ftSecret: " ftSecret; \
+	    if grep -q '^ftSecret=' ./keyvault/.env; then \
+        sed -i 's/^ftSecret=.*/ftSecret=$$ftSecret/' ./keyvault/.env; \
+    else \
+        echo "ftSecret=$$ftSecret" >> ./keyvault/.env; \
+    fi; \
+    echo "ftSecret stored in ./keyvault/.env file."
+
 
 # Docker Compose file
 COMPOSE_FILE := docker-compose.yml

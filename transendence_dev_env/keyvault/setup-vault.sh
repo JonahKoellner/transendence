@@ -127,14 +127,18 @@ echo "$VAULT_TOKEN" > /usr/local/data/vault_token.tok
 # Set VAULT_CACERT to the CA certificate
 export VAULT_CACERT=$CERT_CRT
 
-echo "42API key: $API_KEY42"
+# echo "42API key: $API_KEY42"
+echo "ft secrets $ftUID $ftSecret"
 
-# Write a secret
-vault kv put secret/my-secret apiKey.42=$API_KEY42
+# Write ftUID and ftSecret
+vault kv put secret/ft_secrets ft.uid=${ftUID} ft.secret=${ftSecret}
+
+# Write ftSecret
+# vault kv put secret/ft_secrets ft.secret=$ftSecret
 
 # Read the secret
-echo "Retrieving secret from \$SECRET_PATH..."
-vault kv get secret/my-secret
+# echo "Retrieving secret from \$SECRET_PATH..."
+# vault kv get secret/my-secret
 
 # Kill Vault background process
 kill $VAULT_PID
