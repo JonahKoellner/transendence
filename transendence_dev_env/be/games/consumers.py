@@ -2622,7 +2622,10 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         round = self.tournament.rounds.get(round_number=self.tournament.current_round)
         match = round.matches.get(player1=user) or round.matches.get(player2=user) or None
         if match and match.player1 and match.player2:
-            if self.tournament.participants_ready_states[str(match.player1.id)] and self.tournament.participants_ready_states[str(match.player2.id)]:
+            dict = self.tournament.participants_ready_states
+            id1 = match.player1.id
+            id2 = match.player2.id
+            if str(id1) in dict and str(id2) in dict and dict[str(id1)] and dict[str(id2)]:
                 return match.id
         return -1
 
