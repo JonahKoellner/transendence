@@ -59,3 +59,93 @@
     transform: scale(1.1);
   }
 }
+.easter-egg-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; 
+  animation: fadeIn 0.5s forwards; // or whichever animation you want
+
+  .modal-content {
+    position: relative;
+    // 1) Use the Rolling Stone image as background
+    background: 
+      /* Semi-transparent dark overlay so text remains readable */
+      linear-gradient(
+        rgba(0, 0, 0, 0.7), 
+        rgba(0, 0, 0, 0.7)
+      ),
+      url('https://www.rollingstone.com/wp-content/uploads/2018/06/rs-198321-GettyImages-464915916.jpg?w=1600&h=900&crop=1') 
+        center center / cover no-repeat;
+    
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+
+    // 2) Neon box-shadow and border
+    box-shadow: 
+      0 0 20px rgba(97, 186, 80, 0.4),
+      0 0 40px rgba(97, 186, 80, 0.2);
+    border: 2px solid #61BA50;
+    box-shadow: 
+      0 0 8px #61BA50, 
+      0 0 12px rgba(97, 186, 80, 0.5),
+      inset 0 0 8px rgba(97, 186, 80, 0.5);
+
+    // 3) Pop-in animation
+    animation: scaleUp 0.5s forwards;
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+      transition: color 0.3s;
+
+      &:hover {
+        color: #61BA50;
+      }
+    }
+
+    .easter-egg-title {
+      color: #61BA50;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      text-shadow: 0px 0px 10px rgba(76, 175, 80, 0.8);
+      animation: flicker 3s infinite; // reuse the flicker animation
+    }
+
+    .easter-egg-text {
+      color: #cfcfcf;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Reuse or define keyframes if needed:
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.4; }
+}

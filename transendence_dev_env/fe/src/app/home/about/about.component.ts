@@ -237,10 +237,10 @@ export class AboutComponent implements OnInit, OnDestroy {
       ]
     }
   ];
-
   constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit() {
+    window.scrollTo(0, 0);
     this.loadKonamiCode();
     this.computeModuleProgress();
   }

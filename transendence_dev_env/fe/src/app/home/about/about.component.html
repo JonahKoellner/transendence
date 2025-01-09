@@ -10,8 +10,11 @@
         Welcome to <strong>Transcendence</strong> – where the boundaries of gaming, Fullstack, and AI blur into one chaotic, exhilarating experience.
         This passion project isn’t just code; it’s countless late nights, endless caffeine, and a sprinkle of sheer madness.
       </p>
+
       <div class="contributors-carousel">
-        <button class="carousel-button prev-button" (click)="prevContributor()">&lt;</button>
+        <button class="carousel-button prev-button" 
+        (click)="prevContributor()" 
+        aria-label="Previous contributor">&lt;</button>
         
         <div class="carousel-track-container">
           <ul class="carousel-track">
@@ -27,7 +30,9 @@
           </ul>
         </div>
         
-        <button class="carousel-button next-button" (click)="nextContributor()">&gt;</button>
+        <button class="carousel-button next-button" 
+        (click)="nextContributor()" 
+        aria-label="Next contributor">&gt;</button>
       </div>
   
       <!-- Video Section -->
@@ -37,7 +42,8 @@
           height="315"
           src="https://www.youtube.com/embed/L_WoOkDAqbM"
           frameborder="0"
-          allowfullscreen>
+          allowfullscreen
+          title="Transcendence teaser video">
         </iframe>
       </div>
   
@@ -90,7 +96,8 @@
         [src]="sanitizer.bypassSecurityTrustResourceUrl(pdfSrc)"
         width="100%"
         height="600"
-        frameborder="0">
+        frameborder="0"
+        title="Transcendence Project Subject">
       </iframe>
     </div>
   

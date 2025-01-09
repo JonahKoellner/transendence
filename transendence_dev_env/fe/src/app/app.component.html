@@ -37,6 +37,13 @@
 
 <!-- Main Content Area -->
 <div class="container mt-5 pt-4">
+  <div class="easter-egg-modal" *ngIf="showEasterEgg">
+    <div class="modal-content">
+      <span class="close-button" (click)="closeEasterEgg()">&times;</span>
+      <h2 class="easter-egg-title">End</h2>
+      <p class="easter-egg-text">End my life lmao</p>
+    </div>
+  </div>
   <router-outlet></router-outlet>
   <app-cookie-consent></app-cookie-consent>
 </div>

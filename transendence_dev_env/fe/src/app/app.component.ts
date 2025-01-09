@@ -1,4 +1,4 @@
-import { Component, OnInit, Renderer2 } from '@angular/core';
+import { Component, HostListener, OnInit, Renderer2 } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './auth.service';
@@ -18,6 +18,7 @@ export class AppComponent implements OnInit {
   isAuthenticated = false;
   is2FaEnabled = false;
   toldUser = false;
+  showEasterEgg = false;
 
   constructor(
     private authService: AuthService,
@@ -81,5 +82,19 @@ export class AppComponent implements OnInit {
     } else {
       this.renderer.removeClass(document.body, 'dark-theme');
     }
+  }
+
+  @HostListener('document:mouseup', ['$event'])
+  onMouseUp(event: MouseEvent): void {
+    const selection = window.getSelection()?.toString().trim() || '';
+    
+    // 2) Check if the user selected exactly "Transcendence"
+    if (selection === 'end') {
+      // 3) Trigger your Easter Egg
+      this.showEasterEgg = true; 
+    }
+  }
+  closeEasterEgg() {
+    this.showEasterEgg = false;
   }
 }
