@@ -2701,6 +2701,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         self.match = None
         self.room_id = None
         self.match_id = None
+        
+        self.game_manager_channel = None
 
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
@@ -2709,8 +2711,15 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
-
+        
         await self.initialize_match()
+
+        if await self.is_left_player():
+            self.game_manager_channel = self.channel_name
+        else:
+            #channel has been set for the right player via 'set_game_manager' message
+            pass
+
         await self.send_game_settings()
         await self.send_game_state()
 
@@ -2775,6 +2784,12 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     def check_player_ready(self):
         return self.match.player1_ready and self.match.player2_ready
 
+    async def is_left_player(self):
+        return self.scope['user'] == self.left_player
+    
+    async def is_left_player_id(self, user_id):
+        return user_id == self.left_player.id
+
     async def handle_key_event(self, action, content):
         key = content.get("key")
         max_speed = 10
@@ -2787,11 +2802,29 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 speed = 0
         else:
             speed = 0
-        logger.info(f"comparing user {self.scope['user']} with left player {self.left_player} and right player {self.right_player}")
-        if self.scope['user'] == self.left_player:
-            self.left_paddle_speed = speed
-        elif self.scope['user'] == self.right_player:
-            self.right_paddle_speed = speed
+        
+        if self.game_manager_channel:
+            await self.channel_layer.send(
+                self.game_manager_channel,
+                {
+                    "type": "update_paddle_speed",
+                    "speed": speed,
+                    "user_id": self.scope['user'].id
+                }
+            )
+        else:
+            logger.warning("Game manager channel is not set. Cannot send paddle speed update.")
+
+    async def update_paddle_speed(self, event):
+        user_id = event["user_id"]
+        speed = event["speed"]
+        logger.info(f"Updating paddle speed for user {user_id} to {speed}")
+        async with self.game_lock:
+            if await self.is_left_player_id(user_id):
+                self.left_paddle_speed = speed
+            else:
+                self.right_paddle_speed = speed
+        logger.info(f"after updating: left_paddle_speed: {self.left_paddle_speed}, right_paddle_speed: {self.right_paddle_speed}")
 
     # async def start_countdown(self):
     #     try:
@@ -2810,10 +2843,26 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         if self.game_in_progress:
             return
 
+        logger.info(f'setting game manager channel to {self.channel_name}')
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "set_game_manager",
+                "channel_name": self.channel_name
+            }
+        )
         logger.info('Starting game loop')
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
         self.match_end_task = asyncio.create_task(self.match_timer())
+        #TODO send game status 'started' so frontend just sends key strokes when the game is started
+        
+
+    async def set_game_manager(self, event):
+        # Only set the game manager if the current consumer is not player1
+        if not await self.is_left_player():
+            self.game_manager_channel = event["channel_name"]
+            logger.info(f"Set game manager for player2 to {self.game_manager_channel}")
 
     async def match_timer(self):
         try:
