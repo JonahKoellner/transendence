@@ -78,9 +78,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private handleGameState(msg: any): void {
-    if (this.leftScore !== msg.leftScore || this.rightScore !== msg.rightScore) {
-      console.log('Score updated:', msg.leftScore, msg.rightScore);
-    }
     this.leftScore = msg.leftScore;
     this.rightScore = msg.rightScore;
     this.gameState = msg;
@@ -106,19 +103,19 @@ export class GameComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
-    console.log("Key down: " + event.code);
     this.gameDisplayService.sendMessage({
       action: 'keydown',
       key: event.code,
+      user_id: this.userProfile?.id.toString(),
     });
   }
 
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
-    console.log("Key up: " + event.code);
     this.gameDisplayService.sendMessage({
       action: 'keyup',
       key: event.code,
+      user_id: this.userProfile?.id.toString(),
     });
   }
 }

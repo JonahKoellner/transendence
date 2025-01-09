@@ -124,6 +124,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
 
   onGameEnd(): void {
     console.log('Game ended, resetting state.')
+    this.updateTournamentState();
     this.gameInProgress = false;
     this.matchId = '';
   }
@@ -136,8 +137,6 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
         console.log('tournament:', this.tournament);
         break;
       case 'join_match':
-        console.log(msg.match_id, msg.players.p1_id, msg.players.p2_id);
-        console.log('own id:', this.userProfile?.id);
         if (msg.players.p1_id === this.userProfile?.id || msg.players.p2_id === this.userProfile?.id) {
           this.joinMatch(msg);
         }

@@ -1,11 +1,10 @@
 <div class="tournament-tree">
-  <button (click)="onReadyClick()" *ngIf="!gameInProgress">Ready</button>
   <h1>Tournament Tree</h1>
   <section class="game" *ngIf="gameInProgress">
-    <app-game [matchId]="matchId" [userProfile]="userProfile"></app-game>
+    <app-game (gameEnd)="onGameEnd()" [matchId]="matchId" [userProfile]="userProfile"></app-game>
   </section>
 
-  <div *ngIf="tournament">
+  <div *ngIf="tournament && !gameInProgress">
     <!-- Single Elimination Bracket -->
     <div *ngIf="tournament.tournament_type === 'Single Elimination'" class="single-elimination-bracket">
       <div *ngFor="let round of tournament.rounds; let r = index" class="round">
@@ -70,5 +69,8 @@
         </ng-container>
       </div>
     </div>
+  </div>
+  <div class="ready-section">
+    <button class="ready-button" (click)="onReadyClick()" *ngIf="!gameInProgress">Ready</button>
   </div>
 </div>

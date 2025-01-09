@@ -1,14 +1,50 @@
 .game {
-    display: flex;
-    justify-content: center;
+	display: flex;
 	flex-direction: column;
 	align-items: center;
-    margin-top: 2rem;
-  
-    canvas {
-      border: 2px solid #61BA50;
-      border-radius: 8px;
-      background-color: #0E0F10;
-    }
-  }
-  
+	justify-content: center;
+	margin-top: 2rem;
+	gap: 1rem; /* Add spacing between children */
+
+	/* Score Display */
+	.score {
+		font-size: 2rem;
+		color: #61BA50; /* Green color */
+		margin-bottom: 1rem;
+
+		strong {
+			font-weight: bold;
+		}
+	}
+
+	/* Ready Button Section */
+	.ready-section {
+		margin-top: 1rem;
+
+		.ready-button {
+			padding: 0.5rem 1rem;
+			font-size: 1.2rem;
+			color: white;
+			background-color: #61BA50;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+
+			&:hover {
+				background-color: #4da743;
+			}
+
+			&:active {
+				background-color: #3b8c36;
+			}
+		}
+	}
+
+	/* Canvas Styling for Game Display (if used inside the game-display component) */
+	canvas {
+		border: 2px solid #61BA50;
+		border-radius: 8px;
+		background-color: #0E0F10;
+	}
+}

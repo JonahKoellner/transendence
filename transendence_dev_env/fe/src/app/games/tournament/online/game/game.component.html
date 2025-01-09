@@ -1,16 +1,12 @@
 <div class="game">
-	<div *ngIf="!gameInProgress">
-		<p>Game Ended</p>
-		<p>Winner: {{ winner }}</p>
-		<p>Score: {{ leftScore }} : {{ rightScore }}</p>
-	</div>
-	<div *ngIf="gameInProgress">
+	<div *ngIf="gameInProgress" class="game-in-progress">
+		<p><strong>Score:</strong> {{ leftScore }} : {{ rightScore }}</p>
 		<p class="score">
 			<strong>{{ leftScore }}</strong> - <strong>{{ rightScore }}</strong>
-		  </p>
+		</p>
 		<app-game-display [gameState]="gameState" [gameSettings]="gameSettings"></app-game-display>
 	</div>
-	<div *ngIf="!isReady">
-		<button (click)="updateReadyStatus()">Ready</button>
+	<div *ngIf="!isReady" class="ready-section">
+		<button class="ready-button" (click)="updateReadyStatus()">Ready</button>
 	</div>
-  </div>
+</div>

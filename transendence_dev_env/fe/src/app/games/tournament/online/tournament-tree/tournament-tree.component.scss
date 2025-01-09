@@ -11,6 +11,29 @@
     font-size: 2rem;
   }
 
+  .ready-section {
+		margin-top: 1rem;
+
+		.ready-button {
+			padding: 0.5rem 1rem;
+			font-size: 1.2rem;
+			color: white;
+			background-color: #61BA50;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+
+			&:hover {
+				background-color: #4da743;
+			}
+
+			&:active {
+				background-color: #3b8c36;
+			}
+		}
+	}
+
   .single-elimination-bracket, .round-robin-bracket {
     width: 100%;
     max-width: 700px;

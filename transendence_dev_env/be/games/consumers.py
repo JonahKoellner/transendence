@@ -2714,7 +2714,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         
         await self.initialize_match()
 
-        if await self.is_left_player():
+        if await self.is_left_player_id(self.scope['user'].id):
             self.game_manager_channel = self.channel_name
         else:
             #channel has been set for the right player via 'set_game_manager' message
@@ -2782,15 +2782,16 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def check_player_ready(self):
         return self.match.player1_ready and self.match.player2_ready
-
-    async def is_left_player(self):
-        return self.scope['user'] == self.left_player
     
     async def is_left_player_id(self, user_id):
-        return user_id == self.left_player.id
+        return user_id == str(self.left_player.id)
 
     async def handle_key_event(self, action, content):
         key = content.get("key")
+        user_id = content.get("user_id")
+        
+        logger.info(f'user_id: {user_id}, backend left: {self.left_player.id}, right: {self.right_player.id}')
+        
         max_speed = 10
         if action == "keydown":
             if key == "KeyW":
@@ -2808,7 +2809,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 {
                     "type": "update_paddle_speed",
                     "speed": speed,
-                    "user_id": self.scope['user'].id
+                    "user_id": user_id
                 }
             )
         else:
@@ -2820,9 +2821,11 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         logger.info(f"Updating paddle speed for user {user_id} to {speed}")
         async with self.game_lock:
             if await self.is_left_player_id(user_id):
+                logger.info(f"Updating left paddle speed to {speed}")
                 self.left_paddle_speed = speed
             else:
                 self.right_paddle_speed = speed
+                logger.info(f'Updating right paddle speed to {speed}')
         logger.info(f"after updating: left_paddle_speed: {self.left_paddle_speed}, right_paddle_speed: {self.right_paddle_speed}")
 
     # async def start_countdown(self):
@@ -2841,7 +2844,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def start_game(self):
         if self.game_in_progress:
             return
-
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "game_started"}
@@ -2865,9 +2867,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def set_game_manager(self, event):
         # Only set the game manager if the current consumer is not player1
-        if not await self.is_left_player():
+        if not await self.is_left_player_id(self.scope['user'].id):
             self.game_manager_channel = event["channel_name"]
-            logger.info(f"Set game manager for player2 to {self.game_manager_channel}")
 
     async def match_timer(self):
         try:
