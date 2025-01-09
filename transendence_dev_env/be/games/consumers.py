@@ -2,6 +2,8 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineMatch
 from .services.tournament_lobby_service import TournamentLobbyService
+from .services.tournament_service import TournamentService
+from .services.round_service import RoundService
 from django.contrib.auth.models import User 
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -2528,12 +2530,22 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         try:
             if action == "ready":
                 logger.debug(f"User {self.user.username} is ready.")
-                await self.update_ready_status(self.user, True)
-                id = await self.check_start_game(self.user) # check if we can start a game for that user
-                if id != None:
-                    await self.start_game(id)
+                # match_id = await database_sync_to_async(OnlineMatch.objects.filter())
+                if await self.check_round_and_finish(): # for the case where theres one player in a match and thats the last/only match in the round
+                    await self.next_round()
+                    await self.broadcast_tournament()
+                else:
+                    await self.update_ready_status(self.user, True)
+                    id = await self.check_start_game(self.user) # check if we can start a game for that user
+                    if id != None:
+                        await self.start_game(id)
             elif action == "get_tournament_state":
                 await self.broadcast_tournament()
+            elif action == "game_end":
+                if await self.check_round_and_finish():
+                    await self.next_round()
+                    await self.broadcast_tournament()
+                
         except Exception as e:
             await self.send_json({
                 "type": "error",
@@ -2576,6 +2588,21 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             }
         )
         
+    @database_sync_to_async
+    def next_round(self):
+        logger.info(f'tournamentconsumer next round, current_round: {self.tournament.current_round}')
+        self.tournament.refresh_from_db()
+        TournamentService.next_round(self.tournament)
+        self.tournament.save()
+        logger.info(f'tournamentconsumer after function call current_round: {self.tournament.current_round}')
+
+    @database_sync_to_async
+    def check_round_and_finish(self):
+        self.tournament.refresh_from_db()
+        flag = RoundService.check_round_finished(self.tournament.rounds.get(round_number=self.tournament.current_round))
+        self.tournament.save()
+        return flag
+
     async def alert(self, event):
         """handle the alert WebSocket message type."""
         await self.send_json({
@@ -2721,6 +2748,10 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             pass
 
         await self.send_game_settings()
+        await self.update_player_ready_status(self.scope['user'], True) # as soon as were connected, we are ready.
+        if await self.check_player_ready():
+            await self.start_countdown()
+            # await self.start_game()
 
     @database_sync_to_async
     def get_match_from_db(self):
@@ -2760,14 +2791,10 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             logger.info(f"Received action: {action} from user {self.scope['user'].username}")
             if action in ["keydown", "keyup"]:
                 await self.handle_key_event(action, content)
-            elif action == "set_ready":
-                is_ready = content.get("is_ready", False)
-                await self.update_player_ready_status(self.scope['user'], is_ready)
-                await self.broadcast_ready_state()
-
-                # If both sides are ready and game not started, begin countdown
-                if await self.check_player_ready():
-                    await self.start_game()
+            # elif action == "set_ready":
+            #     is_ready = content.get("is_ready", False)
+                
+            #     await self.broadcast_ready_state()
         except Exception as e:
             logger.error(f"Error receiving message: {e}")
             await self.send_json({"type": "error", "message": str(e)})
@@ -2823,16 +2850,21 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def start_countdown(self):
         try:
-            for i in range(3, 0, -1):
+            total_time = 5  # Total match time in seconds
+            for remaining_time in range(total_time, 0, -1):
+                logger.info(f"Remaining time: {remaining_time}")
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {"type": "countdown", "count": i}
+                    {
+                        "type": "timer_until_start",
+                        "remaining_time": remaining_time
+                    }
                 )
                 await asyncio.sleep(1)
+            if not self.game_in_progress:
+                await self.start_game()
         except asyncio.CancelledError:
             return
-        if self.check_player_ready() and not self.game_in_progress:
-            await self.start_game()
 
     async def start_game(self):
         if self.game_in_progress:
@@ -2958,7 +2990,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         # record_match_result() handles winner, end_time, outcome, status, etc.
         self.match.record_match_result()
-        
+    
     async def send_game_settings(self): # TODO fetch + send all image urls as game settings to frontend
         game_settings = {
             "paddleskin_image_left": "url-to-left-paddle.png",
@@ -2973,10 +3005,16 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 "settings": game_settings,
             }
         )
-    
+
     async def match_timer_update(self, event):
         await self.send_json({
             "type": "match_timer_update",
+            "remaining_time": event["remaining_time"]
+        })
+        
+    async def timer_until_start(self, event):
+        await self.send_json({
+            "type": "timer_until_start",
             "remaining_time": event["remaining_time"]
         })
 

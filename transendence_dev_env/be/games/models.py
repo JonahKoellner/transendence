@@ -101,6 +101,12 @@ class OnlineRound(BaseRound):
         self.end_time = timezone.now()
         self.duration = (self.end_time - self.start_time).total_seconds()
         self.status = 'completed'
+        if self.stage == Stage.ROUND_ROBIN_STAGE:
+            for winner in self.winners.all():
+                if str(winner.id) in self.tournament.round_robin_scores:
+                    self.tournament.round_robin_scores[str(winner.id)] += 1
+                else:
+                    self.tournament.round_robin_scores[str(winner.id)] = 1
         self.save()
 
 class BaseTournament(models.Model):

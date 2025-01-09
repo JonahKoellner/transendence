@@ -22,6 +22,17 @@ def generate_match_id() -> str:
 
 class RoundService:
     @staticmethod
+    def check_round_finished(round_instance: OnlineRound):
+        """
+        Check if all matches in the round_instance are completed.
+        """
+        finished = all(match.status == "completed" for match in round_instance.matches.all()) and round_instance.status != "completed"
+        logger.info(f'Round {round_instance.round_number} finished: {finished}')
+        if finished:
+            round_instance.end_round()
+        return finished
+
+    @staticmethod
     def generate_rounds(tournament: OnlineTournament):
         """
         Generate a list of OnlineRound objects based on the total_rounds

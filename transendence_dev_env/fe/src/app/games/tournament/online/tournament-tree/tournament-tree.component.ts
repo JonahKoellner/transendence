@@ -124,7 +124,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
 
   onGameEnd(): void {
     console.log('Game ended, resetting state.')
-    this.updateTournamentState();
+    this.tournamentService.sendMessage({ action: 'game_end' });
     this.gameInProgress = false;
     this.matchId = '';
   }
@@ -143,7 +143,6 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
         break;
       case 'alert':
         this.toastr.info(msg.message, 'Alert');
-        this.updateTournamentState();
         break;
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);

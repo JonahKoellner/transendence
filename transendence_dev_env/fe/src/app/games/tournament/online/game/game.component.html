@@ -7,7 +7,7 @@
 		</p>
 		<app-game-display [gameState]="gameState" [gameSettings]="gameSettings"></app-game-display>
 	</div>
-	<div *ngIf="!isReady" class="ready-section">
-		<button class="ready-button" (click)="updateReadyStatus()">Ready</button>
+	<div *ngIf="!gameInProgress" class="timer-section">
+		<p><strong>{{secsUntilGameStart}} Seconds until the game starts...</strong></p>
 	</div>
 </div>

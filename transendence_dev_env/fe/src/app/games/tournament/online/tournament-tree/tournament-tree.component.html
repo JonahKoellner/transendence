@@ -1,10 +1,17 @@
 <div class="tournament-tree">
-  <h1>Tournament Tree</h1>
+  <h1>Tournament {{tournament?.status}}</h1>
   <section class="game" *ngIf="gameInProgress">
     <app-game (gameEnd)="onGameEnd()" [matchId]="matchId" [userProfile]="userProfile"></app-game>
   </section>
 
   <div *ngIf="tournament && !gameInProgress">
+    <!-- Tournament Completed Section -->
+    <div *ngIf="tournament.status === 'completed'" class="tournament-completed">
+      <h2>Tournament Completed</h2>
+      <p>Congratulations to the winner: {{ tournament.final_winner || 'TBD' }}</p>
+    </div>
+
+  <div *ngIf="tournament && gameInProgress === false">
     <!-- Single Elimination Bracket -->
     <div *ngIf="tournament.tournament_type === 'Single Elimination'" class="single-elimination-bracket">
       <div *ngFor="let round of tournament.rounds; let r = index" class="round">
@@ -43,7 +50,7 @@
           <tbody>
             <tr *ngFor="let participant of tournament.participants">
               <td>{{ participant.username }}</td>
-              <td>{{ tournament.round_robin_scores[participant.username] || 0 }}</td>
+              <td>{{ tournament.round_robin_scores[participant.id] || 0 }}</td>
             </tr>
           </tbody>
         </table>
@@ -70,7 +77,7 @@
       </div>
     </div>
   </div>
-  <div class="ready-section">
-    <button class="ready-button" (click)="onReadyClick()" *ngIf="!gameInProgress">Ready</button>
+  <div *ngIf="tournament.status !== 'completed'" class="ready-section">
+    <button class="ready-button" (click)="onReadyClick()" [disabled]="gameInProgress">Ready</button>
   </div>
 </div>
