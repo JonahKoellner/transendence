@@ -30,7 +30,7 @@ export class GameComponent implements OnInit, OnDestroy {
   private messageSubscription!: Subscription;
 
   //for everything around the canvas
-  gameInProgress: boolean = true;
+  gameInProgress: boolean = false;
   winner: string = '';
   isReady: boolean = false;
   leftScore: number = 0;
@@ -65,7 +65,7 @@ export class GameComponent implements OnInit, OnDestroy {
         console.log('Game started:', msg);
         this.gameInProgress = true;
       } else if (msg.type === 'game_settings') {
-        this.handleGameSettings(msg.settings);
+        this.gameSettings = msg.settings;
       }
     });
   }
@@ -78,12 +78,11 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private handleGameState(msg: any): void {
-    let state = msg.state
-    if (this.leftScore !== state.left_score || this.rightScore !== state.right_score) {
-      console.log('Score updated:', state.left_score, state.right_score);
+    if (this.leftScore !== msg.leftScore || this.rightScore !== msg.rightScore) {
+      console.log('Score updated:', msg.leftScore, msg.rightScore);
     }
-    this.leftScore = state.left_score;
-    this.rightScore = state.right_score;
+    this.leftScore = msg.leftScore;
+    this.rightScore = msg.rightScore;
     this.gameState = msg;
   }
 
@@ -92,18 +91,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameInProgress = false;
     this.winner = winner;
     this.gameEnd.emit();
-  }
-
-  private handleGameSettings(settings: GameSettings): void {
-    this.gameSettings = settings;
-
-    this.loadImages()
-    .then(() => {
-      console.log('Images loaded successfully!');
-    })
-    .catch((err) => {
-      this.toastr.error('Error loading images', 'Error');
-    });
   }
 
   updateReadyStatus() {

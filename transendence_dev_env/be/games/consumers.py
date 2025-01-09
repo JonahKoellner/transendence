@@ -2721,7 +2721,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             pass
 
         await self.send_game_settings()
-        await self.send_game_state()
 
     @database_sync_to_async
     def get_match_from_db(self):
@@ -2843,6 +2842,11 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         if self.game_in_progress:
             return
 
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "game_started"}
+        )
+
         logger.info(f'setting game manager channel to {self.channel_name}')
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -2851,6 +2855,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 "channel_name": self.channel_name
             }
         )
+
         logger.info('Starting game loop')
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
@@ -2911,7 +2916,20 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 self.left_score += 1
                 await self.reset_ball()
 
-            await self.send_game_state()
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "game_state",
+                    "leftScore": self.left_score,
+                    "rightScore": self.right_score,
+                    "ball_x": self.ball_x,
+                    "ball_y": self.ball_y,
+                    "left_paddle_y": self.left_paddle_y,
+                    "right_paddle_y": self.right_paddle_y,
+                    "left_speed": self.left_paddle_speed,
+                    "right_speed": self.right_paddle_speed,
+                }
+            )
 
     async def reset_ball(self):
         self.ball_x = 500
@@ -2936,25 +2954,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         # record_match_result() handles winner, end_time, outcome, status, etc.
         self.match.record_match_result()
-
-    async def send_game_state(self):
-        """
-        Send the current game state to the frontend.
-        """
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "game_state",
-                "data": {
-                    "left_paddle_y": self.left_paddle_y,
-                    "right_paddle_y": self.right_paddle_y,
-                    "ball_x": self.ball_x,
-                    "ball_y": self.ball_y,
-                    "left_score": self.left_score,
-                    "right_score": self.right_score,
-                },
-            },
-        )
         
     async def send_game_settings(self): # TODO fetch + send all image urls as game settings to frontend
         game_settings = {
@@ -2972,13 +2971,10 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         )
     
     async def game_state(self, event):
-        """
-        Handle the 'game_state' WebSocket message type.
-        """
-        await self.send_json({
-            "type": "game_state",
-            "data": event["data"],
-        })
+        await self.send_json(event)
+        
+    async def game_started(self, event):
+        await self.send_json({"type": "game_started"})
 
     async def game_settings(self, event):
         """
@@ -2988,9 +2984,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             "type": "game_settings",
             "settings": event["settings"],
         })
-
-    async def game_state(self, event):
-        await self.send_json(event)
 
     async def broadcast_ready_state(self):
         await self.channel_layer.group_send(
