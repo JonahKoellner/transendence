@@ -27,7 +27,6 @@ export class AppComponent implements OnInit {
     private profileService: ProfileService,
     private toastr: ToastrService
   ) {
-    this.authService.initializeWebSocket();
     this.applyTheme();
   }
 
@@ -47,6 +46,7 @@ export class AppComponent implements OnInit {
     if (this.authService.isAuthenticated()) {
       this.profileService.getProfile().subscribe(
         profile => {
+          this.authService.initializeWebSocket();
           this.is2FaEnabled = profile.is_2fa_enabled;
 
           if (!this.is2FaEnabled && !this.toldUser && !this.router.url.startsWith('/verify-otp')) {
@@ -87,10 +87,7 @@ export class AppComponent implements OnInit {
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent): void {
     const selection = window.getSelection()?.toString().trim() || '';
-    
-    // 2) Check if the user selected exactly "Transcendence"
     if (selection === 'end') {
-      // 3) Trigger your Easter Egg
       this.showEasterEgg = true; 
     }
   }

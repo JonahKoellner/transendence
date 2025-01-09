@@ -57,27 +57,34 @@ export class AboutComponent implements OnInit, OnDestroy {
     {
       name: 'Lukas Kreuzer',
       avatar: 'https://cdn.intra.42.fr/users/384cad88316a2ad0b74b16caa26fff48/lkreuzer.png',
-      role: 'Focused on backend development and server-side logic.'
+      role: `Led the project end-to-end, overseeing both the technical vision and creative direction. 
+             He designed much of the front-end UI/UX, architected large parts of the backend, 
+             and ensured the overall cohesion between all project components.`
     },
     {
       name: 'Jonah Köllner',
       avatar: 'https://cdn.intra.42.fr/users/33446a7c706db8e85a8a1f272e42b014/jkollner.jpg',
-      role: 'Focused on front-end design and user experience.'
+      role: `Owned the DevOps side of the project, setting up automated build pipelines and deployment workflows. 
+             He worked to optimize performance, streamline continuous integration, 
+             and maintain high uptime across the production environment.`
     },
     {
       name: 'Gergely Pásztor',
       avatar: 'https://cdn.intra.42.fr/users/3c1f08193b22c4acd4b8abd1f431a693/gpasztor.jpg',
-      role: 'Focused on database integration and API development.'
+      role: `Developed the core game mechanics, focusing on the logic and real-time rendering of the canvas UI. 
+             He fine-tuned physics, animations, and overall gameplay flow to deliver an engaging player experience.`
     },
     {
       name: 'Niklas Burchhardt',
       avatar: 'https://cdn.intra.42.fr/users/8c087da4532c6d41740814505a57a870/nburchha.jpg',
-      role: 'Coordinated the project and ensured timely delivery.'
+      role: `Implemented the comprehensive online tournament system, enabling players to join and compete in large-scale brackets. 
+             He ensured reliable matchmaking, bracket management, and robust networking for a seamless multiplayer experience.`
     },
     {
       name: 'Felix Böck',
       avatar: 'https://cdn.intra.42.fr/users/896c969a835505db23a2c1cb9cd5527c/fbock.jpg',
-      role: 'Focused on testing and maintaining code quality.'
+      role: `Focused on rigorous testing and continuous bug fixing, upholding stability and performance standards. 
+             By refining test suites and addressing edge cases, he helped maintain a smooth, high-quality user experience.`
     }
   ];
 
@@ -205,19 +212,19 @@ export class AboutComponent implements OnInit, OnDestroy {
       status: 'in_progress',
       description: 'Accessibility Module',
       details: 'Making the application accessible to all users by supporting multiple devices, languages, and accessibility features.',
-      totalPoints: 0.5,
+      totalPoints: 1.0,
       implementationDetails: [
         'Creating pong on mobile was too tedious due to the complexity of the UI and game mechanics.',
         'Ensured expanding browser compatibility to support all major browsers.',
         'Decided to just use english as the main language due to time constraints and limited practical benefits.',
-        'Adding accessibility features for visually impaired users to enhance inclusivity.',
+        'Used a high contrast theme, clean and clear text with usage of alt texts and specific html elements.',
         'We didnt want to add server-side rendering due to time constraints and limited practical benefits.'
       ],
       subModules: [
         { description: 'Support on all devices (0.5 points)', status: 'incomplete' },
         { description: 'Expanding Browser Compatibility (0.5 points) - Ensured functionality across all major browsers.', status: 'completed' },
         { description: 'Multiple language supports (0.5 points)', status: 'incomplete' },
-        { description: 'Add accessibility for Visually Impaired Users (0.5 points)', status: 'in_progress' },
+        { description: 'Add accessibility for Visually Impaired Users (0.5 points)', status: 'completed' },
         { description: 'Server-Side Rendering (SSR) Integration (0.5 points)', status: 'incomplete' }
       ]
     },
