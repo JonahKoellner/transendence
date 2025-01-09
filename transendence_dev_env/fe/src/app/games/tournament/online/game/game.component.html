@@ -1,6 +1,7 @@
 <div class="game">
 	<div *ngIf="gameInProgress" class="game-in-progress">
-		<p><strong>Score:</strong> {{ leftScore }} : {{ rightScore }}</p>
+		<p><strong>Remaining Time: {{remainingTime}}</strong></p>
+		<p><strong>Score:</strong></p>
 		<p class="score">
 			<strong>{{ leftScore }}</strong> - <strong>{{ rightScore }}</strong>
 		</p>

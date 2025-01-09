@@ -2768,13 +2768,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 # If both sides are ready and game not started, begin countdown
                 if await self.check_player_ready():
                     await self.start_game()
-                #     if not self.countdown_task or self.countdown_task.done():
-                #         self.countdown_task = asyncio.create_task(self.start_countdown())
-                # else:
-                #     # If someone unreadies, cancel any countdown in progress
-                #     if self.countdown_task and not self.countdown_task.done():
-                #         self.countdown_task.cancel()
-                #         self.countdown_task = None
         except Exception as e:
             logger.error(f"Error receiving message: {e}")
             await self.send_json({"type": "error", "message": str(e)})
@@ -2828,18 +2821,18 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 logger.info(f'Updating right paddle speed to {speed}')
         logger.info(f"after updating: left_paddle_speed: {self.left_paddle_speed}, right_paddle_speed: {self.right_paddle_speed}")
 
-    # async def start_countdown(self):
-    #     try:
-    #         for i in range(3, 0, -1):
-    #             await self.channel_layer.group_send(
-    #                 self.room_group_name,
-    #                 {"type": "countdown", "count": i}
-    #             )
-    #             await asyncio.sleep(1)
-    #     except asyncio.CancelledError:
-    #         return
-    #     if all(self.ready_status.values()) and not self.game_in_progress:
-    #         await self.start_game()
+    async def start_countdown(self):
+        try:
+            for i in range(3, 0, -1):
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {"type": "countdown", "count": i}
+                )
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            return
+        if self.check_player_ready() and not self.game_in_progress:
+            await self.start_game()
 
     async def start_game(self):
         if self.game_in_progress:
@@ -2872,7 +2865,17 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def match_timer(self):
         try:
-            await asyncio.sleep(30)
+            total_time = 30  # Total match time in seconds
+            for remaining_time in range(total_time, 0, -1):
+                logger.info(f"Remaining time: {remaining_time}")
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "match_timer_update",
+                        "remaining_time": remaining_time
+                    }
+                )
+                await asyncio.sleep(1)
             await self.end_match()
         except asyncio.CancelledError:
             return
@@ -2971,9 +2974,15 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             }
         )
     
+    async def match_timer_update(self, event):
+        await self.send_json({
+            "type": "match_timer_update",
+            "remaining_time": event["remaining_time"]
+        })
+
     async def game_state(self, event):
         await self.send_json(event)
-        
+
     async def game_started(self, event):
         await self.send_json({"type": "game_started"})
 

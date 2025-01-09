@@ -35,6 +35,7 @@ export class GameComponent implements OnInit, OnDestroy {
   isReady: boolean = false;
   leftScore: number = 0;
   rightScore: number = 0;
+  remainingTime: string = '30'; // default value, because each games has 30 seconds
 
   //TODO make this right, currently use default values
   gameState: any = null;
@@ -66,6 +67,9 @@ export class GameComponent implements OnInit, OnDestroy {
         this.gameInProgress = true;
       } else if (msg.type === 'game_settings') {
         this.gameSettings = msg.settings;
+      } else if (msg.type === 'match_timer_update') {
+        console.log('Remaining time:', msg.remaining_time);
+        this.remainingTime = msg.remaining_time;
       }
     });
   }
