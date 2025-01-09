@@ -32,7 +32,7 @@ export class GameComponent implements AfterViewInit {
   private messageSubscription!: Subscription;
 
   //for everything around the canvas
-  game_end: boolean = false;
+  gameInProgress: boolean = true;
   winner: string = '';
   isReady: boolean = false;
   leftScore: number = 0;
@@ -77,6 +77,9 @@ export class GameComponent implements AfterViewInit {
         this.handleGameState(msg.data);
       } else if (msg.type === 'game_ended') {
         this.handleGameEnd(msg.winner);
+      } else if (msg.type === 'game_started') {
+        console.log('Game started:', msg);
+        this.gameInProgress = true;
       } else if (msg.type === 'game_settings') {
         this.handleGameSettings(msg.settings);
       }
@@ -119,7 +122,7 @@ export class GameComponent implements AfterViewInit {
 
   private handleGameEnd(winner: any) {
     console.log('Game ended:', winner);
-    this.game_end = true;
+    this.gameInProgress = false;
     this.winner = winner;
     this.gameEnd.emit();
   }
