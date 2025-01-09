@@ -10,17 +10,25 @@
         Welcome to <strong>Transcendence</strong> – where the boundaries of gaming, Fullstack, and AI blur into one chaotic, exhilarating experience.
         This passion project isn’t just code; it’s countless late nights, endless caffeine, and a sprinkle of sheer madness.
       </p>
-  
-      <!-- Contributors Section -->
-      <ul class="contributors">
-        <li class="contributor-card" *ngFor="let contributor of contributors">
-          <img [src]="contributor.avatar" [alt]="contributor.name" class="avatar" loading="lazy">
-          <div class="contributor-info">
-            <span class="name">{{ contributor.name }}</span>
-            <span class="info">{{ contributor.role }}</span>
-          </div>
-        </li>
-      </ul>
+      <div class="contributors-carousel">
+        <button class="carousel-button prev-button" (click)="prevContributor()">&lt;</button>
+        
+        <div class="carousel-track-container">
+          <ul class="carousel-track">
+            <li class="contributor-slide" *ngFor="let contributor of contributors">
+              <div class="contributor-slide-content">
+                <img [src]="contributor.avatar" class="avatar" [alt]="contributor.name">
+                <div class="contributor-info">
+                  <span class="name">{{ contributor.name }}</span>
+                  <span class="info">{{ contributor.role }}</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <button class="carousel-button next-button" (click)="nextContributor()">&gt;</button>
+      </div>
   
       <!-- Video Section -->
       <div class="video-container">

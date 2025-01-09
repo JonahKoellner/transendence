@@ -39,7 +39,7 @@ export class AboutComponent implements OnInit, OnDestroy {
     'b', 'a'
   ];
   konamiIndex: number = 0;
-
+  currentIndex = 0;
   // Reference to the event handler for removal
   private keyDownHandler!: (e: KeyboardEvent) => void;
 
@@ -310,5 +310,27 @@ export class AboutComponent implements OnInit, OnDestroy {
         module.status = 'incomplete';
       }
     });
+  }
+
+  prevContributor() {
+    const track = document.querySelector('.carousel-track') as HTMLElement;
+    const slides = Array.from(track.children) as HTMLElement[];
+    
+    // Decrement index
+    this.currentIndex = (this.currentIndex - 1 + slides.length) % slides.length;
+    
+    // Move track
+    track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+  }
+  
+  nextContributor() {
+    const track = document.querySelector('.carousel-track') as HTMLElement;
+    const slides = Array.from(track.children) as HTMLElement[];
+    
+    // Increment index
+    this.currentIndex = (this.currentIndex + 1) % slides.length;
+    
+    // Move track
+    track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
   }
 }
