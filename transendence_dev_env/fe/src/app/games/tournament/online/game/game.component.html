@@ -1,4 +1,13 @@
 <div class="game">
-    <canvas #gameCanvas height="500" width="1000"></canvas>
-    <button (click)="updateReadyStatus()">Ready</button>
+	<div *ngIf="game_end">
+		<p>Game Ended</p>
+		<p>Winner: {{ winner }}</p>
+		<p>Score: {{ leftScore }} : {{ rightScore }}</p>
+	</div>
+	<div *ngIf="!game_end">
+		<canvas #gameCanvas height="500" width="1000"></canvas>
+		<div *ngIf="!isReady">
+			<button (click)="updateReadyStatus()">Ready</button>
+		</div>
+	</div>
   </div>

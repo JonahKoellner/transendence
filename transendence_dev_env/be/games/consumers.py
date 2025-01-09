@@ -2688,16 +2688,16 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         self.ball_direction_y = 0.5
         self.ball_speed = 5
 
-        self.left_score = 0
-        self.right_score = 0
+        self.left_score = 0 # player1
+        self.right_score = 0 # player2
 
         self.game_lock = Lock()
         self.game_loop_task = None
         self.countdown_task = None
         self.match_end_task = None
 
-        self.left_user = None
-        self.right_user = None
+        self.left_player = None
+        self.right_player = None
         self.match = None
         self.room_id = None
         self.match_id = None
@@ -2716,7 +2716,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_match_from_db(self):
-        return OnlineMatch.objects.get(match_id=self.match_id, room_id=self.room_id)
+        return OnlineMatch.objects.select_related('player1', 'player2', 'winner').get(match_id=self.match_id, room_id=self.room_id)
 
     @database_sync_to_async
     def update_player_ready_status(self, user, is_ready):
@@ -2730,7 +2730,9 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def initialize_match(self):
         try:
             self.match = await self.get_match_from_db()
-        except:
+            self.left_player = self.match.player1
+            self.right_player = self.match.player2
+        except OnlineMatch.DoesNotExist as e:
             await self.close()
             raise Exception(f"Match not found {e}")
 
@@ -2775,7 +2777,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def handle_key_event(self, action, content):
         key = content.get("key")
-        user_id = content.get("user_id", "")
         max_speed = 10
         if action == "keydown":
             if key == "KeyW":
@@ -2786,10 +2787,10 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 speed = 0
         else:
             speed = 0
-
-        if user_id == "left":
+        logger.info(f"comparing user {self.scope['user']} with left player {self.left_player} and right player {self.right_player}")
+        if self.scope['user'] == self.left_player:
             self.left_paddle_speed = speed
-        elif user_id == "right":
+        elif self.scope['user'] == self.right_player:
             self.right_paddle_speed = speed
 
     # async def start_countdown(self):
@@ -2829,9 +2830,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                "type": "match_ended",
-                "left_score": self.left_score,
-                "right_score": self.right_score
+                "type": "game_ended",
+                "winner": self.match.winner.username if self.match.winner else "Tie"
             }
         )
 
@@ -2921,17 +2921,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 "settings": game_settings,
             }
         )
-
-    async def send_game_end(self):
-        """
-        Notify the frontend that the game has ended.
-        """
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "game_end",
-            },
-        )
     
     async def game_state(self, event):
         """
@@ -2951,14 +2940,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             "settings": event["settings"],
         })
 
-    async def game_end(self, event):
-        """
-        Handle the 'game_end' WebSocket message type.
-        """
-        await self.send_json({
-            "type": "game_end",
-        })
-
     async def game_state(self, event):
         await self.send_json(event)
 
@@ -2971,9 +2952,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def ready_state(self, event):
         await self.send_json({"type": "ready_state", "player1_ready": event["player1_ready"], "player2_ready": event["player2_ready"]})
 
-    async def match_ended(self, event):
+    async def game_ended(self, event):
         await self.send_json({
-            "type": "match_ended",
-            "left_score": event["left_score"],
-            "right_score": event["right_score"]
+            "type": "game_ended",
+            "winner": event["winner"]
         })

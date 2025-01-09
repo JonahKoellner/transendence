@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild, EventEmitter, Output, Input } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild, EventEmitter, Output, Input, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { GameDisplayService } from 'src/app/services/game-display.service';
@@ -31,6 +31,13 @@ export class GameComponent implements AfterViewInit {
   context!: CanvasRenderingContext2D;
   private messageSubscription!: Subscription;
 
+  //for everything around the canvas
+  game_end: boolean = false;
+  winner: string = '';
+  isReady: boolean = false;
+  leftScore: number = 0;
+  rightScore: number = 0;
+
   gameState: any = null;
   //TODO make this right, currently use default values
   gameSettings: GameSettings = {
@@ -58,16 +65,18 @@ export class GameComponent implements AfterViewInit {
   ngOnInit(): void {
     if (!this.matchId) {
       this.toastr.error('Match ID not provided', 'Error');
-      this.handleGameEnd();
+      this.gameEnd.emit();
     }
     this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
     this.gameDisplayService.connect(this.matchId, this.roomId);
     this.gameDisplayService.messages$.subscribe((msg) => {
-      console.log('Received message:', msg);
+      if (msg.type !== 'game_state') {
+        console.log('Received message:', msg);
+      }
       if (msg.type === 'game_state') {
         this.handleGameState(msg.data);
-      } else if (msg.type === 'game_end') {
-        this.handleGameEnd();
+      } else if (msg.type === 'game_ended') {
+        this.handleGameEnd(msg.winner);
       } else if (msg.type === 'game_settings') {
         this.handleGameSettings(msg.settings);
       }
@@ -83,7 +92,7 @@ export class GameComponent implements AfterViewInit {
     if (context) {
       this.context = context;
       // if (this.imagesLoaded) {
-      this.drawGame();
+      // this.drawGame();
     // } else {
     //   console.warn('Images not loaded yet, Game will be drawn when images are loaded');
     }
@@ -97,13 +106,21 @@ export class GameComponent implements AfterViewInit {
   }
 
   private handleGameState(state: any): void {
+    if (this.leftScore !== state.left_score || this.rightScore !== state.right_score) {
+      console.log('Score updated:', state.left_score, state.right_score);
+    }
+    this.leftScore = state.left_score;
+    this.rightScore = state.right_score;
     this.gameState = state;
     if (this.context) {
       this.drawGame();
     }
   }
 
-  private handleGameEnd() {
+  private handleGameEnd(winner: any) {
+    console.log('Game ended:', winner);
+    this.game_end = true;
+    this.winner = winner;
     this.gameEnd.emit();
   }
 
@@ -121,12 +138,31 @@ export class GameComponent implements AfterViewInit {
 
   updateReadyStatus() {
     console.log("set status to ready")
+    this.isReady = true;
     this.gameDisplayService.sendMessage({
       action: 'set_ready',
       match_id: this.matchId,
       user_id: this.userProfile?.id.toString(),
       is_ready: true
     })
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    console.log("Key down: " + event.code);
+    this.gameDisplayService.sendMessage({
+      action: 'keydown',
+      key: event.code,
+    });
+  }
+
+  @HostListener('window:keyup', ['$event'])
+  onKeyUp(event: KeyboardEvent) {
+    console.log("Key up: " + event.code);
+    this.gameDisplayService.sendMessage({
+      action: 'keyup',
+      key: event.code,
+    });
   }
 
   /**
