@@ -4,12 +4,23 @@
   padding: 10px 20px;
   border-bottom: 1px solid #343a40;
 
+  // === BRAND ===
   .navbar-brand {
     font-weight: bold;
     color: #61BA50 !important;
     font-size: 1.5rem;
+    // Subtle idle animation
+    animation: brandIdle 3s ease-in-out infinite;
+    text-shadow: 0 0 5px rgba(97, 186, 80, 0.5);
+
+    // Hover: more intense/fancy flicker + slight scale
+    &:hover {
+      animation: brandHover 1.5s infinite;
+      transform: scale(1.05);
+    }
   }
 
+  // === NAV LINKS ===
   .nav-link {
     color: #f8f9fa !important;
     margin: 0 10px;
@@ -19,5 +30,32 @@
     &:hover {
       color: #61BA50 !important;
     }
+  }
+}
+
+/* ===== KEYFRAMES ===== */
+
+/* Subtle "breathing" glow for idle brand */
+@keyframes brandIdle {
+  0% {
+    text-shadow: 0 0 4px rgba(97, 186, 80, 0.4), 0 0 8px rgba(97, 186, 80, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(97, 186, 80, 0.6), 0 0 16px rgba(97, 186, 80, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 4px rgba(97, 186, 80, 0.4), 0 0 8px rgba(97, 186, 80, 0.2);
+  }
+}
+
+/* Strong flicker/pulse on hover */
+@keyframes brandHover {
+  0%, 100% {
+    text-shadow: 0 0 5px #61BA50, 0 0 15px rgba(97, 186, 80, 0.8);
+    transform: scale(1.05);
+  }
+  50% {
+    text-shadow: 0 0 20px #61BA50, 0 0 50px rgba(97, 186, 80, 0.8);
+    transform: scale(1.1);
   }
 }
