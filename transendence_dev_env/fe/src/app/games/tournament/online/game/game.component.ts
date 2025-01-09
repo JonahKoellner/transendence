@@ -4,6 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import { GameDisplayService } from 'src/app/services/game-display.service';
 import { Subscription } from 'rxjs';
 import { SettingsComponent } from 'src/app/settings/settings.component';
+import { UserProfile } from 'src/app/profile.service';
 
 interface GameSettings {
   paddleskin_color_left?: string;
@@ -25,6 +26,7 @@ export class GameComponent implements AfterViewInit {
   @Output() gameEnd = new EventEmitter<void>();
   @ViewChild('gameCanvas') canvas!: ElementRef<HTMLCanvasElement>;
   @Input() matchId: string = '';
+  @Input() userProfile: UserProfile | null = null;
   private roomId: string = '';
   context!: CanvasRenderingContext2D;
   private messageSubscription!: Subscription;
@@ -115,6 +117,16 @@ export class GameComponent implements AfterViewInit {
     .catch((err) => {
       this.toastr.error('Error loading images', 'Error');
     });
+  }
+
+  updateReadyStatus() {
+    console.log("set status to ready")
+    this.gameDisplayService.sendMessage({
+      action: 'set_ready',
+      match_id: this.matchId,
+      user_id: this.userProfile?.id.toString(),
+      is_ready: true
+    })
   }
 
   /**

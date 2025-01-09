@@ -56,6 +56,8 @@ class OnlineMatch(BaseMatch):
     match_id = models.CharField(max_length=10, unique=True)
     player1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player1', blank=True, null=True)
     player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player2', blank=True, null=True)
+    player1_ready = models.BooleanField(default=False)
+    player2_ready = models.BooleanField(default=False)
     winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_won', blank=True, null=True)
 
     def record_match_result(self):

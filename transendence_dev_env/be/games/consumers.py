@@ -2620,7 +2620,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         p2 = match.player2
         if p1 == None or p2 == None:
             raise Exception("Both players need to real players to start a game!")
-        logger.info("Sending message to start game")
+        logger.info(f"Sending message to start game for match {match_id}")
+        logger.info(f"start_game p1_id: {p1.id}, p2_id: {p2.id}")
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -2641,6 +2642,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             dict = self.tournament.participants_ready_states
             id1 = match.player1.id
             id2 = match.player2.id
+            logger.info(f"check p1_id: {id1}, p2_id: {id2}")
             if str(id1) in dict and str(id2) in dict and dict[str(id1)] and dict[str(id2)]:
                 return match.match_id
         logger.info(f"Could not start game for user {user.username}")
@@ -2694,7 +2696,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         self.countdown_task = None
         self.match_end_task = None
 
-        self.ready_status = {"left": False, "right": False}
         self.left_user = None
         self.right_user = None
         self.match = None
@@ -2709,12 +2710,29 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        await self.channel_layer.group_send(
-            self.room_group_name, {
-                "type": "initial_state",
-                "data": self
-            }
-        )
+        await self.initialize_match()
+        await self.send_game_settings()
+        await self.send_game_state()
+
+    @database_sync_to_async
+    def get_match_from_db(self):
+        return OnlineMatch.objects.get(match_id=self.match_id, room_id=self.room_id)
+
+    @database_sync_to_async
+    def update_player_ready_status(self, user, is_ready):
+        self.match.refresh_from_db()
+        if user == self.match.player1:
+            self.match.player1_ready = is_ready
+        elif user == self.match.player2:
+            self.match.player2_ready = is_ready
+        self.match.save()
+        
+    async def initialize_match(self):
+        try:
+            self.match = await self.get_match_from_db()
+        except:
+            await self.close()
+            raise Exception(f"Match not found {e}")
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -2727,24 +2745,33 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             self.match_end_task.cancel()
 
     async def receive_json(self, content):
-        action = content.get("action")
-        if action in ["keydown", "keyup"]:
-            await self.handle_key_event(action, content)
-        elif action == "set_ready":
-            user_id = content.get("user_id")
-            is_ready = content.get("is_ready", False)
-            self.ready_status[user_id] = is_ready
-            await self.broadcast_ready_state()
+        try:
+            action = content.get("action")
+            logger.info(f"Received action: {action} from user {self.scope['user'].username}")
+            if action in ["keydown", "keyup"]:
+                await self.handle_key_event(action, content)
+            elif action == "set_ready":
+                is_ready = content.get("is_ready", False)
+                await self.update_player_ready_status(self.scope['user'], is_ready)
+                await self.broadcast_ready_state()
 
-            # If both sides are ready and game not started, begin countdown
-            if all(self.ready_status.values()) and not self.game_in_progress:
-                if not self.countdown_task or self.countdown_task.done():
-                    self.countdown_task = asyncio.create_task(self.start_countdown())
-            else:
-                # If someone unreadies, cancel any countdown in progress
-                if self.countdown_task and not self.countdown_task.done():
-                    self.countdown_task.cancel()
-                    self.countdown_task = None
+                # If both sides are ready and game not started, begin countdown
+                if await self.check_player_ready():
+                    await self.start_game()
+                #     if not self.countdown_task or self.countdown_task.done():
+                #         self.countdown_task = asyncio.create_task(self.start_countdown())
+                # else:
+                #     # If someone unreadies, cancel any countdown in progress
+                #     if self.countdown_task and not self.countdown_task.done():
+                #         self.countdown_task.cancel()
+                #         self.countdown_task = None
+        except Exception as e:
+            logger.error(f"Error receiving message: {e}")
+            await self.send_json({"type": "error", "message": str(e)})
+            
+    @database_sync_to_async
+    def check_player_ready(self):
+        return self.match.player1_ready and self.match.player2_ready
 
     async def handle_key_event(self, action, content):
         key = content.get("key")
@@ -2765,20 +2792,24 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         elif user_id == "right":
             self.right_paddle_speed = speed
 
-    async def start_countdown(self):
-        try:
-            for i in range(3, 0, -1):
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {"type": "countdown", "count": i}
-                )
-                await asyncio.sleep(1)
-        except asyncio.CancelledError:
-            return
-        if all(self.ready_status.values()) and not self.game_in_progress:
-            await self.start_game()
+    # async def start_countdown(self):
+    #     try:
+    #         for i in range(3, 0, -1):
+    #             await self.channel_layer.group_send(
+    #                 self.room_group_name,
+    #                 {"type": "countdown", "count": i}
+    #             )
+    #             await asyncio.sleep(1)
+    #     except asyncio.CancelledError:
+    #         return
+    #     if all(self.ready_status.values()) and not self.game_in_progress:
+    #         await self.start_game()
 
     async def start_game(self):
+        if self.game_in_progress:
+            return
+
+        logger.info('Starting game loop')
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
         self.match_end_task = asyncio.create_task(self.match_timer())
@@ -2831,18 +2862,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 self.left_score += 1
                 await self.reset_ball()
 
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "game_state",
-                    "leftScore": self.left_score,
-                    "rightScore": self.right_score,
-                    "ball_x": self.ball_x,
-                    "ball_y": self.ball_y,
-                    "left_paddle_y": self.left_paddle_y,
-                    "right_paddle_y": self.right_paddle_y,
-                }
-            )
+            await self.send_game_state()
 
     async def reset_ball(self):
         self.ball_x = 500
@@ -2868,17 +2888,88 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         # record_match_result() handles winner, end_time, outcome, status, etc.
         self.match.record_match_result()
 
+    async def send_game_state(self):
+        """
+        Send the current game state to the frontend.
+        """
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "game_state",
+                "data": {
+                    "left_paddle_y": self.left_paddle_y,
+                    "right_paddle_y": self.right_paddle_y,
+                    "ball_x": self.ball_x,
+                    "ball_y": self.ball_y,
+                    "left_score": self.left_score,
+                    "right_score": self.right_score,
+                },
+            },
+        )
+        
+    async def send_game_settings(self): # TODO fetch + send all image urls as game settings to frontend
+        game_settings = {
+            "paddleskin_image_left": "url-to-left-paddle.png",
+            "paddleskin_image_right": "url-to-right-paddle.png",
+            "ballskin_image": "url-to-ball.png",
+            "gamebackground_wallpaper": "url-to-background.png",
+            "user": self.scope['user'].username
+        }
+        await self.send_json( # send to user directly
+            {
+                "type": "game_settings",
+                "settings": game_settings,
+            }
+        )
+
+    async def send_game_end(self):
+        """
+        Notify the frontend that the game has ended.
+        """
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "game_end",
+            },
+        )
+    
+    async def game_state(self, event):
+        """
+        Handle the 'game_state' WebSocket message type.
+        """
+        await self.send_json({
+            "type": "game_state",
+            "data": event["data"],
+        })
+
+    async def game_settings(self, event):
+        """
+        Handle the 'game_settings' WebSocket message type.
+        """
+        await self.send_json({
+            "type": "game_settings",
+            "settings": event["settings"],
+        })
+
+    async def game_end(self, event):
+        """
+        Handle the 'game_end' WebSocket message type.
+        """
+        await self.send_json({
+            "type": "game_end",
+        })
+
     async def game_state(self, event):
         await self.send_json(event)
 
     async def broadcast_ready_state(self):
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "ready_state", "ready_status": self.ready_status}
+            {"type": "ready_state", "player1_ready": self.match.player1_ready, "player2_ready": self.match.player2_ready}
         )
 
     async def ready_state(self, event):
-        await self.send_json({"type": "ready_state", "ready_status": event["ready_status"]})
+        await self.send_json({"type": "ready_state", "player1_ready": event["player1_ready"], "player2_ready": event["player2_ready"]})
 
     async def match_ended(self, event):
         await self.send_json({
