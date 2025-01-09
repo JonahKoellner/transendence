@@ -5,9 +5,12 @@
 		<p>Score: {{ leftScore }} : {{ rightScore }}</p>
 	</div>
 	<div *ngIf="gameInProgress">
-		<canvas #gameCanvas height="500" width="1000"></canvas>
-		<div *ngIf="!isReady">
-			<button (click)="updateReadyStatus()">Ready</button>
-		</div>
+		<p class="score">
+			<strong>{{ leftScore }}</strong> - <strong>{{ rightScore }}</strong>
+		  </p>
+		<app-game-display [gameState]="gameState" [gameSettings]="gameSettings"></app-game-display>
+	</div>
+	<div *ngIf="!isReady">
+		<button (click)="updateReadyStatus()">Ready</button>
 	</div>
   </div>
