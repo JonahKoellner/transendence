@@ -103,9 +103,6 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     // Connect to the WebSocket
     this.tournamentService.connect(this.roomId);
 
-    // Join the tournament room via WebSocket
-    this.tournamentService.sendMessage({ action: 'join', room_id: this.roomId });
-
     // Subscribe to WebSocket messages
     this.messageSubscription = this.tournamentService.messages$.subscribe({
       next: (msg) => this.handleWebSocketMessage(msg),

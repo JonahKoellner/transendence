@@ -2303,7 +2303,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Load the lobby and broadcast the current state
         self.lobby = await database_sync_to_async(TournamentLobby.objects.get)(room_id=self.room_id)
-        await self.broadcast_lobby_state()
 
     async def disconnect(self, close_code):
         # Remove the user from the channel group
@@ -2533,19 +2532,17 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 # match_id = await database_sync_to_async(OnlineMatch.objects.filter())
                 if await self.check_round_and_finish(): # for the case where theres one player in a match and thats the last/only match in the round
                     await self.next_round()
-                    await self.broadcast_tournament()
                 else:
                     await self.update_ready_status(self.user, True)
                     id = await self.check_start_game(self.user) # check if we can start a game for that user
                     if id != None:
                         await self.start_game(id)
             elif action == "get_tournament_state":
-                await self.broadcast_tournament()
+                pass # the tournament state is always sent in the end
             elif action == "game_end":
                 if await self.check_round_and_finish():
                     await self.next_round()
-                    await self.broadcast_tournament()
-                
+
         except Exception as e:
             await self.send_json({
                 "type": "error",
@@ -2700,7 +2697,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         })
 
       
-class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
+class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game manager joins late it has to make a request to get the set_game_manager message
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.game_in_progress = False
@@ -2742,17 +2739,17 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         
         await self.initialize_match()
 
-        if await self.is_left_player_id(self.scope['user'].id):
-            self.game_manager_channel = self.channel_name
+        self.game_manager_channel = await self.get_or_create_game_manager(self.channel_name)
+        if self.game_manager_channel == self.channel_name:
+            logger.info(f"Game manager channel created {self.channel_name} (user: {self.scope['user'].username})")
         else:
-            #channel has been set for the right player via 'set_game_manager' message
-            pass
-
-        await self.send_game_settings()
-        await self.update_player_ready_status(self.scope['user'], True) # as soon as were connected, we are ready.
-        if await self.check_player_ready():
-            await self.start_countdown()
-            # await self.start_game()
+            logger.info(f"Game manager channel already exists {self.game_manager_channel} (user: {self.scope['user'].username})")
+            await self.channel_layer.send(
+                self.game_manager_channel,
+                {
+                    "type": "player_ready",
+                }
+            )
 
     @database_sync_to_async
     def get_match_from_db(self):
@@ -2793,13 +2790,19 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             if action in ["keydown", "keyup"]:
                 await self.handle_key_event(action, content)
             # elif action == "set_ready":
-            #     is_ready = content.get("is_ready", False)
+            #     await self.update_player_ready_status(self.scope['user'], True)
+            #     await self.channel_layer.send(
+            #         self.game_manager_channel,
+            #         {
+            #             "type": "player_ready"
+            #         }
+            #     )
+
                 
-            #     await self.broadcast_ready_state()
         except Exception as e:
             logger.error(f"Error receiving message: {e}")
             await self.send_json({"type": "error", "message": str(e)})
-            
+
     @database_sync_to_async
     def check_player_ready(self):
         return self.match.player1_ready and self.match.player2_ready
@@ -2853,7 +2856,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         try:
             total_time = 5  # Total match time in seconds
             for remaining_time in range(total_time, 0, -1):
-                logger.info(f"Remaining time: {remaining_time}")
+                logger.info(f"Remaining time until start: {remaining_time}, sent from {self.scope['user'].username}")
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -2868,22 +2871,10 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             return
 
     async def start_game(self):
-        if self.game_in_progress:
-            return
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "game_started"}
         )
-
-        logger.info(f'setting game manager channel to {self.channel_name}')
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "set_game_manager",
-                "channel_name": self.channel_name
-            }
-        )
-
         logger.info('Starting game loop')
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
@@ -2891,10 +2882,32 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         #TODO send game status 'started' so frontend just sends key strokes when the game is started
         
 
-    async def set_game_manager(self, event):
-        # Only set the game manager if the current consumer is not player1
-        if not await self.is_left_player_id(self.scope['user'].id):
-            self.game_manager_channel = event["channel_name"]
+    @database_sync_to_async
+    def set_game_manager(self, game_manager):
+        self.match.refresh_from_db()
+        self.match.game_manager = game_manager
+        self.match.save()
+
+    @database_sync_to_async
+    def get_game_manager(self):
+        self.match.refresh_from_db()
+        return self.match.game_manager
+    
+    @database_sync_to_async
+    def get_or_create_game_manager(self, channel_name):
+        with transaction.atomic():
+            match = OnlineMatch.objects.select_for_update().get(match_id=self.match_id, room_id=self.room_id)
+            if not match.game_manager:
+                match.game_manager = channel_name
+                match.save()
+            return match.game_manager
+
+
+    async def player_ready(self, event): # only received by the game manager, so the game manager can start the game
+        """game manager listenes to player_ready event, so it can start the game+countdown"""
+        logger.info(f'player_ready event received by {self.scope["user"].username}')
+        # if await self.check_player_ready():
+        self.countdown_task = asyncio.create_task(self.start_countdown())
 
     async def match_timer(self):
         try:
@@ -3000,7 +3013,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             "gamebackground_wallpaper": "url-to-background.png",
             "user": self.scope['user'].username
         }
-        await self.send_json( # send to user directly
+        await self.send_json( # TODO send to user directly
             {
                 "type": "game_settings",
                 "settings": game_settings,

@@ -55,6 +55,9 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
     this.gameDisplayService.connect(this.matchId, this.roomId);
+
+    // this.updateReadyStatus(); // on init set to ready, so backend knows when both players joined
+
     this.gameDisplayService.messages$.subscribe((msg) => {
       if (msg.type !== 'game_state') {
         console.log('Received message:', msg);
@@ -99,16 +102,16 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   //TODO delete this, wont be needed
-  updateReadyStatus() {
-    console.log("set status to ready")
-    this.isReady = true;
-    this.gameDisplayService.sendMessage({
-      action: 'set_ready',
-      match_id: this.matchId,
-      user_id: this.userProfile?.id.toString(),
-      is_ready: true
-    })
-  }
+  // updateReadyStatus() {
+  //   console.log("set status to ready")
+  //   this.isReady = true;
+  //   this.gameDisplayService.sendMessage({
+  //     action: 'set_ready',
+  //     match_id: this.matchId,
+  //     user_id: this.userProfile?.id.toString(),
+  //     is_ready: true
+  //   })
+  // }
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {

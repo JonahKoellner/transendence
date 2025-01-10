@@ -246,9 +246,9 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (this.host === "") {
       this.router.navigate(['/games/online-tournament/rooms']);
     }
-    if (msg.type !== 'lobby_state' && msg.type !== 'alert') {
-      this.fetchRoomStatus();
-    }
+    // if (msg.type !== 'lobby_state') {
+    //   this.fetchRoomStatus();
+    // }
   }
 
   private handleAlert(msg: any): void {
@@ -257,7 +257,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       this.router.navigate(['/games/online-tournament/rooms']);
     } else if (msg.user_role === 'guest') {
       this.toastr.info(`Player ${msg.username} has left the room.`, 'Info');
-      this.fetchRoomStatus();
     }
   }
 
