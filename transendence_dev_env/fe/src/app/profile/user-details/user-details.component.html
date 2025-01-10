@@ -29,15 +29,17 @@
             'unknown': user.is_online === null || user.is_online === undefined
           }" />
         <!-- Level Badge -->
-        <div class="level-badge">
+         <div class="avatar-wrapper">
+  
+          <!-- Display Name and Email -->
+          <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
+          <!-- <p class="email"><strong>Email:</strong> {{ user.email }}</p> -->
+          <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg"
+            alt="42 logo white" loading="lazy">
+         </div>
+         <div class="level-badge">
           {{ user.level }}
         </div>
-
-        <!-- Display Name and Email -->
-        <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
-        <!-- <p class="email"><strong>Email:</strong> {{ user.email }}</p> -->
-        <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg"
-          alt="42 logo white" loading="lazy">
       </div>
 
       <!-- Tab Controls -->
