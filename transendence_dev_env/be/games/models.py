@@ -175,6 +175,12 @@ class OnlineTournament(BaseTournament):
             }
             for participant in self.participants.all()
         ]
+        
+        try:
+            current_round = self.rounds.filter(round_number=self.current_round).first()
+            current_stage = current_round.stage
+        except OnlineRound.DoesNotExist:
+            current_stage = None
 
         tournament_state = {
             "room_id": self.room_id,
@@ -185,6 +191,7 @@ class OnlineTournament(BaseTournament):
             "participants": participants_data,
             "round_robin_scores": self.round_robin_scores,
             "final_winner": self.final_winner.username if self.final_winner else None,
+            "current_stage": current_stage,
         }
         return tournament_state
 

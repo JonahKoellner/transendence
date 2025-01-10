@@ -56,6 +56,7 @@ interface Tournament {
   participants: Player[];
   round_robin_scores: Record<string, number>;
   final_winner?: string | null;
+  current_stage?: Stage | null;
 }
 
 @Component({
@@ -165,6 +166,11 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
 
   onReadyClick(): void {
     this.tournamentService.sendMessage({ action: 'ready', room_id: this.roomId });
+  }
+
+  onLeaveClick(): void {
+    // this.tournamentService.sendMessage({ action: 'leave', room_id: this.roomId }); //TODO see if we need this
+    this.router.navigate(['/games/tournament/online']);
   }
 
 }

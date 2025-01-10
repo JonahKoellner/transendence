@@ -2622,6 +2622,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             "participants": event.get("participants"),
             "round_robin_scores": event.get("round_robin_scores"),
             "final_winner": event.get("final_winner"),
+            "current_stage": event.get("current_stage"),
         }
         await self.send(
             text_data=json.dumps({
