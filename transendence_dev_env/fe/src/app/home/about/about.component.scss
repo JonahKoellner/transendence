@@ -37,7 +37,6 @@
 }
 
 .contributors-carousel {
-  position: relative;
   width: 100%;
   max-width: 600px;
   margin: 2rem auto;
@@ -48,9 +47,7 @@
 
 
 .carousel-button {
-  position: absolute;
   top: 50%;
-  transform: translateY(-50%);
   z-index: 10;
 
   background: #333;
