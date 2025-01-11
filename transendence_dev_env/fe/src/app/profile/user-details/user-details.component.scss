@@ -29,7 +29,7 @@
     }
   }
 
-  /* User Details Section */
+  /* User Details */
   .user-details {
     max-width: 1000px;
     margin: auto;
@@ -44,7 +44,6 @@
       border-radius: 10px;
       text-align: center;
       margin-bottom: 2rem;
-
 
       /* Online Status */
       .online-status {
@@ -80,7 +79,7 @@
           width: 120px;
           height: 120px;
           border-radius: 50%;
-          border: 4px solid; /* Border color set by classes */
+          border: 4px solid; /* border color set by classes (online/offline/unknown) */
           object-fit: cover;
           transition: transform 0.3s, box-shadow 0.3s;
         }
@@ -90,17 +89,22 @@
           box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
         }
 
-        /* Online Status Border Colors */
+        /* Possible classes for border color, if used */
         &.online {
-          border-color: #28a745; /* Green for online */
+          border-color: #28a745; /* Green */
         }
-
         &.offline {
-          border-color: #dc3545; /* Red for offline */
+          border-color: #dc3545; /* Red */
+        }
+        &.unknown {
+          border-color: #6c757d; /* Gray */
         }
 
-        &.unknown {
-          border-color: #6c757d; /* Grey for unknown */
+        .avatar-wrapper {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
         }
 
         /* Level Badge */
@@ -121,32 +125,39 @@
           justify-content: center;
           align-items: center;
         }
+      }
 
-        .avatar-wrapper {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          position: relative;
-        }
+      /* Container to hold display name + 42 icon side by side */
+      .display-name-container {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* or flex-start if you want them left-aligned */
+        gap: 0.5rem;
+        margin-top: 1rem; /* space above if desired */
       }
 
       /* Display Name */
       .display-name {
         font-size: 1.8rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
         color: #ffffff;
-      }
-
-      /* Email */
-      .email {
-        font-size: 1rem;
-        color: #cccccc;
       }
 
       /* 42 Icon */
       .icon-42 {
-        font-size: 42px;
-        margin-top: 0.5rem;
+        width: 24px;
+        height: 24px;
+        transition: transform 0.2s;
+
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+
+      /* If you show an email somewhere, style it here */
+      .email {
+        font-size: 1rem;
+        color: #cccccc;
       }
     }
 
@@ -183,13 +194,13 @@
       }
     }
 
-    /* Tab Content */
+    /* Tab Content Container */
     .tab-content {
       background-color: #0e0f10;
       padding: 2rem;
       border-radius: 10px;
 
-      /* History Tab */
+      /* HISTORY TAB */
       &.history-tab {
         .sub-tab-controls {
           display: flex;
@@ -204,8 +215,8 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
             font-weight: bold;
+            transition: background-color 0.3s, transform 0.3s;
 
             &.active-sub-tab {
               background-color: #61ba50;
@@ -223,7 +234,7 @@
           }
         }
 
-        /* History Section */
+        /* History Sections (Games, Tournaments) */
         .history-section {
           margin-bottom: 2rem;
 
@@ -309,7 +320,6 @@
             }
           }
 
-          /* Games List */
           .games-list,
           .tournaments-list {
             display: flex;
@@ -350,7 +360,7 @@
             }
           }
 
-          /* Alerts */
+          /* Alerts for no games/tournaments */
           .alert-info {
             background-color: #343a40;
             color: #adb5bd;
@@ -362,11 +372,9 @@
         }
       }
 
-      /* Achievements Tab */
+      /* ACHIEVEMENTS TAB */
       &.achievements-tab {
         .achievements-container {
-
-
           h2 {
             text-align: center;
             color: #61ba50;
@@ -408,15 +416,13 @@
               filter: grayscale(100%);
             }
 
-            /* Achievement Image Container */
             .achievement-image-container {
               display: flex;
               justify-content: center;
               align-items: center;
               margin-bottom: 0.5rem;
-              height: 60px; /* Adjust as needed */
+              height: 60px; /* Adjust if needed */
 
-              /* Achievement Image */
               .achievement-image {
                 max-width: 100%;
                 max-height: 100%;
@@ -426,23 +432,12 @@
                 object-fit: cover;
               }
 
-              /* Fallback Icon */
               .bi {
                 font-size: 2rem;
                 color: #61ba50;
               }
-
-              /* Styling for Not Earned Achievements */
-              .not-earned & {
-                .achievement-image,
-                .bi {
-                  filter: grayscale(100%);
-                  opacity: 0.6;
-                }
-              }
             }
 
-            /* Achievement Details */
             .achievement-details {
               color: #e0e0e0;
 
@@ -462,7 +457,7 @@
               }
             }
 
-            /* Locked Overlay for Not Earned Achievements */
+            /* "Locked" overlay for not-earned achievements */
             &.not-earned::after {
               content: 'Locked';
               color: #fff;
@@ -479,7 +474,12 @@
         }
       }
 
-      /* Stats Tab */
+      /* GRAPHS TAB (not styled in snippet, just a placeholder) */
+      &.graphs-tab {
+        /* e.g., just a placeholder or container for <app-charts-user-details> */
+      }
+
+      /* STATS TAB */
       &.stats-tab {
         .user-stats-display {
           padding: 2rem;
@@ -522,7 +522,6 @@
           }
         }
 
-        /* No Stats Message */
         .no-stats {
           text-align: center;
           color: #cccccc;
@@ -533,299 +532,16 @@
         }
       }
     }
+  }
 
-    /* Achievements Container Outside Tab Content (if any) */
-    .achievements-container {
-
-    }
-
-    /* Animations */
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .user-details-container {
-        padding: 1rem;
-
-        .user-details {
-          padding: 1rem;
-
-          .profile-card {
-            padding: 1rem;
-
-            .avatar {
-              width: 80px;
-              height: 80px;
-              border-width: 3px;
-            }
-
-            .level-badge {
-              padding: 0.3rem 0.7rem;
-              font-size: 0.9rem;
-              width: 35px;
-              height: 35px;
-            }
-
-            .display-name {
-              font-size: 1.5rem;
-            }
-
-            .email {
-              font-size: 0.9rem;
-            }
-          }
-
-          /* Tab Controls */
-          .tab-controls {
-            flex-direction: column;
-            gap: 0.5rem;
-
-            button {
-              width: 100%;
-            }
-          }
-
-          /* Tab Content */
-          .tab-content {
-            padding: 1rem;
-
-            .sub-tab-controls {
-              flex-direction: column;
-              gap: 0.5rem;
-
-              button {
-                width: 100%;
-              }
-            }
-
-            .history-section {
-              .filters {
-                flex-direction: column;
-                align-items: center;
-                gap: 0.5rem;
-
-                .filter-input,
-                .sort-select,
-                input[type='date'] {
-                  width: 100%;
-                  max-width: 300px;
-                }
-
-                label {
-                  width: 100%;
-                  max-width: 300px;
-                }
-              }
-
-              .game-item,
-              .tournament-item {
-                flex-direction: column;
-                align-items: flex-start;
-
-                .game-link,
-                .tournament-link {
-                  margin-bottom: 0.5rem;
-                }
-
-                .game-details,
-                .tournament-details {
-                  font-size: 0.8rem;
-                }
-              }
-            }
-
-            .user-stats-display {
-              padding: 1rem;
-
-              h3 {
-                font-size: 1.4rem;
-              }
-
-              .stats-grid {
-                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-                gap: 1rem;
-
-                .stat-item {
-                  padding: 0.8rem;
-
-                  strong {
-                    font-size: 0.9rem;
-                  }
-
-                  span {
-                    font-size: 1.1rem;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      /* Achievements Tab Responsive */
-      .tab-content.achievements-tab {
-        .achievements-container {
-          .achievements-grid {
-            gap: 1rem;
-          }
-
-          .achievement-card {
-            width: 140px;
-            padding: 0.8rem;
-
-            .achievement-image-container {
-              height: 50px;
-
-              .achievement-image {
-                max-width: 100%;
-                max-height: 100%;
-                object-fit: cover;
-              }
-
-              .bi {
-                font-size: 1.5rem;
-              }
-            }
-
-            .achievement-details {
-              h3 {
-                font-size: 1rem;
-              }
-
-              p {
-                font-size: 0.8rem;
-              }
-
-              .achievement-points {
-                font-size: 0.9rem;
-              }
-            }
-
-            &.not-earned::after {
-              font-size: 0.9rem;
-            }
-          }
-        }
-      }
+  /* Spinner Animation */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
     }
   }
 
-  /* Achievements Container Outside User Details (if any) */
-  .achievements-container {
-
-
-  }
-
-  /* Achievements Grid */
-  .achievements-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
-  }
-
-  /* Achievement Card */
-  .achievement-card {
-    width: 180px;
-    background-color: #2c2c2c;
-    border: 2px solid #61ba50;
-    border-radius: 10px;
-    overflow: hidden;
-    text-align: center;
-    position: relative;
-    padding: 1rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(97, 186, 80, 0.3);
-    }
-
-    &.earned {
-      border-color: #61ba50;
-      background-color: #1b1b1b;
-    }
-
-    &.not-earned {
-      border-color: #555;
-      background-color: #1f1f1f;
-      filter: grayscale(100%);
-    }
-
-    /* Achievement Image Container */
-    .achievement-image-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      height: 60px; /* Adjust as needed */
-
-      /* Achievement Image */
-      .achievement-image {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 2px solid #61ba50;
-        background-color: #1b1b1b;
-      }
-
-      /* Fallback Icon */
-      .bi {
-        font-size: 2rem;
-        color: #61ba50;
-      }
-
-      /* Styling for Not Earned Achievements */
-      &.not-earned {
-        .achievement-image,
-        .bi {
-          filter: grayscale(100%);
-          opacity: 0.6;
-        }
-      }
-    }
-
-    /* Achievement Details */
-    .achievement-details {
-      color: #e0e0e0;
-
-      h3 {
-        margin-bottom: 0.5rem;
-        font-size: 1.2rem;
-      }
-
-      p {
-        margin: 0.3rem 0;
-        font-size: 0.9rem;
-      }
-
-      .achievement-points {
-        font-weight: bold;
-        color: #61ba50;
-      }
-    }
-
-    /* Locked Overlay for Not Earned Achievements */
-    &.not-earned::after {
-      content: 'Locked';
-      color: #fff;
-      background-color: rgba(0, 0, 0, 0.7);
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
-  }
-
-  /* Responsive Design */
+  /* RESPONSIVE DESIGN */
   @media (max-width: 768px) {
     .user-details-container {
       padding: 1rem;
@@ -849,6 +565,11 @@
             height: 35px;
           }
 
+          /* Slightly reduce gap at smaller viewports */
+          .display-name-container {
+            margin-top: 0.75rem;
+          }
+
           .display-name {
             font-size: 1.5rem;
           }
@@ -858,7 +579,6 @@
           }
         }
 
-        /* Tab Controls */
         .tab-controls {
           flex-direction: column;
           gap: 0.5rem;
@@ -868,7 +588,6 @@
           }
         }
 
-        /* Tab Content */
         .tab-content {
           padding: 1rem;
 
@@ -904,6 +623,7 @@
             .tournament-item {
               flex-direction: column;
               align-items: flex-start;
+              gap: 0.5rem;
 
               .game-link,
               .tournament-link {
@@ -934,7 +654,6 @@
                 strong {
                   font-size: 0.9rem;
                 }
-
                 span {
                   font-size: 1.1rem;
                 }
@@ -973,11 +692,9 @@
               h3 {
                 font-size: 1rem;
               }
-
               p {
                 font-size: 0.8rem;
               }
-
               .achievement-points {
                 font-size: 0.9rem;
               }
@@ -991,7 +708,7 @@
       }
     }
 
-    /* Additional Responsive Styles for Achievements Outside Tab Content */
+    /* Additional Responsive Styles for Achievements outside tab content, if any */
     .achievements-grid {
       gap: 1rem;
     }
@@ -1018,11 +735,9 @@
         h3 {
           font-size: 1rem;
         }
-
         p {
           font-size: 0.8rem;
         }
-
         .achievement-points {
           font-size: 0.9rem;
         }
@@ -1033,4 +748,17 @@
       }
     }
   }
+}
+
+::ng-deep .ngx-pagination .current {
+  background: #61BA50 !important;
+}
+
+::ng-deep .ngx-pagination a, .ngx-pagination button {
+  color:  #848484 !important;
+}
+
+::ng-deep .ngx-pagination a:hover, .ngx-pagination button:hover {
+  color: #61BA50 !important;
+  background-color: none !important;
 }
