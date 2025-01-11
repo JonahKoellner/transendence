@@ -35,6 +35,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   private navigationSubscription!: Subscription;
   private goingToTournament: boolean = false; // to detect next route -> not leave the lobby if its the tournament
+  guestCount: number = 0;
   tournamentTypes = [
     { 
       type: 'Single Elimination',
@@ -304,6 +305,11 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
     if (!this.lobbyState?.all_ready) {
       this.toastr.error('Not all players are ready.', 'Cannot Start');
+      return;
+    }
+
+    if (this.lobbyState?.guests.length === 0) {
+      this.toastr.error('Not enough players to start the tournament.', 'Cannot Start');
       return;
     }
 
