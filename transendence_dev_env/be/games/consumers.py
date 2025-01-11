@@ -2303,6 +2303,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Load the lobby and broadcast the current state
         self.lobby = await database_sync_to_async(TournamentLobby.objects.get)(room_id=self.room_id)
+        await self.broadcast_lobby_state()
 
     async def disconnect(self, close_code):
         # Remove the user from the channel group
