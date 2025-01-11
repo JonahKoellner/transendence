@@ -150,7 +150,7 @@ import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/cha
     BlockFriendComponent,
     ChartsUserDetailsComponent,
     ChartsGlobalDetailsComponent
-  ],
+    ],
   imports: [
     BrowserModule,
     FormsModule,
