@@ -31,8 +31,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
   //for everything around the canvas
   gameInProgress: boolean = false;
-  winner: string = '';
-  outcome: string = '';
   isReady: boolean = false;
   leftScore: number = 0;
   rightScore: number = 0;
@@ -66,7 +64,7 @@ export class GameComponent implements OnInit, OnDestroy {
       if (msg.type === 'game_state') {
         this.handleGameState(msg);
       } else if (msg.type === 'game_ended') {
-        this.handleGameEnd(msg.winner, msg.outcome);
+        this.handleGameEnd();
       } else if (msg.type === 'game_started') {
         console.log('Game started:', msg);
         this.gameInProgress = true;
@@ -78,6 +76,10 @@ export class GameComponent implements OnInit, OnDestroy {
       } else if (msg.type === 'timer_until_start') {
         console.log('Timer until start:', msg.remaining_time);
         this.secsUntilGameStart = msg.remaining_time;
+      } else if (msg.type === 'player_disconnected') {
+        console.log('Player disconnected:', msg);
+        this.toastr.error('Player disconnected', 'Error');
+        this.handleGameEnd();
       }
     });
   }
@@ -95,25 +97,10 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameState = msg;
   }
 
-  private handleGameEnd(winner: any, outcome: any): void {
-    console.log('Game ended:', winner);
+  private handleGameEnd(): void {
     this.gameInProgress = false;
-    this.winner = winner;
-    this.outcome = outcome;
     this.gameEnd.emit();
   }
-
-  //TODO delete this, wont be needed
-  // updateReadyStatus() {
-  //   console.log("set status to ready")
-  //   this.isReady = true;
-  //   this.gameDisplayService.sendMessage({
-  //     action: 'set_ready',
-  //     match_id: this.matchId,
-  //     user_id: this.userProfile?.id.toString(),
-  //     is_ready: true
-  //   })
-  // }
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {

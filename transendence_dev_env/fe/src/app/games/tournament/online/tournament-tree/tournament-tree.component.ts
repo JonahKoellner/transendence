@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { TournamentService } from 'src/app/services/tournament.service';
@@ -72,6 +72,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   gameInProgress: boolean = false;
   matchId: string = '';
+  activePlayer: boolean = true;
 
   constructor(
     private router: Router,
@@ -115,10 +116,20 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    console.log('Destroying tournament tree component.');
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
     this.tournamentService.disconnect();
+    this.toastr.info('Disconnected from the tournament room.', 'Info');
+    this.router.navigate(['/games/tournament/online']);
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler(event: Event) {
+    this.tournamentService.disconnect(); // Ensure disconnection on page leave
+    this.toastr.info('Disconnected from the tournament room.', 'Info');
+    this.router.navigate(['/games/tournament/online']);
   }
 
   onGameEnd(): void {
@@ -139,6 +150,10 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
         if (msg.players.p1_id === this.userProfile?.id || msg.players.p2_id === this.userProfile?.id) {
           this.joinMatch(msg);
         }
+        break;
+      case 'you_lost':
+        this.toastr.info('You lost the match. And are now out of the tournament', 'Info');
+        this.activePlayer = false; // used to disable input and buttons
         break;
       case 'alert':
         this.toastr.info(msg.message, 'Alert');

@@ -77,10 +77,10 @@
       </div>
     </div>
   </div>
-  <div *ngIf="tournament.status !== 'completed' && tournament.current_stage !== null" class="ready-section">
+  <div *ngIf="tournament.status !== 'completed' && tournament.current_stage !== null && activePlayer" class="ready-section">
     <button class="ready-button" (click)="onReadyClick()" [disabled]="gameInProgress">Continue to {{tournament.current_stage}}</button>
   </div>
-  <div *ngIf="tournament.status === 'completed' && tournament.current_stage === null" class="ready-section">
+  <div *ngIf="tournament.status === 'completed'" class="ready-section">
     <button class="ready-button" (click)="onLeaveClick()" >Leave Tournament</button>
   </div>
 </div>
