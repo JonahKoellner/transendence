@@ -64,7 +64,7 @@ class OnlineMatch(BaseMatch):
 
     def record_match_result(self):
         if self.winner == None:
-            if self.player1 is None or self.player is None:
+            if self.player1 is None or self.player2 is None:
                 remainingPlayer = self.player1 if self.player1 is not None else self.player2
                 self.status = 'failed'
                 self.winner = remainingPlayer
