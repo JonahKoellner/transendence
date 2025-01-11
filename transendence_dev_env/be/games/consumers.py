@@ -2802,6 +2802,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
                     "type": "player_ready",
                 }
             )
+        # get the players the styling of the canvas
+        await self.send_game_settings()
 
     @database_sync_to_async
     def get_match_from_db(self):
@@ -3049,20 +3051,33 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
         # record_match_result() handles winner, end_time, outcome, status, etc.
         self.match.record_match_result()
     
+    @database_sync_to_async
+    def get_profile(self, user):
+        return user.profile
+    
     async def send_game_settings(self): # TODO fetch + send all image urls as game settings to frontend
+        left_profile = await self.get_profile(self.left_player)
+        right_profile = await self.get_profile(self.right_player)
+        logger.info(f'left_profile_color: {left_profile.paddleskin_color}, right_profile_color: {right_profile.paddleskin_color}')
         game_settings = {
-            "paddleskin_image_left": "url-to-left-paddle.png",
-            "paddleskin_image_right": "url-to-right-paddle.png",
-            "ballskin_image": "url-to-ball.png",
-            "gamebackground_wallpaper": "url-to-background.png",
-            "user": self.scope['user'].username
+            "paddleskin_image_left": left_profile.paddleskin_image.url if left_profile and left_profile.paddleskin_image else None,
+            "paddleskin_image_right": right_profile.paddleskin_image.url if right_profile and right_profile.paddleskin_image else None,
+            "paddleskin_color_left": left_profile.paddleskin_color if left_profile and left_profile.paddleskin_color else "#FFFFFF",
+            "paddleskin_color_right": right_profile.paddleskin_color if right_profile and right_profile.paddleskin_color else "#FFFFFF",
         }
-        await self.send_json( # TODO send to user directly
+        await self.channel_layer.group_send(
+            self.room_group_name,
             {
                 "type": "game_settings",
                 "settings": game_settings,
             }
         )
+    
+    async def game_settings(self, event):
+        await self.send_json({
+            "type": "game_settings",
+            "settings": event["settings"]
+        })
 
     async def match_timer_update(self, event):
         await self.send_json({
@@ -3081,15 +3096,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
 
     async def game_started(self, event):
         await self.send_json({"type": "game_started"})
-
-    async def game_settings(self, event):
-        """
-        Handle the 'game_settings' WebSocket message type.
-        """
-        await self.send_json({
-            "type": "game_settings",
-            "settings": event["settings"],
-        })
 
     async def game_ended(self, event):
         await self.send_json({

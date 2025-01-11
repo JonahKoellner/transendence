@@ -3,8 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { GameDisplayService } from 'src/app/services/game-display.service';
 import { Subscription } from 'rxjs';
-import { SettingsComponent } from 'src/app/settings/settings.component';
 import { UserProfile } from 'src/app/profile.service';
+import { environment } from 'src/environment';
 
 interface GameSettings {
   paddleskin_color_left?: string;
@@ -45,6 +45,7 @@ export class GameComponent implements OnInit, OnDestroy {
     private toastr: ToastrService,
     private gameDisplayService: GameDisplayService,
     private route: ActivatedRoute,
+    // private router: Router,
   ) { }
 
   ngOnInit(): void {
@@ -52,6 +53,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.toastr.error('Match ID not provided', 'Error');
       this.gameEnd.emit();
     }
+
     this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
     this.gameDisplayService.connect(this.matchId, this.roomId);
 
@@ -69,7 +71,17 @@ export class GameComponent implements OnInit, OnDestroy {
         console.log('Game started:', msg);
         this.gameInProgress = true;
       } else if (msg.type === 'game_settings') {
-        this.gameSettings = msg.settings;
+        console.log('Game settings:', msg.settings);
+        this.gameSettings.paddleskin_color_left = msg.settings.paddleskin_color_left;
+        // this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_left;
+        this.gameSettings.paddleskin_image_left = environment.apiUrl + msg.settings.paddleskin_image_left;
+        this.gameSettings.paddleskin_color_right = msg.settings.paddleskin_color_right;
+        // this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_right;
+        this.gameSettings.paddleskin_image_right = environment.apiUrl + msg.settings.paddleskin_image_right;
+        this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
+        this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
+        this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;
+        this.gameSettings.gamebackground_wallpaper = this.userProfile?.gamebackground_wallpaper;
       } else if (msg.type === 'match_timer_update') {
         console.log('Remaining time:', msg.remaining_time);
         this.remainingTime = msg.remaining_time;
