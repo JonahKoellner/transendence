@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
 import asyncio
 import random
 import math
@@ -2514,7 +2515,6 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         
         
         await self.handle_user_disconnect()
-        await self.broadcast_tournament()
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -2523,6 +2523,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 "user_role": "guest"
             }
         )
+        await self.broadcast_tournament()
         logger.debug(f"User {self.user.username} disconnected from tournament {self.room_id}.")
 
     async def receive_json(self, content):
@@ -2542,6 +2543,10 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             elif action == "get_tournament_state":
                 pass # the tournament state is always sent in the end
             elif action == "game_end":
+                if await self.check_if_out():
+                    await self.send_json({
+                        "type": "you_lost",
+                    })
                 if await self.check_round():
                     await self.finish_round()
                     await self.next_round()
@@ -2556,27 +2561,37 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def handle_user_disconnect(self):
         self.tournament.refresh_from_db()
-        if self.user in self.tournament.participants.all():
-            self.tournament.participants.remove(self.user)
-            if str(self.user.id) in self.tournament.participants_ready_states:
-                del self.tournament.participants_ready_states[str(self.user.id)]
-            for round in self.tournament.rounds.all(): # remove player from matches and replace with None
-                for match in round.matches.all():
-                    if match.status == "pending":
-                        logger.debug(f"Trying to remove {self.user.username} from match {match.id}")
-                        removed = False
-                        if self.user == match.player1:
-                            match.player1 = None
-                            removed = True
-                        elif self.user == match.player2:
-                            match.player2 = None
-                            removed = True
-                        if removed:
-                            match.winner = match.player1 if match.player1 != None else match.player2
-                            match.save()
-                            round.save()
-                            break
-            self.tournament.save()
+        if self.user not in self.tournament.participants.all():
+            return
+        self.tournament.participants.remove(self.user)
+        if str(self.user.id) in self.tournament.participants_ready_states:
+            del self.tournament.participants_ready_states[str(self.user.id)]
+        self.tournament.save()
+        # get all matches with the user from this tournament (room_id)
+        matches = OnlineMatch.objects.filter(
+            Q(room_id=self.room_id) & (Q(player1=self.user) | Q(player2=self.user))
+        )
+        # remove player from matches and replace with None
+        for match in matches:
+            if match.status == "pending":
+                logger.debug(f"Trying to remove {self.user.username} from match {match.id}")
+                removed = False
+                if self.user == match.player1:
+                    match.player1 = None
+                    removed = True
+                elif self.user == match.player2:
+                    match.player2 = None
+                    removed = True
+                if removed:
+                    match.winner = match.player1 if match.player1 != None else match.player2
+                    match.status = "failed"
+                    match.save()
+                    logger.debug(f"Removed {self.user.username} from match {match.id}")
+        # check if we can finish the round, because the player left. if so, finish the round
+        if self.check_round():
+            logger.info(f'check_round returned True, finishing round after user disconnect')
+            self.finish_round()
+            self.next_round()
 
     async def broadcast_tournament(self):
         tournament_state = await database_sync_to_async(self.tournament.get_tournament_state)()
@@ -2602,6 +2617,18 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         return flag
     
     @database_sync_to_async
+    def check_if_out(self):
+        """gets last match from client and sends message if client lost"""
+        try:
+            match = OnlineMatch.objects.get(
+                Q(room_id=self.room_id) & Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
+            )
+            logger.info(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
+            return match.winner == self.user
+        except OnlineMatch.DoesNotExist:
+            return False
+    
+    @database_sync_to_async
     def finish_round(self):
         logger.info(f'tournamentconsumer finish round, current_round: {self.tournament.current_round}')
         self.tournament.refresh_from_db()
@@ -2614,6 +2641,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                     self.tournament.round_robin_scores[str(id)] += 1
                 else:
                     self.tournament.round_robin_scores[str(id)] = 1
+        self.tournament.participants_ready_states = {}
         self.tournament.save()
 
     @database_sync_to_async
@@ -2789,6 +2817,14 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
             raise Exception(f"Match not found {e}")
 
     async def disconnect(self, close_code):
+        logger.info(f'User {self.scope["user"].username} disconnected from match {self.match_id}')
+        await self.channel_layer.send(
+            self.game_manager_channel,
+            {
+                "type": "player_disconnected",
+                "user": self.scope['user'].username
+            }
+        )
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         if self.game_loop_task and not self.game_loop_task.done():
             self.game_loop_task.cancel()
@@ -2853,6 +2889,21 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
                 self.right_paddle_speed = speed
                 logger.info(f'Updating right paddle speed to {speed}')
         logger.info(f"after updating: left_paddle_speed: {self.left_paddle_speed}, right_paddle_speed: {self.right_paddle_speed}")
+
+    async def player_disconnected(self, event):
+        logger.info(f"Player disconnected: {event['user']}")
+        await self.send_json({
+            "type": "player_disconnected",
+            "user": event["user"]
+        })
+        # eventually set user taht disconnected to None
+        # if event['user'] == self.left_player.username:
+        #     self.left_player = None
+        # else:
+        #     self.right_player = None
+        # if self.left_player == None or self.right_player == None:
+        #     await self.end_match()
+        
 
     async def start_countdown(self):
         try:
@@ -2931,13 +2982,11 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
         self.game_in_progress = False
         if self.game_loop_task and not self.game_loop_task.done():
             self.game_loop_task.cancel()
-        await self.save_match_results()
+        await self.save_match_results(self.left_score, self.right_score)
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "game_ended",
-                "winner": self.match.winner.username,
-                "outcome": self.match.outcome
             }
         )
 
@@ -2989,11 +3038,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
         self.ball_direction_x = -1 if random.random() < 0.5 else 1
         self.ball_direction_y = (random.random() * 2 - 1) * 0.5
 
-    async def save_match_results(self):
-        await self._save_match_results_db(self.left_score, self.right_score)
-
     @database_sync_to_async
-    def _save_match_results_db(self, left_score, right_score):
+    def save_match_results(self, left_score, right_score):
         self.match.refresh_from_db()
 
         # Set the final scores
@@ -3048,6 +3094,4 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
     async def game_ended(self, event):
         await self.send_json({
             "type": "game_ended",
-            "winner": event["winner"],
-            "outcome": event["outcome"]
         })

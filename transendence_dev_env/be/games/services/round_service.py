@@ -26,7 +26,7 @@ class RoundService:
         """
         Check if all matches in the round_instance are completed.
         """
-        finished = all(match.status == "completed" or match.status == "failed" for match in round_instance.matches.all()) and round_instance.status != "completed"
+        finished = all((match.status == "completed" or match.status == "failed") for match in round_instance.matches.all()) and round_instance.status != "completed"
         logger.info(f'Round {round_instance.round_number} finished: {finished}')
         return finished and round_instance.status != "completed"
 
