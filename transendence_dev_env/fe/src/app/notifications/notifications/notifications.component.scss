@@ -1,42 +1,69 @@
-/* Notifications Icon */
+/******************************************/
+/* NOTIFICATIONS ICON                     */
+/******************************************/
 .notifications-icon {
   position: relative;
   cursor: pointer;
   margin-right: 20px;
+  display: inline-flex;
+  align-items: center;
+
+  /* Bell Icon */
+  .fas {
+    font-size: 1.5rem;
+    color: #f8f9fa;
+    transition: transform 0.3s, color 0.3s;
+
+    /* Slight hover grow/shadow on the icon */
+    &:hover {
+      transform: scale(1.1);
+      color: #61ba50;
+    }
+  }
+
+  /* Unread badge */
+  .badge {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #dc3545;
+    color: #fff;
+    border-radius: 50%;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+    animation: badgePulse 2s infinite; /* Subtle pulsing for attention */
+  }
 }
 
-.notifications-icon .fas {
-  font-size: 1.5rem;
-  color: #f8f9fa;
+/* Subtle pulsing if unread notifications exist */
+.pulse-bell {
+  animation: bellPulse 2s infinite;
 }
 
-.notifications-icon .badge {
-  position: absolute;
-  top: -5px;
-  right: -10px;
-  background-color: #dc3545;
-  color: #fff;
-  border-radius: 50%;
-  padding: 3px 6px;
-  font-size: 0.75rem;
-}
-
-/* Notifications Dropdown Panel */
+/******************************************/
+/* NOTIFICATIONS DROPDOWN PANEL           */
+/******************************************/
 .notifications-dropdown {
   position: absolute;
   top: 60px;
   right: 20px;
   max-height: 500px;
-  background-color: #2C2C2C;
+  background-color: #2c2c2c;
   border: 1px solid #343a40;
   border-radius: 8px;
   overflow: hidden;
   z-index: 1000;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
+
+  /* A subtle shadow for depth */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+
+  /* Animate the dropdown opening (if not using Angular animations) */
+  animation: dropdownFadeIn 0.3s forwards ease-out;
 }
 
+/* Header area with filters */
 .notifications-header {
   display: flex;
   align-items: center;
@@ -44,110 +71,164 @@
   background-color: #343a40;
   padding: 10px;
   border-bottom: 1px solid #444;
+
+  h5 {
+    color: #61ba50;
+    margin: 0;
+  }
+
+  .filters {
+    display: flex;
+    gap: 10px;
+  }
+
+  select {
+    background-color: #2c2c2c;
+    color: #f8f9fa;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #61ba50;
+    }
+  }
 }
 
-.notifications-header h5 {
-  color: #61ba50;
-  margin: 0;
-}
-
-.filters {
-  display: flex;
-  gap: 10px;
-}
-
-.notifications-header select {
-  background-color: #2C2C2C;
-  color: #f8f9fa;
-  border: 1px solid #444;
-  border-radius: 4px;
-  padding: 5px;
-}
-
+/* Body area with list of notifications */
 .notifications-body {
   flex: 1;
   overflow-y: auto;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &.unread {
+      background-color: #2a2d2e;
+    }
+
+    &:hover {
+      background-color: #3a3d3e;
+    }
+
+    /* Notification icon inside the list */
+    .notification-icon {
+      margin-right: 10px;
+
+      i {
+        font-size: 1.3rem;
+        color: #61ba50;
+        transition: transform 0.3s;
+      }
+    }
+
+    /* Notification text content */
+    .notification-content {
+      flex: 1;
+
+      p {
+        margin: 0;
+        color: #f8f9fa;
+      }
+
+      small {
+        color: #adb5bd;
+      }
+    }
+
+    /* Mark as read button */
+    .mark-read-btn {
+      background-color: transparent;
+      color: #61ba50;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 5px;
+      transition: color 0.3s;
+
+      &:hover {
+        text-decoration: underline;
+        color: #7fd968;
+      }
+    }
+  }
 }
 
-.notifications-body ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.notifications-body li {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #444;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.notifications-body li:hover {
-  background-color: #2a2d2e;
-}
-
-.notifications-body li.unread {
-  background-color: #2a2d2e;
-}
-
-.notification-icon {
-  margin-right: 10px;
-}
-
-.notification-icon i {
-  font-size: 1.5rem;
-  color: #61ba50;
-}
-
-.notification-content {
-  flex: 1;
-}
-
-.notification-content p {
-  margin: 0;
-  color: #f8f9fa;
-}
-
-.notification-content small {
-  color: #adb5bd;
-}
-
-.mark-read-btn {
-  background-color: transparent;
-  color: #61ba50;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: 5px;
-}
-
-.mark-read-btn:hover {
-  text-decoration: underline;
-}
-
+/* Footer buttons */
 .notifications-footer {
   padding: 10px;
   border-top: 1px solid #444;
   background-color: #343a40;
   text-align: center;
+
+  button {
+    background-color: #61ba50;
+    color: #fff;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #4e9e3d;
+    }
+
+    &:last-child {
+      margin-right: 0; /* remove margin from last button */
+    }
+  }
 }
 
-.notifications-footer button {
-  background-color: #61ba50;
-  color: #fff;
-  border: none;
-  padding: 7px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 10px;  // Add spacing between buttons
+/******************************************/
+/* KEYFRAMES / ANIMATIONS                 */
+/******************************************/
+/* Fade/slide in for the dropdown (if not using Angular animations) */
+@keyframes dropdownFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.notifications-footer button:last-child {
-  margin-right: 0;  // Remove margin from last button
+/* Subtle pulse for the bell if unread notifications exist */
+@keyframes bellPulse {
+  0%, 100% {
+    transform: scale(1);
+    color: #f8f9fa;
+  }
+  50% {
+    transform: scale(1.1);
+    color: #61ba50;
+  }
 }
 
-.notifications-footer button:hover {
-  background-color: #4e9e3d;
+/* Pulse the badge (optional) */
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
 }
