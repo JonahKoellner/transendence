@@ -64,19 +64,23 @@
   </div>
 </div>
 
-<!-- Friend Request Dialog -->
-<app-friend-request-dialog
-  *ngIf="showFriendRequestDialog && currentNotification"
-  [notification]="currentNotification"
-  (close)="onCloseFriendRequestDialog($event)"
-></app-friend-request-dialog>
+<div>
+  <app-friend-request-dialog
+    *ngIf="showFriendRequestDialog && currentNotification"
+    [notification]="currentNotification"
+    (close)="onCloseFriendRequestDialog($event)"
+  ></app-friend-request-dialog>
+  
+  <!-- Game Invite Dialog -->
+  <app-game-invite-dialog
+    *ngIf="showGameInviteDialog && currentNotification"
+    [notification]="currentNotification"
+    (close)="onCloseGameInviteDialog($event)"
+  ></app-game-invite-dialog>
 
-<!-- Game Invite Dialog -->
-<app-game-invite-dialog
-  *ngIf="showGameInviteDialog && currentNotification"
-  [notification]="currentNotification"
-  (close)="onCloseGameInviteDialog($event)"
-></app-game-invite-dialog>
+</div>
+
+<!-- Friend Request Dialog -->
 
 <!-- Chat Window (commented out for now)
 <app-chat-window
