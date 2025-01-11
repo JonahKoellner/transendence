@@ -122,14 +122,14 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     }
     this.tournamentService.disconnect();
     this.toastr.info('Disconnected from the tournament room.', 'Info');
-    this.router.navigate(['/games/tournament/online']);
+    this.router.navigate(['/games/tournament/online/rooms']);
   }
 
   @HostListener('window:beforeunload', ['$event'])
   beforeUnloadHandler(event: Event) {
     this.tournamentService.disconnect(); // Ensure disconnection on page leave
     this.toastr.info('Disconnected from the tournament room.', 'Info');
-    this.router.navigate(['/games/tournament/online']);
+    this.router.navigate(['/games/tournament/online/rooms']);
   }
 
   onGameEnd(): void {
@@ -182,8 +182,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   }
 
   onLeaveClick(): void {
-    // this.tournamentService.sendMessage({ action: 'leave', room_id: this.roomId }); //TODO see if we need this
-    this.router.navigate(['/games/tournament/online']);
+    this.router.navigate(['/games/tournament/online/rooms']);
   }
 
 }

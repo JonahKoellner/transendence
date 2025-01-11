@@ -44,20 +44,23 @@ class TournamentService:
                 TournamentService.new_matchups(tournament, new_participants)
 
     @staticmethod
-    def new_matchups(tournament: OnlineTournament, participants):
+    def new_matchups(tournament: OnlineTournament, winners_last_round):
         """
         Populate matches in the given `round_instance` (OnlineRound)
         based on the tournament_type and the participant list.
         `participants` should be a list of Django User objects.
         """
         round_instance = tournament.rounds.filter(round_number=tournament.current_round).first()
+        participants_set = set(tournament.participants.all())
+        filtered_winners = [winner for winner in winners_last_round if winner in participants_set]
         
-        if not participants or len(participants) == 0:
+        
+        if not filtered_winners or len(filtered_winners) == 0:
             raise ValueError("Insufficient participants for match.")
         if not round_instance:
             raise ValueError(f"No round found for the current round number. {tournament.current_round}")
 
         if tournament.type == TournamentType.SINGLE_ELIMINATION:
-            RoundService.populate_single_elimination_matches(round_instance, participants)
+            RoundService.populate_single_elimination_matches(round_instance, filtered_winners)
         else:
             raise ValueError(f"Unknown tournament type: {tournament.type}")

@@ -2898,13 +2898,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
             "type": "player_disconnected",
             "user": event["user"]
         })
-        # eventually set user taht disconnected to None
-        # if event['user'] == self.left_player.username:
-        #     self.left_player = None
-        # else:
-        #     self.right_player = None
-        # if self.left_player == None or self.right_player == None:
-        #     await self.end_match()
+        await self.end_match()
         
 
     async def start_countdown(self):
