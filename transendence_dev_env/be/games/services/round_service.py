@@ -26,11 +26,9 @@ class RoundService:
         """
         Check if all matches in the round_instance are completed.
         """
-        finished = all(match.status == "completed" for match in round_instance.matches.all()) and round_instance.status != "completed"
+        finished = all(match.status == "completed" or match.status == "failed" for match in round_instance.matches.all()) and round_instance.status != "completed"
         logger.info(f'Round {round_instance.round_number} finished: {finished}')
-        if finished:
-            round_instance.end_round()
-        return finished
+        return finished and round_instance.status != "completed"
 
     @staticmethod
     def generate_rounds(tournament: OnlineTournament):
@@ -147,3 +145,21 @@ class RoundService:
             match.save()
 
             match_index += 1
+            
+    @staticmethod
+    def end_round(round_instance: OnlineRound):
+        """
+        End the round_instance by updating the status and winner(s).
+        """
+        for match in round_instance.matches.all():
+            if match.winner == None:
+                raise ValueError("Match result is incomplete.")
+            round_instance.winners.add(match.winner)
+        round_instance.end_time = timezone.now()
+        round_instance.duration = (round_instance.end_time - round_instance.start_time).total_seconds()
+        round_instance.status = 'completed'
+        round_instance.save()
+        if round_instance.stage == Stage.ROUND_ROBIN_STAGE:
+            logger.info(f'Round {round_instance.round_number} returns winners for round robin')
+            winner_ids = [str(winner.id) for winner in round_instance.winners.all()]
+            return winner_ids

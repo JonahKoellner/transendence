@@ -32,6 +32,7 @@ export class GameComponent implements OnInit, OnDestroy {
   //for everything around the canvas
   gameInProgress: boolean = false;
   winner: string = '';
+  outcome: string = '';
   isReady: boolean = false;
   leftScore: number = 0;
   rightScore: number = 0;
@@ -65,7 +66,7 @@ export class GameComponent implements OnInit, OnDestroy {
       if (msg.type === 'game_state') {
         this.handleGameState(msg);
       } else if (msg.type === 'game_ended') {
-        this.handleGameEnd(msg.winner);
+        this.handleGameEnd(msg.winner, msg.outcome);
       } else if (msg.type === 'game_started') {
         console.log('Game started:', msg);
         this.gameInProgress = true;
@@ -94,10 +95,11 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameState = msg;
   }
 
-  private handleGameEnd(winner: any) {
+  private handleGameEnd(winner: any, outcome: any): void {
     console.log('Game ended:', winner);
     this.gameInProgress = false;
     this.winner = winner;
+    this.outcome = outcome;
     this.gameEnd.emit();
   }
 

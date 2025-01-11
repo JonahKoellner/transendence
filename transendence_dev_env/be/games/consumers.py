@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineMatch
+from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineMatch, TournamentType
 from .services.tournament_lobby_service import TournamentLobbyService
 from .services.tournament_service import TournamentService
 from .services.round_service import RoundService
@@ -2531,7 +2531,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             if action == "ready":
                 logger.debug(f"User {self.user.username} is ready.")
                 # match_id = await database_sync_to_async(OnlineMatch.objects.filter())
-                if await self.check_round_and_finish(): # for the case where theres one player in a match and thats the last/only match in the round
+                if await self.check_round(): # for the case where theres one player in a match and thats the last/only match in the round
+                    await self.finish_round()
                     await self.next_round()
                 else:
                     await self.update_ready_status(self.user, True)
@@ -2541,7 +2542,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             elif action == "get_tournament_state":
                 pass # the tournament state is always sent in the end
             elif action == "game_end":
-                if await self.check_round_and_finish():
+                if await self.check_round():
+                    await self.finish_round()
                     await self.next_round()
 
         except Exception as e:
@@ -2586,6 +2588,34 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             }
         )
         
+
+    @database_sync_to_async
+    @transaction.atomic
+    def check_round(self):
+        self.tournament.refresh_from_db()
+        round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+        flag = RoundService.check_round_finished(round)
+        if flag == True:
+            round.status = "completed" # already setting to completed, so not both consumers end the round
+            round.save()
+        self.tournament.save()
+        return flag
+    
+    @database_sync_to_async
+    def finish_round(self):
+        logger.info(f'tournamentconsumer finish round, current_round: {self.tournament.current_round}')
+        self.tournament.refresh_from_db()
+        round_robin_winner_ids = RoundService.end_round(self.tournament.rounds.get(round_number=self.tournament.current_round))
+        if self.tournament.type == TournamentType.ROUND_ROBIN:
+            logger.info(f'round_robin_winner_ids: {round_robin_winner_ids}')
+            for id in round_robin_winner_ids:
+                logger.info(f'round_robin_winner_id: {id}')
+                if str(id) in self.tournament.round_robin_scores:
+                    self.tournament.round_robin_scores[str(id)] += 1
+                else:
+                    self.tournament.round_robin_scores[str(id)] = 1
+        self.tournament.save()
+
     @database_sync_to_async
     def next_round(self):
         logger.info(f'tournamentconsumer next round, current_round: {self.tournament.current_round}')
@@ -2593,13 +2623,6 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         TournamentService.next_round(self.tournament)
         self.tournament.save()
         logger.info(f'tournamentconsumer after function call current_round: {self.tournament.current_round}')
-
-    @database_sync_to_async
-    def check_round_and_finish(self):
-        self.tournament.refresh_from_db()
-        flag = RoundService.check_round_finished(self.tournament.rounds.get(round_number=self.tournament.current_round))
-        self.tournament.save()
-        return flag
 
     async def alert(self, event):
         """handle the alert WebSocket message type."""
@@ -2913,7 +2936,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
             self.room_group_name,
             {
                 "type": "game_ended",
-                "winner": self.match.winner.username if self.match.winner else "Tie"
+                "winner": self.match.winner.username,
+                "outcome": self.match.outcome
             }
         )
 
@@ -2970,11 +2994,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
 
     @database_sync_to_async
     def _save_match_results_db(self, left_score, right_score):
-        if not self.match:
-            try:
-                self.match = OnlineMatch.objects.get(match_id=self.match_id, room_id=self.room_id)
-            except OnlineMatch.DoesNotExist:
-                return
+        self.match.refresh_from_db()
 
         # Set the final scores
         self.match.player1_score = left_score
@@ -3028,5 +3048,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
     async def game_ended(self, event):
         await self.send_json({
             "type": "game_ended",
-            "winner": event["winner"]
+            "winner": event["winner"],
+            "outcome": event["outcome"]
         })
