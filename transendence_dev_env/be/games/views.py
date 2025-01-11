@@ -1175,9 +1175,6 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
                 "is_full": lobby.is_full(),
                 "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
                 "max_player_count": lobby.max_player_count,
-                # "max_rounds": lobby.max_rounds,
-                # "round_score_limit": lobby.round_score_limit,
-                "initial_stage": lobby.initial_stage,
                 "tournament_type": lobby.tournament_type,
             }, status=status.HTTP_200_OK)
 

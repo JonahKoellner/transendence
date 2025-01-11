@@ -26,7 +26,8 @@ interface Match {
   player1_score: number | null;
   player2_score: number | null;
   winner?: string | null;
-  status: 'pending' | 'ongoing' | 'completed';
+  status: 'pending' | 'ongoing' | 'completed' | 'failed';
+  outcome: 'Finished' | 'Tie' | null;
   start_time: string | null;
   end_time: string | null;
 }

@@ -102,7 +102,7 @@ class RoundService:
             match = matches[match_index]
             match.player1 = player1
             match.player2 = player2
-            match.status = "pending" if player2 else "completed"
+            match.status = "pending" if player2 else "failed"
             match.start_time = timezone.now()
             match.end_time = timezone.now() if not player2 else None
             match.winner = player1 if not player2 else None

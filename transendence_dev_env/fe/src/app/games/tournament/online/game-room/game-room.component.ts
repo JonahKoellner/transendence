@@ -231,7 +231,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
           this.lobbyState.all_ready = msg.all_ready;
         }
         break;
-      case 'tournament_start': //TODO lobby gets deleted before i can navigate to the tournament
+      case 'tournament_start':
         console.log('Navigating to tournament tree');
         this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
         this.lobbyService.disconnect();
@@ -253,10 +253,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   private handleAlert(msg: any): void {
     if (msg.user_role === 'host') {
-      this.toastr.error('The host has left the room. Redirecting you to the lobby', 'Error');
+      this.toastr.error(msg.message, 'Error');
       this.router.navigate(['/games/online-tournament/rooms']);
     } else if (msg.user_role === 'guest') {
-      this.toastr.info(`Player ${msg.username} has left the room.`, 'Info');
+      this.toastr.info(msg.message, 'Info');
     }
   }
 

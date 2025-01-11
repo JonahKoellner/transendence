@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+import random
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -63,14 +64,21 @@ class OnlineMatch(BaseMatch):
 
     def record_match_result(self):
         if self.winner == None:
-            if self.player1_score is None or self.player2_score is None:
-                raise ValueError("Match result is incomplete.")
-            else:
-                self.winner = self.player1 if self.player1_score > self.player2_score else self.player2
-                self.status = 'completed'
+            if self.player1 is None or self.player is None:
+                remainingPlayer = self.player1 if self.player1 is not None else self.player2
+                self.status = 'failed'
+                self.winner = remainingPlayer
                 self.end_time = timezone.now()
                 self.outcome = MatchOutcome.FINISHED
-                self.save()
+            else:
+                self.outcome = MatchOutcome.FINISHED if self.player1_score != self.player2_score else MatchOutcome.TIE
+                if self.outcome == MatchOutcome.FINISHED:
+                    self.winner = self.player1 if self.player1_score > self.player2_score else self.player2
+                else:
+                    self.winner = random.choice([self.player1, self.player2]) # tie
+                self.status = 'completed'
+                self.end_time = timezone.now()
+            self.save()
 
 class BaseRound(models.Model):
     round_number = models.IntegerField()
@@ -157,6 +165,7 @@ class OnlineTournament(BaseTournament):
                         "player2_score": match.player2_score if match.player2_score is not None else None,
                         "winner": match.winner.username if match.winner else None,
                         "status": match.status,
+                        "outcome": match.outcome,
                         "start_time": match.start_time.isoformat() if match.start_time else None,
                         "end_time": match.end_time.isoformat() if match.end_time else None,
                     }
@@ -232,7 +241,6 @@ class TournamentLobby(models.Model):
     guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
     max_player_count = models.IntegerField(default=4, validators=[MinValueValidator(4), MaxValueValidator(32)])
-    initial_stage = models.CharField(max_length=50, choices=Stage.choices, default=Stage.SEMI_FINALS)
     tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
     tournament = models.ForeignKey(
         OnlineTournament,
@@ -313,8 +321,6 @@ class TournamentLobby(models.Model):
             "active_lobby": self.active_lobby,
             "active_tournament": self.active_tournament,
             "created_at": self.created_at.isoformat(),
-            "max_rounds": self.max_rounds,
-            # "round_score_limit": self.round_score_limit,
             "max_player_count": self.max_player_count,
             "room_id": self.room_id,
             "tournament_type": self.tournament_type
