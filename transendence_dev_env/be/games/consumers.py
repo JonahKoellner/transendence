@@ -2820,8 +2820,8 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
 
     async def disconnect(self, close_code):
         logger.info(f'User {self.scope["user"].username} disconnected from match {self.match_id}')
-        await self.channel_layer.send(
-            self.game_manager_channel,
+        await self.channel_layer.group_send(
+            self.room_group_name,
             {
                 "type": "player_disconnected",
                 "user": self.scope['user'].username
