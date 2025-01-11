@@ -1,5 +1,5 @@
 // user-details.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { forkJoin } from 'rxjs';
@@ -21,8 +21,10 @@ export interface UserStats {
   templateUrl: './user-details.component.html',
   styleUrls: ['./user-details.component.scss']
 })
-export class UserDetailsComponent implements OnInit {
+export class UserDetailsComponent implements  OnInit, OnDestroy {
   userId: number = 0;
+  private animationInterval: any;
+  private animatedAngle: number = 0;
   user: UserProfile | null = null;
   errorMessage: string = '';
   isLoading = true;
@@ -70,6 +72,13 @@ export class UserDetailsComponent implements OnInit {
       this.userId = +params.get('id')!;
       this.loadProfile(this.userId);
     });
+  }
+
+  ngOnDestroy() {
+    // Clean up the interval when the component is destroyed
+    if (this.animationInterval) {
+      clearInterval(this.animationInterval);
+    }
   }
 
   onPageChangeProjects(page: number) {
@@ -170,6 +179,7 @@ export class UserDetailsComponent implements OnInit {
         }
         this.applyGameFilters();
         this.applyTournamentFilters();
+        this.startBackgroundAnimation();
         this.isLoading = false;
 
       },
@@ -231,5 +241,53 @@ export class UserDetailsComponent implements OnInit {
       default:
         return 'bi-award-fill'; // Default icon
     }
+  }
+  private startBackgroundAnimation() {
+    // Base speed can be adjusted based on level
+    const baseSpeed = 0.5;
+    // Increase speed proportionally with level (e.g., 10% faster per level)
+    const speedFactor = baseSpeed * (1 + (this.user!.level / 10)); 
+  
+    this.animationInterval = setInterval(() => {
+      this.animatedAngle += speedFactor;
+      if (this.animatedAngle >= 360) this.animatedAngle = 0;
+  
+      // Adjust gradient stops based on the user level
+      let gradientStops: string;
+      if (this.user!.level < 5) {
+        // Simpler gradient for lower levels
+        gradientStops = `
+          rgba(30, 30, 30, 1) 0%,
+          rgba(30, 30, 30, 0.8) 50%,
+          ${this.hexToRgba(this.profileColor.profile_color, 0.5)} 100%
+        `;
+      } else if (this.user!.level < 10) {
+        // More complex gradient for mid-levels
+        gradientStops = `
+          rgba(30, 30, 30, 1) 0%,
+          ${this.hexToRgba(this.profileColor.profile_color, 0.7)} 33%,
+          ${this.hexToRgba(this.profileColor.profile_color, 0.5)} 66%,
+          rgba(30, 30, 30, 0.8) 100%
+        `;
+      } else {
+        // Even more intricate gradient for high levels
+        gradientStops = `
+          rgba(30, 30, 30, 1) 0%,
+          ${this.hexToRgba(this.profileColor.profile_color, 0.9)} 25%,
+          ${this.hexToRgba(this.profileColor.profile_color, 0.6)} 50%,
+          ${this.hexToRgba(this.profileColor.profile_color, 0.9)} 75%,
+          rgba(30, 30, 30, 0.8) 100%
+        `;
+      }
+  
+      // Optionally, add a pulsating brightness effect based on the angle
+      const brightness = 0.9 + 0.1 * Math.sin(this.animatedAngle * (Math.PI / 180));
+  
+      // Update the gradient with the new angle, stops, and filter
+      this.profileBackgroundStyle = {
+        'background': `linear-gradient(${this.animatedAngle}deg, ${gradientStops})`,
+        'filter': `brightness(${brightness})`,
+      };
+    }, 50); // Update interval remains the same
   }
 }
