@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, Renderer2 } from '@angular/core';
+import { Component, OnInit, OnDestroy, Renderer2, NgZone } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './auth.service';
@@ -10,8 +10,7 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Pong Arena';
   isDarkTheme = true;
   isCollapsed = true;
@@ -20,26 +19,41 @@ export class AppComponent implements OnInit {
   toldUser = false;
   showEasterEgg = false;
 
+  private onGlobalMouseUpBound: (event: MouseEvent) => void;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private renderer: Renderer2,
     private profileService: ProfileService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private ngZone: NgZone
   ) {
     this.applyTheme();
+    // Bind the global mouseup handler once for attaching and detaching.
+    this.onGlobalMouseUpBound = this.onGlobalMouseUp.bind(this);
   }
 
   ngOnInit(): void {
-    // Subscribe to router events to detect navigation changes
+    // Subscribe to router events to detect navigation changes.
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.checkAuthentication();
     });
 
-    // Initial authentication check
+    // Initial authentication check.
     this.checkAuthentication();
+
+    // Attach the global mouseup listener outside Angular's zone for performance.
+    this.ngZone.runOutsideAngular(() => {
+      document.addEventListener('mouseup', this.onGlobalMouseUpBound);
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up the global mouseup listener when the component is destroyed.
+    document.removeEventListener('mouseup', this.onGlobalMouseUpBound);
   }
 
   checkAuthentication(): void {
@@ -53,7 +67,7 @@ export class AppComponent implements OnInit {
             this.toastr.info('You have not enabled 2FA. We recommend you enable it in your profile settings.', 'Info', { timeOut: 10000 });
             this.toldUser = true;
           }
-          
+
           this.isAuthenticated = true;
         },
         error => {
@@ -84,14 +98,23 @@ export class AppComponent implements OnInit {
     }
   }
 
-  @HostListener('document:mouseup', ['$event'])
-  onMouseUp(event: MouseEvent): void {
+  private onGlobalMouseUp(event: MouseEvent): void {
+    // Filter out mouseup events originating from iframes.
+    const targetElement = event.target as HTMLElement;
+    if (targetElement.tagName === 'IFRAME') {
+      return;
+    }
+
     const selection = window.getSelection()?.toString().trim() || '';
     if (selection === 'end') {
-      this.showEasterEgg = true; 
+      // Re-enter Angular's zone only when updating bound properties.
+      this.ngZone.run(() => {
+        this.showEasterEgg = true;
+      });
     }
   }
-  closeEasterEgg() {
+
+  closeEasterEgg(): void {
     this.showEasterEgg = false;
   }
 }
