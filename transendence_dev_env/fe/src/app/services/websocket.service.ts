@@ -1,9 +1,10 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { delay, filter, retryWhen, tap } from 'rxjs/operators';
-import { AuthService } from '../auth.service';
+import { delay, filter, retryWhen, switchMap, map, catchError, tap } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environment';
+import { AuthService } from "../auth.service";
 
 interface Notification {
   id: number;
