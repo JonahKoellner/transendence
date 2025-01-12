@@ -116,6 +116,28 @@
   max-width: 500px;  /* Limit the width of the card */
 }
 
+.contributor-slide-content.luke-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.contributor-slide-content.luke-background .background-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.009;  /* Adjust opacity for subtlety */
+  pointer-events: none;  /* Allow clicks to pass through to content */
+}
+
+.contributor-slide-content.luke-background .avatar,
+.contributor-slide-content.luke-background .contributor-info {
+  position: relative;
+  z-index: 1;
+}
+
 /* Avatar on the left */
 .avatar {
   width: 100px;
