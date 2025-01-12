@@ -47,19 +47,27 @@ export class WebsocketService implements OnDestroy {
           }),
           // Delay before retry
           delay(this.reconnectDelay),
-          // Refresh token if needed
-          switchMap(() => this.auth.refreshTokenIfNeeded().pipe(
-            tap((newToken: string | null) => {
-              if (!newToken) {
-                // Handle the case where the token is null
-                console.error('No token returned; cannot reconnect.');
-                throw new Error('No token to use for WebSocket connection');
-              }
-              console.log('Retrying with new token:', newToken);
-              // Now guaranteed to be a string, so no more TS error:
-              this.socket$ = this.createWebSocket(newToken);
-            })
-          )),
+          // Refresh token if needed by subscribing
+          switchMap(() => {
+            return new Observable((observer) => {
+              this.auth.refreshTokenIfNeeded().subscribe({
+                next: (newToken) => {
+                  if (!newToken) {
+                    console.error('No token returned; cannot reconnect.');
+                    observer.error(new Error('No token to use for WebSocket connection'));
+                    return;
+                  }
+                  console.log('Retrying with new token:', newToken);
+                  this.socket$ = this.createWebSocket(newToken);
+                  observer.next(null);
+                  observer.complete();
+                },
+                error: (err) => {
+                  observer.error(err);
+                }
+              });
+            });
+          }),
           // Retry with the new token
           switchMap(() => this.socket$)
         )
