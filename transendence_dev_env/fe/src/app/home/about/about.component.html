@@ -19,7 +19,20 @@
         <div class="carousel-track-container">
           <ul class="carousel-track">
             <li class="contributor-slide" *ngFor="let contributor of contributors">
-              <div class="contributor-slide-content">
+              <div class="contributor-slide-content"
+                   [ngClass]="{'luke-background': contributor.name === 'Lukas Kreuzer'}">
+              
+                <!-- Conditionally insert background video for Lukas -->
+                <ng-container *ngIf="contributor.name === 'Lukas Kreuzer'">
+                  <iframe 
+                    class="background-video"
+                    src="https://www.youtube.com/embed/L_WoOkDAqbM?autoplay=1&mute=1&loop=1&modestbranding=1&controls=0&showinfo=0&playlist=L_WoOkDAqbM&iv_load_policy=3&cc_load_policy=3&rel=0&disablekb=1"
+                    frameborder="0"
+                    allow="autoplay; fullscreen"
+                    title="Lukas Background Video">
+                  </iframe>
+                </ng-container>
+            
                 <img [src]="contributor.avatar" class="avatar" [alt]="contributor.name">
                 <div class="contributor-info">
                   <span class="name">{{ contributor.name }}</span>
@@ -35,17 +48,6 @@
         aria-label="Next contributor">&gt;</button>
       </div>
   
-      <!-- Video Section -->
-      <div class="video-container">
-        <iframe
-          width="560"
-          height="315"
-          src="https://www.youtube.com/embed/L_WoOkDAqbM"
-          frameborder="0"
-          allowfullscreen
-          title="Transcendence teaser video">
-        </iframe>
-      </div>
   
       <p>
         Whether you’re here for the next-level gameplay, the cutting-edge tech, or the sheer thrill of it all, we’re glad you’re here.
