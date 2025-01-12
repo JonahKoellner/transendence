@@ -104,23 +104,23 @@ export class WebsocketService implements OnDestroy {
   }
 
   // Get a new token
-  private getNewToken(): Observable<string> {
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
-      map((response: any) => {
-        if (response && response.access) {
-          localStorage.setItem('access_token', response.access);
-          return response.access;
-        } else {
-          console.warn('ws: Failed to refresh token, logging out');
-          return '';  // Return an empty string or handle the error appropriately
-        }
-      }),
-      catchError(error => {
-        console.error('ws err: Error refreshing token, logging out:', error);
-        return new Observable<string>();  // Return an empty observable or handle the error appropriately
-      })
-    );
-  }
+  // private getNewToken(): Observable<string> {
+  //   return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
+  //     map((response: any) => {
+  //       if (response && response.access) {
+  //         localStorage.setItem('access_token', response.access);
+  //         return response.access;
+  //       } else {
+  //         console.warn('ws: Failed to refresh token, logging out');
+  //         return '';  // Return an empty string or handle the error appropriately
+  //       }
+  //     }),
+  //     catchError(error => {
+  //       console.error('ws err: Error refreshing token, logging out:', error);
+  //       return new Observable<string>();  // Return an empty observable or handle the error appropriately
+  //     })
+  //   );
+  // }
 
   // Return an observable that resolves when WebSocket is connected
   waitForConnection(): Observable<boolean> {
