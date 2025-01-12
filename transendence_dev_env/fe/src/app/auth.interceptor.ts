@@ -28,7 +28,7 @@ export class AuthInterceptor implements HttpInterceptor {
     if (req.url.includes('api.intra.42.fr')) {
       return next.handle(req);
     }
-    
+
     // Clone the request to add the authentication token, if available
     let authReq = req;
     const accessToken = this.authService.getAccessToken();
@@ -67,7 +67,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private handle401Error(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // If refreshTokenSubject has a value, a refresh is already in progress
-    if (!this.isRefreshing) {
+    if (!this.authService.refreshInProgress) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 

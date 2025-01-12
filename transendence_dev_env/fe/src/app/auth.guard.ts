@@ -12,7 +12,7 @@ export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): Observable<boolean> | Promise<boolean> | boolean {
-    if (!this.authService.isAuthenticated()) {
+    if (!this.authService.isAuthenticated() && !this.authService.refreshInProgress) {
       return this.authService.refreshTokenIfNeeded().pipe(
         map(token => {
           if (token) {

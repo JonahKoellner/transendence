@@ -166,7 +166,8 @@ export class AuthService {
     // Prevent multiple refresh calls if a refresh is already in progress
     if (this.refreshInProgress) {  // could get triggered if we have two call one by Interceptor and one by AuthGuard
       console.error('Refresh token process already in progress');
-      return throwError('Refresh token process already in progress');
+      return of("");
+      // return throwError('Refresh token process already in progress');
     }
 
     this.refreshInProgress = true;

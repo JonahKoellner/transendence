@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { delay, filter, retryWhen, tap } from 'rxjs/operators';
+import { delay, filter, switchMap, retryWhen, tap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { environment } from 'src/environment';
 
@@ -25,7 +25,7 @@ interface Notification {
 export class WebsocketService implements OnDestroy {
   private socket$!: WebSocketSubject<any>;
   public notifications$ = new Subject<any>();  // For notifications and chat messages
-  private reconnectDelay: number = 5000;  // Reconnection delay in milliseconds
+  private reconnectDelay: number = 500;  // Reconnection delay in milliseconds
   private isConnected = new BehaviorSubject<boolean>(false);  // Observable to track connection status
 
 
@@ -42,8 +42,13 @@ export class WebsocketService implements OnDestroy {
       retryWhen(errors =>
         errors.pipe(
           tap(err => {
-            console.error('WebSocket error, retrying...', err)}),
-          delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
+            console.error('WebSocket error, retrying...', err);
+          }),
+          delay(this.reconnectDelay),  // Retry after a delay if WebSocket fails
+          switchMap(() => {
+            this.socket$ = this.createWebSocket(localStorage.getItem('access_token') || '');
+            return this.socket$;
+          })
         )
       )
     ).subscribe({
