@@ -30,7 +30,7 @@ export class WebsocketService implements OnDestroy {
   private isConnected = new BehaviorSubject<boolean>(false);  // Observable to track connection status
 
 
-  constructor(private http: HttpClient, private auth: AuthService) {}  // Inject AuthService
+  constructor(private auth: AuthService) {}  // Inject AuthService
 
   connectNotifications(token: string): void {
     // If there's an existing connection, return to avoid reconnecting
