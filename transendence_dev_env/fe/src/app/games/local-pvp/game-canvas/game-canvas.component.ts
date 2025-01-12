@@ -72,7 +72,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          this.toastr.warning('Failed to load left paddle image. Falling back to color.', 'Warning');
           resolve();
         };
       }));
@@ -88,7 +87,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          this.toastr.warning('Failed to load ball image. Falling back to color.', 'Warning');
           resolve();
         };
       }));
@@ -104,7 +102,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          this.toastr.warning('Failed to load background image. Falling back to color.', 'Warning');
           resolve();
         };
       }));
