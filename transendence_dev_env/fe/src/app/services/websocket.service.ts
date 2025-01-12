@@ -24,45 +24,62 @@ interface Notification {
 })
 export class WebsocketService implements OnDestroy {
   private socket$!: WebSocketSubject<any>;
+  private apiUrl = environment.apiUrl;
   public notifications$ = new Subject<any>();  // For notifications and chat messages
-  private reconnectDelay: number = 5000;  // Reconnection delay in milliseconds
+  private reconnectDelay: number = 1000;  // Reconnection delay in milliseconds
   private isConnected = new BehaviorSubject<boolean>(false);  // Observable to track connection status
 
 
-  constructor(private authService: AuthService) {}  // Inject AuthService
+  constructor(private http: HttpClient, private auth: AuthService) {}  // Inject AuthService
 
-  // Connect to WebSocket with token
   connectNotifications(token: string): void {
     // If there's an existing connection, return to avoid reconnecting
     if (this.isConnected.value) return;
-
+  
     this.socket$ = this.createWebSocket(token);
-
+  
     this.socket$.pipe(
       retryWhen(errors =>
         errors.pipe(
           tap(err => {
-            console.error('WebSocket error, retrying...', err)}),
-          delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
+            console.error('WebSocket error, retrying...', err);
+          }),
+          // Delay before retry
+          delay(this.reconnectDelay),
+          // Refresh token if needed
+          switchMap(() => this.auth.refreshTokenIfNeeded().pipe(
+            tap((newToken: string | null) => {
+              if (!newToken) {
+                // Handle the case where the token is null
+                console.error('No token returned; cannot reconnect.');
+                throw new Error('No token to use for WebSocket connection');
+              }
+              console.log('Retrying with new token:', newToken);
+              // Now guaranteed to be a string, so no more TS error:
+              this.socket$ = this.createWebSocket(newToken);
+            })
+          )),
+          // Retry with the new token
+          switchMap(() => this.socket$)
         )
       )
     ).subscribe({
       next: msg => {
         if (!this.isConnected.value) {
-          this.isConnected.next(true);  // WebSocket is connected
+          this.isConnected.next(true);
         }
-        this.notifications$.next(msg);  // Handle chat messages
+        this.notifications$.next(msg);
       },
       error: err => {
         console.error('WebSocket error:', err);
-        this.isConnected.next(false);  // WebSocket is disconnected
+        this.isConnected.next(false);
       },
       complete: () => {
-        this.isConnected.next(false);  // WebSocket connection closed
+        this.isConnected.next(false);
         console.warn('WebSocket connection closed');
       }
     });
-}
+  }
 
   // Create WebSocket instance
   private createWebSocket(token: string): WebSocketSubject<any> {
@@ -85,6 +102,24 @@ export class WebsocketService implements OnDestroy {
     })).subscribe();
   }
 
+  // Get a new token
+  // private getNewToken(): Observable<string> {
+  //   return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
+  //     map((response: any) => {
+  //       if (response && response.access) {
+  //         localStorage.setItem('access_token', response.access);
+  //         return response.access;
+  //       } else {
+  //         console.warn('ws: Failed to refresh token, logging out');
+  //         return '';  // Return an empty string or handle the error appropriately
+  //       }
+  //     }),
+  //     catchError(error => {
+  //       console.error('ws err: Error refreshing token, logging out:', error);
+  //       return new Observable<string>();  // Return an empty observable or handle the error appropriately
+  //     })
+  //   );
+  // }
 
   // Return an observable that resolves when WebSocket is connected
   waitForConnection(): Observable<boolean> {
