@@ -154,20 +154,12 @@ services:
              daphne -b 0.0.0.0 -p 8000 be.asgi:application"
     ports:
       - "8000:8000"
-    # environment:
-    #   - POSTGRES_DB=mydb
-    #   - POSTGRES_USER=user
-    #   - POSTGRES_PASSWORD=pass
-    #   - DB_HOST=db
-    #   - DB_PORT=5432
-    #   - REDIS_HOST=redis
-    #   - REDIS_PORT=6379
-    #   - DJANGO_SETTINGS_MODULE=be.settings
-    #   - DOMAIN=localhost
     env_file:
       - ./be/.env
     depends_on:
       logstash:
+        condition: service_healthy
+      db:
         condition: service_healthy
     networks:
       - webnet
@@ -186,15 +178,11 @@ services:
 
   db:
     container_name: db
-    image: postgres:17
+    # image: postgres:17
     build: 
       context: ./db
     env_file:
       - ./db/.env
-    # environment:
-      # - POSTGRES_DB=mydb
-      # - POSTGRES_USER=user
-      # - POSTGRES_PASSWORD=pass
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Named volume for database persistence
     ports:
@@ -205,6 +193,11 @@ services:
     networks:
       - webnet
       - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     logging:
       driver: "gelf"
       options:
