@@ -37,7 +37,6 @@ export class GameComponent implements OnInit, OnDestroy {
   remainingTime: string = '30'; // default value, because each games has 30 seconds
   secsUntilGameStart: string = '5'; // default value because each game starts after 5 seconds
 
-  //TODO make this right, currently use default values
   gameState: any = null;
   gameSettings: GameSettings = {};
 

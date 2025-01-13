@@ -23,7 +23,7 @@ export class GameDisplayService {
     if (this.socket$ && this.isConnected.value) return;
     const token = this.authService.getAccessToken();
     // Replace your existing connection logic with the new URL
-    this.socket$ = webSocket(environment.wsUrl + `/tournament/${roomId}/${matchId}/?token=${token}`); //TODO see if thats the correct ws URL
+    this.socket$ = webSocket(environment.wsUrl + `/tournament/${roomId}/${matchId}/?token=${token}`);
 
     this.socket$.subscribe(
       (msg) => {

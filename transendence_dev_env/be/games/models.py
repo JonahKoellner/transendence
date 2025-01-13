@@ -100,7 +100,6 @@ class OnlineRound(BaseRound):
     room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
     matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
     winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
-    #TODO add start_time nullable and blank to override the start time from baseround because we dont know the start time upon creation. alternative: just update start time
 
 class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
@@ -207,7 +206,6 @@ class BaseLobby(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)]) 
     round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
-    #TODO make this class abstract?? so it wont have its own object in db
 
 class PlayerCustomization(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customization")

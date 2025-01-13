@@ -2539,7 +2539,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         return self.user == lobby.host
 
 #TODO when is the tournament deleted? -> when there is no player connected to the tournament websocket anymore and the tournament is done. -> if everyone leaves the tournament will automatically be done.
-#TODO still shows the tournament lobby (probably doesnt get deleted) when the tournament is active -> delete lobby when tournament is active
 
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -2748,7 +2747,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             self.tournament.participants_ready_states[str(user.id)] = is_ready
         self.tournament.save()
 
-    async def start_game(self, match_id): # TODO sends message to two players who should both connect to the game consumer with a game_id from the message. should be triggered for each match when both players are ready
+    async def start_game(self, match_id):
         logger.info('Starting game')
         round = await database_sync_to_async(self.tournament.rounds.get)(round_number=self.tournament.current_round)
         match = await self.get_match_for_round_and_id(round, match_id)
@@ -2810,7 +2809,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         })
 
       
-class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game manager joins late it has to make a request to get the set_game_manager message
+class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.game_in_progress = False
@@ -2989,7 +2988,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
         self.match_end_task = asyncio.create_task(self.match_timer())
-        #TODO send game status 'started' so frontend just sends key strokes when the game is started
         
 
     @database_sync_to_async
@@ -3110,7 +3108,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer): #TODO when non game m
     def get_profile(self, user):
         return user.profile
     
-    async def send_game_settings(self): # TODO fetch + send all image urls as game settings to frontend
+    async def send_game_settings(self):
         left_profile = await self.get_profile(self.left_player)
         right_profile = await self.get_profile(self.right_player)
         logger.info(f'left_profile_color: {left_profile.paddleskin_color}, right_profile_color: {right_profile.paddleskin_color}')
