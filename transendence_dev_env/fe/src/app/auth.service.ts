@@ -16,6 +16,7 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
   private refreshTimeout: any;
+  private refreshInterval = 5 * 60 * 1000;
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
@@ -93,10 +94,12 @@ export class AuthService {
   }
 
   logout(reason?: string): void {
-    if(this.refreshTimeout) { clearTimeout(this.refreshTimeout); }  // Clear refresh timer
     let revalidate = false;
     if (reason === "2FA revalidation required") {
       revalidate = true;
+    }
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
     }
     const accessToken = localStorage.getItem('access_token');
     if (accessToken) {
@@ -143,7 +146,7 @@ export class AuthService {
   }
 
   clearAll(): void {
-    if(this.refreshTimeout) { clearTimeout(this.refreshTimeout); }
+    this.stopPeriodicTokenRefresh();
     localStorage.clear();
     sessionStorage.clear();
     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
@@ -272,4 +275,31 @@ export class AuthService {
       })
     );
   }
+  startPeriodicTokenRefresh(): void {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout); // Clear any existing timer
+    }
+    this.scheduleNextTokenRefresh(); // Schedule the first refresh
+  }
+
+  stopPeriodicTokenRefresh(): void {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout); // Clear refresh timer
+      this.refreshTimeout = null;
+    }
+  }
+
+  private scheduleNextTokenRefresh(): void {
+    this.refreshTimeout = setTimeout(() => {
+      this.refreshToken().subscribe({
+        next: () => {
+          this.scheduleNextTokenRefresh(); // Schedule the next refresh after success
+        },
+        error: (err) => {
+          this.logout('Session expired in idle, please log in again');
+        }
+      });
+    }, this.refreshInterval);
+  }
+
 }

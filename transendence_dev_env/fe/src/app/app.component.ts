@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Renderer2, NgZone } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, Subscription } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ProfileService } from './profile.service';
 import { ToastrService } from 'ngx-toastr';
@@ -20,6 +20,7 @@ export class AppComponent implements OnInit, OnDestroy {
   showEasterEgg = false;
 
   private onGlobalMouseUpBound: (event: MouseEvent) => void;
+  private routerSubscription!: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -36,7 +37,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Subscribe to router events to detect navigation changes.
-    this.router.events.pipe(
+    this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.checkAuthentication();
@@ -45,6 +46,11 @@ export class AppComponent implements OnInit, OnDestroy {
     // Initial authentication check.
     this.checkAuthentication();
 
+    // Start periodic token refresh if authenticated
+    if (this.authService.isAuthenticated()) {
+      this.authService.startPeriodicTokenRefresh();
+    }
+
     // Attach the global mouseup listener outside Angular's zone for performance.
     this.ngZone.runOutsideAngular(() => {
       document.addEventListener('mouseup', this.onGlobalMouseUpBound);
@@ -52,8 +58,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up the global mouseup listener when the component is destroyed.
+    // Unsubscribe from router events to prevent memory leaks
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
+
+    // Remove the global mouseup listener
     document.removeEventListener('mouseup', this.onGlobalMouseUpBound);
+
+    // Stop periodic token refresh
+    this.authService.stopPeriodicTokenRefresh();
   }
 
   checkAuthentication(): void {
