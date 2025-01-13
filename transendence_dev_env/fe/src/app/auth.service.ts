@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, delay, map, retryWhen, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
 import { environment } from 'src/environment';
 import { ToastrService } from 'ngx-toastr';
@@ -227,15 +227,49 @@ export class AuthService {
     );
   }
   initializeWebSocket(): void {
-    const token = this.getAccessToken();
-    if (token) {
-        this.websocketService.connectNotifications(token);
-    }
+    this.refreshToken().subscribe({
+      next: (newToken) => {
+        this.websocketService.connectNotifications(newToken);
+      },
+      error: (err) => {
+        console.error('Failed to refresh token for WebSocket connection', err);
+        // Retry after a delay if the error is not due to an invalid token
+        if (err.status !== 401 && err.status !== 400) {
+          setTimeout(() => this.initializeWebSocket(), 5000);
+        } else {
+          this.logout('Session expired, please log in again');
+        }
+      }
+    });
   }
   private getCookie(name: string): string | null {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
     return null;
+  }
+
+  refreshToken(): Observable<string> {
+    return this.http.post<{ access: string }>(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
+      tap(response => {
+        const newAccess = response.access;
+        this.setAccessToken(newAccess);
+      }),
+      map(response => response.access),
+      retryWhen(errors => errors.pipe(
+        tap((err) => {
+          console.error('Token refresh failed, retrying...', err);
+          if (err.status === 401 || err.status === 400) {
+            throw err;  // Stop retrying if token is invalid or missing
+          }
+        }),
+        delay(3000)  // Retry after 3 seconds
+      )),
+      catchError(err => {
+        console.error('Final token refresh failure, logging out', err);
+        this.logout('Session expired, please log in again');
+        return throwError(() => err);
+      })
+    );
   }
 }

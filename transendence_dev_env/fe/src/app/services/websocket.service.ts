@@ -32,37 +32,43 @@ export class WebsocketService implements OnDestroy {
   constructor(private authService: AuthService) {}  // Inject AuthService
 
   // Connect to WebSocket with token
-  connectNotifications(token: string): void {
-    // If there's an existing connection, return to avoid reconnecting
-    if (this.isConnected.value) return;
+// In WebsocketService
+connectNotifications(token: string): void {
+  // Avoid reconnecting if already connected
+  if (this.isConnected.value) return;
 
-    this.socket$ = this.createWebSocket(token);
+  // Disconnect any existing socket before reconnecting
+  if (this.socket$) {
+    this.disconnect();
+  }
 
-    this.socket$.pipe(
-      retryWhen(errors =>
-        errors.pipe(
-          tap(err => {
-            console.error('WebSocket error, retrying...', err)}),
-          delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
-        )
+  this.socket$ = this.createWebSocket(token);
+
+  this.socket$.pipe(
+    retryWhen(errors =>
+      errors.pipe(
+        tap(err => console.error('WebSocket error, retrying...', err)),
+        delay(this.reconnectDelay) // Retry after a delay
       )
-    ).subscribe({
-      next: msg => {
-        if (!this.isConnected.value) {
-          this.isConnected.next(true);  // WebSocket is connected
-        }
-        this.notifications$.next(msg);  // Handle chat messages
-      },
-      error: err => {
-        console.error('WebSocket error:', err);
-        this.isConnected.next(false);  // WebSocket is disconnected
-      },
-      complete: () => {
-        this.isConnected.next(false);  // WebSocket connection closed
-        console.warn('WebSocket connection closed');
+    )
+  ).subscribe({
+    next: msg => {
+      if (!this.isConnected.value) {
+        this.isConnected.next(true);
       }
-    });
+      this.notifications$.next(msg);
+    },
+    error: err => {
+      console.error('WebSocket error:', err);
+      this.isConnected.next(false);
+    },
+    complete: () => {
+      this.isConnected.next(false);
+      console.warn('WebSocket connection closed');
+    }
+  });
 }
+
 
   // Create WebSocket instance
   private createWebSocket(token: string): WebSocketSubject<any> {
