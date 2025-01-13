@@ -134,14 +134,16 @@ class RoundService:
             if match_index >= len(matches):
                 raise ValueError("Not enough matches to populate all participants.")
 
+            one_none = player1 == None or player2 == None
+
             match = matches[match_index]
-            match.player1 = player1
-            match.player2 = player2
-            match.status = "pending" if player2 else "completed"
+            match.player1 = player1 if player1 != None else player2 # swap players if player1 is None
+            match.player2 = player2 if match.player1 != player2 else None
+            match.status = "pending" if not one_none else "failed"
             match.start_time = timezone.now()
-            match.end_time = timezone.now() if not player2 else None
-            match.winner = None if player2 else player1
-            match.outcome = "Finished" if not player2 else None
+            match.end_time = timezone.now() if one_none else None
+            match.winner = None if not one_none else match.player1
+            match.outcome = "Finished" if one_none else None
             match.save()
 
             match_index += 1

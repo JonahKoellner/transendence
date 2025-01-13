@@ -2619,6 +2619,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def check_if_out(self):
         """gets last match from client and sends message if client lost"""
+        if self.tournament.type == TournamentType.ROUND_ROBIN:
+            return False
         try:
             match = OnlineMatch.objects.get(
                 Q(room_id=self.room_id) & Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
