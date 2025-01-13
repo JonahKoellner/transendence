@@ -1,6 +1,8 @@
 
 # Function to generate password based on available tools
-generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64)))
+# generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64)))
+# Function to generate a password without backslashes and at least 24 characters long
+generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 32 | tr -d '/+' | head -c 24), $(shell head -c 24 /dev/urandom | base64 | tr -d '/+' | head -c 24)))
 
 generate_passwords:
 	@echo "Generating passwords..."
@@ -16,6 +18,11 @@ generate_passwords:
 	@echo "VAULT_ADDR=https://0.0.0.0:8200" >> ./keyvault/.env
 	@echo "Passwords generated and stored in ./keyvault/.env file."
 
+	@echo "Generting redis password..."
+	$(eval REDIS_PASS=$(call generate-password))
+	@echo "REDIS_PASSWORD=$(REDIS_PASS)" > ./redis/.env
+	@echo "REDIS_PASSWORD=$(REDIS_PASS)" >> ./be/.env
+	@echo "Redis password generated and saved to .env files."
 
 
 addHost:

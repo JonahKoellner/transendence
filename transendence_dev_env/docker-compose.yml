@@ -162,6 +162,8 @@ services:
         condition: service_healthy
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - webnet
       - app-net
@@ -212,7 +214,13 @@ services:
 
   redis:
     container_name: redis
-    image: redis:6-alpine
+    # image: redis:6-alpine
+    build: 
+      context: ./redis
+      args:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+    env_file:
+      - ./redis/.env
     ports:
       - "6379:6379"
     networks:
@@ -223,6 +231,11 @@ services:
     depends_on:
       logstash:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     logging:
       driver: "gelf"
       options:
