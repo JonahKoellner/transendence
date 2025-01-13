@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, delay, map, retryWhen, tap } from 'rxjs/operators';
+import { catchError, delay, map, retryWhen, scan, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
 import { environment } from 'src/environment';
 import { ToastrService } from 'ngx-toastr';
@@ -259,15 +259,21 @@ export class AuthService {
         this.setAccessToken(newAccess);
       }),
       map(response => response.access),
-      retryWhen(errors => errors.pipe(
-        tap((err) => {
-          console.error('Token refresh failed, retrying...', err);
-          if (err.status === 401 || err.status === 400) {
-            throw err;  // Stop retrying if token is invalid or missing
-          }
-        }),
-        delay(3000)  // Retry after 3 seconds
-      )),
+      retryWhen(errors =>
+        errors.pipe(
+          scan((errorCount, err) => {
+            console.error('Token refresh failed, retrying...', err);
+            if (err.status === 401 || err.status === 400) {
+              throw err;
+            }
+            if (errorCount >= 2) {
+              throw err; // 3 attempts total
+            }
+            return errorCount + 1;
+          }, 0),
+          delay(3000)
+        )
+      ),
       catchError(err => {
         console.error('Final token refresh failure, logging out', err);
         this.logout('Session expired, please log in again');
