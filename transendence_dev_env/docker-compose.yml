@@ -187,10 +187,14 @@ services:
   db:
     container_name: db
     image: postgres:17
-    environment:
-      - POSTGRES_DB=mydb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
+    build: 
+      context: ./db
+    env_file:
+      - ./db/.env
+    # environment:
+      # - POSTGRES_DB=mydb
+      # - POSTGRES_USER=user
+      # - POSTGRES_PASSWORD=pass
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Named volume for database persistence
     ports:
