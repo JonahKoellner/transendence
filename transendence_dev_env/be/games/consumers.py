@@ -2685,7 +2685,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                 Q(room_id=self.room_id) & Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
             )
             logger.info(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
-            return match.winner == self.user
+            return match.winner != self.user
         except OnlineMatch.DoesNotExist:
             return False
     
