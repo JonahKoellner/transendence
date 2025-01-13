@@ -132,7 +132,8 @@ services:
       - elk-net
       - host-bridge
     depends_on:
-      # - django
+      django:
+        condition: service_healthy
       logstash:
         condition: service_healthy
     logging:
@@ -166,6 +167,11 @@ services:
       - app-net
       - elk-net
       - host-bridge
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     logging:
       driver: "gelf"
       options:
@@ -195,7 +201,7 @@ services:
       - app-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 15s
+      interval: 5s
       timeout: 5s
       retries: 5
     logging:
