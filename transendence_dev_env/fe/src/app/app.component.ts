@@ -82,7 +82,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.authService.logout();
+    this.authService.logout("logout pressed");
   }
 
   toggleTheme(): void {

@@ -14,10 +14,6 @@ export class HomeComponent {
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
   navigateToMode(mode: string) {
     switch (mode) {
       case 'pve':

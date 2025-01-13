@@ -15,8 +15,7 @@ export class AuthService {
   // private apiUrl = 'http://localhost:8000';  // Your Django backend URL
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
-  public refreshInProgress = false;
-
+  private refreshTimeout: any;
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
@@ -87,9 +86,6 @@ export class AuthService {
     localStorage.setItem('access_token', token);
   }
 
-  // public getRefreshToken(): string | null {  this doesn't work!
-  //   return this.getCookie('refresh_token');
-  // }
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('access_token');
@@ -97,6 +93,7 @@ export class AuthService {
   }
 
   logout(reason?: string): void {
+    if(this.refreshTimeout) { clearTimeout(this.refreshTimeout); }  // Clear refresh timer
     let revalidate = false;
     if (reason === "2FA revalidation required") {
       revalidate = true;
@@ -146,6 +143,7 @@ export class AuthService {
   }
 
   clearAll(): void {
+    if(this.refreshTimeout) { clearTimeout(this.refreshTimeout); }
     localStorage.clear();
     sessionStorage.clear();
     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
@@ -161,40 +159,6 @@ export class AuthService {
     }
   }
 
-  refreshTokenIfNeeded(): Observable<string | null> {
-    // console.debug('Refreshing JWT token...');
-    // Prevent multiple refresh calls if a refresh is already in progress
-    if (this.refreshInProgress) {  // could get triggered if we have two call one by Interceptor and one by AuthGuard
-      console.error('Refresh token process already in progress');
-      return throwError('Refresh token process already in progress');
-    }
-
-    this.refreshInProgress = true;
-
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
-      tap((response: any) => {
-        if (response && response.access) {
-          // console.debug('Token refreshed successfully, new token: ', response.access);
-          this.storeTokens(response.access);
-          this.websocketService.connectNotifications(response.access);
-          this.refreshInProgress = false; // idk maybe its useful
-        } else {
-          console.warn('Failed to refresh token, logging out');
-          this.clearAll();
-          this.logout();
-        }
-      }),
-      catchError(error => {
-        console.error('Error refreshing token, logging out:', error);
-        this.clearAll();
-        this.logout();
-        return of(null);
-      }),
-      tap(() => {
-        this.refreshInProgress = false; // Reset the refresh flag
-      })
-    );
-  }
 
   // Method to retrieve user profile information
   getProfile(): Observable<any> {

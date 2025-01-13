@@ -100,7 +100,10 @@ export class NotificationService {
     if (!this.authService.isAuthenticated()) return;
     this.websocketService.notifications$.subscribe((notification: Notification) => {
       const currentNotifications = this.notifications$.value;
-      this.notifications$.next([notification, ...currentNotifications]);
+      // Only add if not already present
+      if (!currentNotifications.some(notif => notif.id === notification.id)) {
+        this.notifications$.next([notification, ...currentNotifications]);
+      }
     });
   }
 
