@@ -76,6 +76,13 @@ import { ImpressumComponent } from './home/impressum/impressum.component';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
+import { OnlineComponent as OnlineTournamentComponent } from './games/tournament/online/online.component';
+import { CreateRoomComponent as OnlineTournamentCreateRoomComponent } from './games/tournament/online/create-room/create-room.component';
+import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/tournament/online/join-room/join-room.component';
+import { GameRoomsComponent as OnlineTournamentRoomsComponent } from './games/tournament/online/game-rooms/game-rooms.component';
+import { GameRoomComponent as OnlineTournamentGameRoomComponent } from './games/tournament/online/game-room/game-room.component';
+import { TournamentTreeComponent } from './games/tournament/online/tournament-tree/tournament-tree.component';
+import { GameComponent } from './games/tournament/online/game/game.component';
 import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.component';
 import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
 import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
@@ -146,11 +153,18 @@ import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/cha
     GameRoomArenaComponent,
     GameDisplayArenaComponent,
     ImpressumComponent,
+    OnlineTournamentComponent,
+    OnlineTournamentCreateRoomComponent,
+    OnlineTournamentJoinRoomComponent,
+    OnlineTournamentRoomsComponent,
+    OnlineTournamentGameRoomComponent,
+    TournamentTreeComponent,
+    GameComponent,
     RemoveFriendComponent,
     BlockFriendComponent,
     ChartsUserDetailsComponent,
     ChartsGlobalDetailsComponent
-    ],
+  ],
   imports: [
     BrowserModule,
     FormsModule,

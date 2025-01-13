@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status, serializers
-from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer
+from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer, TournamentSerializer
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -10,16 +10,16 @@ from django.db import models
 from django.db.models import Avg, Count, Sum, Q, F
 from django.contrib.auth.models import User
 from accounts.models import Profile
-from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome
-from .serializers import TournamentSerializer
+from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby
+from django.db.models.functions import Abs
+from django.db.models.functions import Cast
 import random
 import string
 from django.db import transaction
-
+from .services.tournament_lobby_service import TournamentLobbyService
 
 def generate_room_id(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -323,7 +323,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         # Opponent type factor: more XP for winning against players than bots
         total_wins = 0
         bot_wins = 0
-        for match in tournament.rounds.filter(matches__winner=player.username):
+        for match in tournament.rounds.filter(matches__winner=player.username): #TODO match var is actually a round object, fix this
             total_wins += 1
             if match.player1_type == 'Bot' or match.player2_type == 'Bot':
                 bot_wins += 1
@@ -1045,6 +1045,142 @@ class ArenaLobbyViewSet(viewsets.ViewSet):
 
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
+
+class TournamentLobbyViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['post'])
+    def create_room(self, request):
+        """Creates a new tournament lobby."""
+        room_id = generate_room_id()
+        host = request.user
+
+        #make sure the host is not in any other rooms / hosts any other rooms
+        self.remove_user_from_other_rooms(host)
+        TournamentLobby.objects.filter(host=host, active_lobby=True).delete()
+
+        # Create the tournament lobby
+        lobby = TournamentLobby.objects.create(
+            room_id=room_id,
+            host=host,
+        )
+
+        return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    @transaction.atomic
+    def join_room(self, request):
+        """Allows a user to join an active tournament lobby."""
+        room_id = request.data.get("room_id")
+        user = request.user
+
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+
+            if user == lobby.host:
+                return Response({"detail": "You are already the host."}, status=status.HTTP_200_OK)
+
+            if user in lobby.guests.all():
+                return Response({"detail": "You are already a participant."}, status=status.HTTP_200_OK)
+
+            if len(lobby.guests.all()) >= lobby.max_player_count: # at most max players -1 because of host
+                return Response({"detail": "Lobby is full."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Add the user as a guest
+            lobby.guests.add(user)
+            lobby.guest_ready_states[user.id] = False  # Initialize ready state
+            TournamentLobbyService.adjust_max_player_count(lobby)
+            lobby.save()
+
+            return Response({"detail": "Joined lobby successfully."}, status=status.HTTP_200_OK)
+
+        except TournamentLobby.DoesNotExist:
+            return Response({"detail": "Lobby not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    def remove_user_from_other_rooms(self, user):
+        """Removes the user from any rooms they are currently in."""
+        # Remove user from any room where they are a guest.
+        lobbies = TournamentLobby.objects.filter(guests=user)
+        for lobby in lobbies:
+            lobby.guests.remove(user)
+            lobby.guest_ready_states.pop(user.id, None)
+            lobby.save()
+
+    def room_status(self, request, room_id=None):
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id)
+
+            return Response({
+                "room_id": room_id,
+                "active_lobby": lobby.active_lobby,
+                "active_tournament": lobby.active_tournament,
+                "host": lobby.host.username,
+                "guests": [{
+                    "username": guest.username,
+                    "is_ready": lobby.guest_ready_states.get(str(guest.id), False)
+                } for guest in lobby.guests.all()],
+                "player_count": lobby.guests.count()+1,
+                "all_ready": lobby.all_ready(),
+                "is_full": lobby.is_full(),
+                "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
+                "max_player_count": lobby.max_player_count,
+                "tournament_type": lobby.tournament_type,
+            }, status=status.HTTP_200_OK)
+
+        except TournamentLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
+    def list_rooms(self, request):
+        """Returns a list of all active tournament lobbies."""
+        lobbies = TournamentLobby.objects.filter(active_lobby=True)
+        data = [
+            {
+                "room_id": lobby.room_id,
+                "active_lobby": lobby.active_lobby,
+                "active_tournament": lobby.active_tournament,
+                "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
+                "host": lobby.host.username,
+                "player_count": lobby.guests.count()+1,
+                "tournament_type": lobby.tournament_type,
+                "max_player_count": lobby.max_player_count,
+            }
+            for lobby in lobbies
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'])
+    def set_ready(self, request):
+        room_id = request.data.get("room_id")
+        is_ready = request.data.get("ready", False)
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+            user = request.user
+
+            # Use the lobby's method to set ready status
+            if user in lobby.guests.all():
+                lobby.set_ready_status(user, is_ready)
+                return Response({"detail": "Updated ready status"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Not part of this lobby"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except ArenaLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<room_id>[^/.]+)')
+    def delete_room(self, request, room_id=None):
+        """Deletes a lobby if the requesting user is the host."""
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+
+            if request.user != lobby.host:
+                return Response({"detail": "Only the host can delete this room."}, status=status.HTTP_403_FORBIDDEN)
+
+            lobby.delete()
+            return Response({"detail": "Lobby deleted successfully."}, status=status.HTTP_200_OK)
+
+        except TournamentLobby.DoesNotExist:
+            return Response({"detail": "Lobby not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class StatsViewSet(viewsets.ViewSet):
     """

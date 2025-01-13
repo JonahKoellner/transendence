@@ -1,0 +1,65 @@
+<div class="game-room">
+  <header>
+    <h2>Tournament Lobby</h2>
+    <p>Room ID: {{ roomId }}</p>
+    <button (click)="copyLinkToClipboard()" class="copy-link-btn">Copy Invite Link</button>
+  </header>
+
+  <!-- Tournament Type Selection -->
+  <div class="tournament-type-selection">
+    <h3>Select Tournament Type:</h3>
+    <div class="type-buttons">
+      <button
+        *ngFor="let type of tournamentTypes"
+        [class.selected]="type.type === tournamentType"
+        [disabled]="!isHost"
+        (click)="selectTournamentType(type)"
+      >
+        {{ type.type }}
+      </button>
+    </div>
+    <div *ngIf="!tournamentType" class="text-danger">
+      <small>Select a Tournament Style</small>
+    </div>
+  </div>
+  <p *ngIf="tournamentDescription" class="description">{{ tournamentDescription }}</p>
+
+  <!-- Player Count Selection -->
+  <div *ngIf="playerCountOptions.length > 0" class="player-count-selection">
+    <h3>Player Count:</h3>
+    <p>maxPlayerCount: {{ maxPlayerCount }}</p>
+    <div class="count-buttons">
+      <!-- TODO: make this not a button -> just to see the current player count -->
+      <button
+        *ngFor="let count of playerCountOptions"
+        [class.selected]="count === maxPlayerCount"
+        [disabled]="true"
+        (click)="selectMaxPlayerCount(count)"
+      >
+        {{ count }}
+      </button>
+    </div>
+  </div>
+
+  <section class="players" *ngIf="lobbyState">
+    <h3>Players</h3>
+    <ul>
+      <li>
+        <strong>Host:</strong> {{ lobbyState.host }}
+      </li>
+      <li *ngFor="let guest of lobbyState.guests">
+        <strong>Guest:</strong> {{ guest.username }}
+        <span [class.ready]="guest.ready_state" [class.not-ready]="!guest.ready_state">
+          {{ guest.ready_state ? 'Ready' : 'Not Ready' }}
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="actions">
+    <button *ngIf="isHost" (click)="startTournament()" [disabled]="!lobbyState?.all_ready || lobbyState!.guests.length === 0">Start Tournament</button>
+    <button *ngIf="!isHost" (click)="toggleReadyStatus()">
+      {{ isReady ? 'Unready' : 'Ready' }}
+    </button>
+  </section>
+</div>
