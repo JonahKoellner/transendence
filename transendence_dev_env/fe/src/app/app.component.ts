@@ -44,7 +44,7 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     // Initial authentication check.
-    this.checkAuthentication();
+    //this.checkAuthentication();
 
     // Start periodic token refresh if authenticated
     if (this.authService.isAuthenticated()) {

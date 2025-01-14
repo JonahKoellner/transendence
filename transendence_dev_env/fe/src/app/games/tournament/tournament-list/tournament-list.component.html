@@ -1,49 +1,104 @@
 <div class="tournament-list">
   <h2>All Tournaments</h2>
+  
+  <!-- Error Message -->
   <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
 
-  <!-- Filter and Sort Controls -->
-  <div class="controls" *ngIf="!isLoading">
-    <input
-      type="text"
-      [(ngModel)]="searchName"
-      (input)="applyFilters()"
-      placeholder="Search by name"
-      class="filter-input"
-    />
+  <!-- Toggle Filters Button -->
+  <button class="toggle-filters-button" (click)="showFilters = !showFilters">
+    <span>Filters &amp; Sorting</span>
+    <!-- Simple arrow icon that rotates based on showFilters state -->
+    <span class="arrow-icon" [class.rotated]="showFilters">▼</span>
+  </button>
 
-    <input
-      type="text"
-      [(ngModel)]="searchParticipant"
-      (input)="applyFilters()"
-      placeholder="Search by participant"
-      class="filter-input"
-    />
+  <!-- Filter & Sort Controls (collapsible) -->
+  <div class="controls" *ngIf="showFilters">
+    <h3 class="controls-title">Filters &amp; Sorting</h3>
 
-    <label>
-      Start Date:
-      <input type="date" [(ngModel)]="startDate" (change)="applyFilters()" />
-    </label>
+    <div class="row">
+      <!-- Search by Name -->
+      <div class="control-field">
+        <label for="searchName" class="control-label">Search Name</label>
+        <input
+          id="searchName"
+          type="text"
+          [(ngModel)]="searchName"
+          (input)="applyFilters()"
+          placeholder="Tournament name..."
+          class="filter-input"
+        />
+      </div>
 
-    <label>
-      End Date:
-      <input type="date" [(ngModel)]="endDate" (change)="applyFilters()" />
-    </label>
+      <!-- Search by Participant -->
+      <div class="control-field">
+        <label for="searchParticipant" class="control-label">Participant</label>
+        <input
+          id="searchParticipant"
+          type="text"
+          [(ngModel)]="searchParticipant"
+          (input)="applyFilters()"
+          placeholder="Participant name..."
+          class="filter-input"
+        />
+      </div>
+    </div>
 
-    <select [(ngModel)]="sortOrder" (change)="applyFilters()" class="sort-select">
-      <option value="desc">Newest First</option>
-      <option value="asc">Oldest First</option>
-    </select>
+    <div class="row">
+      <!-- Start Date -->
+      <div class="control-field">
+        <label for="startDate" class="control-label">Start Date</label>
+        <input
+          id="startDate"
+          type="date"
+          [(ngModel)]="startDate"
+          (change)="applyFilters()"
+          class="date-input"
+        />
+      </div>
 
-    <select
-      [(ngModel)]="filterTournamentType"
-      (change)="applyFilters()"
-      class="sort-select"
-    >
-      <option value="all">All Tournaments</option>
-      <option value="offline">Offline Only</option>
-      <option value="online">Online Only</option>
-    </select>
+      <!-- End Date -->
+      <div class="control-field">
+        <label for="endDate" class="control-label">End Date</label>
+        <input
+          id="endDate"
+          type="date"
+          [(ngModel)]="endDate"
+          (change)="applyFilters()"
+          class="date-input"
+        />
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Sort Order -->
+      <div class="control-field">
+        <label for="sortOrder" class="control-label">Sort Order</label>
+        <select
+          id="sortOrder"
+          [(ngModel)]="sortOrder"
+          (change)="applyFilters()"
+          class="sort-select"
+        >
+          <option value="desc">Newest First</option>
+          <option value="asc">Oldest First</option>
+        </select>
+      </div>
+
+      <!-- Offline/Online Filter -->
+      <div class="control-field">
+        <label for="filterType" class="control-label">Tournament Type</label>
+        <select
+          id="filterType"
+          [(ngModel)]="filterTournamentType"
+          (change)="applyFilters()"
+          class="sort-select"
+        >
+          <option value="all">All Tournaments</option>
+          <option value="offline">Offline Only</option>
+          <option value="online">Online Only</option>
+        </select>
+      </div>
+    </div>
   </div>
 
   <!-- Loading Spinner -->
@@ -52,53 +107,107 @@
     <p>Loading...</p>
   </div>
 
-  <!-- Tournament Cards (Only render when not loading) -->
-  <div class="tournament-cards" *ngIf="!isLoading">
-    <div
-      *ngFor="
-        let tournament of filteredTournaments
-          | paginate:
-              {
-                itemsPerPage: itemsPerPageTournaments,
-                currentPage: pTournaments,
-                id: 'tournamentPagination'
-              }
-      "
-      class="tournament-card"
-    >
-      <a
-        [routerLink]="
-          tournament?.isOnline
-            ? ['/games/tournament/online/details', tournament?.id]
-            : ['/games/tournament/details', tournament?.id]
+  <!-- OFFLINE SECTION -->
+  <section
+    class="offline-section"
+    *ngIf="!isLoading && (filterTournamentType === 'all' || filterTournamentType === 'offline')"
+  >
+    <h3 class="section-title">Offline Tournaments</h3>
+    <div class="tournament-cards">
+      <div
+        *ngFor="
+          let tournament of filteredOfflineTournaments
+            | paginate:
+                {
+                  itemsPerPage: itemsPerPageTournaments,
+                  currentPage: pTournaments,
+                  id: 'offlineTournamentPagination'
+                }
         "
-        class="card-link"
+        class="tournament-card"
       >
-        <div class="card-header">
-          <h3>{{ tournament?.name }}</h3>
-          <span
-            class="status"
-            [class.completed]="tournament?.status === 'completed'"
-          >
-            {{ tournament?.status | titlecase }}
-          </span>
-        </div>
-        <div class="card-body">
-          <p><strong>Type:</strong> {{ tournament?.type }}</p>
-          <p><strong>Mode:</strong> {{ tournament?.isOnline ? 'Online' : 'Offline' }}</p>
-          <p><strong>Participants:</strong> {{ tournament?.participants?.length }}</p>
-          <p><strong>Winner:</strong> {{ tournament?.finalWinner || 'TBD' }}</p>
-          <p><strong>Start:</strong> {{ tournament?.startTime | date: 'short' }}</p>
-        </div>
-      </a>
+        <a
+          [routerLink]="['/games/tournament/details', tournament.id]"
+          class="card-link"
+        >
+          <div class="card-header">
+            <h4>{{ tournament.name }}</h4>
+            <span class="status" [class.completed]="tournament.status === 'completed'">
+              {{ tournament.status | titlecase }}
+            </span>
+          </div>
+          <div class="card-body">
+            <p><strong>Type:</strong> {{ tournament.type }}</p>
+            <p><strong>Mode:</strong> Offline</p>
+            <p><strong>Participants:</strong> {{ tournament.all_participants?.length }}</p>
+            <p><strong>Winner:</strong> {{ tournament.final_winner || 'TBD' }}</p>
+            <p>
+              <strong>Start:</strong>
+              {{ tournament.start_time | date: 'short' }}
+            </p>
+          </div>
+        </a>
+      </div>
     </div>
     <pagination-controls
       (pageChange)="pTournaments = $event"
-      id="tournamentPagination"
+      id="offlineTournamentPagination"
       class="custom-pagination tournament-pagination"
       [directionLinks]="true"
       [autoHide]="true"
     >
     </pagination-controls>
-  </div>
+  </section>
+
+  <!-- ONLINE SECTION -->
+  <section
+    class="online-section"
+    *ngIf="!isLoading && (filterTournamentType === 'all' || filterTournamentType === 'online')"
+  >
+    <h3 class="section-title">Online Tournaments</h3>
+    <div class="tournament-cards">
+      <div
+        *ngFor="
+          let tournament of filteredOnlineTournaments
+            | paginate:
+                {
+                  itemsPerPage: itemsPerPageTournaments,
+                  currentPage: pTournaments,
+                  id: 'onlineTournamentPagination'
+                }
+        "
+        class="tournament-card"
+      >
+        <a
+          [routerLink]="['/games/tournament/online/details', tournament.id]"
+          class="card-link"
+        >
+          <div class="card-header">
+            <h4>{{ tournament.name }}</h4>
+            <span class="status" [class.completed]="tournament.status === 'completed'">
+              {{ tournament.status | titlecase }}
+            </span>
+          </div>
+          <div class="card-body">
+            <p><strong>Type:</strong> {{ tournament.type }}</p>
+            <p><strong>Mode:</strong> Online</p>
+            <p><strong>Participants:</strong> {{ tournament.participants.length }}</p>
+            <p><strong>Winner:</strong> {{ tournament.finalWinner || 'TBD' }}</p>
+            <p>
+              <strong>Start:</strong>
+              {{ tournament.startTime | date: 'short' }}
+            </p>
+          </div>
+        </a>
+      </div>
+    </div>
+    <pagination-controls
+      (pageChange)="pTournaments = $event"
+      id="onlineTournamentPagination"
+      class="custom-pagination tournament-pagination"
+      [directionLinks]="true"
+      [autoHide]="true"
+    >
+    </pagination-controls>
+  </section>
 </div>
