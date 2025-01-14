@@ -79,12 +79,6 @@ export class AboutComponent implements OnInit, OnDestroy {
       avatar: 'https://cdn.intra.42.fr/users/8c087da4532c6d41740814505a57a870/nburchha.jpg',
       role: `Implemented the comprehensive online tournament system, enabling players to join and compete in large-scale brackets. 
              He ensured reliable matchmaking, bracket management, and robust networking for a seamless multiplayer experience.`
-    },
-    {
-      name: 'Felix Böck',
-      avatar: 'https://cdn.intra.42.fr/users/896c969a835505db23a2c1cb9cd5527c/fbock.jpg',
-      role: `Focused on rigorous testing and continuous bug fixing, upholding stability and performance standards. 
-             By refining test suites and addressing edge cases, he helped maintain a smooth, high-quality user experience.`
     }
   ];
 
@@ -103,8 +97,8 @@ export class AboutComponent implements OnInit, OnDestroy {
         'Decided not to implement due to unclear requirements and limited practical benefits.'
       ],
       subModules: [
-        { description: 'Use a Framework as backend (1 point) - Integrated using Django.', status: 'completed' },
-        { description: 'Use a front-end framework (0.5 points) - Leveraged Angular and Bootstrap for UI development.', status: 'completed' },
+        { description: 'Use a Framework as backend (1 point)', status: 'completed' },
+        { description: 'Use a front-end framework (0.5 points)', status: 'completed' },
         { description: 'Database Integration (0.5 points) - Implemented with PostgreSQL for relational data management.', status: 'completed' },
         { description: 'Blockchain Score Storage (1 point)', status: 'incomplete' }
       ]
@@ -199,12 +193,12 @@ export class AboutComponent implements OnInit, OnDestroy {
       status: 'in_progress',
       description: 'Graphics Module',
       details: 'Developing advanced 3D graphics techniques to enhance visual appeal and user engagement.',
-      totalPoints: 0,
+      totalPoints: 1,
       implementationDetails: [
         'Currently implementing advanced 3D techniques to improve game visuals and user experience.'
       ],
       subModules: [
-        { description: 'Implementing Advanced 3D Techniques (1 point)', status: 'in_progress' }
+        { description: 'Implementing Advanced 3D Techniques (1 point)', status: 'completed' }
       ]
     },
     {

@@ -1,73 +1,86 @@
+// auth.interceptor.ts
 import { Injectable } from '@angular/core';
 import {
   HttpEvent, HttpInterceptor, HttpHandler,
   HttpRequest, HttpErrorResponse
 } from '@angular/common/http';
 import { AuthService } from './auth.service';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import {
-  catchError, filter, switchMap, take
-} from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Skip specific URLs that should not trigger a refresh
+    // 1) Bypass refresh for specific endpoints if needed:
     if (
-      req.url.includes('api.intra.42.fr') || 
+      req.url.includes('api.intra.42.fr') ||
       req.url.endsWith('/accounts/logout/') ||
       req.url.endsWith('/accounts/login/') ||
       req.url.endsWith('/accounts/register/') ||
       req.url.endsWith('/accounts/verify-otp/') ||
-      req.url.endsWith('/accounts/token/refresh/')  // exclude refresh endpoint to avoid infinite loop
+      req.url.endsWith('/accounts/token/refresh/')
     ) {
       return next.handle(req);
     }
 
-    // Always perform a refresh before proceeding with the request
+    // 2) Attach the current token
+    const authReq = this.addToken(req, this.authService.getAccessToken());
+    
+    // 3) Pass request along; if 401 arises, handle
+    return next.handle(authReq).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          // Possibly expired token => refresh once
+          return this.handle401Error(authReq, next);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+
+  private handle401Error(originalReq: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
       return this.authService.refreshToken().pipe(
-        switchMap(newAccess => {
+        switchMap((newToken: string) => {
+          // Refresh succeeded
           this.isRefreshing = false;
-          this.refreshTokenSubject.next(newAccess);
-          const authReq = this.addTokenToRequest(req);
-          return next.handle(authReq);
+          this.refreshTokenSubject.next(newToken);
+          // Retry the original request w/ new token
+          return next.handle(this.addToken(originalReq, newToken));
         }),
-        catchError((err: HttpErrorResponse) => {
+        catchError(err => {
+          // Refresh failed => logout (deferred via setTimeout or Promise)
           this.isRefreshing = false;
-          if (err.status !== 404) { //possible need to exclude more than just 404
-            this.authService.logout('Token refresh failed');
-          }
+          setTimeout(() => this.authService.logout('Token refresh failed'), 0);
           return throwError(() => err);
-        }),
+        })
       );
     } else {
-      // If a refresh is already in progress, wait until it's done
+      // If a refresh is already in progress, wait for it
       return this.refreshTokenSubject.pipe(
         filter(token => token !== null),
         take(1),
-        switchMap(token => {
-          const authReq = this.addTokenToRequest(req);
-          return next.handle(authReq);
-        })
+        switchMap(token => next.handle(this.addToken(originalReq, token!)))
       );
     }
   }
 
-  private addTokenToRequest(req: HttpRequest<any>): HttpRequest<any> {
-    const token = this.authService.getAccessToken();
-    return req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+  private addToken(req: HttpRequest<any>, token: string | null): HttpRequest<any> {
+    if (token) {
+      return req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+    return req;
   }
 }

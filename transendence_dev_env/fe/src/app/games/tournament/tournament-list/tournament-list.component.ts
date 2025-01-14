@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { GameService } from '../../game.service';
 import { Tournament } from '../local/start/start.component';
 import { TournamentService } from 'src/app/services/tournament.service';
@@ -14,6 +15,7 @@ interface CombinedTournament {
   finalWinner?: string | null;
   isOnline: boolean;
 }
+
 @Component({
   selector: 'app-tournament-list',
   templateUrl: './tournament-list.component.html',
@@ -38,7 +40,6 @@ export class TournamentListComponent implements OnInit {
   endDate: string = '';
   sortOrder: 'asc' | 'desc' = 'desc';
 
-  // An optional filter to show only offline or online
   // Possible values: 'all', 'offline', 'online'
   filterTournamentType: 'all' | 'offline' | 'online' = 'all';
 
@@ -46,40 +47,48 @@ export class TournamentListComponent implements OnInit {
   pTournaments: number = 1;
   itemsPerPageTournaments: number = 6;
 
+  // Loading flag
+  isLoading: boolean = false;
+
   constructor(
     private gameService: GameService,
     private tournamentService: TournamentService
   ) {}
 
   ngOnInit(): void {
-    // Fetch both offline and online tournaments
-    this.fetchTournaments();
-    this.fetchOnlineTournaments();
+    this.isLoading = true;
+    this.fetchAllTournaments();
   }
 
   onPageChangeTournaments(page: number) {
     this.pTournaments = page;
   }
 
-  fetchTournaments(): void {
-    this.gameService.getTournaments().subscribe({
-      next: (tournaments) => {
-        this.tournaments = tournaments;
-        // Once we have the offline tournaments, merge them
-        this.mergeAllTournaments();
-      },
-      error: () => (this.errorMessage = 'Failed to load offline tournaments')
-    });
-  }
-
-  fetchOnlineTournaments(): void {
-    this.tournamentService.getTournaments().subscribe({
-      next: (onlineTournaments) => {
+  /**
+   * Fetch both offline & online tournaments simultaneously,
+   * then merge into a single array.
+   */
+  private fetchAllTournaments(): void {
+    forkJoin([
+      this.gameService.getTournaments(),       // Returns offline tournaments
+      this.tournamentService.getTournaments()  // Returns online tournaments
+    ]).subscribe({
+      next: ([offlineTournaments, onlineTournaments]) => {
+        this.tournaments = offlineTournaments;
         this.onlineTournaments = onlineTournaments;
-        // Once we have the online tournaments, merge them
-        this.mergeAllTournaments();
+        try {
+          this.mergeAllTournaments();
+        } catch (error) {
+          console.error('Failed to merge tournaments:', error);
+          this.errorMessage = 'Failed to merge tournaments.';
+          this.isLoading = false;
+        }
       },
-      error: () => (this.errorMessage = 'Failed to load online tournaments')
+      error: (error) => {
+        console.error('Failed to load tournaments:', error);
+        this.errorMessage = 'Failed to load tournaments.';
+        this.isLoading = false;
+      }
     });
   }
 
@@ -87,12 +96,12 @@ export class TournamentListComponent implements OnInit {
    * Merge offline tournaments & online tournaments into a single array
    * then apply filters.
    */
-  mergeAllTournaments(): void {
-    // Map offline tournaments to CombinedTournament
+  private mergeAllTournaments(): void {
+    // Map offline tournaments
     const offlineMapped: CombinedTournament[] = this.tournaments.map((t) => ({
       id: t.id ?? 0,
       name: t.name,
-      type: t.type, // or t.type.toString() if needed
+      type: t.type,
       participants: t.all_participants || [],
       startTime: new Date(t.start_time),
       status: t.status,
@@ -100,9 +109,8 @@ export class TournamentListComponent implements OnInit {
       isOnline: false,
     }));
 
-    // Map online tournaments to CombinedTournament
+    // Map online tournaments
     const onlineMapped: CombinedTournament[] = this.onlineTournaments.map((ot) => ({
-      // For online tournaments, use roomId as 'id' or anything unique
       id: ot.id,
       name: ot.name,
       type: ot.type,
@@ -116,8 +124,11 @@ export class TournamentListComponent implements OnInit {
     // Combine them
     this.allTournaments = [...offlineMapped, ...onlineMapped];
 
-    // Now apply filters + sorting to get filteredTournaments
-    this.applyFilters();
+    // Defer filter + set loading in a microtask
+    Promise.resolve().then(() => {
+      this.applyFilters();
+      this.isLoading = false;
+    });
   }
 
   applyFilters(): void {
@@ -142,7 +153,7 @@ export class TournamentListComponent implements OnInit {
           ? tournamentTime <= new Date(this.endDate).getTime()
           : true;
 
-        // Filter by online/offline if user wants to see only one type
+        // Filter by online/offline
         const matchesType =
           this.filterTournamentType === 'all' ||
           (this.filterTournamentType === 'online' && tournament.isOnline) ||
