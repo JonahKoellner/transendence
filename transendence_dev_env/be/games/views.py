@@ -55,9 +55,9 @@ class GameViewSet(viewsets.ModelViewSet):
         performance_multiplier = 1 + min(score_difference / 100, 0.5)  # Up to +50% XP based on score gap
 
         # Game mode multiplier: more challenging modes award more XP
-        if game.game_mode == Game.PVE:
+        if game.game_mode == Game.PVE or game.game_mode == Game.THREE_D_PVE:
             mode_multiplier = 0.7 if not is_winner else 1.0  # PvE easier, give less XP if lost
-        elif game.game_mode == Game.LOCAL_PVP:
+        elif game.game_mode == Game.LOCAL_PVP or game.game_mode == Game.THREE_D_PVP:
             mode_multiplier = 1.0 if not is_winner else 1.1  # Balanced mode, slight bonus for win
         elif game.game_mode == Game.ONLINE_PVP:
             mode_multiplier = 1.1 if not is_winner else 1.3  # Online PvP, higher reward for higher challenge

@@ -43,6 +43,9 @@ export class HomeComponent {
       case 'online_chaos':
         this.router.navigate(['/games/online-pvp-chaos/rooms']);
         break;
+      case '3d':
+        this.router.navigate(['/games/three-d']);
+        break;
     }
   }
   navigateToLeaderboards() {
