@@ -93,9 +93,6 @@ logs:
 
 # Clear everything and remove the volumes
 clean: down
-	@echo "Removing .env"
-	@rm ./elk/.env
-	@rm ./keyvault/.env
 	@docker system prune -af
 	@docker volume ls -q | xargs -r docker volume rm
 
