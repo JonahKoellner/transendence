@@ -239,13 +239,17 @@
               class="tournament-item"
             >
               <a
-                [routerLink]="['/games/tournament/details', tournament.id]"
+                [routerLink]="
+                  tournament.isOnline
+                    ? ['/games/tournament/online/details', tournament.id]
+                    : ['/games/tournament/details', tournament.id]
+                "
                 class="tournament-link"
               >
                 <strong>{{ tournament.name }}</strong>
               </a>
               <p class="tournament-details">
-                {{ tournament.type }} | Status: {{ tournament.status }}
+                {{ tournament.isOnline ? 'Online' : 'Offline' }} {{ tournament.type }} | Status: {{ tournament.status }}
               </p>
             </div>
 
@@ -259,6 +263,7 @@
             </pagination-controls>
           </div>
         </div>
+
       </div>
 
       <!-- ACHIEVEMENTS TAB -->

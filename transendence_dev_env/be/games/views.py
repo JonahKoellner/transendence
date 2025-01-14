@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status, serializers
-from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer, TournamentSerializer
+from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer, TournamentSerializer, OnlineTournamentSerializer
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -10,13 +10,16 @@ from django.db import models
 from django.db.models import Avg, Count, Sum, Q, F
 from django.contrib.auth.models import User
 from accounts.models import Profile
-from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby
+from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby, OnlineTournament
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
 import random
 import string
 from django.db import transaction
 from .services.tournament_lobby_service import TournamentLobbyService
+
+import logging
+logger = logging.getLogger('game_debug')
 
 def generate_room_id(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -410,6 +413,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        logger.warning(serializer.data)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -484,6 +488,43 @@ class TournamentViewSet(viewsets.ModelViewSet):
         # Serialize and return the results
         serializer = self.get_serializer(tournaments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class OnlineTournamentViewSet(viewsets.ModelViewSet):
+    """
+    A viewset that provides standard actions for OnlineTournament, 
+    with additional filtering by participant or user.
+    """
+    queryset = OnlineTournament.objects.all()
+    serializer_class = OnlineTournamentSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
+    def get_tournaments_by_user(self, request, user_id=None):
+        """
+        Get all tournaments where the user is a participant or the host.
+        """
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Filter tournaments by host or participant
+        tournaments = OnlineTournament.objects.filter(Q(participants=user)).distinct()
+        logger.warning(f'tournaments in tournaments by user: {[tournament.id for tournament in tournaments]}')
+        serializer = self.get_serializer(tournaments, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a specific tournament by ID.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        logger.warning(f'retrieve: {serializer.data}')
+        return Response(serializer.data)
+
 
 class LobbyViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]

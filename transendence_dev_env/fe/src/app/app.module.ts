@@ -87,6 +87,7 @@ import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.com
 import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
 import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
 import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/charts-global-details.component';
+import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
 import { ThreeDComponent } from './games/three-d/three-d.component';
 import { GameCanvasThreeDPveComponent } from './games/three-d/game-canvas-three-d-pve/game-canvas-three-d-pve.component';
 import { GameCanvasThreeDPvpComponent } from './games/three-d/game-canvas-three-d-pvp/game-canvas-three-d-pvp.component';
@@ -169,7 +170,8 @@ import { GameCanvasThreeDPvpComponent } from './games/three-d/game-canvas-three-
     RemoveFriendComponent,
     BlockFriendComponent,
     ChartsUserDetailsComponent,
-    ChartsGlobalDetailsComponent
+    ChartsGlobalDetailsComponent,
+    OnlineDetailsComponent
   ],
   imports: [
     BrowserModule,

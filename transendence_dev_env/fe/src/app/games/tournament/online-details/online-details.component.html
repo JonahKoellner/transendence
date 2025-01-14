@@ -1,0 +1,59 @@
+<div class="tournament-details" *ngIf="onlineTournament">
+    <div class="tournament-header">
+      <h2>{{ onlineTournament.name }}</h2>
+      <p
+        class="status"
+        [class.completed]="onlineTournament.status === 'completed'"
+        [class.ongoing]="onlineTournament.status === 'ongoing'"
+        [class.pending]="onlineTournament.status === 'pending'"
+      >
+        Status: {{ onlineTournament.status | titlecase }}
+      </p>
+    </div>
+  
+    <div class="tournament-info">
+      <div class="info-section">
+        <h3>Details</h3>
+        <p><strong>Type:</strong> {{ onlineTournament.type }}</p>
+        <p><strong>Participants:</strong> {{ onlineTournament.participants.length }}</p>
+        <p><strong>Start Time:</strong> {{ onlineTournament.startTime | date: 'medium' }}</p>
+        <p><strong>End Time:</strong> {{ onlineTournament.endTime | date: 'medium' }}</p>
+        <!-- Duration calculation if needed -->
+      </div>
+  
+      <div class="winner-section" *ngIf="onlineTournament.finalWinner">
+        <h3>Winner</h3>
+        <p><strong>Name:</strong> {{ onlineTournament.finalWinner }}</p>
+      </div>
+    </div>
+  
+    <div class="rounds-section" *ngIf="onlineTournament.rounds?.length">
+      <h3>Rounds</h3>
+      <div *ngFor="let round of onlineTournament.rounds" class="round-card">
+        <h4>Round {{ round.roundNumber }} - {{ round.stage }}</h4>
+  
+        <div *ngFor="let match of round.matches" class="match-card">
+          <div class="players">
+            <div class="player">
+              <span class="name">{{ match.player1 || 'TBD' }}</span>
+              <span class="score">Score: {{ match.player1Score ?? 0 }}</span>
+            </div>
+            <div class="vs">vs</div>
+            <div class="player">
+              <span class="name">{{ match.player2 || 'TBD' }}</span>
+              <span class="score">Score: {{ match.player2Score ?? 0 }}</span>
+            </div>
+          </div>
+  
+          <div class="match-result">
+            <p><strong>Winner:</strong> {{ match.winner || 'TBD' }}</p>
+            <p><strong>Outcome:</strong> {{ match.outcome || 'Pending' }}</p>
+            <p><strong>Duration:</strong> {{ match.duration || 0 }} ms</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  

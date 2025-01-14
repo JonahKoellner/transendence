@@ -49,6 +49,7 @@ import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room
 import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
 import { ImpressumComponent } from './home/impressum/impressum.component';
+import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
 import { ThreeDComponent } from './games/three-d/three-d.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
@@ -98,6 +99,7 @@ const routes: Routes = [
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/online/details/:id', component: OnlineDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
   { path: 'games/list', component: GamesListComponent, canActivate: [AuthGuard] },
   { path: 'games/leaderboard', component: LeaderboardComponent, canActivate: [AuthGuard] },

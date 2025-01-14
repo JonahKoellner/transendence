@@ -2538,7 +2538,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             return False
         return self.user == lobby.host
 
-#TODO when is the tournament deleted? -> when there is no player connected to the tournament websocket anymore and the tournament is done. -> if everyone leaves the tournament will automatically be done.
+#TODO when is the tournament deleted? -> only via rest endpoint, or not at all. we want to keep the tournament for stats and stuff
 
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -2560,18 +2560,18 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         
         # Load the tournament and broadcast the initial state
         self.tournament = await database_sync_to_async(OnlineTournament.objects.get)(room_id=self.room_id)
-        logger.info(f"User {self.user.username} connected to tournament {self.room_id}.")
+        logger.debug(f"User {self.user.username} connected to tournament {self.room_id}.")
         await self.broadcast_tournament()
-        
+
     async def disconnect(self, close_code):
         # Remove the user from the channel group
-        logger.info(f"User {self.user.username} disconnected from tournament {self.room_id}.")
+        logger.debug(f"User {self.user.username} disconnected from tournament {self.room_id}.")
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
-        
-        
+
+
         await self.handle_user_disconnect()
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -2619,6 +2619,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def handle_user_disconnect(self):
         self.tournament.refresh_from_db()
+        if self.tournament.status == 'completed':
+            return
         if self.user not in self.tournament.participants.all():
             return
         self.tournament.participants.remove(self.user)
@@ -2647,7 +2649,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                     logger.debug(f"Removed {self.user.username} from match {match.id}")
         # check if we can finish the round, because the player left. if so, finish the round
         if self.check_round():
-            logger.info(f'check_round returned True, finishing round after user disconnect')
+            logger.debug(f'check_round returned True, finishing round after user disconnect')
             self.finish_round()
             self.next_round()
 
@@ -2683,20 +2685,20 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             match = OnlineMatch.objects.get(
                 Q(room_id=self.room_id) & Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
             )
-            logger.info(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
+            logger.debug(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
             return match.winner != self.user
         except OnlineMatch.DoesNotExist:
             return False
     
     @database_sync_to_async
     def finish_round(self):
-        logger.info(f'tournamentconsumer finish round, current_round: {self.tournament.current_round}')
+        logger.debug(f'tournamentconsumer finish round, current_round: {self.tournament.current_round}')
         self.tournament.refresh_from_db()
         round_robin_winner_ids = RoundService.end_round(self.tournament.rounds.get(round_number=self.tournament.current_round))
         if self.tournament.type == TournamentType.ROUND_ROBIN:
-            logger.info(f'round_robin_winner_ids: {round_robin_winner_ids}')
+            logger.debug(f'round_robin_winner_ids: {round_robin_winner_ids}')
             for id in round_robin_winner_ids:
-                logger.info(f'round_robin_winner_id: {id}')
+                logger.debug(f'round_robin_winner_id: {id}')
                 if str(id) in self.tournament.round_robin_scores:
                     self.tournament.round_robin_scores[str(id)] += 1
                 else:
@@ -2706,11 +2708,11 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def next_round(self):
-        logger.info(f'tournamentconsumer next round, current_round: {self.tournament.current_round}')
+        logger.debug(f'tournamentconsumer next round, current_round: {self.tournament.current_round}')
         self.tournament.refresh_from_db()
         TournamentService.next_round(self.tournament)
         self.tournament.save()
-        logger.info(f'tournamentconsumer after function call current_round: {self.tournament.current_round}')
+        logger.debug(f'tournamentconsumer after function call current_round: {self.tournament.current_round}')
 
     async def alert(self, event):
         """handle the alert WebSocket message type."""
@@ -2757,8 +2759,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         p2 = match.player2
         if p1 == None or p2 == None:
             raise Exception("Both players need to real players to start a game!")
-        logger.info(f"Sending message to start game for match {match_id}")
-        logger.info(f"start_game p1_id: {p1.id}, p2_id: {p2.id}")
+        logger.debug(f"Sending message to start game for match {match_id}")
+        logger.debug(f"start_game p1_id: {p1.id}, p2_id: {p2.id}")
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -2779,10 +2781,10 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             dict = self.tournament.participants_ready_states
             id1 = match.player1.id
             id2 = match.player2.id
-            logger.info(f"check p1_id: {id1}, p2_id: {id2}")
+            logger.debug(f"check p1_id: {id1}, p2_id: {id2}")
             if str(id1) in dict and str(id2) in dict and dict[str(id1)] and dict[str(id2)]:
                 return match.match_id
-        logger.info(f"Could not start game for user {user.username}")
+        logger.warning(f"Could not start game for user {user.username}")
 
     @database_sync_to_async
     def get_match_for_round_and_id(self, round, match_id):
@@ -2853,9 +2855,9 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         self.game_manager_channel = await self.get_or_create_game_manager(self.channel_name)
         if self.game_manager_channel == self.channel_name:
-            logger.info(f"Game manager channel created {self.channel_name} (user: {self.scope['user'].username})")
+            logger.debug(f"Game manager channel created {self.channel_name} (user: {self.scope['user'].username})")
         else:
-            logger.info(f"Game manager channel already exists {self.game_manager_channel} (user: {self.scope['user'].username})")
+            logger.debug(f"Game manager channel already exists {self.game_manager_channel} (user: {self.scope['user'].username})")
             await self.channel_layer.send(
                 self.game_manager_channel,
                 {
@@ -2899,7 +2901,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         try:
             action = content.get("action")
-            logger.info(f"Received action: {action} from user {self.scope['user'].username}")
+            logger.debug(f"Received action: {action} from user {self.scope['user'].username}")
             if action in ["keydown", "keyup"]:
                 await self.handle_key_event(action, content)
 
@@ -2913,9 +2915,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def handle_key_event(self, action, content):
         key = content.get("key")
         user_id = content.get("user_id")
-        
-        logger.info(f'user_id: {user_id}, backend left: {self.left_player.id}, right: {self.right_player.id}')
-        
+
         max_speed = 10
         if action == "keydown":
             if key == "KeyW":
@@ -2942,18 +2942,14 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def update_paddle_speed(self, event):
         user_id = event["user_id"]
         speed = event["speed"]
-        logger.info(f"Updating paddle speed for user {user_id} to {speed}")
         async with self.game_lock:
             if await self.is_left_player_id(user_id):
-                logger.info(f"Updating left paddle speed to {speed}")
                 self.left_paddle_speed = speed
             else:
                 self.right_paddle_speed = speed
-                logger.info(f'Updating right paddle speed to {speed}')
-        logger.info(f"after updating: left_paddle_speed: {self.left_paddle_speed}, right_paddle_speed: {self.right_paddle_speed}")
+            logger.debug(f'updated paddle speeds: left: {self.left_paddle_speed} right: {self.right_paddle_speed}')
 
     async def player_disconnected(self, event):
-        logger.info(f"Player disconnected: {event['user']}")
         await self.send_json({
             "type": "player_disconnected",
             "user": event["user"]
@@ -2965,7 +2961,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         try:
             total_time = 5  # Total match time in seconds
             for remaining_time in range(total_time, 0, -1):
-                logger.info(f"Remaining time until start: {remaining_time}, sent from {self.scope['user'].username}")
+                logger.debug(f"Remaining time until start: {remaining_time}, sent from {self.scope['user'].username}")
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -2984,7 +2980,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {"type": "game_started"}
         )
-        logger.info('Starting game loop')
+        logger.debug('Starting game loop')
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
         self.match_end_task = asyncio.create_task(self.match_timer())
@@ -3013,14 +3009,14 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def player_ready(self, event): # only received by the game manager, so the game manager can start the game
         """game manager listenes to player_ready event, so it can start the game+countdown"""
-        logger.info(f'player_ready event received by {self.scope["user"].username}')
+        logger.debug(f'player_ready event received by {self.scope["user"].username}')
         self.countdown_task = asyncio.create_task(self.start_countdown())
 
     async def match_timer(self):
         try:
             total_time = 30  # Total match time in seconds
             for remaining_time in range(total_time, 0, -1):
-                logger.info(f"Remaining time: {remaining_time}")
+                logger.debug(f"Remaining time: {remaining_time}")
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -3111,7 +3107,6 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def send_game_settings(self):
         left_profile = await self.get_profile(self.left_player)
         right_profile = await self.get_profile(self.right_player)
-        logger.info(f'left_profile_color: {left_profile.paddleskin_color}, right_profile_color: {right_profile.paddleskin_color}')
         game_settings = {
             "paddleskin_image_left": left_profile.paddleskin_image.url if left_profile and left_profile.paddleskin_image else None,
             "paddleskin_image_right": right_profile.paddleskin_image.url if right_profile and right_profile.paddleskin_image else None,

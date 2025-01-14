@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import Game
 from django.contrib.auth.models import User
-from .models import Tournament, Round, Match
+from .models import Tournament, Round, Match, Game, OnlineMatch, OnlineRound, OnlineTournament
 class GameSerializer(serializers.ModelSerializer):
     player1 = serializers.SerializerMethodField()
     player2 = serializers.SerializerMethodField()
@@ -269,4 +268,56 @@ class GlobalStatsSerializer(serializers.Serializer):
     leaderboard_most_wins = LeaderboardEntrySerializer(many=True)
     leaderboard_most_games = LeaderboardEntrySerializer(many=True)
     leaderboard_most_tournament_wins = LeaderboardEntrySerializer(many=True)
-    
+
+class OnlineMatchSerializer(serializers.ModelSerializer):
+    player1 = serializers.CharField(source='player1.username', allow_null=True)
+    player2 = serializers.CharField(source='player2.username', allow_null=True)
+    winner = serializers.CharField(source='winner.username', allow_null=True)
+
+    class Meta:
+        model = OnlineMatch
+        fields = [
+            'match_id', 'room_id', 'player1', 'player2', 'player1_score', 'player2_score',
+            'tie_resolved', 'created_at', 'start_time', 'end_time', 'duration', 'status',
+            'outcome', 'player1_ready', 'player2_ready', 'winner', 'game_manager'
+        ]
+        
+class OnlineRoundSerializer(serializers.ModelSerializer):
+    matches = OnlineMatchSerializer(many=True)
+    winners = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = OnlineRound
+        fields = [
+            'round_number', 'stage', 'matches', 'winners', 'status',
+            'start_time', 'end_time', 'duration', 'room_id'
+        ]
+        
+class OnlineTournamentSerializer(serializers.ModelSerializer):
+    rounds = OnlineRoundSerializer(many=True)
+    participants = serializers.SerializerMethodField()
+    final_winner = serializers.CharField(source='final_winner.username', allow_null=True)
+    current_stage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OnlineTournament
+        fields = [
+            'room_id', 'name', 'type', 'status', 'rounds', 'participants',
+            'round_robin_scores', 'final_winner', 'current_stage', 'id'  # Include current_stage here
+        ]
+
+    def get_participants(self, obj):
+        return [
+            {
+                "id": participant.id,
+                "username": participant.username
+            }
+            for participant in obj.participants.all()
+        ]
+
+    def get_current_stage(self, obj):
+        try:
+            current_round = obj.rounds.filter(round_number=obj.current_round).first()
+            return current_round.stage if current_round else None
+        except OnlineRound.DoesNotExist:
+            return None
