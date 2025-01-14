@@ -66,7 +66,8 @@ class OnlineMatch(BaseMatch):
         if self.winner != None:
             return
         self.end_time = timezone.now()
-        self.duration = self.end_time - self.start_time
+        time_delta = self.end_time - self.start_time
+        self.duration = int(time_delta.total_seconds())
         if self.player1 is None or self.player2 is None:
             self.status = 'failed'
             self.winner = self.player1 if self.player1 is not None else self.player2
@@ -151,6 +152,7 @@ class OnlineTournament(BaseTournament):
                         "outcome": match.outcome,
                         "start_time": match.start_time.isoformat() if match.start_time else None,
                         "end_time": match.end_time.isoformat() if match.end_time else None,
+                        "duration": match.duration if match.duration else None
                     }
                     for match in round_instance.matches.all()
                 ],
