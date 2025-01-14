@@ -171,17 +171,17 @@ COPY modsecurity_custom.conf /etc/nginx/modsecurity/modsecurity_custom.conf
 
 
 # Set up ModSecurity
-RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/nginx/modsecurity/modsecurity.conf
+RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine DetectionOnly/' /etc/nginx/modsecurity/modsecurity.conf
+RUN sed -i 's/SecResponseBodyAccess On/SecResponseBodyAccess Off/' /etc/nginx/modsecurity/modsecurity.conf
+# RUN sed -i 's/SecResponseBodyAccess On/SecResponseBodyAccess Off/' /etc/nginx/modsecurity/modsecurity.conf
 RUN echo "Include /etc/nginx/modsecurity/modsecurity_custom.conf" >> /etc/nginx/modsecurity/modsecurity.conf
 
-RUN echo "SecRequestBodyAccess On" >> /etc/nginx/modsecurity/modsecurity.conf && \
-    echo "SecDebugLog /var/log/modsec_debug.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
-    echo "SecDebugLogLevel 3" >> /etc/nginx/modsecurity/modsecurity.conf && \
-    echo "SecAuditEngine On" >> /etc/nginx/modsecurity/modsecurity.conf && \
-    echo "SecAuditLog /var/log/modsec_audit.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
-    echo "SecAuditLogFormat JSON" >> /etc/nginx/modsecurity/modsecurity.conf && \
-    echo "SecAuditLogParts ABIJDEFHZ" >> /etc/nginx/modsecurity/modsecurity.conf
-
+# RUN echo "SecDebugLog /var/log/modsec_debug.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
+#     echo "SecDebugLogLevel 9" >> /etc/nginx/modsecurity/modsecurity.conf && \
+#     echo "SecAuditEngine On" >> /etc/nginx/modsecurity/modsecurity.conf && \
+#     echo "SecAuditLog /var/log/modsec_audit.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
+#     echo "SecAuditLogFormat JSON" >> /etc/nginx/modsecurity/modsecurity.conf && \
+#     echo "SecAuditLogParts ABIJDEFHZ" >> /etc/nginx/modsecurity/modsecurity.conf
 
 # Download the OWASP ModSecurity Core Rule Set
 WORKDIR /etc/nginx/modsecurity
