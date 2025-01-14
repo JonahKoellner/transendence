@@ -19,7 +19,7 @@ class GameSerializer(serializers.ModelSerializer):
         }
 
     def get_player2(self, obj):
-        if obj.game_mode in [Game.ONLINE_PVP, Game.ONLINE_CHAOS_PVP, Game.ONLINE_ARENA_PVP, Game.ARENA_PVP, Game.LOCAL_PVP, Game.CHAOS_PVP]:
+        if obj.game_mode in [Game.ONLINE_PVP, Game.ONLINE_CHAOS_PVP, Game.ONLINE_ARENA_PVP, Game.ARENA_PVP, Game.LOCAL_PVP, Game.CHAOS_PVP, Game.THREE_D_PVP]:
             if obj.player2_name_pvp_local:
                 return {
                     "id": 0,

@@ -88,6 +88,9 @@ import { BlockFriendComponent } from './dialogs/block-friend/block-friend.compon
 import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
 import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/charts-global-details.component';
 import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
+import { ThreeDComponent } from './games/three-d/three-d.component';
+import { GameCanvasThreeDPveComponent } from './games/three-d/game-canvas-three-d-pve/game-canvas-three-d-pve.component';
+import { GameCanvasThreeDPvpComponent } from './games/three-d/game-canvas-three-d-pvp/game-canvas-three-d-pvp.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -137,6 +140,9 @@ import { OnlineDetailsComponent } from './games/tournament/online-details/online
     GameCanvasChaosComponent,
     GameCanvasChaosPvpComponent,
     GameCanvasComponentArena,
+    ThreeDComponent,
+    GameCanvasThreeDPveComponent,
+    GameCanvasThreeDPvpComponent,
     GamesListComponent,
     DeleteAccountModalComponent,
     FtAuthCallbackComponentComponent,

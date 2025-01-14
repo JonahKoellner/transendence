@@ -33,7 +33,6 @@ import { ChaosComponent } from './games/chaos/chaos.component';
 import { GamesListComponent } from './games/games-list/games-list.component';
 import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
 import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
-import { Local3dPvpComponent } from './games/3d/local-pvp/local-pvp.component';
 import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
 import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/password-reset-confirm.component';
 import { PrivacyPolicyComponent } from './home/privacy-policy/privacy-policy.component';
@@ -51,6 +50,7 @@ import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-ro
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
 import { ImpressumComponent } from './home/impressum/impressum.component';
 import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
+import { ThreeDComponent } from './games/three-d/three-d.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -105,6 +105,7 @@ const routes: Routes = [
   { path: 'games/leaderboard', component: LeaderboardComponent, canActivate: [AuthGuard] },
   { path: 'games/chaos', component: ChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/arena', component: ArenaComponent, canActivate: [AuthGuard] },
+  { path: 'games/three-d', component: ThreeDComponent, canActivate: [AuthGuard] },
   { path: 'privacy-policy', component: PrivacyPolicyComponent},
   { path: 'disclaimer', component: DisclaimerComponent },
   { path: 'tos', component: TermsOfServiceComponent },
@@ -113,7 +114,6 @@ const routes: Routes = [
   { path: 'reset-password', component: PasswordResetConfirmComponent },
   { path: 'impressum', component: ImpressumComponent },
   { path: 'about', component: AboutComponent},
-  { path: 'test', component: Local3dPvpComponent},
   { path: '**', redirectTo: 'login' }
 ];
 
