@@ -2601,13 +2601,18 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             elif action == "get_tournament_state":
                 pass # the tournament state is always sent in the end
             elif action == "game_end":
+                logger.debug(f'game_end received from {self.user.username}')
                 if await self.check_if_out():
                     await self.send_json({
                         "type": "you_lost",
                     })
+                logger.debug('checking round')
                 if await self.check_round():
+                    logger.debug('the round is getting finished and advanced now')
                     await self.finish_round()
                     await self.next_round()
+                else:
+                    logger.debug('round cannot be finished')
 
         except Exception as e:
             await self.send_json({
@@ -2667,6 +2672,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     @transaction.atomic
     def check_round(self):
+        logger.debug('check_round')
         self.tournament.refresh_from_db()
         round = self.tournament.rounds.get(round_number=self.tournament.current_round)
         flag = RoundService.check_round_finished(round)
@@ -2674,20 +2680,24 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             round.status = "completed" # already setting to completed, so not both consumers end the round
             round.save()
         self.tournament.save()
+        logger.debug(f'check_round returns {flag}')
         return flag
     
     @database_sync_to_async
     def check_if_out(self):
         """gets last match from client and sends message if client lost"""
+        logger.debug('check_if_out start')
         if self.tournament.type == TournamentType.ROUND_ROBIN:
             return False
         try:
-            match = OnlineMatch.objects.get(
-                Q(room_id=self.room_id) & Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
+            current_round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+            match = current_round.matches.get(
+                Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
             )
             logger.debug(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
             return match.winner != self.user
         except OnlineMatch.DoesNotExist:
+            logger.debug('No completed match found for the user in this room.')
             return False
     
     @database_sync_to_async
@@ -2758,7 +2768,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         p1 = match.player1
         p2 = match.player2
         if p1 == None or p2 == None:
-            raise Exception("Both players need to real players to start a game!")
+            raise Exception("Both players need to be real players to start a game!")
         logger.debug(f"Sending message to start game for match {match_id}")
         logger.debug(f"start_game p1_id: {p1.id}, p2_id: {p2.id}")
         await self.channel_layer.group_send(
@@ -2784,7 +2794,6 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             logger.debug(f"check p1_id: {id1}, p2_id: {id2}")
             if str(id1) in dict and str(id2) in dict and dict[str(id1)] and dict[str(id2)]:
                 return match.match_id
-        logger.warning(f"Could not start game for user {user.username}")
 
     @database_sync_to_async
     def get_match_for_round_and_id(self, round, match_id):
@@ -3014,7 +3023,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def match_timer(self):
         try:
-            total_time = 30  # Total match time in seconds
+            total_time = 5  # Total match time in seconds TODO set back to 30
             for remaining_time in range(total_time, 0, -1):
                 logger.debug(f"Remaining time: {remaining_time}")
                 await self.channel_layer.group_send(
@@ -3030,6 +3039,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             return
 
     async def end_match(self):
+        logger.info('ending match')
         self.game_in_progress = False
         if self.game_loop_task and not self.game_loop_task.done():
             self.game_loop_task.cancel()
@@ -3099,6 +3109,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         # record_match_result() handles winner, end_time, outcome, status, etc.
         self.match.record_match_result()
+        logger.info(f'after save record_match_result: match status {self.match.status}, winner: {self.match.winner.username if self.match.winner else "no winner"}')
     
     @database_sync_to_async
     def get_profile(self, user):

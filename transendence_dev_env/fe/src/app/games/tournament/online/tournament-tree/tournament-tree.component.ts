@@ -30,6 +30,7 @@ interface Match {
   outcome: 'Finished' | 'Tie' | null;
   start_time: string | null;
   end_time: string | null;
+  duration: string | null;
 }
 
 interface Round {
