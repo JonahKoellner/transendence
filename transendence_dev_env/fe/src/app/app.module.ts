@@ -87,6 +87,7 @@ import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.com
 import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
 import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
 import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/charts-global-details.component';
+import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -163,7 +164,8 @@ import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/cha
     RemoveFriendComponent,
     BlockFriendComponent,
     ChartsUserDetailsComponent,
-    ChartsGlobalDetailsComponent
+    ChartsGlobalDetailsComponent,
+    OnlineDetailsComponent
   ],
   imports: [
     BrowserModule,
