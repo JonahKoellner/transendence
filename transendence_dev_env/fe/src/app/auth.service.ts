@@ -16,7 +16,7 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
   private refreshTimeout: any;
-  private refreshInterval = 5 * 60 * 1000;
+  private refreshInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
@@ -230,21 +230,20 @@ export class AuthService {
     );
   }
   initializeWebSocket(): void {
-    this.refreshToken().subscribe({
-      next: (newToken) => {
-        this.websocketService.connectNotifications(newToken);
-      },
-      error: (err) => {
-        console.error('Failed to refresh token for WebSocket connection', err);
-        // Retry after a delay if the error is not due to an invalid token
-        if (err.status !== 401 && err.status !== 400) {
-          setTimeout(() => this.initializeWebSocket(), 5000);
-        } else {
-          this.logout('Session expired, please log in again');
-        }
-      }
-    });
+    // check if we have a valid token
+    if (!this.isAuthenticated()) {
+      console.warn('User not authenticated, skipping WebSocket connect');
+      return;
+    }
+    const token = this.getAccessToken();
+    if (!token) {
+      console.warn('No access token found, skipping WS connect');
+      return;
+    }
+    // Connect once
+    this.websocketService.connectNotifications(token);
   }
+
   private getCookie(name: string): string | null {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -271,12 +270,12 @@ export class AuthService {
             }
             return errorCount + 1;
           }, 0),
-          delay(3000)
+          delay(1000)
         )
       ),
       catchError(err => {
         console.error('Final token refresh failure, logging out', err);
-        this.logout('Session expired, please log in again');
+        setTimeout(() => this.logout('Session expired, please log in again'), 0);
         return throwError(() => err);
       })
     );

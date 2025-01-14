@@ -1,97 +1,104 @@
 <div class="tournament-list">
-    <h2>All Tournaments</h2>
-    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
-  
-    <!-- Filter and Sort Controls -->
-    <div class="controls">
- <input
+  <h2>All Tournaments</h2>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+
+  <!-- Filter and Sort Controls -->
+  <div class="controls" *ngIf="!isLoading">
+    <input
       type="text"
       [(ngModel)]="searchName"
       (input)="applyFilters()"
       placeholder="Search by name"
       class="filter-input"
-  />
+    />
 
-  <input
+    <input
       type="text"
       [(ngModel)]="searchParticipant"
       (input)="applyFilters()"
       placeholder="Search by participant"
       class="filter-input"
-  />
+    />
 
-  <label>
+    <label>
       Start Date:
       <input type="date" [(ngModel)]="startDate" (change)="applyFilters()" />
-  </label>
+    </label>
 
-  <label>
+    <label>
       End Date:
       <input type="date" [(ngModel)]="endDate" (change)="applyFilters()" />
-  </label>
+    </label>
 
-  <select [(ngModel)]="sortOrder" (change)="applyFilters()" class="sort-select">
+    <select [(ngModel)]="sortOrder" (change)="applyFilters()" class="sort-select">
       <option value="desc">Newest First</option>
       <option value="asc">Oldest First</option>
-  </select>
-      <select [(ngModel)]="filterTournamentType" (change)="applyFilters()" class="sort-select">
-        <option value="all">All Tournaments</option>
-        <option value="offline">Offline Only</option>
-        <option value="online">Online Only</option>
-      </select>
-    </div>
-  
-    <!-- Tournament Cards -->
-    <div class="tournament-cards">
-      <div
-        *ngFor="
-          let tournament of filteredTournaments
-            | paginate:
-                { itemsPerPage: itemsPerPageTournaments,
-                  currentPage: pTournaments,
-                  id: 'tournamentPagination' }
-        "
-        class="tournament-card"
-      >
-        <!-- 
-          If it's offline, link to your offline details;
-          if it's online, link to your online details (if separate).
-          Or you can unify them under one route if desired. 
-        -->
-        <a
-          [routerLink]="
-            tournament.isOnline
-              ? ['/games/tournament/online/details', tournament.id]
-              : ['/games/tournament/details', tournament.id]
-          "
-          class="card-link"
-        >
-          <div class="card-header">
-            <h3>{{ tournament.name }}</h3>
-            <span
-              class="status"
-              [class.completed]="tournament.status === 'completed'"
-            >
-              {{ tournament.status | titlecase }}
-            </span>
-          </div>
-          <div class="card-body">
-            <p><strong>Type:</strong> {{ tournament.type }}</p>
-            <p><strong>Mode:</strong> {{ tournament.isOnline ? 'Online' : 'Offline' }}</p>
-            <p><strong>Participants:</strong> {{ tournament.participants.length }}</p>
-            <p><strong>Winner:</strong> {{ tournament.finalWinner || 'TBD' }}</p>
-            <p><strong>Start:</strong> {{ tournament.startTime | date: 'short' }}</p>
-          </div>
-        </a>
-      </div>
-      <pagination-controls
-        (pageChange)="pTournaments = $event"
-        id="tournamentPagination"
-        class="custom-pagination tournament-pagination"
-        [directionLinks]="true"
-        [autoHide]="true"
-      >
-      </pagination-controls>
-    </div>
+    </select>
+
+    <select
+      [(ngModel)]="filterTournamentType"
+      (change)="applyFilters()"
+      class="sort-select"
+    >
+      <option value="all">All Tournaments</option>
+      <option value="offline">Offline Only</option>
+      <option value="online">Online Only</option>
+    </select>
   </div>
-  
+
+  <!-- Loading Spinner -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Tournament Cards (Only render when not loading) -->
+  <div class="tournament-cards" *ngIf="!isLoading">
+    <div
+      *ngFor="
+        let tournament of filteredTournaments
+          | paginate:
+              {
+                itemsPerPage: itemsPerPageTournaments,
+                currentPage: pTournaments,
+                id: 'tournamentPagination'
+              }
+      "
+      class="tournament-card"
+    >
+      <a
+        [routerLink]="
+          tournament?.isOnline
+            ? ['/games/tournament/online/details', tournament?.id]
+            : ['/games/tournament/details', tournament?.id]
+        "
+        class="card-link"
+      >
+        <div class="card-header">
+          <h3>{{ tournament?.name }}</h3>
+          <span
+            class="status"
+            [class.completed]="tournament?.status === 'completed'"
+          >
+            {{ tournament?.status | titlecase }}
+          </span>
+        </div>
+        <div class="card-body">
+          <p><strong>Type:</strong> {{ tournament?.type }}</p>
+          <p><strong>Mode:</strong> {{ tournament?.isOnline ? 'Online' : 'Offline' }}</p>
+          <p><strong>Participants:</strong> {{ tournament?.participants?.length }}</p>
+          <p><strong>Winner:</strong> {{ tournament?.finalWinner || 'TBD' }}</p>
+          <p><strong>Start:</strong> {{ tournament?.startTime | date: 'short' }}</p>
+        </div>
+      </a>
+    </div>
+    <pagination-controls
+      (pageChange)="pTournaments = $event"
+      id="tournamentPagination"
+      class="custom-pagination tournament-pagination"
+      [directionLinks]="true"
+      [autoHide]="true"
+    >
+    </pagination-controls>
+  </div>
+</div>
