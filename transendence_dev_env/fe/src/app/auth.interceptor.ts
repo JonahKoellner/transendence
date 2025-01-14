@@ -22,7 +22,6 @@ export class AuthInterceptor implements HttpInterceptor {
       req.url.endsWith('/accounts/logout/') ||
       req.url.endsWith('/accounts/login/') ||
       req.url.endsWith('/accounts/register/') ||
-      req.url.endsWith('/accounts/verify-otp/') ||
       req.url.endsWith('/accounts/token/refresh/')
     ) {
       return next.handle(req);
