@@ -2606,9 +2606,13 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
                     await self.send_json({
                         "type": "you_lost",
                     })
+                logger.debug('checking round')
                 if await self.check_round():
+                    logger.debug('the round is getting finished and advanced now')
                     await self.finish_round()
                     await self.next_round()
+                else:
+                    logger.debug('round cannot be finished')
 
         except Exception as e:
             await self.send_json({
@@ -2682,15 +2686,18 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def check_if_out(self):
         """gets last match from client and sends message if client lost"""
+        logger.debug('check_if_out start')
         if self.tournament.type == TournamentType.ROUND_ROBIN:
             return False
         try:
-            match = OnlineMatch.objects.get(
-                Q(room_id=self.room_id) & Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
+            current_round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+            match = current_round.matches.get(
+                Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
             )
             logger.debug(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
             return match.winner != self.user
         except OnlineMatch.DoesNotExist:
+            logger.debug('No completed match found for the user in this room.')
             return False
     
     @database_sync_to_async
