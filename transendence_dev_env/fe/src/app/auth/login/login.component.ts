@@ -36,7 +36,10 @@ export class LoginComponent implements OnInit {
   
     this.authService.login(this.username, this.password).subscribe(
       (response: any) => {
-        localStorage.setItem('access_token', response.access);
+        if (!response || !response.access) {
+          this.error = 'Login failed';
+          return;
+        }
         this.profileService.getProfile().subscribe(
           profile => {
             if (!profile.is_2fa_enabled && response.otp_uri) {

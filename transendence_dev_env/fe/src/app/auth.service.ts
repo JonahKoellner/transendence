@@ -162,27 +162,6 @@ export class AuthService {
     }
   }
 
-
-  // Method to retrieve user profile information
-  getProfile(): Observable<any> {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      throw new Error('Access token is missing');
-    }
-
-    return this.http.get(`${this.apiUrl}/accounts/users/`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }).pipe(
-      tap((response: any) => {
-        // console.log('Profile data retrieved:', response);  // Debug log
-      }),
-      catchError(err => {
-        this.toastr.error('Failed to load profile data', 'Error');
-        return of(null);  // Handle the error and return an observable
-      })
-    );
-  }
-
   // Method to enable 2FA
   enable2FA(): Observable<any> {
     const accessToken = localStorage.getItem('access_token');  // Get JWT access token
