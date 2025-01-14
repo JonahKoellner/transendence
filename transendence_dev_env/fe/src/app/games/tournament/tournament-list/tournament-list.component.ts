@@ -103,7 +103,7 @@ export class TournamentListComponent implements OnInit {
     // Map online tournaments to CombinedTournament
     const onlineMapped: CombinedTournament[] = this.onlineTournaments.map((ot) => ({
       // For online tournaments, use roomId as 'id' or anything unique
-      id: ot.roomId,
+      id: ot.id,
       name: ot.name,
       type: ot.type,
       participants: ot.participants?.map((user) => user.username) || [],

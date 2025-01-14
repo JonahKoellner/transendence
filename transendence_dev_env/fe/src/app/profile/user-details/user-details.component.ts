@@ -191,7 +191,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
         // Map online tournaments to CombinedTournament
         const onlineMapped = onlineTournaments.map((ot: OnlineTournament) => ({
-          id: ot.roomId,
+          id: ot.id,
           name: ot.name,
           type: ot.type,
           status: ot.status,

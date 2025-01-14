@@ -36,6 +36,7 @@ export interface OnlineRound {
 }
 
 export interface OnlineTournament {
+  id: string;               // Unique tournament ID
   roomId: string;           // Unique room ID for the tournament
   name: string;             // Tournament name
   type: 'Single Elimination' | 'Round Robin' | string; // Tournament type

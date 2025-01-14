@@ -1,86 +1,134 @@
 <div class="tournament-tree">
-  <h1>Tournament {{tournament?.status}}</h1>
+  <h1>Tournament {{ tournament?.status }}</h1>
   <section class="game" *ngIf="gameInProgress">
-    <app-game (gameEnd)="onGameEnd()" [matchId]="matchId" [userProfile]="userProfile"></app-game>
+    <app-game
+      (gameEnd)="onGameEnd()"
+      [matchId]="matchId"
+      [userProfile]="userProfile"
+    ></app-game>
   </section>
 
   <div *ngIf="tournament && !gameInProgress">
     <!-- Tournament Completed Section -->
-    <div *ngIf="tournament.status === 'completed'" class="tournament-completed">
+    <div
+      *ngIf="tournament.status === 'completed'"
+      class="tournament-completed"
+    >
       <h2>Tournament Completed</h2>
-      <p>Congratulations to the winner: {{ tournament.final_winner || 'TBD' }}</p>
+      <p>
+        Congratulations to the winner: {{ tournament.final_winner || 'TBD' }}
+      </p>
     </div>
 
-  <div *ngIf="tournament && gameInProgress === false">
-    <!-- Single Elimination Bracket -->
-    <div *ngIf="tournament.tournament_type === 'Single Elimination'" class="single-elimination-bracket">
-      <div *ngFor="let round of tournament.rounds; let r = index" class="round">
-        <ng-container *ngIf="round">
-          <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
-          <div *ngFor="let match of round.matches" class="match">
-            <div class="player">
-              {{ match?.player1 || 'TBD' }} - Score: {{ match?.player1_score || 0 }}
+    <div *ngIf="tournament && gameInProgress === false">
+      <!-- Single Elimination Bracket -->
+      <div
+        *ngIf="tournament.tournament_type === 'Single Elimination'"
+        class="single-elimination-bracket"
+      >
+        <div
+          *ngFor="let round of tournament.rounds; let r = index"
+          class="round"
+        >
+          <ng-container *ngIf="round">
+            <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
+            <div *ngFor="let match of round.matches" class="match">
+              <div class="player">
+                {{ match?.player1 || 'TBD' }} - Score:
+                {{ match?.player1_score || 0 }}
+              </div>
+              <div class="vs">vs</div>
+              <div class="player">
+                {{ match?.player2 || 'TBD' }} - Score:
+                {{ match?.player2_score || 0 }}
+              </div>
+              <div *ngIf="match?.winner" class="winner">
+                Winner: {{ match.winner }}
+              </div>
+              <div *ngIf="!match?.player1 || !match?.player2" class="info">
+                Waiting for players...
+              </div>
             </div>
-            <div class="vs">vs</div>
-            <div class="player">
-              {{ match?.player2 || 'TBD' }} - Score: {{ match?.player2_score || 0 }}
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Round Robin Bracket -->
+      <div
+        *ngIf="tournament.tournament_type === 'Round Robin'"
+        class="round-robin-bracket"
+      >
+        <div class="round-robin-scores">
+          <h3>Round Robin Scores</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="
+                  let participant of tournament.participants
+                "
+              >
+                <td>{{ participant.username }}</td>
+                <td>
+                  {{ tournament.round_robin_scores[participant.id] || 0 }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div
+          *ngFor="let round of tournament.rounds; let r = index"
+          class="round"
+        >
+          <ng-container *ngIf="round">
+            <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
+            <div *ngFor="let match of round.matches" class="match">
+              <div class="player">
+                {{ match?.player1 || 'TBD' }} - Score:
+                {{ match?.player1_score || 0 }}
+              </div>
+              <div class="vs">vs</div>
+              <div class="player">
+                {{ match?.player2 || 'TBD' }} - Score:
+                {{ match?.player2_score || 0 }}
+              </div>
+              <div *ngIf="match?.winner" class="winner">
+                Winner: {{ match.winner }}
+              </div>
+              <div *ngIf="!match?.player1 || !match?.player2" class="info">
+                Waiting for players...
+              </div>
             </div>
-            <div *ngIf="match?.winner" class="winner">
-              Winner: {{ match.winner }}
-            </div>
-            <div *ngIf="!match?.player1 || !match?.player2" class="info">
-              Waiting for players...
-            </div>
-          </div>
-        </ng-container>
+          </ng-container>
+        </div>
       </div>
     </div>
 
-    <!-- Round Robin Bracket -->
-    <div *ngIf="tournament.tournament_type === 'Round Robin'" class="round-robin-bracket">
-      <div class="round-robin-scores">
-        <h3>Round Robin Scores</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let participant of tournament.participants">
-              <td>{{ participant.username }}</td>
-              <td>{{ tournament.round_robin_scores[participant.id] || 0 }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div *ngFor="let round of tournament.rounds; let r = index" class="round">
-        <ng-container *ngIf="round">
-          <h4>Round {{ round.round_number }} - {{ round.stage }}</h4>
-          <div *ngFor="let match of round.matches" class="match">
-            <div class="player">
-              {{ match?.player1 || 'TBD' }} - Score: {{ match?.player1_score || 0 }}
-            </div>
-            <div class="vs">vs</div>
-            <div class="player">
-              {{ match?.player2 || 'TBD' }} - Score: {{ match?.player2_score || 0 }}
-            </div>
-            <div *ngIf="match?.winner" class="winner">
-              Winner: {{ match.winner }}
-            </div>
-            <div *ngIf="!match?.player1 || !match?.player2" class="info">
-              Waiting for players...
-            </div>
-          </div>
-        </ng-container>
-      </div>
+    <div
+      *ngIf="
+        tournament.status !== 'completed' &&
+        tournament.current_stage !== null &&
+        activePlayer
+      "
+      class="ready-section"
+    >
+      <button
+        class="ready-button"
+        (click)="onReadyClick()"
+        [disabled]="gameInProgress"
+      >
+        Continue to {{ tournament.current_stage }}
+      </button>
     </div>
-  </div>
-  <div *ngIf="tournament.status !== 'completed' && tournament.current_stage !== null && activePlayer" class="ready-section">
-    <button class="ready-button" (click)="onReadyClick()" [disabled]="gameInProgress">Continue to {{tournament.current_stage}}</button>
-  </div>
-  <div *ngIf="tournament.status === 'completed'" class="ready-section">
-    <button class="ready-button" (click)="onLeaveClick()" >Leave Tournament</button>
+    <div *ngIf="tournament.status === 'completed'" class="ready-section">
+      <button class="ready-button" (click)="onLeaveClick()">
+        Leave Tournament
+      </button>
+    </div>
   </div>
 </div>

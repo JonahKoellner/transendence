@@ -303,7 +303,7 @@ class OnlineTournamentSerializer(serializers.ModelSerializer):
         model = OnlineTournament
         fields = [
             'room_id', 'name', 'type', 'status', 'rounds', 'participants',
-            'round_robin_scores', 'final_winner', 'current_stage'  # Include current_stage here
+            'round_robin_scores', 'final_winner', 'current_stage', 'id'  # Include current_stage here
         ]
 
     def get_participants(self, obj):
