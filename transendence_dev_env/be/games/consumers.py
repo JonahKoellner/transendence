@@ -2601,6 +2601,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             elif action == "get_tournament_state":
                 pass # the tournament state is always sent in the end
             elif action == "game_end":
+                logger.debug(f'game_end received from {self.user.username}')
                 if await self.check_if_out():
                     await self.send_json({
                         "type": "you_lost",
@@ -2667,6 +2668,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     @transaction.atomic
     def check_round(self):
+        logger.debug('check_round')
         self.tournament.refresh_from_db()
         round = self.tournament.rounds.get(round_number=self.tournament.current_round)
         flag = RoundService.check_round_finished(round)
@@ -2674,6 +2676,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
             round.status = "completed" # already setting to completed, so not both consumers end the round
             round.save()
         self.tournament.save()
+        logger.debug(f'check_round returns {flag}')
         return flag
     
     @database_sync_to_async
