@@ -2619,6 +2619,8 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def handle_user_disconnect(self):
         self.tournament.refresh_from_db()
+        if self.tournament.status == 'completed':
+            return
         if self.user not in self.tournament.participants.all():
             return
         self.tournament.participants.remove(self.user)

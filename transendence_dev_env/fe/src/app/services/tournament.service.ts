@@ -1,11 +1,11 @@
-// import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, delay, Observable, retryWhen, Subject, tap } from 'rxjs';
+import { BehaviorSubject, catchError, of, Observable, Subject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
-// import { GameSettings } from '../games/tournament/online/create-room/create-room.component';
 import { Router } from '@angular/router';
 import { environment } from 'src/environment';
+import { OnlineTournament } from '../games/tournament/online/online.component'
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class TournamentService {
   public messages$ = new Subject<any>();
   private isConnected = new BehaviorSubject<boolean>(false);
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService, private router: Router, private http: HttpClient) {}
 
   connect(roomId: string) {
     if (this.socket$) {
@@ -46,6 +46,42 @@ export class TournamentService {
 
   ngOnDestroy() {
     this.disconnect();
+  }
+
+  //HTTP
+  // Headers with authorization token
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('access_token')}`
+    });
+  }
+
+  getTournaments(): Observable<OnlineTournament[]> {
+    return this.http.get<OnlineTournament[]>(`${environment.apiUrl}/games/online-tournaments/`, { headers: this.getHeaders() }).pipe(
+      catchError((error) => {
+        console.error('Error fetching tournaments:', error);
+        return of([]);
+      })
+    );
+  }
+  
+  getTournamentsByUser(userId: number): Observable<OnlineTournament[]> {
+    return this.http.get<OnlineTournament[]>(`${environment.apiUrl}/games/online-tournaments/by-user/${userId}/`, { headers: this.getHeaders() }).pipe(
+      catchError((error) => {
+        console.error(`Error fetching games for user ${userId}:`, error);
+        return of([]);
+      })
+    );
+  }
+
+  getTournamentById(tournamentId: number): Observable<OnlineTournament> {
+    return this.http.get<OnlineTournament>(`${environment.apiUrl}/games/online-tournaments/${tournamentId}/`, { headers: this.getHeaders() }).pipe(
+      catchError((error) => {
+        console.error(`Error fetching online-tournament ${tournamentId}:`, error);
+        return of({} as OnlineTournament);
+      })
+    );
   }
 
 }
