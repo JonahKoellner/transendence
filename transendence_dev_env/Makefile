@@ -20,8 +20,8 @@ generate_passwords:
 
 	@echo "Generting redis password..."
 	$(eval REDIS_PASS=$(call generate-password))
-	@echo "REDIS_PASSWORD=$(REDIS_PASS)" > ./redis/.env
-	@echo "REDIS_PASSWORD=$(REDIS_PASS)" >> ./be/.env
+	@sed -i '' '/^requirepass /d' ./redis/redis.conf && echo "requirepass \"$(REDIS_PASS)\"" >> ./redis/redis.conf
+	@sed -i '' '/^REDIS_PASSWORD=/d' ./be/.env && echo "REDIS_PASSWORD=$(REDIS_PASS)" >> ./be/.env
 	@echo "Redis password generated and saved to .env files."
 
 
