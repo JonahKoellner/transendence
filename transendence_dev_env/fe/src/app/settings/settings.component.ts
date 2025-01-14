@@ -3,6 +3,7 @@ import { AuthService } from '../auth.service';
 import * as QRCode from 'qrcode';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { ProfileService } from '../profile.service';
 
 @Component({
   selector: 'app-settings',
@@ -15,12 +16,12 @@ export class SettingsComponent implements OnInit{
   qrCodeImage: string = '';
   error: string = '';
 
-  constructor(private authService: AuthService, private router: Router, private toastr: ToastrService) {}
+  constructor(private authService: AuthService,private profileService: ProfileService, private router: Router, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.isLoading = true;
     // Fetch the user's profile to check if 2FA is enabled
-    this.authService.getProfile().subscribe(
+    this.profileService.getProfile().subscribe(
       (profile) => {
         this.is2FAEnabled = profile.is_2fa_enabled;  // Update the UI based on the 2FA status
         this.isLoading = false;
@@ -36,7 +37,7 @@ export class SettingsComponent implements OnInit{
   // Load user profile
   loadProfile(): void {
     this.isLoading = true;
-    this.authService.getProfile().subscribe(
+    this.profileService.getProfile().subscribe(
       (profile) => {
         if (profile) {
           this.is2FAEnabled = profile.is_2fa_enabled;  // Update the 2FA status
