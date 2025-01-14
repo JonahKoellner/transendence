@@ -36,6 +36,10 @@ export class GameCanvasThreeDPvpComponent implements AfterViewInit {
   rightScore = 0;
   round = 0;
 
+  private readonly desiredFPS = 60;
+  private readonly msPerFrame = 1000 / this.desiredFPS; // ~16.67 ms
+  private lastTimestamp = 0;
+
   private keysPressed: { [key: string]: boolean } = {};
 
   constructor() {}
@@ -45,7 +49,7 @@ export class GameCanvasThreeDPvpComponent implements AfterViewInit {
     this.initGameObjects();
     this.initEventListeners();
     this.resetRound(); 
-    this.animate();
+    this.animationId = requestAnimationFrame(this.animate);
   }
 
   ngOnDestroy(): void {
@@ -154,10 +158,14 @@ export class GameCanvasThreeDPvpComponent implements AfterViewInit {
     this.ballSpeed = 0.15;
   }
 
-  private animate = (): void => {
+  private animate = (timestamp: number): void => {
     this.animationId = requestAnimationFrame(this.animate);
-    this.updateGame();
-    this.renderer.render(this.scene, this.camera);
+    const delta = timestamp - this.lastTimestamp;
+    if (delta >= this.msPerFrame) {
+      this.lastTimestamp = timestamp - (delta % this.msPerFrame);
+      this.updateGame();
+      this.renderer.render(this.scene, this.camera);
+    }
   };
 
   private updateGame(): void {
