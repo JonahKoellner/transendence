@@ -63,22 +63,22 @@ class OnlineMatch(BaseMatch):
     game_manager = models.CharField(max_length=255, blank=True, null=True)
 
     def record_match_result(self):
-        if self.winner == None:
-            if self.player1 is None or self.player2 is None:
-                remainingPlayer = self.player1 if self.player1 is not None else self.player2
-                self.status = 'failed'
-                self.winner = remainingPlayer
-                self.end_time = timezone.now()
-                self.outcome = MatchOutcome.FINISHED
+        if self.winner != None:
+            return
+        self.end_time = timezone.now()
+        self.duration = self.end_time - self.start_time
+        if self.player1 is None or self.player2 is None:
+            self.status = 'failed'
+            self.winner = self.player1 if self.player1 is not None else self.player2
+            self.outcome = MatchOutcome.FINISHED
+        else:
+            self.outcome = MatchOutcome.FINISHED if self.player1_score != self.player2_score else MatchOutcome.TIE
+            if self.outcome == MatchOutcome.FINISHED:
+                self.winner = self.player1 if self.player1_score > self.player2_score else self.player2
             else:
-                self.outcome = MatchOutcome.FINISHED if self.player1_score != self.player2_score else MatchOutcome.TIE
-                if self.outcome == MatchOutcome.FINISHED:
-                    self.winner = self.player1 if self.player1_score > self.player2_score else self.player2
-                else:
-                    self.winner = random.choice([self.player1, self.player2]) # tie
-                self.status = 'completed'
-                self.end_time = timezone.now()
-            self.save()
+                self.winner = random.choice([self.player1, self.player2]) # tie
+            self.status = 'completed'
+        self.save()
 
 class BaseRound(models.Model):
     round_number = models.IntegerField()

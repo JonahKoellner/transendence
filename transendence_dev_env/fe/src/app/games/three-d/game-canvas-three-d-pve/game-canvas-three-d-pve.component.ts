@@ -36,6 +36,10 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
   rightScore = 0;
   round = 0;
 
+  private readonly desiredFPS = 60;
+  private readonly msPerFrame = 1000 / this.desiredFPS; // ~16.67 ms
+  private lastTimestamp = 0;
+
   private aiIntervalID!: number;
 
   aiTargetY: number = 0;
@@ -53,7 +57,7 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
     this.initEventListeners();
     this.setAIParameters();
     this.resetRound(); 
-    this.animate();
+    this.animationId = requestAnimationFrame(this.animate);
     this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval);
   }
 
@@ -256,10 +260,14 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
     this.ballSpeed = 0.15;
   }
 
-  private animate = (): void => {
+  private animate = (timestamp: number): void => {
     this.animationId = requestAnimationFrame(this.animate);
-    this.updateGame();
-    this.renderer.render(this.scene, this.camera);
+    const delta = timestamp - this.lastTimestamp;
+    if (delta >= this.msPerFrame) {
+      this.lastTimestamp = timestamp - (delta % this.msPerFrame);
+      this.updateGame();
+      this.renderer.render(this.scene, this.camera);
+    }
   };
 
   private updateGame(): void {
