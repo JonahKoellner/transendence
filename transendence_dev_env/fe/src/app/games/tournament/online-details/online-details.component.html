@@ -16,14 +16,14 @@
         <h3>Details</h3>
         <p><strong>Type:</strong> {{ onlineTournament.type }}</p>
         <p><strong>Participants:</strong> {{ onlineTournament.participants.length }}</p>
-        <p><strong>Start Time:</strong> {{ onlineTournament.startTime | date: 'medium' }}</p>
-        <p><strong>End Time:</strong> {{ onlineTournament.endTime | date: 'medium' }}</p>
+        <p><strong>Start Time:</strong> {{ onlineTournament.created_at | date: 'medium' }}</p>
+        <p><strong>End Time:</strong> {{ onlineTournament.end_time | date: 'medium' }}</p>
         <!-- Duration calculation if needed -->
       </div>
   
-      <div class="winner-section" *ngIf="onlineTournament.finalWinner">
+      <div class="winner-section" *ngIf="onlineTournament.final_winner">
         <h3>Winner</h3>
-        <p><strong>Name:</strong> {{ onlineTournament.finalWinner }}</p>
+        <p><strong>Name:</strong> {{ onlineTournament.final_winner }}</p>
       </div>
     </div>
   
@@ -36,12 +36,12 @@
           <div class="players">
             <div class="player">
               <span class="name">{{ match.player1 || 'TBD' }}</span>
-              <span class="score">Score: {{ match.player1Score ?? 0 }}</span>
+              <span class="score">Score: {{ match.player1_score ?? 0 }}</span>
             </div>
             <div class="vs">vs</div>
             <div class="player">
               <span class="name">{{ match.player2 || 'TBD' }}</span>
-              <span class="score">Score: {{ match.player2Score ?? 0 }}</span>
+              <span class="score">Score: {{ match.player2_score ?? 0 }}</span>
             </div>
           </div>
   

@@ -6,21 +6,23 @@ export interface User {
 }
 
 export interface OnlineMatch {
-  matchId: string;          // Unique ID for the match
-  roomId: string;           // Room ID from the tournament lobby
-  player1?: string;         // Username of Player 1
-  player2?: string;         // Username of Player 2
-  player1Score?: number;    // Score of Player 1
-  player2Score?: number;    // Score of Player 2
-  player1Ready: boolean;    // Indicates if Player 1 is ready
-  player2Ready: boolean;    // Indicates if Player 2 is ready
-  winner?: string;          // Username of the winner
-  outcome?: string;         // Outcome of the match
-  status: 'pending' | 'ongoing' | 'completed' | 'failed'; // Match status
-  startTime: string;        // ISO 8601 date string for match start time
-  endTime?: string;         // ISO 8601 date string for match end time
-  duration?: number;        // Match duration in seconds
-  gameManager?: string;     // Information about the game manager
+  match_id: string;
+  room_id: string;
+  player1?: string;
+  player2?: string;
+  player1_score?: number;
+  player2_score?: number;
+  player1_ready: boolean;
+  player2_ready: boolean;
+  winner?: string;
+  outcome?: string;
+  status: 'pending' | 'ongoing' | 'completed' | 'failed';
+  start_time: string;
+  end_time?: string;
+  duration?: number;
+  game_manager?: string;
+  tie_resolved?: boolean;    // Also remember to add tie_resolved if you need it
+  created_at?: string;       // If you care about created time as well
 }
 
 export interface OnlineRound {
@@ -36,19 +38,19 @@ export interface OnlineRound {
 }
 
 export interface OnlineTournament {
-  id: string;               // Unique tournament ID
-  roomId: string;           // Unique room ID for the tournament
+  id: number;               // Unique tournament ID
+  room_id: string;           // Unique room ID for the tournament
   name: string;             // Tournament name
   type: 'Single Elimination' | 'Round Robin' | string; // Tournament type
   participants: User[]; // List of participants
   rounds: OnlineRound[];    // List of rounds in the tournament
-  finalWinner?: string;     // Username of the final winner
-  roundRobinScores: Record<string, number>; // Scores for each participant
+  final_winner?: string;     // Username of the final winner
+  round_robin_scores: Record<string, number>; // Scores for each participant
   status: 'pending' | 'ongoing' | 'completed'; // Tournament status
-  currentRound: number;     // Current round number
-  totalRounds: number;      // Total number of rounds
-  startTime: string;        // ISO 8601 date string for tournament start time
-  endTime?: string;         // ISO 8601 date string for tournament end time
+  current_stage: string;    // Current stage of the tournament
+  created_at: string;        // ISO 8601 date string for tournament start time
+  end_time: string;          // ISO 8601 date string for tournament end time
+  duration: number;          // Tournament duration in seconds
 }
 
 @Component({

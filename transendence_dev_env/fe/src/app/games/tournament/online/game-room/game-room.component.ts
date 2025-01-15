@@ -289,7 +289,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   
     const settings: any = {};
     if (max_player_count) settings.max_player_count = max_player_count;
-    // if (roundScoreLimit) settings.round_score_limit = Number(roundScoreLimit);
     if (tournament_type) settings.tournament_type = tournament_type;
   
     this.lobbyService.sendMessage({

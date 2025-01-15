@@ -127,7 +127,7 @@ export class TournamentListComponent implements OnInit {
         );
 
         // By start/end date
-        const tournamentTime = new Date(tournament.startTime).getTime();
+        const tournamentTime = new Date(tournament.created_at).getTime();
         const matchesStartDate = this.startDate
           ? tournamentTime >= new Date(this.startDate).getTime()
           : true;
@@ -138,8 +138,8 @@ export class TournamentListComponent implements OnInit {
         return matchesName && matchesParticipant && matchesStartDate && matchesEndDate;
       })
       .sort((a, b) => {
-        const dateA = new Date(a.startTime).getTime();
-        const dateB = new Date(b.startTime).getTime();
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
         return this.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       });
   }

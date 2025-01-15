@@ -192,10 +192,10 @@
             <p><strong>Type:</strong> {{ tournament.type }}</p>
             <p><strong>Mode:</strong> Online</p>
             <p><strong>Participants:</strong> {{ tournament.participants.length }}</p>
-            <p><strong>Winner:</strong> {{ tournament.finalWinner || 'TBD' }}</p>
+            <p><strong>Winner:</strong> {{ tournament.final_winner || 'TBD' }}</p>
             <p>
               <strong>Start:</strong>
-              {{ tournament.startTime | date: 'short' }}
+              {{ tournament.created_at | date: 'short' }}
             </p>
           </div>
         </a>

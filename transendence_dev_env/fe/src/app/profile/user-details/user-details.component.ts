@@ -196,8 +196,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
           type: ot.type,
           status: ot.status,
           isOnline: true,
-          start_time: ot.startTime,
-          end_time: ot.endTime || null
+          start_time: ot.created_at,
+          end_time: ot.end_time || null
         }));
 
         this.tournamentHistory = [...offlineMapped, ...onlineMapped];
