@@ -2985,11 +2985,12 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             return
 
     async def start_game(self):
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {"type": "game_started"}
-        )
-        logger.debug('Starting game loop')
+        if self.game_manager_channel == self.channel_name:
+            logger.debug('Game manager starting game loop')
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "game_started"}
+            )
         self.game_in_progress = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
         self.match_end_task = asyncio.create_task(self.match_timer())
