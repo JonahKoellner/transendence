@@ -62,3 +62,15 @@
     }
   }
   
+  ::ng-deep .ngx-pagination .current {
+    background: #61BA50 !important;
+  }
+  
+  ::ng-deep .ngx-pagination a, .ngx-pagination button {
+    color:  #848484 !important;
+  }
+  
+  ::ng-deep .ngx-pagination a:hover, .ngx-pagination button:hover {
+    color: #61BA50 !important;
+    background-color: none !important;
+  }

@@ -1,25 +1,60 @@
 .game-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  max-width: 800px;
-  margin: auto;
-  padding: 2rem;
-
-  h2 {
-      color: #61BA50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    max-width: 800px;
+    margin: auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  
+    h2 {
+      color: #61ba50;
       font-size: 2rem;
       font-weight: bold;
       margin-bottom: 1.5rem;
-  }
-
-  .error {
-      color: #FF5722;
+      text-shadow: 0 0 8px rgba(97, 186, 80, 0.7); // Neon glow
+    }
+  
+    .error {
+      color: #ff5722;
       font-size: 1.1rem;
-  }
-
-  .controls {
+    }
+  
+    /***** TOGGLE FILTERS BUTTON *****/
+    .toggle-filters-button {
+      background: transparent;
+      border: 2px solid #61ba50;
+      color: #61ba50;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-shadow: 0 0 5px rgba(97, 186, 80, 0.7);
+  
+      &:hover {
+        background-color: #61ba50;
+        color: #1f1f1f;
+        box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
+      }
+  
+      .arrow-icon {
+        display: inline-block;
+        transition: transform 0.3s ease;
+        &.rotated {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  
+    /***** CONTROLS SECTION (COLLAPSIBLE) *****/
+    .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
@@ -27,141 +62,195 @@
       justify-content: space-between;
       margin-bottom: 1.5rem;
       width: 100%;
-
+      padding: 1rem;
+      background-color: #1f1f1f;
+      border: 2px solid #61ba50;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(97, 186, 80, 0.2);
+      animation: fadeInDown 0.5s ease;
+  
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+  
       .filter-input {
-          padding: 0.75rem;
-          border: 1px solid #61BA50;
-          border-radius: 8px;
-          font-size: 1rem;
-          background-color: #2C2C2C;
-          color: #e0e0e0;
-          width: 180px;
-          transition: border-color 0.3s;
-
-          &::placeholder {
-              color: #bbb;
-          }
-
-          &:focus {
-              border-color: #61BA50;
-              background-color: #3a3a3a;
-          }
+        padding: 0.75rem;
+        border: 2px solid #61ba50;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: #2c2c2c;
+        color: #e0e0e0;
+        width: 180px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+  
+        &::placeholder {
+          color: #bbb;
+        }
+  
+        &:focus {
+          border-color: #80d473;
+          background-color: #3a3a3a;
+          box-shadow: 0 0 8px rgba(97, 186, 80, 0.5);
+        }
       }
-
+  
       label {
-          font-weight: bold;
-          color: #61BA50;
-          display: flex;
-          flex-direction: column;
+        font-weight: bold;
+        color: #61ba50;
+        display: flex;
+        flex-direction: column;
+        font-size: 0.9rem;
+  
+        input[type='date'] {
+          padding: 0.5rem;
+          border: 2px solid #61ba50;
+          border-radius: 4px;
           font-size: 0.9rem;
-
-          input[type="date"] {
-              padding: 0.5rem;
-              border: 1px solid #61BA50;
-              border-radius: 4px;
-              font-size: 0.9rem;
-              background-color: #2C2C2C;
-              color: #e0e0e0;
-              transition: border-color 0.3s;
-
-              &:focus {
-                  border-color: #61BA50;
-                  background-color: #3a3a3a;
-              }
+          background-color: #2c2c2c;
+          color: #e0e0e0;
+          transition: border-color 0.3s, box-shadow 0.3s;
+  
+          &:focus {
+            border-color: #80d473;
+            background-color: #3a3a3a;
+            box-shadow: 0 0 8px rgba(97, 186, 80, 0.5);
           }
+        }
       }
-
+  
       .sort-select {
-          padding: 0.75rem;
-          border: 1px solid #61BA50;
-          border-radius: 8px;
-          font-size: 1rem;
-          width: 160px;
-          background: #61BA50;
-          color: white;
-          transition: background-color 0.3s;
-
-          option {
-              color: black;
-          }
-
-          &:hover {
-              background-color: #45A049;
-          }
+        padding: 0.75rem;
+        border: 2px solid #61ba50;
+        border-radius: 8px;
+        font-size: 1rem;
+        width: 160px;
+        background: #61ba50;
+        color: white;
+        transition: background-color 0.3s, box-shadow 0.3s;
+  
+        option {
+          color: black;
+        }
+  
+        &:hover {
+          background-color: #45a049;
+          box-shadow: 0 0 8px rgba(97, 186, 80, 0.7);
+        }
       }
-  }
-
-  .game-cards {
+    }
+  
+    /***** GAME CARDS SECTION *****/
+    .game-cards {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.5rem;
       width: 100%;
-  }
-
-  .game-card {
-      background: #0E0F10;
+    }
+  
+    .game-card {
+      background: #0e0f10;
       color: #e0e0e0;
       padding: 1.5rem;
       border-radius: 8px;
       border: 1px solid #333;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      transition: box-shadow 0.3s, transform 0.3s;
+      transition: box-shadow 0.3s, transform 0.3s, background-color 0.3s;
       cursor: pointer;
-
+  
       &:hover {
-          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-          transform: translateY(-2px);
-          background-color: #2C2C2C;
+        box-shadow: 0 0 15px rgba(97, 186, 80, 0.5);
+        transform: translateY(-2px);
+        background-color: #2c2c2c;
       }
-
+  
       .card-link {
-          text-decoration: none;
-          color: inherit;
-          display: block;
+        text-decoration: none;
+        color: inherit;
+        display: block;
       }
-
+  
       .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-
-          h3 {
-              color: #61BA50;
-              font-size: 1.3rem;
-              font-weight: bold;
-              margin: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+  
+        h3 {
+          color: #61ba50;
+          font-size: 1.3rem;
+          font-weight: bold;
+          margin: 0;
+          text-shadow: 0 0 5px rgba(97, 186, 80, 0.7);
+        }
+  
+        .status {
+          font-size: 0.9rem;
+          font-weight: bold;
+          color: #777;
+  
+          &.completed {
+            color: #61ba50;
           }
-
-          .status {
-              font-size: 0.9rem;
-              font-weight: bold;
-              color: #777;
-
-              &.completed {
-                  color: #61BA50;
-              }
-
-              &.in-progress {
-                  color: #ffc107;
-              }
-
-              &.upcoming {
-                  color: #ff5722;
-              }
+          &.in-progress {
+            color: #ffc107;
           }
+          &.upcoming {
+            color: #ff5722;
+          }
+        }
       }
-
+  
       .card-body {
-          p {
-              font-size: 0.95rem;
-              color: #adb5bd;
-              margin: 0.2rem 0;
-
-              strong {
-                  color: #e0e0e0;
-              }
+        p {
+          font-size: 0.95rem;
+          color: #adb5bd;
+          margin: 0.2rem 0;
+  
+          strong {
+            color: #e0e0e0;
           }
+        }
       }
+    }
+  
+    /***** PAGINATION OVERRIDES *****/
+    ::ng-deep .ngx-pagination .current {
+      background: #61ba50 !important;
+      border: 1px solid #61ba50 !important;
+    }
+  
+    ::ng-deep .ngx-pagination a,
+    ::ng-deep .ngx-pagination button {
+      color: #848484 !important;
+    }
+  
+    ::ng-deep .ngx-pagination a:hover,
+    ::ng-deep .ngx-pagination button:hover {
+      color: #61ba50 !important;
+      background-color: none !important;
+    }
+  
+    /***** RESPONSIVE STYLES *****/
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+  
+      .game-cards {
+        grid-template-columns: 1fr;
+      }
+  
+      .toggle-filters-button {
+        align-self: center;
+      }
+    }
   }
-}
+  

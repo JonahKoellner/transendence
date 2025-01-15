@@ -27,7 +27,7 @@ export class GameLobbyService {
     this.socket$ = webSocket(environment.wsUrl + `/lobby/${roomId}/?token=${token}`);
 
     this.socket$.subscribe(
-      (msg) => {this.messages$.next(msg),  console.log(msg, roomId)},
+      (msg) => {this.messages$.next(msg)},
       (err) => {console.error('WebSocket error:', err),this.handleError(err, roomId)},
       () => console.warn('WebSocket connection closed')
     );
@@ -38,7 +38,6 @@ export class GameLobbyService {
 
     this.deleteRoom(roomId).subscribe(
       (res) => {
-        console.log(res);
         this.router.navigate(['/games/online-pvp/rooms'])
       },
       (err) => {

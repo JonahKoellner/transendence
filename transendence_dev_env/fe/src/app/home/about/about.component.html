@@ -1,146 +1,136 @@
 <div class="about-container">
+    <!-- Header Section -->
     <div class="about-header">
-        <h2>About Transcendence</h2>
+      <h2>About Transcendence</h2>
     </div>
-
+  
+    <!-- Description Section -->
     <div class="about-description">
-        <p>
-            Welcome to <strong>Transcendence</strong> – where the boundaries of gaming, Fullstack and AI blur into one chaotic, exhilarating experience. 
-            This passion project isn’t just code; it’s countless late nights, endless caffeine, and a sprinkle of sheer madness
-        </p>
-    
-        <ul class="contributors">
-            <li>
-                <img src="https://cdn.intra.42.fr/users/384cad88316a2ad0b74b16caa26fff48/lkreuzer.png" alt="Lukas Kreuzer" class="avatar">
-                <span class="name">Lukas Kreuzer</span>
-                <span class="info">Code Sorcerer Supreme</span>
-            </li>
-            <li>
-                <img src="https://cdn.intra.42.fr/users/33446a7c706db8e85a8a1f272e42b014/jkollner.jpg" alt="Jonah Köllner" class="avatar">
-                <span class="name">Jonah Köllner</span>
-                <span class="info">Chief Button Clicker</span>
-            </li>
-            <li>
-                <img src="https://cdn.intra.42.fr/users/3c1f08193b22c4acd4b8abd1f431a693/gpasztor.jpg" alt="Gregor Parzdor" class="avatar">
-                <span class="name">Gergely Pásztor</span>
-                <span class="info">Head of Vibes & Snacks</span>
-            </li>
-            <li>
-                <img src="https://cdn.intra.42.fr/users/8c087da4532c6d41740814505a57a870/nburchha.jpg" alt="Gregor Parzdor" class="avatar">
-                <span class="name">Niklas Burchhardt</span>
-                <span class="info">Mastermind</span>
-            </li>
-        </ul>
-    
-        <div class="video-container">
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/L_WoOkDAqbM" frameborder="0" allowfullscreen></iframe>
-        </div>
-    
-        <p>
-            Whether you’re here for the next-level gameplay, the cutting-edge tech or the sheer thrill of it all, we’re glad you’re here.
-        </p>
-    </div>
+      <p>
+        Welcome to <strong>Transcendence</strong> – where the boundaries of gaming, Fullstack, and AI blur into one chaotic, exhilarating experience.
+        This passion project isn’t just code; it’s countless late nights, endless caffeine, and a sprinkle of sheer madness.
+      </p>
 
+      <div class="contributors-carousel">
+        <button class="carousel-button prev-button" 
+        (click)="prevContributor()" 
+        aria-label="Previous contributor">&lt;</button>
+        
+        <div class="carousel-track-container">
+          <ul class="carousel-track">
+            <li class="contributor-slide" *ngFor="let contributor of contributors">
+              <div class="contributor-slide-content"
+                   [ngClass]="{'luke-background': contributor.name === 'Lukas Kreuzer'}">
+              
+                <!-- Conditionally insert background video for Lukas -->
+                <ng-container *ngIf="contributor.name === 'Lukas Kreuzer'">
+                  <iframe 
+                    class="background-video"
+                    src="https://www.youtube.com/embed/L_WoOkDAqbM?autoplay=1&mute=1&loop=1&modestbranding=1&controls=0&showinfo=0&playlist=L_WoOkDAqbM&iv_load_policy=3&cc_load_policy=3&rel=0&disablekb=1"
+                    frameborder="0"
+                    allow="autoplay; fullscreen"
+                    title="Lukas Background Video">
+                  </iframe>
+                </ng-container>
+            
+                <img [src]="contributor.avatar" class="avatar" [alt]="contributor.name">
+                <div class="contributor-info">
+                  <span class="name">{{ contributor.name }}</span>
+                  <span class="info">{{ contributor.role }}</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <button class="carousel-button next-button" 
+        (click)="nextContributor()" 
+        aria-label="Next contributor">&gt;</button>
+      </div>
+  
+  
+      <p>
+        Whether you’re here for the next-level gameplay, the cutting-edge tech, or the sheer thrill of it all, we’re glad you’re here.
+      </p>
+    </div>
+  
+    <!-- Modules Overview Section -->
     <div class="about-modules">
-        <h3>Project Overview</h3>
-        <div class="module-summary">
-            <p><strong>Total Points Achieved:</strong> 12.5 + 4.0</p>
-            <p><strong>Completion Requirements:</strong> A minimum of 7 points is needed to achieve 100% project completion.</p>
-            <p><strong>Bonus Eligibility:</strong> To reach the maximum score of 125%, a total of 9.5 points is required.</p>
-            <p><strong>Bonus Scoring:</strong></p>
-            <ul>
-                <li>5 points are awarded for each minor module completed.</li>
-                <li>10 points are awarded for each major module completed.</li>
-            </ul>
-        </div>
+      <h3>Project Overview</h3>
+      <div class="module-summary">
+        <p><strong>Total Points Achieved:</strong> 15.5 (0.5 in progress)</p>
+        <p><strong>Completion Requirements:</strong> A minimum of 7 points is needed to achieve 100% project completion.</p>
+        <p><strong>Bonus Eligibility:</strong> To reach the maximum score of 125%, a total of 9.5 points is required.</p>
+        <p><strong>Bonus Scoring:</strong></p>
         <ul>
-            <li>Web
-                <ul>
-                    <li class="completed">Use a Framework as backend (1 point) - Integrated using Django.</li>
-                    <li class="completed">Use a front-end framework (0.5 points) - Leveraged Angular and Bootstrap for UI development.</li>
-                    <li class="completed">Database Integration (0.5 points) - Implemented with PostgreSQL for relational data management.</li>
-                    <li class="incomplete">Blockchain Score Storage (1 point)</li>
-                </ul>
-            </li>
-            <li>User Management
-                <ul>
-                    <li class="completed">Standard user management and authentication (1 point) - Implemented with JWT Django and Angular tools.</li>
-                    <li class="completed">Remote authentication (1 point)</li>
-                </ul>
-            </li>
-            <li>Gameplay and User Experience
-                <ul>
-                    <li class="completed">Remote players (1 point) - Enabled through WebSockets.</li>
-                    <li class="completed">Multiple players (1 point) - Added an Arena Mode.</li>
-                    <li class="incomplete">Add Another Game with User History and Matchmaking (1 point)</li>
-                    <li class="completed">Game Customization Options (0.5 points) - Players can set custom colors, skins and round settings.</li>
-                    <li class="completed">Live Chat (1 point) - Implemented with WebSockets for real-time messaging.</li>
-                </ul>
-            </li>
-            <li>AI-Algo
-                <ul>
-                    <li class="completed">Introduce an AI Opponent (1 point) - Implemented a predictive algorithm to calculate ball trajectory and simulate human-like reactions with difficulty-based randomness and speed adjustments.</li>
-                    <li class="in_progress">User and Game Stats Dashboards (0.5 points) - Designed with Chart.js for dynamic visuals.</li>
-                </ul>
-            </li>
-            <li>Cybersecurity
-                <ul>
-                    <li class="in_progress">Implement WAF/ModSecurity with Hardened Configuration and HashiCorp Vault for Secrets Management (1 point).</li>
-                    <li class="completed">GDPR Compliance Options with User Anonymization, Local Data Management, and Account Deletion (0.5 points).</li>
-                    <li class="completed">Implement Two-Factor Authentication (2FA) and JWT (1 point) - Enhanced security through OTP-based 2FA.</li>
-                </ul>
-            </li>
-            <li>DevOps
-                <ul>
-                    <li class="completed">Infrastructure Setup with ELK for Log Management (1 point).</li>
-                    <li class="in_progress">Monitoring system (0.5 points).</li>
-                    <li class="incomplete">Designing the Backend as Microservices (1 point).</li>
-                </ul>
-            </li>
-            <li>Graphics
-                <ul>
-                    <li class="in_progress">Implementing Advanced 3D Techniques (1 point).</li>
-                </ul>
-            </li>
-            <li>Accessibility
-                <ul>
-                    <li class="incomplete">Support on all devices (0.5 points).</li>
-                    <li class="completed">Expanding Browser Compatibility (0.5 points) - Ensured functionality across all major browsers.</li>
-                    <li class="in_progress">Multiple language supports (0.5 points).</li>
-                    <li class="in_progress">Add accessibility for Visually Impaired Users (0.5 points).</li>
-                    <li class="incomplete">Server-Side Rendering (SSR) Integration (0.5 points).</li>
-                </ul>
-            </li>
-            <li>Server-Side Pong
-                <ul>
-                    <li class="completed">Replacing Basic Pong with Server-Side Pong and Implementing an API (1 point) - Enhanced gameplay with server-side logic.</li>
-                    <li class="incomplete">Enabling Pong Gameplay via CLI against Web Users with API Integration (1 point).</li>
-                </ul>
-            </li>
+          <li>5 points are awarded for each minor module completed.</li>
+          <li>10 points are awarded for each major module completed.</li>
         </ul>
+      </div>
+      <ul class="modules-list">
+        <li *ngFor="let module of modules" class="module-item" (click)="openModuleDialog(module)">
+          <div class="module-header">
+            <span class="module-name">{{ module.name }}</span>
+            <span class="module-progress" [ngClass]="module.status" >
+              {{ module.completedSubModules }} / {{ module.totalSubModules }} Submodules
+              <br>
+              {{ module.totalPoints }} Points Achieved
+            </span>
+          </div>
+          <ul class="submodules-list">
+            <li
+              *ngFor="let subModule of module.subModules"
+              [ngClass]="subModule.status"
+              class="submodule-item">
+              {{ subModule.description }}
+            </li>
+          </ul>
+        </li>
+      </ul>
     </div>
-    <div class="pdf-viewer">
-        <div class="about-header">
-            <h2>Project Subject</h2>
-        </div>
-        <iframe
-            [src]="sanitizer.bypassSecurityTrustResourceUrl(pdfSrc)"
-            width="100%"
-            height="600"
-            frameborder="0">
-        </iframe>
+  
+    <!-- PDF Viewer Section -->
+    <!-- <div class="pdf-viewer">
+      <div class="about-header">
+        <h2>Project Subject</h2>
+      </div>
+      <iframe
+        [src]="sanitizer.bypassSecurityTrustResourceUrl(pdfSrc)"
+        width="100%"
+        height="600"
+        frameborder="0"
+        title="Transcendence Project Subject">
+      </iframe>
     </div>
+   -->
+    <!-- Retro Game Modal -->
     <div class="retro-game-modal" *ngIf="showRetroGameModal">
-        <div class="modal-content">
-            <span class="close-button" (click)="closeRetroGameModal()">&times;</span>
-            <h2>Enjoy Your Retro Game!</h2>
-            <iframe 
-                [src]="retroGameUrl" 
-                width="100%" 
-                height="600" 
-                frameborder="0" 
-                allowfullscreen>
-            </iframe>
-        </div>
+      <div class="modal-content">
+        <span class="close-button" (click)="closeRetroGameModal()">&times;</span>
+        <h2>Enjoy Your Retro Game!</h2>
+        <iframe 
+          [src]="retroGameUrl" 
+          width="100%" 
+          height="600" 
+          frameborder="0" 
+          allowfullscreen>
+        </iframe>
+      </div>
     </div>
-</div>
+  
+    <!-- Module Details Dialog -->
+    <div class="module-dialog" *ngIf="selectedModule" (click)="closeModuleDialog($event)">
+      <div class="dialog-content" (click)="$event.stopPropagation()">
+        <span class="close-button" (click)="closeModuleDialog()">&times;</span>
+        <h2>{{ selectedModule.name }}</h2>
+        <p>{{ selectedModule.details }}</p>
+        <h3>Implementation Details:</h3>
+        <ul>
+          <li *ngFor="let detail of selectedModule.implementationDetails">
+            {{ detail }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  

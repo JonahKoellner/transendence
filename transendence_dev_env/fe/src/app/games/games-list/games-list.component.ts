@@ -10,17 +10,23 @@ export class GamesListComponent implements OnInit {
   games: Game[] = [];
   filteredGames: Game[] = [];
   errorMessage: string = '';
+  showFilters: boolean = false;
 
   // Filters and Sorting Options
   searchPlayer: string = '';
   startDate: string = '';
   endDate: string = '';
   sortOrder: 'asc' | 'desc' = 'desc';
-
+  pGames: number = 1; // Current page
+  itemsPerPageGames: number = 6; // Items per page
   constructor(private gameService: GameService) {}
 
   ngOnInit(): void {
     this.fetchGames();
+  }
+
+  onPageChangeProjects(page: number) {
+    this.pGames = page;
   }
 
   fetchGames(): void {

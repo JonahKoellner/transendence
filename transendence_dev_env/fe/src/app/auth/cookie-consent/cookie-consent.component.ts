@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CookieConsentService } from 'src/app/services/cookie-consent.service';
 
@@ -7,7 +7,7 @@ import { CookieConsentService } from 'src/app/services/cookie-consent.service';
   templateUrl: './cookie-consent.component.html',
   styleUrls: ['./cookie-consent.component.scss']
 })
-export class CookieConsentComponent {
+export class CookieConsentComponent implements OnInit{
   showBanner: boolean = false;
 
   constructor(private consentService: CookieConsentService, private router: Router) { }

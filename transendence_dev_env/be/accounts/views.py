@@ -1,34 +1,32 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework.response import Response
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db import transaction
+from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError
-import random
 from .serializers import (
     RegisterSerializer, LoginSerializer, OTPVerifySerializer,
-    TokenSerializer, UserProfileSerializer, NotificationSerializer,
+    NotificationSerializer,
     UserProfileSerializer, UserDetailSerializer, ChatMessageSerializer,
-    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+    FriendRequestSerializer, SendGameInviteSerializer, AchievementSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    SendArenaGameInviteSerializer, SendChaosGameInviteSerializer
 )
-from .utils import create_notification, update_profile_with_transaction
-from django.http import JsonResponse
+from .utils import create_notification
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement
+from .models import Notification, ChatMessage, FriendRequest, Achievement, UserAchievement, Profile
 from django.db import models
-from django.db.models import Q
+from django.db.models import Count, Q, F, Sum, Avg
 import be.settings as besettings
-from games.models import Game, Lobby, Tournament
+from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby
 from django.utils import timezone
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import logging
@@ -38,7 +36,6 @@ from django.utils.encoding import force_bytes
 logger = logging.getLogger('accounts')
 from anymail.message import AnymailMessage
 from django.conf import settings
-from django.urls import reverse
 import hvac
 class PasswordResetRequestView(APIView):
     """
@@ -327,8 +324,10 @@ class VerifyOTPView(APIView):
 
 class TokenRefreshView(SimpleJWTTokenRefreshView):
     def post(self, request, *args, **kwargs):
+        logger.debug("got JWT refresh request")
         refresh_token = request.COOKIES.get('refresh_token')
         if not refresh_token:
+            logger.debug("no refresh token found in TokenRefreshView")
             return Response({"message": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
         
         serializer = self.get_serializer(data={'refresh': refresh_token})
@@ -342,6 +341,7 @@ class TokenRefreshView(SimpleJWTTokenRefreshView):
         
         # Update refresh token cookie if rotated
         if api_settings.ROTATE_REFRESH_TOKENS and new_refresh_token:
+            logger.debug("rotating JWT refresh token")
             response.set_cookie(
                 'refresh_token',
                 new_refresh_token,
@@ -350,6 +350,7 @@ class TokenRefreshView(SimpleJWTTokenRefreshView):
                 secure=False,
                 samesite='Lax' if besettings.DEBUG else 'None'
             )
+        logger.debug(f"Sending new access token: {response_data}")
         return response
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -359,10 +360,11 @@ class UserViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
 
     def get_serializer_class(self):
-        # Use UserProfileSerializer for detailed views and UserDetailSerializer for others
-        if self.action in ['retrieve', 'update', 'partial_update']:
+        if self.action in ['update', 'partial_update']:
             return UserProfileSerializer
-        return UserDetailSerializer
+        elif self.action == 'retrieve':
+            return UserProfileSerializer
+        return UserDetailSerializer  # Use for other actions if necessary
 
     def list(self, request, *args, **kwargs):
         """
@@ -788,7 +790,141 @@ class NotificationViewSet(viewsets.ModelViewSet):
                 notification_type='game_invite',
                 data={
                     'message': f'{sender_user.username} has invited you to join Lobby {room_id}.',
-                    'room_id': room_id
+                    'room_id': room_id,
+                    'game_type': "classic"
+                },
+                priority='high'
+            )
+
+            return Response({'status': 'Game invite sent successfully.'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+    @action(detail=False, methods=['post'], url_path='send-game-invite-arena')
+    def send_game_invite_arena(self, request):
+        serializer = SendArenaGameInviteSerializer(data=request.data)
+        if serializer.is_valid():
+            receiver_id = serializer.validated_data['receiver_id']
+            room_id = serializer.validated_data['room_id']
+
+            sender_user = request.user
+
+            # Retrieve the receiver user
+            try:
+                receiver_user = User.objects.get(id=receiver_id)
+            except User.DoesNotExist:
+                return Response({'detail': 'Receiver user does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Retrieve the lobby instance using room_id
+            try:
+                lobby = ArenaLobby.objects.get(room_id=room_id)
+            except ArenaLobby.DoesNotExist:
+                return Response({'detail': 'Lobby does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if lobby.player_one == receiver_user:
+                return Response({'detail': 'Cannot send game invite to the host of the Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is already part of a Game in the Lobby
+            if Game.objects.filter(lobby=lobby, player2=receiver_user).exists() or \
+               Game.objects.filter(lobby=lobby, player1=receiver_user).exists():
+                return Response({'detail': 'User is already part of a game in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is a friend
+            if not sender_user.profile.friends.filter(id=receiver_user.profile.id).exists():
+                return Response({'detail': 'You can only send game invites to your friends.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver has blocked the sender or vice versa
+            if sender_user.profile.blocked_users.filter(id=receiver_user.profile.id).exists() or \
+               receiver_user.profile.blocked_users.filter(id=sender_user.profile.id).exists():
+                return Response({'detail': 'Cannot send game invite to this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if there is already a pending game invite to this Lobby for this receiver
+            existing_invites = Notification.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                is_read=False,
+                data__room_id=room_id
+            )
+            if existing_invites.exists():
+                return Response({'detail': 'A pending game invite already exists for this user in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the game invite notification
+            create_notification(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                data={
+                    'message': f'{sender_user.username} has invited you to join Lobby {room_id}.',
+                    'room_id': room_id,
+                    'game_type': "arena"
+                },
+                priority='high'
+            )
+
+            return Response({'status': 'Game invite sent successfully.'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=False, methods=['post'], url_path='send-game-invite-chaos')
+    def send_game_invite_chaos(self, request):
+        serializer = SendChaosGameInviteSerializer(data=request.data)
+        if serializer.is_valid():
+            receiver_id = serializer.validated_data['receiver_id']
+            room_id = serializer.validated_data['room_id']
+
+            sender_user = request.user
+
+            # Retrieve the receiver user
+            try:
+                receiver_user = User.objects.get(id=receiver_id)
+            except User.DoesNotExist:
+                return Response({'detail': 'Receiver user does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Retrieve the lobby instance using room_id
+            try:
+                chaosLobby = ChaosLobby.objects.get(room_id=room_id)
+            except ChaosLobby.DoesNotExist:
+                return Response({'detail': 'Lobby does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if chaosLobby.host == receiver_user:
+                return Response({'detail': 'Cannot send game invite to the host of the Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is already part of a Game in the Lobby
+            if Game.objects.filter(lobby=chaosLobby, player2=receiver_user).exists() or \
+               Game.objects.filter(lobby=chaosLobby, player1=receiver_user).exists():
+                return Response({'detail': 'User is already part of a game in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver is a friend
+            if not sender_user.profile.friends.filter(id=receiver_user.profile.id).exists():
+                return Response({'detail': 'You can only send game invites to your friends.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the receiver has blocked the sender or vice versa
+            if sender_user.profile.blocked_users.filter(id=receiver_user.profile.id).exists() or \
+               receiver_user.profile.blocked_users.filter(id=sender_user.profile.id).exists():
+                return Response({'detail': 'Cannot send game invite to this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if there is already a pending game invite to this Lobby for this receiver
+            existing_invites = Notification.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                is_read=False,
+                data__room_id=room_id
+            )
+            if existing_invites.exists():
+                return Response({'detail': 'A pending game invite already exists for this user in this Lobby.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the game invite notification
+            create_notification(
+                sender=sender_user,
+                receiver=receiver_user,
+                notification_type='game_invite',
+                data={
+                    'message': f'{sender_user.username} has invited you to join Lobby {room_id}.',
+                    'room_id': room_id,
+                    'game_type': "chaos"
                 },
                 priority='high'
             )
@@ -867,6 +1003,7 @@ class AchievementListView(APIView):
         achievements = Achievement.objects.all()
         serializer = AchievementSerializer(achievements, many=True, context={'request': request})
         return Response(serializer.data)
+
     
 class HashiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -901,3 +1038,294 @@ class HashiView(APIView):
             return Response(secret_data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+class UserStatsView(APIView):
+    """
+    API view to retrieve user statistics for display on the user detail page.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, user_id):
+        """
+        Handle GET request to retrieve user statistics.
+        """
+        try:
+
+            # Fetch the user profile with related user data
+            profile = get_object_or_404(Profile.objects.select_related('user'), user__id=user_id)
+
+            # Current date
+            today = timezone.now().date()
+
+            # Define the date range (last 12 months)
+            start_date = today - timedelta(days=365)
+
+            # Helper function to generate last 12 month labels accurately
+            def get_last_12_months():
+                months = []
+                year = today.year
+                month = today.month
+                for _ in range(12):
+                    months.append(f"{year}-{month:02}")
+                    month -= 1
+                    if month == 0:
+                        month = 12
+                        year -= 1
+                return sorted(months)
+
+            # 1. Games Played Over Time (Last 12 Months)
+            games_played = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                start_time__date__gte=start_date
+            ).annotate(month=F('start_time__month'), year=F('start_time__year')) \
+             .values('year', 'month') \
+             .annotate(count=Count('id')) \
+             .order_by('year', 'month')
+
+            # Organize data per month
+            games_played_dict = {}
+            for entry in games_played:
+                month_year = f"{entry['year']}-{entry['month']:02}"
+                games_played_dict[month_year] = entry['count']
+
+            # Generate last 12 months
+            last_12_months = get_last_12_months()
+            games_played_final = []
+            for month in last_12_months:
+                games_played_final.append({
+                    "month": month,
+                    "count": games_played_dict.get(month, 0)
+                })
+
+            # 2. Win/Loss Ratio
+            total_wins = Game.objects.filter(winner=profile.user).count()
+            total_losses = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                ~Q(winner=profile.user)
+            ).count()
+
+            win_loss_ratio = {
+                "wins": total_wins,
+                "losses": total_losses
+            }
+
+            # 3. Game Modes Distribution
+            game_modes = Game.GAME_MODES
+            game_mode_distribution = {}
+            for mode, _ in game_modes:
+                count = Game.objects.filter(game_mode=mode).filter(
+                    Q(player1=profile.user) |
+                    Q(player2=profile.user) |
+                    Q(player3=profile.user) |
+                    Q(player4=profile.user)
+                ).count()
+                game_mode_distribution[mode] = count
+
+            # 4. Time Spent Playing Over Time (Last 12 Months)
+            time_spent = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                start_time__date__gte=start_date,
+                duration__isnull=False
+            ).annotate(month=F('start_time__month'), year=F('start_time__year')) \
+             .values('year', 'month') \
+             .annotate(total_minutes=Sum('duration')) \
+             .order_by('year', 'month')
+
+            # Organize data per month
+            time_spent_dict = {}
+            for entry in time_spent:
+                month_year = f"{entry['year']}-{entry['month']:02}"
+                time_spent_dict[month_year] = entry['total_minutes']
+
+            # Prepare final data
+            time_spent_final = []
+            for month in last_12_months:
+                time_spent_final.append({
+                    "month": month,
+                    "total_minutes": time_spent_dict.get(month, 0)
+                })
+
+            # 5. Tournaments Participated vs. Won
+            tournaments_participated = Tournament.objects.filter(
+                host=profile.user
+            ).count()
+            tournaments_won = Tournament.objects.filter(
+                final_winner=profile.user
+            ).count()
+
+            tournaments_stats = {
+                "participated": tournaments_participated,
+                "won": tournaments_won
+            }
+
+            # 6. Preferred Playing Times Over the Day (Last 12 Months)
+            preferred_playing_times = Game.objects.filter(
+                Q(player1=profile.user) |
+                Q(player2=profile.user) |
+                Q(player3=profile.user) |
+                Q(player4=profile.user),
+                start_time__date__gte=start_date
+            ).annotate(hour=F('start_time__hour')) \
+             .values('hour') \
+             .annotate(count=Count('id')) \
+             .order_by('hour')
+
+            # Organize data per hour
+            playing_times_dict = {hour: 0 for hour in range(24)}
+            for entry in preferred_playing_times:
+                playing_times_dict[entry['hour']] = entry['count']
+
+            # Prepare data for chart
+            preferred_playing_times_final = []
+            for hour in range(24):
+                preferred_playing_times_final.append({
+                    "hour": f"{hour}:00 - {hour}:59",
+                    "count": playing_times_dict[hour]
+                })
+
+            # Prepare final JSON response
+            data = {
+                "games_played_over_time": games_played_final,
+                "win_loss_ratio": win_loss_ratio,
+                "game_modes_distribution": game_mode_distribution,
+                "time_spent_playing_over_time": time_spent_final,
+                "tournaments_stats": tournaments_stats,
+                "preferred_playing_times": preferred_playing_times_final
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in UserStatsView GET: {e}")
+            return Response(
+                {"detail": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+class GlobalStatsView(APIView):
+    """
+    API view to retrieve global statistics for display on the global dashboard.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """
+        Handle GET request to retrieve global statistics.
+        """
+        try:
+            # Current date
+            today = timezone.now().date()
+
+            # Define the date range (last 12 months)
+            start_date = today - timedelta(days=365)
+
+            # Helper function to generate last 12 month labels accurately
+            def get_last_12_months():
+                months = []
+                year = today.year
+                month = today.month
+                for _ in range(12):
+                    months.append(f"{year}-{month:02}")
+                    month -= 1
+                    if month == 0:
+                        month = 12
+                        year -= 1
+                return sorted(months)
+
+            last_12_months = get_last_12_months()
+
+            # 1. Games Played per Mode
+            games_per_mode = Game.objects.values('game_mode').annotate(count=Count('id')).order_by('-count')
+            games_per_mode_data = {entry['game_mode']: entry['count'] for entry in games_per_mode}
+
+            # 2. Peak Playing Times (Games started per hour)
+            games_per_hour = Game.objects.extra(select={'hour': 'EXTRACT(HOUR FROM start_time)'}).values('hour').annotate(count=Count('id')).order_by('hour')
+            games_per_hour_dict = {int(entry['hour']): entry['count'] for entry in games_per_hour}
+
+            # Initialize all hours with zero counts
+            peak_playing_times = [{"hour": f"{hour}:00 - {hour}:59", "count": games_per_hour_dict.get(hour, 0)} for hour in range(24)]
+
+            # 3. Game Modes Popularity
+            # Similar to Games Played per Mode but expressed as percentages
+            total_games = Game.objects.count()
+            game_modes_popularity = [
+                {
+                    "mode": entry['game_mode'],
+                    "percentage": round((entry['count'] / total_games) * 100, 2) if total_games > 0 else 0
+                }
+                for entry in games_per_mode
+            ]
+
+            # 4. Games Played Globally Over Time (Last 12 Months)
+            games_over_time = Game.objects.filter(start_time__date__gte=start_date) \
+                .annotate(month=F('start_time__month'), year=F('start_time__year')) \
+                .values('year', 'month') \
+                .annotate(count=Count('id')) \
+                .order_by('year', 'month')
+
+            # Organize data per month
+            games_over_time_dict = {}
+            for entry in games_over_time:
+                month_year = f"{entry['year']}-{entry['month']:02}"
+                games_over_time_dict[month_year] = entry['count']
+
+            games_played_over_time = [games_over_time_dict.get(month, 0) for month in last_12_months]
+
+            # 5. Global Win/Loss Ratio
+            total_wins = Game.objects.filter(winner__isnull=False).count()  # Assuming 'winner' is set when a game is won
+            total_losses = Game.objects.filter(winner__isnull=True).count()  # Assuming 'winner' is null when a game is lost or tied
+            # Alternatively, define loss based on game outcomes if available
+
+            win_loss_ratio = {
+                "wins": total_wins,
+                "losses": total_losses
+            }
+
+            # 6. Average Game Duration per Mode
+            avg_duration_per_mode = Game.objects.values('game_mode').annotate(average_duration=Avg('duration')).order_by('-average_duration')
+            avg_duration_data = {entry['game_mode']: round(entry['average_duration'], 2) if entry['average_duration'] else 0 for entry in avg_duration_per_mode}
+
+            # Prepare final JSON response
+            data = {
+                "games_played_per_mode": {
+                    "labels": list(games_per_mode_data.keys()),
+                    "data": list(games_per_mode_data.values())
+                },
+                "peak_playing_times": {
+                    "labels": [entry["hour"] for entry in peak_playing_times],
+                    "data": [entry["count"] for entry in peak_playing_times]
+                },
+                "game_modes_popularity": {
+                    "labels": [entry["mode"] for entry in game_modes_popularity],
+                    "data": [entry["percentage"] for entry in game_modes_popularity]
+                },
+                "games_played_over_time": {
+                    "labels": last_12_months,
+                    "data": games_played_over_time
+                },
+                "win_loss_ratio": win_loss_ratio,
+                "average_game_duration_per_mode": {
+                    "labels": list(avg_duration_data.keys()),
+                    "data": list(avg_duration_data.values())
+                }
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in GlobalStatsView GET: {e}")
+            return Response(
+                {"detail": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

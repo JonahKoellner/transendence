@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -8,18 +10,18 @@ import { AuthService } from './auth.service';
 export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
-  canActivate(): boolean {
-    console.log('AuthGuard canActivate check');
-  
-    // Check if the user is authenticated (JWT token is valid)
-    if (!this.authService.isAuthenticated()) {
-      console.log('Not authenticated, redirecting to /login');
-      this.router.navigate(['/login']);
-      return false;
+  canActivate(): Observable<boolean> {
+    if (this.authService.isAuthenticated()) {
+      return of(true);
     }
-
-    console.log('Access granted by AuthGuard');
-    return true;
-  }
   
+    return this.authService.refreshToken().pipe(
+      map(() => true),
+      catchError(err => {
+        console.error('Route guard: Token refresh failed', err);
+        this.router.navigate(['/login'], { queryParams: { message: 'Session expired, please log in again' } });
+        return of(false);
+      })
+    );
+  }
 }

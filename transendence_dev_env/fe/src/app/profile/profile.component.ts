@@ -6,7 +6,9 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ImageSelectorModalComponent } from './image-selector-modal/image-selector-modal.component';
 import { DeleteAccountModalComponent } from './delete-account-modal/delete-account-modal.component';
 import { FtAuthService, FtUser } from '../ft-auth.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { AuthService } from '../auth.service';
 interface ImageSelection {
   type: 'preset' | 'upload';
   data: File | string; // File object for uploads, string identifier/path for presets
@@ -25,6 +27,8 @@ export class ProfileComponent implements OnInit {
   isUpdating = false;
   userProfile!: UserProfile;
   
+  activeTab: 'info' | 'edit' | 'settings' | '42'= 'info';
+  
   // Options for customization
   paddleskinOption: 'color' | 'image' = 'color';
   ballskinOption: 'color' | 'image' = 'color';
@@ -34,6 +38,12 @@ export class ProfileComponent implements OnInit {
   ftUserData: FtUser | null = null;
   ftLoading: boolean = false;
   ftError: string | null = null;
+
+  pCursus: number = 1; // Current page
+  itemsPerPageCursus: number = 1; // Items per page
+
+  pProjects: number = 1; // Current page
+  itemsPerPageProjects: number = 3; // Items per page
 
   selectedImages: {
     avatar?: ImageSelection;
@@ -48,7 +58,10 @@ export class ProfileComponent implements OnInit {
     private modalService: NgbModal,
     private http: HttpClient,
     private ftAuthService: FtAuthService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastr: ToastrService,
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -57,12 +70,23 @@ export class ProfileComponent implements OnInit {
       if (params['ftAuthError'] === 'true') {
         this.ftAuthenticated = false;
         this.ftError = 'Failed to authenticate with 42. Please try again.';
+      } else if (params['ftAuthError'] === 'false') {
+        this.ftError = null;
+        this.activeTab = '42';
       }
+
     });
 
     this.initializeForm();
     this.loadProfile();
     this.checkFtAuthentication();
+  }
+
+  onPageChangeCursus(page: number) {
+    this.pCursus = page;
+  }
+  onPageChangeProjects(page: number) {
+    this.pProjects = page;
   }
 
   initializeForm() {
@@ -118,7 +142,7 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
       },
       (error) => {
-        console.error('Error loading profile:', error);
+        this.toastr.error('An error occurred while loading your profile. Please try again.');
         this.isLoading = false;
       }
     );
@@ -159,7 +183,7 @@ export class ProfileComponent implements OnInit {
     this.paddleskinOption = option;
     if (option === 'image') {
       this.profileForm.get('paddleskin_color')?.disable();
-      this.profileForm.get('paddleskin_color')?.setValue('#FF0000'); // Reset to default or keep existing
+      this.profileForm.get('paddleskin_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
     } else {
       this.profileForm.get('paddleskin_image')?.reset();
       this.profileForm.get('paddleskin_image_to_delete')?.setValue(false); // Reset deletion flag
@@ -173,7 +197,7 @@ export class ProfileComponent implements OnInit {
     this.ballskinOption = option;
     if (option === 'image') {
       this.profileForm.get('ballskin_color')?.disable();
-      this.profileForm.get('ballskin_color')?.setValue('#0000FF'); // Reset to default or keep existing
+      this.profileForm.get('ballskin_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
     } else {
       this.profileForm.get('ballskin_image')?.reset();
       this.profileForm.get('ballskin_image_to_delete')?.setValue(false); // Reset deletion flag
@@ -187,7 +211,7 @@ export class ProfileComponent implements OnInit {
     this.gamebackgroundOption = option;
     if (option === 'image') {
       this.profileForm.get('gamebackground_color')?.disable();
-      this.profileForm.get('gamebackground_color')?.setValue('#FFFFFF'); // Reset to default or keep existing
+      this.profileForm.get('gamebackground_color')?.setValue('#000000'); // Reset to default or keep existing
     } else {
       this.profileForm.get('gamebackground_wallpaper')?.reset();
       this.profileForm.get('gamebackground_wallpaper_to_delete')?.setValue(false); // Reset deletion flag
@@ -295,7 +319,6 @@ export class ProfileComponent implements OnInit {
   
     const formData = new FormData();
     if (this.profileForm.get('display_name')!.value) {
-      console.log('display_name', this.profileForm.get('display_name')!.value);
       formData.append('display_name', this.profileForm.get('display_name')!.value);
     } else {
       formData.delete('display_name');
@@ -373,11 +396,11 @@ export class ProfileComponent implements OnInit {
   
     // Append username if required
     formData.append("username", this.userProfile.username);
-
-  
+    const displayName = this.profileForm.get('display_name')?.value ?? '';
+    formData.append('display_name', displayName);
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
-        alert('Profile updated successfully');
+        this.toastr.success('Profile updated successfully', 'Success');
         // Reload the profile to reflect changes
         this.loadProfile();
   
@@ -396,8 +419,7 @@ export class ProfileComponent implements OnInit {
       },
       (error: HttpErrorResponse) => {
         this.isUpdating = false;
-        console.error('Error updating profile:', error);
-        alert('An error occurred while updating your profile. Please try again.');
+        this.toastr.error('An error occurred while updating your profile. Please try again.', 'Error');
       }
     );
   }
@@ -515,9 +537,7 @@ export class ProfileComponent implements OnInit {
           reader.readAsDataURL(file);
         },
         (error) => {
-          console.error('Error fetching preset image:', error);
-          // Optionally, notify the user about the error
-          alert('Failed to load the selected preset image. Please try another one.');
+          this.toastr.error('Failed to load the selected preset image. Please try another one.', 'Error');
         }
       );
     }
@@ -544,13 +564,13 @@ export class ProfileComponent implements OnInit {
     if (confirm('Are you sure you want to delete your account? This action is irreversible.')) {
       this.profileService.deleteAccount(password).subscribe(
         (response) => {
-          alert('Your account has been deleted successfully.');
-          // Optionally, redirect to the homepage or login page
-          window.location.href = '/';
+          this.toastr.success('Your account has been successfully deleted.', 'Success');
+          this.authService.clearAll();
+          this.router.navigate(['/login']);
+          window.location.reload();
         },
         (error: HttpErrorResponse) => {
-          console.error('Error deleting account:', error);
-          alert(error.error.message || 'An error occurred while deleting your account. Please try again.');
+          this.toastr.error('An error occurred while deleting your account. Please try again.', 'Error');
         }
       );
     }
@@ -565,13 +585,13 @@ export class ProfileComponent implements OnInit {
           this.ftLoading = false;
           // Optionally, update your userProfile with 42 data
           // this.userProfile.ftData = data;
-          if (this.userProfile.is_ft_authenticated === false) {
+          if (this.userProfile && this.userProfile.is_ft_authenticated === false) {
             this.update42ValidationOnProfile();
           }
 
         },
         (error) => {
-          console.error('Failed to fetch 42 user data:', error);
+          this.toastr.error('Failed to fetch 42 user data. Please log in again.', 'Error');
           this.ftAuthenticated = false;
           this.ftError = 'Failed to fetch 42 user data. Please log in again.';
           this.ftLoading = false;
@@ -590,7 +610,7 @@ export class ProfileComponent implements OnInit {
     formData.append('is_ft_authenticated', 'true');
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
-        alert('Profile synced with 42 account successfully');
+        this.toastr.success('Profile synced with 42 account successfully', 'Success');
         // Reload the profile to reflect changes
         this.loadProfile();
   
@@ -608,8 +628,7 @@ export class ProfileComponent implements OnInit {
       },
       (error: HttpErrorResponse) => {
         this.isUpdating = false;
-        console.error('Error updating profile:', error);
-        alert('An error occurred while updating your profile. Please try again.');
+        this.toastr.error('An error occurred while updating your profile. Please try again.', 'Error');
       }
     );
   }
@@ -620,7 +639,7 @@ export class ProfileComponent implements OnInit {
     formData.append('is_ft_authenticated', 'false');
     this.profileService.updateProfile(formData, this.userProfile.id).subscribe(
       (response) => {
-        alert('Removed 42 account from profile successfully');
+        this.toastr.success('Removed 42 account from profile successfully', 'Success');
         // Reload the profile to reflect changes
         this.loadProfile();
   
@@ -638,8 +657,7 @@ export class ProfileComponent implements OnInit {
       },
       (error: HttpErrorResponse) => {
         this.isUpdating = false;
-        console.error('Error updating profile:', error);
-        alert('An error occurred while updating your profile. Please try again.');
+        this.toastr.error('An error occurred while removing 42 account from profile. Please try again.', 'Error');
       }
     );
   }

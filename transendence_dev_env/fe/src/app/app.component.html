@@ -1,45 +1,69 @@
-<!-- Fixed Navbar at Top -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow" *ngIf="isAuthenticated">
-  <a class="navbar-brand" routerLink="/home">Pong Arena</a>
-  <button
-    class="navbar-toggler"
-    type="button"
-    (click)="isCollapsed = !isCollapsed"
-    aria-controls="navbarNav"
-    aria-expanded="!isCollapsed"
-    aria-label="Toggle navigation"
-  >
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div [ngbCollapse]="isCollapsed" class="navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ml-auto">
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/games">Games</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="games/leaderboard">Leaderboard</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/friends">Friends</a>
-      </li>
-      <li class="nav-item" *ngIf="is2FaEnabled">
-        <a class="nav-link" routerLink="/profile">Profile</a>
-      </li>
-      <li class="nav-item" *ngIf="!is2FaEnabled">
-        <a class="nav-link" routerLink="/profile">Profile (Not Verified)</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" (click)="logout()">Logout</a>
-      </li>
-    </ul>
-  </div>
+<nav
+  class="navbar navbar-expand-lg fixed-top navbar-dark navbar-custom"
+  *ngIf="isAuthenticated"
+>
+  <div class="container-fluid">
+    <!-- Brand -->
+    <a class="navbar-brand neon-hover" routerLink="/home">Pong Arena</a>
 
-  <!-- Notifications Icon -->
-  <app-notifications></app-notifications>
+    <!-- Toggler / Hamburger -->
+    <div class="group">
+      <app-notifications class="notify-one"></app-notifications>
+      <button
+        class="navbar-toggler"
+        type="button"
+        (click)="isCollapsed = !isCollapsed"
+        aria-controls="navbarNav"
+        aria-expanded="!isCollapsed"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+
+
+    <!-- Collapsible Navigation -->
+    <div [ngbCollapse]="isCollapsed" class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/games">Games</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="games/leaderboard">Leaderboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/friends">Friends</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/profile">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" (click)="logout()">Logout</a>
+        </li>
+      </ul>
+    </div>
+  
+
+  
+</div>
+
+
+<app-notifications class="notify-two"></app-notifications>
 </nav>
 
+
 <!-- Main Content Area -->
-<div class="container mt-5 pt-4">
+<div class="main-content">
+  <!-- Easter Egg Modal -->
+  <div class="easter-egg-modal" *ngIf="showEasterEgg">
+    <div class="modal-content">
+      <span class="close-button" (click)="closeEasterEgg()">&times;</span>
+      <h2 class="easter-egg-title">End</h2>
+      <p class="easter-egg-text">End my life lmao</p>
+    </div>
+  </div>
+
+  <!-- Page Outlets -->
   <router-outlet></router-outlet>
   <app-cookie-consent></app-cookie-consent>
 </div>

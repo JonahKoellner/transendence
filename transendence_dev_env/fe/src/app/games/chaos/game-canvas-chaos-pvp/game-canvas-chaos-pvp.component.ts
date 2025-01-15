@@ -84,7 +84,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load left paddle image. Falling back to color.');
           resolve();
         };
       }));
@@ -100,7 +99,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load ball image. Falling back to color.');
           resolve();
         };
       }));
@@ -116,7 +114,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load background image. Falling back to color.');
           resolve();
         };
       }));
@@ -228,7 +225,6 @@ drawPowerUps() {
       if (distance < this.ballRadius + 15) {
         if (this.lastHit && this.powerUpEffects[powerUp.type]) {
           this.powerUpEffects[powerUp.type](this.lastHit);
-          console.log(`Player ${this.lastHit} collected ${powerUp.type} power-up!`);
         }
         return false;
       }

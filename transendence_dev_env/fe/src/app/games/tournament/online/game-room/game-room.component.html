@@ -1,0 +1,100 @@
+<div class="tournament-lobby">
+  <header class="lobby-header">
+    <h2 class="lobby-title">Tournament Lobby</h2>
+    <div class="header-actions">
+      <p>Room ID: {{ roomId }}</p>
+      <button (click)="copyLinkToClipboard()" class="copy-link-btn">Copy Invite Link</button>
+    </div>
+  </header>
+
+  <!-- Tournament Type Selection -->
+  <div class="tournament-type-selection">
+    <h3>Select Tournament Type</h3>
+    <div class="type-buttons">
+      <button
+        *ngFor="let type of tournamentTypes"
+        [class.selected]="type.type === tournamentType"
+        [disabled]="!isHost"
+        (click)="selectTournamentType(type)"
+      >
+        {{ type.type }}
+      </button>
+    </div>
+    <div *ngIf="!tournamentType" class="text-danger">
+      <small>Please select a tournament style</small>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <p *ngIf="tournamentDescription" class="description">
+    {{ tournamentDescription }}
+  </p>
+
+  <!-- Player Count Selection -->
+  <div *ngIf="playerCountOptions.length > 0" class="player-count-selection">
+    <h3>Player Count</h3>
+    <p>Max Players: {{ maxPlayerCount }}</p>
+    <div class="count-buttons">
+      <button
+        *ngFor="let count of playerCountOptions"
+        [class.selected]="count === maxPlayerCount"
+        [disabled]="true"
+        (click)="selectMaxPlayerCount(count)"
+      >
+        {{ count }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Players List -->
+  <h3>Players</h3>
+  <section class="players-list" *ngIf="lobbyState">
+    <div class="player-card host">
+      <div class="player-info">
+        <strong>Host:</strong>
+        <span class="player-name">{{ lobbyState.host }}</span>
+        <span class="player-status ready">Host</span>
+      </div>
+    </div>
+
+    <div
+      class="player-card guest"
+      *ngFor="let guest of lobbyState.guests"
+      [class.ready]="guest.ready_state"
+      [class.not-ready]="!guest.ready_state"
+    >
+      <div class="player-info">
+        <strong>Guest:</strong>
+        <span class="player-name">{{ guest.username }}</span>
+        <span
+          class="player-status"
+          [class.ready]="guest.ready_state"
+          [class.not-ready]="!guest.ready_state"
+        >
+          {{ guest.ready_state ? 'Ready' : 'Not Ready' }}
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Action Buttons -->
+  <section class="actions">
+    <button
+      *ngIf="isHost"
+      (click)="startTournament()"
+      [disabled]="!lobbyState?.all_ready || lobbyState!.guests.length === 0"
+      class="btn-start"
+    >
+      Start Tournament
+    </button>
+
+    <button
+      *ngIf="!isHost"
+      (click)="toggleReadyStatus()"
+      [class.ready]="isReady"
+      [class.not-ready]="!isReady"
+    >
+      {{ isReady ? 'Unready' : 'Ready' }}
+    </button>
+  </section>
+</div>

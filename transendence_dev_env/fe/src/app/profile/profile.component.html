@@ -7,31 +7,54 @@
     <div class="spinner"></div>
     <p>Loading your profile...</p>
   </div>
+
   
-  <!-- Profile Content -->
   <div *ngIf="!isLoading && userProfile" class="profile-content">
-    
-    <!-- Profile Card -->
+    <div class="tab-controls">
+      <button 
+        (click)="activeTab = 'info'" 
+        [ngClass]="{'active-tab': activeTab === 'info'}">
+        Profile Information
+      </button>
+      <button 
+        (click)="activeTab = 'edit'" 
+        [ngClass]="{'active-tab': activeTab === 'edit'}">
+        Edit Profile
+      </button>
+      <button 
+        (click)="activeTab = 'settings'" 
+        [ngClass]="{'active-tab': activeTab === 'settings'}">
+        Account Settings
+      </button>
+      <button 
+        (click)="activeTab = '42'" 
+        [ngClass]="{'active-tab': activeTab === '42'}">
+        42 Integration
+      </button>
+    </div>
+
     <div class="profile-card">
+
+    <div *ngIf="activeTab === 'info'" class="tab-content info-tab"> 
       <div class="profile-header">
         <!-- Avatar -->
         <div class="avatar-container">
           <img 
             *ngIf="userProfile.avatar" 
             [src]="userProfile.avatar" 
-            alt="User Avatar" 
+            alt="User Avatar"
+            loading="lazy" 
             class="avatar" 
           />
         </div>
         
         <!-- User Info -->
         <div class="user-info">
-          <h2>Your Profile</h2>
+          <h2>{{ userProfile.username }} <span *ngIf="userProfile.display_name"> - {{ userProfile.display_name }}</span></h2>
           <a [routerLink]="['/profile/user-details/', userProfile.id]" class="account-link">
             Go to Account Page
           </a>
-          <p><strong>Username:</strong> {{ userProfile.username }}</p>
-          <p><strong>Email:</strong> {{ userProfile.email }}</p>
+          <p>{{ userProfile.email }}</p>
         </div>
       </div>
       
@@ -51,11 +74,18 @@
           </div>
         </div>
       </div>
-      
-      <!-- Profile Update Form -->
+    </div>
+  
+    <div *ngIf="activeTab === 'edit'" class="tab-content edit-tab">
+
+      <h2>Edit Profile</h2>
+
+
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="update-form">
   
         <!-- Display Name -->
+
+
         <div class="form-group">
           <label for="displayName">Display Name:</label>
           <input 
@@ -63,18 +93,31 @@
             type="text"
             formControlName="display_name" 
             class="form-input" 
-            placeholder="Enter your display name" 
+            placeholder="Enter your display name"
+            maxlength="25" 
           />
         </div>
+
+        <div 
+        *ngIf="profileForm.get('display_name')?.invalid && (profileForm.get('display_name')?.dirty || profileForm.get('display_name')?.touched)" 
+        class="text-danger">
+
+        <small *ngIf="profileForm.get('display_name')?.errors?.['maxlength']">
+          Display Name cannot exceed 25 characters.
+        </small>
+        
+      </div>
         
         <!-- Avatar Upload -->
+
         <div class="form-group avatar-section">
-          <label for="avatar">Avatar:</label>
+          <label *ngIf="avatarPreview || userProfile.avatar" for="avatar">Avatar:</label>
           <div class="avatar-preview-container">
             <img
               *ngIf="avatarPreview || userProfile.avatar"
               [src]="avatarPreview || userProfile.avatar || 'assets/default_avatar.png'" 
-              alt="Avatar Preview" 
+              alt="Avatar Preview"
+              loading="lazy" 
               class="avatar-preview" 
             />
             <button class="delete-icon" *ngIf="avatarPreview || userProfile.avatar" (click)="deleteAvatar()" type="button">
@@ -86,6 +129,8 @@
             {{ avatarPreview || userProfile.avatar ? 'Change Avatar' : 'Select Avatar' }}
           </button>
         </div>
+
+        <h4>Ingame Customisations</h4>
         
         <!-- Paddle Skin Customization -->
         <div class="form-group customization-section">
@@ -119,7 +164,8 @@
               <img 
                 *ngIf="paddleskinImagePreview || userProfile.paddleskin_image"
                 [src]="paddleskinImagePreview || userProfile.paddleskin_image" 
-                alt="Paddle Skin Preview" 
+                alt="Paddle Skin Preview"
+                loading="lazy" 
                 class="image-preview" 
               />
               <button class="delete-icon" *ngIf="paddleskinImagePreview || userProfile.paddleskin_image" (click)="deletePaddleskinImage()" type="button">
@@ -164,7 +210,8 @@
               <img
                 *ngIf="ballskinImagePreview || userProfile.ballskin_image"
                 [src]="ballskinImagePreview || userProfile.ballskin_image" 
-                alt="Ball Skin Preview" 
+                alt="Ball Skin Preview"
+                loading="lazy" 
                 class="image-preview" 
               />
               <button class="delete-icon" *ngIf="ballskinImagePreview || userProfile.ballskin_image" (click)="deleteBallskinImage()" type="button">
@@ -209,7 +256,8 @@
               <img
                 *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper"
                 [src]="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" 
-                alt="Game Background Preview" 
+                alt="Game Background Preview"
+                loading="lazy" 
                 class="image-preview" 
               />
               <button class="delete-icon" *ngIf="gamebackgroundImagePreview || userProfile.gamebackground_wallpaper" (click)="deleteGamebackgroundImage()" type="button">
@@ -227,13 +275,16 @@
           {{ isUpdating ? 'Updating...' : 'Update Profile' }}
         </button>
       </form>
-
+    </div>
+  
+    <div *ngIf="activeTab === 'settings'" class="tab-content settings-tab">
       <app-settings></app-settings>
       
       <!-- Delete Account Button -->
       <button class="btn btn-danger mt-3" (click)="openDeleteAccountModal()">Delete Account</button>
-      
-      <!-- 42 Authentication Section -->
+    </div>
+  
+    <div *ngIf="activeTab === '42'" class="tab-content 42-tab">
       <div class="ft-auth-section mt-4">
         <h3>42 Integration</h3>
     
@@ -256,7 +307,8 @@
                 *ngIf="ftUserData.image?.link" 
                 [src]="ftUserData.image.link" 
                 alt="42 User Avatar" 
-                class="ft-avatar" 
+                class="ft-avatar"
+                loading="lazy" 
               />
             </div>
             
@@ -291,13 +343,23 @@
           <div class="ft-additional-data mt-3">
             <h5>Cursus Information</h5>
             <div *ngIf="ftUserData.cursus_users && ftUserData.cursus_users.length > 0" class="cursus-list">
-              <div *ngFor="let cursusUser of ftUserData.cursus_users" class="cursus-item">
+              <div *ngFor="let cursusUser of ftUserData.cursus_users | paginate: { itemsPerPage: itemsPerPageCursus, currentPage: pCursus, id: 'cursusPagination'  }" class="cursus-item">
                 <p><strong>Cursus:</strong> {{ cursusUser.cursus.name }}</p>
                 <p><strong>Grade:</strong> {{ cursusUser.grade || 'N/A' }}</p>
                 <p><strong>Level:</strong> {{ cursusUser.level | number: '1.2-2' }}</p>
                 <!-- Add more cursus-related fields if needed -->
               </div>
+          
+              <!-- Pagination Controls -->
+<pagination-controls 
+  (pageChange)="pCursus = $event" 
+  id="cursusPagination"
+  class="custom-pagination cursus-pagination"
+  [directionLinks]="true"
+  [autoHide]="true">
+</pagination-controls>
             </div>
+            
             <div *ngIf="!ftUserData.cursus_users || ftUserData.cursus_users.length === 0">
               <p>No Cursus Information Available.</p>
             </div>
@@ -306,19 +368,24 @@
           <div class="ft-additional-data mt-3">
             <h5>Projects Information</h5>
             <div *ngIf="ftUserData.projects_users && ftUserData.projects_users.length > 0" class="projects-list">
-              <div *ngFor="let projectUser of ftUserData.projects_users" class="project-item">
+              <div *ngFor="let projectUser of ftUserData.projects_users | paginate: { itemsPerPage: itemsPerPageProjects, currentPage: pProjects, id: 'projectsPagination' }" class="project-item">
                 <p><strong>Project:</strong> {{ projectUser.project.name }}</p>
                 <p><strong>Status:</strong> {{ projectUser.status }}</p>
                 <p><strong>Final Mark:</strong> {{ projectUser.final_mark || 'N/A' }}</p>
                 <!-- Add more project-related fields if needed -->
               </div>
+              <pagination-controls 
+              (pageChange)="pProjects = $event" 
+              id="projectsPagination"
+  class="custom-pagination projects-pagination"
+              [directionLinks]="true"
+              [autoHide]="true">
+            </pagination-controls>
             </div>
             <div *ngIf="!ftUserData.projects_users || ftUserData.projects_users.length === 0">
               <p>No Projects Information Available.</p>
             </div>
           </div>
-          
-          <!-- Add more sections as needed, e.g., Achievements, Languages, etc. -->
         </div>
     
         <!-- Login Button -->
@@ -331,10 +398,7 @@
           <button class="btn btn-warning" (click)="logoutFromFt()">Logout and Unlink 42</button>
         </div>
       </div>
-      
-      <!-- Error Message -->
-      <div *ngIf="!isLoading && !userProfile" class="alert-error">
-        <p>No profile data available.</p>
-      </div>
-      
     </div>
+    </div>
+  </div>
+

@@ -16,6 +16,12 @@ import { OnlinePvpComponent } from './games/online-pvp/online-pvp.component';
 import { StartComponent } from './games/tournament/local/start/start.component';
 import { TournamentDetailsComponent } from './games/tournament/tournament-details/tournament-details.component';
 import { TournamentListComponent } from './games/tournament/tournament-list/tournament-list.component';
+import { OnlineComponent as OnlineTournamentComponent } from './games/tournament/online/online.component';
+import { CreateRoomComponent as OnlineTournamentCreateRoomComponent } from './games/tournament/online/create-room/create-room.component';
+import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/tournament/online/join-room/join-room.component';
+import { GameRoomsComponent as OnlineTournamentRoomsComponent } from './games/tournament/online/game-rooms/game-rooms.component';
+import { GameRoomComponent as OnlineTournamentGameRoomComponent } from './games/tournament/online/game-room/game-room.component';
+import { TournamentTreeComponent } from './games/tournament/online/tournament-tree/tournament-tree.component';
 import { CreateRoomComponent } from './games/online-pvp/create-room/create-room.component';
 import { JoinRoomComponent } from './games/online-pvp/join-room/join-room.component';
 import { GameRoomComponent } from './games/online-pvp/game-room/game-room.component';
@@ -27,7 +33,6 @@ import { ChaosComponent } from './games/chaos/chaos.component';
 import { GamesListComponent } from './games/games-list/games-list.component';
 import { FtAuthCallbackComponentComponent } from './profile/ft-auth-callback-component/ft-auth-callback-component.component';
 import { RevalidateOtpComponent } from './auth/revalidate-otp/revalidate-otp.component';
-import { Local3dPvpComponent } from './games/3d/local-pvp/local-pvp.component';
 import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
 import { PasswordResetConfirmComponent } from './auth/password-reset-confirm/password-reset-confirm.component';
 import { PrivacyPolicyComponent } from './home/privacy-policy/privacy-policy.component';
@@ -43,6 +48,9 @@ import { CreateRoomArenaComponent } from './games/online-arena/create-room/creat
 import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room.component';
 import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
+import { ImpressumComponent } from './home/impressum/impressum.component';
+import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
+import { ThreeDComponent } from './games/three-d/three-d.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent},
   { path: 'register', component: RegisterComponent},
@@ -61,40 +69,51 @@ const routes: Routes = [
       { path: 'create', component: CreateRoomComponent, canActivate: [AuthGuard]},
       { path: 'join', component: JoinRoomComponent, canActivate: [AuthGuard] }
     ],
-   },
-   { path: 'games/online-pvp-chaos',component: OnlinePvpChaosComponent, canActivate: [AuthGuard],
+  },
+  { path: 'games/online-pvp-chaos',component: OnlinePvpChaosComponent, canActivate: [AuthGuard],
     children: [
       { path: 'rooms', component: GameRoomsChaosComponent, canActivate: [AuthGuard]},
       { path: 'create', component: CreateRoomChaosComponent, canActivate: [AuthGuard]},
       { path: 'join', component: JoinRoomChaosComponent, canActivate: [AuthGuard] }
     ],
-   },
-   { path: 'games/online-arena',component: OnlineArenaComponent, canActivate: [AuthGuard],
+  },
+  { path: 'games/online-arena',component: OnlineArenaComponent, canActivate: [AuthGuard],
     children: [
       { path: 'rooms', component: GameRoomsArenaComponent, canActivate: [AuthGuard]},
       { path: 'create', component: CreateRoomArenaComponent, canActivate: [AuthGuard]},
       { path: 'join', component: JoinRoomArenaComponent, canActivate: [AuthGuard] }
     ],
-   },
+  },
+  { path: 'games/tournament/online',component: OnlineTournamentComponent, canActivate: [AuthGuard],
+    children: [
+      { path: 'rooms', component: OnlineTournamentRoomsComponent, canActivate: [AuthGuard]},
+      { path: 'create', component: OnlineTournamentCreateRoomComponent, canActivate: [AuthGuard]},
+      { path: 'join', component: OnlineTournamentJoinRoomComponent, canActivate: [AuthGuard]}
+    ],
+  },
   { path: 'games/online-arena/game-room/:roomId', component: GameRoomArenaComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp-chaos/game-room/:roomId', component: GameRoomChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/online-pvp/game-room/:roomId', component: GameRoomComponent, canActivate: [AuthGuard] },
+  { path: 'games/online-tournament/game-room/:roomId', component: OnlineTournamentGameRoomComponent, canActivate: [AuthGuard] },
+  { path: 'games/online-tournament/tournament-tree/:roomId', component: TournamentTreeComponent, canActivate: [AuthGuard] },
   { path: 'games/details/:id', component: GameDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/start', component: StartComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/details/:id', component: TournamentDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'games/tournament/online/details/:id', component: OnlineDetailsComponent, canActivate: [AuthGuard] },
   { path: 'games/tournament/local/list', component: TournamentListComponent, canActivate: [AuthGuard] },
   { path: 'games/list', component: GamesListComponent, canActivate: [AuthGuard] },
   { path: 'games/leaderboard', component: LeaderboardComponent, canActivate: [AuthGuard] },
   { path: 'games/chaos', component: ChaosComponent, canActivate: [AuthGuard] },
   { path: 'games/arena', component: ArenaComponent, canActivate: [AuthGuard] },
+  { path: 'games/three-d', component: ThreeDComponent, canActivate: [AuthGuard] },
   { path: 'privacy-policy', component: PrivacyPolicyComponent},
   { path: 'disclaimer', component: DisclaimerComponent },
   { path: 'tos', component: TermsOfServiceComponent },
   { path: 'auth/callback', component: FtAuthCallbackComponentComponent },
   { path: 'forgot-password', component: PasswordResetComponent },
   { path: 'reset-password', component: PasswordResetConfirmComponent },
+  { path: 'impressum', component: ImpressumComponent },
   { path: 'about', component: AboutComponent},
-  { path: 'test', component: Local3dPvpComponent},
   { path: '**', redirectTo: 'login' }
 ];
 

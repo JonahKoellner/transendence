@@ -7,7 +7,7 @@ import { NotificationService, SendGameInvitePayload } from 'src/app/notification
 import { FriendService } from 'src/app/friend.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from 'src/environments/environment';
-
+import { ToastrService } from 'ngx-toastr';
 interface GameSettings {
   paddleskin_color_left?: string;
   paddleskin_image_left?: string;
@@ -52,14 +52,14 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private friendService: FriendService,
-    public modalService: NgbModal
+    public modalService: NgbModal,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
     this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
     this.lobbyService.joinRoom(this.roomId).subscribe({
       next: (data) => {
-        console.log('Joined room:', data);
         this.lobbyService.connect(this.roomId);
         this.loadFriends();
         this.messageSubscription = this.lobbyService.messages$.subscribe(msg => {
@@ -80,7 +80,6 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
             this.guestId = msg.guestId;
           } else if (msg.type === 'game_state') {
             this.gameState = msg;
-            console.log('Game state:', msg);
             this.leftScore = msg.leftScore;
             this.rightScore = msg.rightScore;
           } else if (msg.type === 'game_started') {
@@ -88,14 +87,14 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
           } else if (msg.type === 'alert') {
             // Check if the disconnecting user was the host or guest
             if (msg.user_role === 'host') {
-              alert('The host has left the game. Redirecting you to the lobby.');
+              this.toastr.error('The host has left the game. Redirecting you to the lobby.', 'Host Disconnected');
               this.router.navigate(['/games/online-pvp-chaos/rooms']);
             } else if (msg.user_role === 'guest') {
               this.guest = 'Waiting for guest';
               this.isGuestReady = false;
               this.allReady = false;
               if (this.gameInProgress) {
-                alert('The guest has left the game. The game will be terminated.');
+                this.toastr.error('The guest has left the game. Redirecting you to the lobby.', 'Guest Disconnected');
                 this.gameInProgress = false;
                 this.isGuestReady = false;
                 this.allReady = false;
@@ -121,14 +120,14 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
                 });
               },
               (error) => {
-                console.error('Error setting ready status:', error);
+                this.toastr.error('Error setting ready status.', 'Error');
                 this.router.navigate(['/games/online-pvp-chaos/rooms']);
               }
             );
-            console.log('Game over!');
-            console.log('msg:', msg);
+            // console.log('Game over!');
+            // console.log('msg:', msg);
           } else if (msg.type === 'round_completed') {
-            console.log('Round completed!');
+            this.toastr.info('Round completed!', 'Round Over');
           }
           if (this.host === "")
           {
@@ -162,13 +161,13 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
                     }
                   },
                   (error) => {
-                    console.error('Error fetching user profile:', error);
+                    this.toastr.error('Error fetching user profile.', 'Error');
                     this.router.navigate(['/games/online-pvp-chaos/rooms']);
                   }
                 );
               },
               (error) => {
-                console.error('Error fetching room status:', error);
+                this.toastr.error('Error fetching room data.', 'Error');
                 this.router.navigate(['/games/online-pvp-chaos/rooms']);
               }
             );
@@ -177,7 +176,7 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
       );
       },
       error: (error) => {
-        console.error('Error joining room:', error);
+        this.toastr.error('Error joining room.', 'Error');
         this.router.navigate(['/games/online-pvp-chaos/rooms']);
       }
     });
@@ -206,7 +205,7 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
     navigator.clipboard.writeText(url).then(() => {
       alert('Link copied to clipboard!');
     }).catch(err => {
-      console.error('Failed to copy: ', err);
+      this.toastr.error('Failed to copy link to clipboard.', 'Error');
     });
   }
 
@@ -224,7 +223,7 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
         });
       },
       (error) => {
-        console.error('Error setting ready status:', error);
+        this.toastr.error('Error setting ready status.', 'Error');
         this.router.navigate(['/games/online-pvp-chaos/rooms']);
       }
     );
@@ -283,9 +282,9 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
         room_id: this.roomId,
         receiver_id: friend_id
       };
-      this.notificationService.sendGameInvite(gameInvitePayload).subscribe(
+      this.notificationService.sendGameInviteChaos(gameInvitePayload).subscribe(
         () => {
-          console.log('Game invite sent successfully');
+          this.toastr.success('Game invite sent successfully!', 'Success');
         }
       );
     }
@@ -296,7 +295,7 @@ export class GameRoomChaosComponent implements OnInit, OnDestroy {
           this.friends = data;
         },
         (error) => {
-          console.error(error);
+          this.toastr.error('Failed to load friends.', 'Error');
         }
       );
     }

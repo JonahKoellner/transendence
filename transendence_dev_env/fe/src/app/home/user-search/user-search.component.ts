@@ -1,23 +1,30 @@
-import { Component } from '@angular/core';
+
+import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
-
+import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-user-search',
   templateUrl: './user-search.component.html',
   styleUrls: ['./user-search.component.scss']
 })
-export class UserSearchComponent {
+export class UserSearchComponent implements OnInit {
   searchQuery: string = '';
   users: UserProfile[] = [];
   error: string = '';
   successMessage: string = '';
   isLoading: boolean = false;
 
-  constructor(private userService: ProfileService, private friendService: FriendService) { }
+  pUsers: number = 1; // Current page
+  itemsPerPageUsers: number = 50; // Items per page
+
+  constructor(private userService: ProfileService, private friendService: FriendService, private toastr: ToastrService) { }
+  
+  ngOnInit(): void {
+    console.log("");
+  }
 
   searchUsers(): void {
-    console.log('Searching for users:', this.searchQuery);
     if (this.searchQuery.trim() === '') {
       this.users = [];
       return;
@@ -33,9 +40,12 @@ export class UserSearchComponent {
       (err) => {
         this.error = 'Error searching users.';
         this.isLoading = false;
-        console.error(err);
+        this.toastr.error('Error searching users.', 'Error');
       }
     );
+  }
+  onPageChangeFriends(page: number) {
+    this.pUsers = page;
   }
 
   sendFriendRequest(userId: number): void {
@@ -48,7 +58,7 @@ export class UserSearchComponent {
       (err) => {
         this.error = err.error.detail || 'Error adding friend.';
         this.successMessage = '';
-        console.error(err);
+        this.toastr.error('Error adding friend.', 'Error');
       }
     );
   }

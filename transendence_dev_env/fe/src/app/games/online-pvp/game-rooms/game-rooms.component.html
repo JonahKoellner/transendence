@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let room of rooms">
+        <tr *ngFor="let room of rooms | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }">
           <td>{{ room.room_id }}</td>
           <td>{{ room.host }}</td>
           <td>{{ room.guest || 'Waiting for guest' }}</td>
@@ -23,6 +23,13 @@
             <a [routerLink]="['/games/online-pvp/game-room', room.room_id]">Join</a>
           </td>
         </tr>
+        <pagination-controls
+        (pageChange)="pGames = $event"
+        id="itemsPerPageGames"
+        class="custom-pagination games-pagination"
+        [directionLinks]="true"
+        [autoHide]="true">
+        </pagination-controls>
       </tbody>
     </table>
   </div>

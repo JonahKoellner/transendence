@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import RegisterView, LoginView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet, AchievementListView, PasswordResetRequestView, PasswordResetConfirmView, HashiView
+from .views import RegisterView, LoginView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet, AchievementListView, PasswordResetRequestView, PasswordResetConfirmView, HashiView, UserStatsView
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -17,6 +17,8 @@ urlpatterns = [
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('achievements/', AchievementListView.as_view(), name='achievement-list'),
-    path('get-vault-secret/', HashiView.as_view(), name='get_vault_secret'),
     path('', include(router.urls)),
+    path('user-stats/<int:user_id>/', UserStatsView.as_view(), name='user-stats'),
+    path('global-stats/', GlobalStatsView.as_view(), name='global-stats'),
+    path('get-vault-secret/', HashiView.as_view(), name='get_vault_secret'),
 ]

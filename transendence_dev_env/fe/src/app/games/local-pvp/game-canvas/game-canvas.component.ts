@@ -1,5 +1,6 @@
 import { Component, ElementRef, ViewChild, HostListener, Output, EventEmitter, Input, AfterViewInit } from '@angular/core';
 import { GameSettings } from '../local-pvp.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-game-canvas-pvp',
@@ -43,13 +44,16 @@ export class GameCanvasComponentPVP implements AfterViewInit {
   ballImage: HTMLImageElement | null = null;
   backgroundImage: HTMLImageElement | null = null;
 
+  constructor(private toastr: ToastrService) {
+  }
+
   ngAfterViewInit() {
     this.context = this.canvas.nativeElement.getContext('2d')!;
     this.loadImages().then(() => {
       this.resetRound();
       this.startGame();
     }).catch(error => {
-      console.error('Error loading images:', error);
+      this.toastr.error('Error loading images.', 'Error');
       this.resetRound();
       this.startGame();
     });
@@ -68,7 +72,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load left paddle image. Falling back to color.');
           resolve();
         };
       }));
@@ -84,7 +87,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load ball image. Falling back to color.');
           resolve();
         };
       }));
@@ -100,7 +102,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load background image. Falling back to color.');
           resolve();
         };
       }));

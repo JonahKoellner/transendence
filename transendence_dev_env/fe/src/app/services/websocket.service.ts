@@ -26,43 +26,52 @@ export class WebsocketService implements OnDestroy {
   private socket$!: WebSocketSubject<any>;
   public notifications$ = new Subject<any>();  // For notifications and chat messages
   private reconnectDelay: number = 5000;  // Reconnection delay in milliseconds
-  private isConnected = new BehaviorSubject<boolean>(false);  // Observable to track connection status
+  private isConnected$ = new BehaviorSubject<boolean>(false);  // Observable to track connection status
 
 
   constructor(private authService: AuthService) {}  // Inject AuthService
 
   // Connect to WebSocket with token
-  connectNotifications(token: string): void {
-    // If there's an existing connection, return to avoid reconnecting
-    if (this.isConnected.value) return;
+// In WebsocketService
+connectNotifications(token: string): void {
+  if (this.isConnected$.value) {
+    return;  // already connected
+  }
 
-    this.socket$ = this.createWebSocket(token);
+  // If there's an existing socket, close it
+  if (this.socket$) {
+    this.disconnect();
+  }
 
-    this.socket$.pipe(
-      retryWhen(errors =>
-        errors.pipe(
-          tap(err => {
-            console.error('WebSocket error, retrying...', err)}),
-          delay(this.reconnectDelay)  // Retry after a delay if WebSocket fails
-        )
-      )
-    ).subscribe({
-      next: msg => {
-        if (!this.isConnected.value) {
-          this.isConnected.next(true);  // WebSocket is connected
-        }
-        this.notifications$.next(msg);  // Handle chat messages
-      },
-      error: err => {
-        console.error('WebSocket error:', err);
-        this.isConnected.next(false);  // WebSocket is disconnected
-      },
-      complete: () => {
-        this.isConnected.next(false);  // WebSocket connection closed
-        console.warn('WebSocket connection closed');
+  // Create the socket
+  this.socket$ = webSocket({
+    url: `${environment.wsUrl}/notifications/?token=${token}`,
+    deserializer: e => JSON.parse(e.data),
+    serializer: value => JSON.stringify(value)
+  });
+
+  // Subscribe to incoming messages
+  this.socket$.subscribe({
+    next: (message) => {
+      // first time we get a message, mark as connected
+      if (!this.isConnected$.value) {
+        this.isConnected$.next(true);
       }
-    });
+      // Pass the message along
+      this.notifications$.next(message);
+    },
+    error: (err) => {
+      console.error('WebSocket error:', err);
+      this.isConnected$.next(false);
+      // optionally handle auto-reconnect or 401 in a custom way
+    },
+    complete: () => {
+      console.warn('WebSocket closed');
+      this.isConnected$.next(false);
+    }
+  });
 }
+
 
   // Create WebSocket instance
   private createWebSocket(token: string): WebSocketSubject<any> {
@@ -76,7 +85,7 @@ export class WebsocketService implements OnDestroy {
 
   // Send a message via WebSocket
   sendMessage(msg: any): void {
-    this.isConnected.pipe(tap(connected => {
+    this.isConnected$.pipe(tap(connected => {
       if (connected) {
         this.socket$.next(msg);
       } else {
@@ -88,15 +97,16 @@ export class WebsocketService implements OnDestroy {
 
   // Return an observable that resolves when WebSocket is connected
   waitForConnection(): Observable<boolean> {
-    return this.isConnected.asObservable();
+    return this.isConnected$.asObservable();
   }
 
   // Disconnect from WebSocket
   disconnect(): void {
     if (this.socket$) {
       this.socket$.complete();
+      this.socket$ = undefined!;
     }
-    this.isConnected.next(false);
+    this.isConnected$.next(false);
   }
 
   ngOnDestroy() {

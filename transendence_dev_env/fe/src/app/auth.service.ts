@@ -3,10 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, delay, map, retryWhen, scan, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
 import { environment } from 'src/environments/environment';
-
+import { ToastrService } from 'ngx-toastr';
 @Injectable({
   providedIn: 'root'
 })
@@ -14,9 +14,9 @@ export class AuthService {
   // private apiUrl = 'http://localhost:8000';  // Your Django backend URL
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
-  public refreshInProgress = false;
-
-  constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService) {}
+  private refreshTimeout: any;
+  private refreshInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
+  constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
   register(username: string, email: string, password: string): Observable<any> {
@@ -37,13 +37,13 @@ export class AuthService {
       }),
       catchError(error => {
         if (error.status === 400) {
-          console.error('Login failed: Invalid username or password');
+          this.toastr.error('Invalid username or password', 'Login failed');
         } else if (error.status === 401) {
           localStorage.setItem('temp_token', error.error.access);
-          console.error('Login failed: User must revalidate OTP');
+          this.toastr.warning('Please revalidate your OTP');
           this.router.navigate(['/revalidate-otp', { needToReVarify: true }]);
         }
-        console.error('Login error:', error);
+        this.toastr.error('Login failed', 'Error');
         return of(null);
       })
     );
@@ -61,31 +61,31 @@ export class AuthService {
         if (response.success) {
           localStorage.setItem('otp_verified', 'true');
         } else {
-          console.error('OTP verification failed');
+          this.toastr.error('OTP verification failed', 'Error');
         }
       })
     );
   }
 
   // Store the access token in local storage
-  private storeTokens(accessToken: string, refreshToken: string): void {
+  private storeTokens(accessToken: string, refreshToken?: string): void {
     localStorage.setItem('access_token', accessToken);
-    document.cookie = `refresh_token=${refreshToken}; path=/; SameSite=Lax; Secure=False`;
-    console.log('Access token stored:', accessToken);  // Debug log
-    console.log('Refresh token stored:', refreshToken);  // Debug log
-    console.log('Cookies:', document.cookie);  // Debug log
-    console.log('Via getCookie:', this.getRefreshToken());  // Debug log
+    if (refreshToken) {  // this won't work because its a HttpOnly cookie!
+      document.cookie = `refresh_token=${refreshToken}; path=/; SameSite=Lax; Secure=False`;
+    }
   }
 
   // Get the access token
   public getAccessToken(): string | null {
     const token = localStorage.getItem('access_token');
-    console.log('Retrieved access token:', token);  // Debug log
     return token;
   }
-  public getRefreshToken(): string | null {
-    return this.getCookie('refresh_token');
+
+  public setAccessToken(token: string): void {
+    // Store the new access token
+    localStorage.setItem('access_token', token);
   }
+
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('access_token');
@@ -95,17 +95,16 @@ export class AuthService {
   logout(reason?: string): void {
     let revalidate = false;
     if (reason === "2FA revalidation required") {
-      console.error('we need to reeval:', reason);
       revalidate = true;
     }
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
+    }
     const accessToken = localStorage.getItem('access_token');
-    console.log('Attempting to logout. Access token:', accessToken);
-    console.log('Logout reason:', reason);
     if (accessToken) {
       const headers = { Authorization: `Bearer ${accessToken}` };
       this.http.post(`${this.apiUrl}/accounts/logout/`, {}, { headers, withCredentials: true }).subscribe(
         (response) => {
-          console.log('Logout successful. Response:', response);
           this.websocketService.disconnect();
           if (revalidate)
           {
@@ -116,7 +115,6 @@ export class AuthService {
           }
         },
         (error) => {
-          console.error('Logout error:', error);
           this.websocketService.disconnect();
           if (revalidate)
             {
@@ -147,6 +145,7 @@ export class AuthService {
   }
 
   clearAll(): void {
+    this.stopPeriodicTokenRefresh();
     localStorage.clear();
     sessionStorage.clear();
     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
@@ -160,66 +159,6 @@ export class AuthService {
       const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
     }
-  }
-
-  refreshTokenIfNeeded(): Observable<string | null> {
-    const refreshToken = this.getCookie('refresh_token');
-
-    if (!refreshToken) {
-      console.warn('Refresh token is missing. Logging out...');
-      this.clearAll();
-      this.logout();
-      return of(null);
-    }
-    console.log("Refreshing with rf token: ",refreshToken)
-    // Prevent multiple refresh calls if a refresh is already in progress
-    if (this.refreshInProgress) {
-      return throwError('Refresh token process already in progress');
-    }
-
-    this.refreshInProgress = true;
-
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, { refresh: refreshToken }, { withCredentials: true }).pipe(
-      tap((response: any) => {
-        if (response && response.access) {
-          this.storeTokens(response.access, response.refresh || refreshToken);
-          this.websocketService.connectNotifications(response.access);
-        } else {
-          console.warn('Failed to refresh token, logging out');
-          this.clearAll();
-          this.logout();
-        }
-      }),
-      catchError(error => {
-        console.error('Error refreshing token, logging out:', error);
-        this.clearAll();
-        this.logout();
-        return of(null);
-      }),
-      tap(() => {
-        this.refreshInProgress = false; // Reset the refresh flag
-      })
-    );
-  }
-
-  // Method to retrieve user profile information
-  getProfile(): Observable<any> {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      throw new Error('Access token is missing');
-    }
-
-    return this.http.get(`${this.apiUrl}/accounts/users/`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }).pipe(
-      tap((response: any) => {
-        console.log('Profile data retrieved:', response);  // Debug log
-      }),
-      catchError(err => {
-        console.error('Error fetching profile data', err);
-        return of(null);  // Handle the error and return an observable
-      })
-    );
   }
 
   // Method to enable 2FA
@@ -241,7 +180,7 @@ export class AuthService {
         }
       }),
       catchError(err => {
-        console.error('Error enabling 2FA', err);
+        this.toastr.error('Failed to enable 2FA', 'Error');
         return of(null);  // Handle the error and return an observable
       })
     );
@@ -259,26 +198,91 @@ export class AuthService {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).pipe(
       tap((response: any) => {
-        console.log('2FA disabled:', response.message);
         localStorage.removeItem('otp_uri');  // Remove the OTP URI from local storage
         localStorage.removeItem('otp_verified');  // Remove the OTP verified flag
       }),
       catchError(err => {
-        console.error('Error disabling 2FA', err);
+        this.toastr.error('Failed to disable 2FA', 'Error');
         return of(null);  // Handle the error and return an observable
       })
     );
   }
   initializeWebSocket(): void {
-    const token = this.getAccessToken();
-    if (token) {
-        this.websocketService.connectNotifications(token);
+    // check if we have a valid token
+    if (!this.isAuthenticated()) {
+      console.warn('User not authenticated, skipping WebSocket connect');
+      return;
     }
+    const token = this.getAccessToken();
+    if (!token) {
+      console.warn('No access token found, skipping WS connect');
+      return;
+    }
+    // Connect once
+    this.websocketService.connectNotifications(token);
   }
+
   private getCookie(name: string): string | null {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
     return null;
   }
+
+  refreshToken(): Observable<string> {
+    return this.http.post<{ access: string }>(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
+      tap(response => {
+        const newAccess = response.access;
+        this.setAccessToken(newAccess);
+      }),
+      map(response => response.access),
+      retryWhen(errors =>
+        errors.pipe(
+          scan((errorCount, err) => {
+            console.error('Token refresh failed, retrying...', err);
+            if (err.status === 401 || err.status === 400) {
+              throw err;
+            }
+            if (errorCount >= 2) {
+              throw err; // 3 attempts total
+            }
+            return errorCount + 1;
+          }, 0),
+          delay(1000)
+        )
+      ),
+      catchError(err => {
+        console.error('Final token refresh failure, logging out', err);
+        setTimeout(() => this.logout('Session expired, please log in again'), 0);
+        return throwError(() => err);
+      })
+    );
+  }
+  startPeriodicTokenRefresh(): void {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout); // Clear any existing timer
+    }
+    this.scheduleNextTokenRefresh(); // Schedule the first refresh
+  }
+
+  stopPeriodicTokenRefresh(): void {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout); // Clear refresh timer
+      this.refreshTimeout = null;
+    }
+  }
+
+  private scheduleNextTokenRefresh(): void {
+    this.refreshTimeout = setTimeout(() => {
+      this.refreshToken().subscribe({
+        next: () => {
+          this.scheduleNextTokenRefresh(); // Schedule the next refresh after success
+        },
+        error: (err) => {
+          this.logout('Session expired in idle, please log in again');
+        }
+      });
+    }, this.refreshInterval);
+  }
+
 }

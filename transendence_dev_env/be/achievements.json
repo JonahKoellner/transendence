@@ -1,418 +1,453 @@
 [
-    {
-      "model": "accounts.achievement",
-      "pk": 1,
-      "fields": {
-        "name": "First Game",
-        "description": "Play your first game.",
-        "points": 10,
-        "criteria_type": "stat",
-        "criteria_key": "games_played",
-        "criteria_value": 1
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 2,
-      "fields": {
-        "name": "Gamer",
-        "description": "Play 10 games.",
-        "points": 20,
-        "criteria_type": "stat",
-        "criteria_key": "games_played",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 3,
-      "fields": {
-        "name": "Veteran",
-        "description": "Play 100 games.",
-        "points": 50,
-        "criteria_type": "stat",
-        "criteria_key": "games_played",
-        "criteria_value": 100
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 4,
-      "fields": {
-        "name": "First Win",
-        "description": "Win your first game.",
-        "points": 15,
-        "criteria_type": "stat",
-        "criteria_key": "games_won",
-        "criteria_value": 1
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 5,
-      "fields": {
-        "name": "Winner",
-        "description": "Win 10 games.",
-        "points": 30,
-        "criteria_type": "stat",
-        "criteria_key": "games_won",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 6,
-      "fields": {
-        "name": "Champion",
-        "description": "Win 100 games.",
-        "points": 100,
-        "criteria_type": "stat",
-        "criteria_key": "games_won",
-        "criteria_value": 100
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 7,
-      "fields": {
-        "name": "First Loss",
-        "description": "Lose your first game.",
-        "points": 5,
-        "criteria_type": "stat",
-        "criteria_key": "games_lost",
-        "criteria_value": 1
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 8,
-      "fields": {
-        "name": "Perseverance",
-        "description": "Lose 10 games.",
-        "points": 10,
-        "criteria_type": "stat",
-        "criteria_key": "games_lost",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 9,
-      "fields": {
-        "name": "Never Give Up",
-        "description": "Lose 100 games.",
-        "points": 25,
-        "criteria_type": "stat",
-        "criteria_key": "games_lost",
-        "criteria_value": 100
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 10,
-      "fields": {
-        "name": "Friendly",
-        "description": "Add a friend.",
-        "points": 10,
-        "criteria_type": "stat",
-        "criteria_key": "friends_count",
-        "criteria_value": 1
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 11,
-      "fields": {
-        "name": "Social Butterfly",
-        "description": "Have 10 friends.",
-        "points": 25,
-        "criteria_type": "stat",
-        "criteria_key": "friends_count",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 12,
-      "fields": {
-        "name": "Blocker",
-        "description": "Block a user.",
-        "points": 5,
-        "criteria_type": "action",
-        "criteria_expression": "blocked_user == True"
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 13,
-      "fields": {
-        "name": "Privacy Protector",
-        "description": "Block 10 users.",
-        "points": 15,
-        "criteria_type": "stat",
-        "criteria_key": "blocked_users_count",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 14,
-      "fields": {
-        "name": "Identity Shift",
-        "description": "Change your display name.",
-        "points": 5,
-        "criteria_type": "action",
-        "criteria_expression": "display_name_changed == True"
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 15,
-      "fields": {
-        "name": "First Tournament",
-        "description": "Participate in your first tournament.",
-        "points": 20,
-        "criteria_type": "stat",
-        "criteria_key": "tournaments_participated",
-        "criteria_value": 1
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 16,
-      "fields": {
-        "name": "Competitor",
-        "description": "Participate in 5 tournaments.",
-        "points": 40,
-        "criteria_type": "stat",
-        "criteria_key": "tournaments_participated",
-        "criteria_value": 5
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 17,
-      "fields": {
-        "name": "Tournament Master",
-        "description": "Participate in 10 tournaments.",
-        "points": 60,
-        "criteria_type": "stat",
-        "criteria_key": "tournaments_participated",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 18,
-      "fields": {
-        "name": "First Victory",
-        "description": "Win your first tournament.",
-        "points": 50,
-        "criteria_type": "stat",
-        "criteria_key": "tournaments_won",
-        "criteria_value": 1
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 19,
-      "fields": {
-        "name": "Champion's Glory",
-        "description": "Win 5 tournaments.",
-        "points": 100,
-        "criteria_type": "stat",
-        "criteria_key": "tournaments_won",
-        "criteria_value": 5
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 20,
-      "fields": {
-        "name": "Legend",
-        "description": "Win 10 tournaments.",
-        "points": 200,
-        "criteria_type": "stat",
-        "criteria_key": "tournaments_won",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 21,
-      "fields": {
-        "name": "Time Well Spent",
-        "description": "Spend 10 minutes in games.",
-        "points": 10,
-        "criteria_type": "stat",
-        "criteria_key": "minutes_played",
-        "criteria_value": 10
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 22,
-      "fields": {
-        "name": "Dedicated Gamer",
-        "description": "Spend 100 minutes in games.",
-        "points": 30,
-        "criteria_type": "stat",
-        "criteria_key": "minutes_played",
-        "criteria_value": 100
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 23,
-      "fields": {
-        "name": "Marathoner",
-        "description": "Spend 1000 minutes in games.",
-        "points": 70,
-        "criteria_type": "stat",
-        "criteria_key": "minutes_played",
-        "criteria_value": 1000
-      }
-    },
-    {
-      "model": "accounts.achievement",
-      "pk": 24,
-      "fields": {
-        "name": "Consistent Player",
-        "description": "Log in for 7 consecutive days.",
-        "points": 50,
-        "criteria_type": "stat",
-        "criteria_key": "login_streak",
-        "criteria_value": 7
-      }
-    },
-    {
-        "model": "accounts.achievement",
-        "pk": 25,
-        "fields": {
-          "name": "Level Up",
-          "description": "Reach level 5.",
-          "points": 20,
-          "criteria_type": "stat",
-          "criteria_key": "level",
-          "criteria_value": 5
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 26,
-        "fields": {
-          "name": "Veteran Player",
-          "description": "Reach level 10.",
-          "points": 50,
-          "criteria_type": "stat",
-          "criteria_key": "level",
-          "criteria_value": 10
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 27,
-        "fields": {
-          "name": "XP Collector",
-          "description": "Accumulate 1000 XP.",
-          "points": 30,
-          "criteria_type": "stat",
-          "criteria_key": "xp",
-          "criteria_value": 1000
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 28,
-        "fields": {
-          "name": "First Message",
-          "description": "Send your first message.",
-          "points": 5,
-          "criteria_type": "stat",
-          "criteria_key": "messages_sent",
-          "criteria_value": 1
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 29,
-        "fields": {
-          "name": "Chatty",
-          "description": "Send 50 messages.",
-          "points": 20,
-          "criteria_type": "stat",
-          "criteria_key": "messages_sent",
-          "criteria_value": 50
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 30,
-        "fields": {
-          "name": "Friendship",
-          "description": "Have 5 friends.",
-          "points": 15,
-          "criteria_type": "stat",
-          "criteria_key": "friends_count",
-          "criteria_value": 5
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 31,
-        "fields": {
-          "name": "Social Network",
-          "description": "Have 20 friends.",
-          "points": 50,
-          "criteria_type": "stat",
-          "criteria_key": "friends_count",
-          "criteria_value": 20
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 32,
-        "fields": {
-          "name": "Playing with Friends",
-          "description": "Play a game with a friend.",
-          "points": 15,
-          "criteria_type": "stat",
-          "criteria_key": "games_with_friends",
-          "criteria_value": 1
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 33,
-        "fields": {
-          "name": "Friendly Gamer",
-          "description": "Play 10 games with friends.",
-          "points": 30,
-          "criteria_type": "stat",
-          "criteria_key": "games_with_friends",
-          "criteria_value": 10
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 34,
-        "fields": {
-          "name": "Marathon Runner",
-          "description": "Play a game lasting over 60 minutes.",
-          "points": 25,
-          "criteria_type": "action",
-          "criteria_expression": "game_duration >= 60"
-        }
-      },
-      {
-        "model": "accounts.achievement",
-        "pk": 35,
-        "fields": {
-          "name": "Speedster",
-          "description": "Win a game in under 5 minutes.",
-          "points": 25,
-          "criteria_type": "action",
-          "criteria_expression": "game_duration <= 5 and game_won == True"
-        }
-      }
-    ]
+  {
+    "model": "accounts.achievement",
+    "pk": 1,
+    "fields": {
+      "name": "First Game",
+      "description": "Play your first game.",
+      "points": 10,
+      "criteria_type": "stat",
+      "criteria_key": "games_played",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/b244f221da2ca3d567b83833796d5a4b558696f8a870356aee01016af1c247eb.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 2,
+    "fields": {
+      "name": "Gamer",
+      "description": "Play 10 games.",
+      "points": 20,
+      "criteria_type": "stat",
+      "criteria_key": "games_played",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/fc2053bb7390bbbd37909e0dc7e641b6160933377e5dd3216c2daf363f5d314b.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 3,
+    "fields": {
+      "name": "Veteran",
+      "description": "Play 100 games.",
+      "points": 50,
+      "criteria_type": "stat",
+      "criteria_key": "games_played",
+      "criteria_value": 100,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/4fe3ecc4b7777432471823df095f08e959d07957e9461bb28dea0262d1e8144c.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 4,
+    "fields": {
+      "name": "First Win",
+      "description": "Win your first game.",
+      "points": 15,
+      "criteria_type": "stat",
+      "criteria_key": "games_won",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/a1f2b90a242fd525521a3ca1db7fd97f77114b14c4c4bd428c8b187d97f81522.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 5,
+    "fields": {
+      "name": "Winner",
+      "description": "Win 10 games.",
+      "points": 30,
+      "criteria_type": "stat",
+      "criteria_key": "games_won",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/66f96bfdae0ff4ad4cfe980e2840a578cca38b392a0a566a10afeb7802d2b349.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 6,
+    "fields": {
+      "name": "Champion",
+      "description": "Win 100 games.",
+      "points": 100,
+      "criteria_type": "stat",
+      "criteria_key": "games_won",
+      "criteria_value": 100,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/4fecf1b9b83363d93955eefbc1b2c379f6b5eb6aaae21f34bc049a329fb4df92.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 7,
+    "fields": {
+      "name": "First Loss",
+      "description": "Lose your first game.",
+      "points": 5,
+      "criteria_type": "stat",
+      "criteria_key": "games_lost",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/eb3574ac033458e3cf73353cf644a39a3dcc356055169ae57b05b387513c8bbb.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 8,
+    "fields": {
+      "name": "Perseverance",
+      "description": "Lose 10 games.",
+      "points": 10,
+      "criteria_type": "stat",
+      "criteria_key": "games_lost",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/9be12a2eb97d82e576c466feb6d720dac37f1994f6a5af53d134c069c234ff79.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 9,
+    "fields": {
+      "name": "Never Give Up",
+      "description": "Lose 100 games.",
+      "points": 25,
+      "criteria_type": "stat",
+      "criteria_key": "games_lost",
+      "criteria_value": 100,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/d5d42f0ded9f918f890325c47b7f45f26f86e1be5728ddef2d7981a42e0f9ff1.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 10,
+    "fields": {
+      "name": "Friendly",
+      "description": "Add a friend.",
+      "points": 10,
+      "criteria_type": "stat",
+      "criteria_key": "friends_count",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/d7e2bd50795a369a140b2aff50378672bbb09b62884b529f5faaa2d275dd998b.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 11,
+    "fields": {
+      "name": "Social Butterfly",
+      "description": "Have 10 friends.",
+      "points": 25,
+      "criteria_type": "stat",
+      "criteria_key": "friends_count",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/6e7bc5a307d41d58cd457810a77c11e309e47e6eda2352998940044fa66270ce.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 12,
+    "fields": {
+      "name": "Blocker",
+      "description": "Block a user.",
+      "points": 5,
+      "criteria_type": "action",
+      "criteria_expression": "blocked_user == True",
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/a7fc74fc3c2add62ce33350822dd7703c12a485bb333d4cf862e032cb0c5f47d.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 13,
+    "fields": {
+      "name": "Privacy Protector",
+      "description": "Block 10 users.",
+      "points": 15,
+      "criteria_type": "stat",
+      "criteria_key": "blocked_users_count",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/134122caf7a77a3fb5df9903c88ae5195e9d63fb1210a6a7d8d83012a1a027d3.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 14,
+    "fields": {
+      "name": "Identity Shift",
+      "description": "Change your display name.",
+      "points": 5,
+      "criteria_type": "action",
+      "criteria_expression": "display_name_changed == True",
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/a0c2708d35c7c02460290417fe25373aa06ea2b7d86b8106be7bae979c294413.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 15,
+    "fields": {
+      "name": "First Tournament",
+      "description": "Participate in your first tournament.",
+      "points": 20,
+      "criteria_type": "stat",
+      "criteria_key": "tournaments_participated",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/9daec9e62e2a4d5012502d73fb08d0bc1d441431383988b49273e135cd5e561e.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 16,
+    "fields": {
+      "name": "Competitor",
+      "description": "Participate in 5 tournaments.",
+      "points": 40,
+      "criteria_type": "stat",
+      "criteria_key": "tournaments_participated",
+      "criteria_value": 5,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/1af0bc4ce2ce2672dd25ec72ddcb584ffbcf463dbc3e050b188dce9fb39a7fb4.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 17,
+    "fields": {
+      "name": "Tournament Master",
+      "description": "Participate in 10 tournaments.",
+      "points": 60,
+      "criteria_type": "stat",
+      "criteria_key": "tournaments_participated",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/ac3a3efc53235209ad9da650d842ab264ddcf763ae337ebae71fe2426b038838.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 18,
+    "fields": {
+      "name": "First Victory",
+      "description": "Win your first tournament.",
+      "points": 50,
+      "criteria_type": "stat",
+      "criteria_key": "tournaments_won",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/36b2d7d5a97e1169aca70fafc1a6f68e56c47f1f460d94e4a98354d74d15c272.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 19,
+    "fields": {
+      "name": "Champion's Glory",
+      "description": "Win 5 tournaments.",
+      "points": 100,
+      "criteria_type": "stat",
+      "criteria_key": "tournaments_won",
+      "criteria_value": 5,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/9f0c6a5cdb8ac8366c01cd28aa58a700458b86e0b9cd002603434a6a0385a110.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 20,
+    "fields": {
+      "name": "Legend",
+      "description": "Win 10 tournaments.",
+      "points": 200,
+      "criteria_type": "stat",
+      "criteria_key": "tournaments_won",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/8a16e5f25c6b63376a94bb103bab1409611bbffe06736e49cec58863498a045a.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 21,
+    "fields": {
+      "name": "Time Well Spent",
+      "description": "Spend 10 minutes in games.",
+      "points": 10,
+      "criteria_type": "stat",
+      "criteria_key": "minutes_played",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/ee03f99b999c0666a84a378d63b8faa523d7cf34364ebc31cad91cb9eb582b8c.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 22,
+    "fields": {
+      "name": "Dedicated Gamer",
+      "description": "Spend 100 minutes in games.",
+      "points": 30,
+      "criteria_type": "stat",
+      "criteria_key": "minutes_played",
+      "criteria_value": 100,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/06e28206358b558f9b1ab435e27c21161c73b1ca0be0c1bd4bd251965783b6c9.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 23,
+    "fields": {
+      "name": "Marathoner",
+      "description": "Spend 1000 minutes in games.",
+      "points": 70,
+      "criteria_type": "stat",
+      "criteria_key": "minutes_played",
+      "criteria_value": 1000,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/44fa1b50c066d78a0d65d979b24bb49439ffedf59556b3f0dbf5c989df0d1e74.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 24,
+    "fields": {
+      "name": "Consistent Player",
+      "description": "Log in for 7 consecutive days.",
+      "points": 50,
+      "criteria_type": "stat",
+      "criteria_key": "login_streak",
+      "criteria_value": 7,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/1c60d48173d06ed86151f93950e2d10d7585333c94735ddf8951740f24816bf2.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 25,
+    "fields": {
+      "name": "Level Up",
+      "description": "Reach level 5.",
+      "points": 20,
+      "criteria_type": "stat",
+      "criteria_key": "level",
+      "criteria_value": 5,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/982af5001ca01258cbfe725521aa735eb0c044673270606b3962e67b46ec1b3f.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 26,
+    "fields": {
+      "name": "Veteran Player",
+      "description": "Reach level 10.",
+      "points": 50,
+      "criteria_type": "stat",
+      "criteria_key": "level",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/8f2a26dc0e2dff3d357b4e2183fe390e8bb2498d1453c8bc6394708e5dc41119.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 27,
+    "fields": {
+      "name": "XP Collector",
+      "description": "Accumulate 1000 XP.",
+      "points": 30,
+      "criteria_type": "stat",
+      "criteria_key": "xp",
+      "criteria_value": 1000,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/a76b7176c9f902bc737bbd819b68c6b7654e1d9d7bd003ee5a9c32033e3084af.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 28,
+    "fields": {
+      "name": "First Message",
+      "description": "Send your first message.",
+      "points": 5,
+      "criteria_type": "stat",
+      "criteria_key": "messages_sent",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/1add4063e0667bf127004ef365e1b921b9dfc28dab590ea91cb6a7ec4d476c09.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 29,
+    "fields": {
+      "name": "Chatty",
+      "description": "Send 50 messages.",
+      "points": 20,
+      "criteria_type": "stat",
+      "criteria_key": "messages_sent",
+      "criteria_value": 50,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/47d7d4a7c0d493b6130706a905a3c1e728f355d789404fae1e276e6b84224eb3.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 30,
+    "fields": {
+      "name": "Friendship",
+      "description": "Have 5 friends.",
+      "points": 15,
+      "criteria_type": "stat",
+      "criteria_key": "friends_count",
+      "criteria_value": 5,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/ce4c76b478937f61e0302ef208ca35219d985969cb99df147f8cb4814ffee058.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 31,
+    "fields": {
+      "name": "Social Network",
+      "description": "Have 20 friends.",
+      "points": 50,
+      "criteria_type": "stat",
+      "criteria_key": "friends_count",
+      "criteria_value": 20,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/5689ff7b23ff5e21bd14b8a14e63a9c4162b5ea0b9469c49e06fbb47a3c95603.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 32,
+    "fields": {
+      "name": "Playing with Friends",
+      "description": "Play a game with a friend.",
+      "points": 15,
+      "criteria_type": "stat",
+      "criteria_key": "games_with_friends",
+      "criteria_value": 1,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/761d599e4e3ae464346f0dfdf760a27a0186a498e5f433dd0803cbb2192b8eb8.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 33,
+    "fields": {
+      "name": "Friendly Gamer",
+      "description": "Play 10 games with friends.",
+      "points": 30,
+      "criteria_type": "stat",
+      "criteria_key": "games_with_friends",
+      "criteria_value": 10,
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/fd46595d31d3f1ec4c0871fb8b58061e6c960dded8062f409e1200ad9bb1195e.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 34,
+    "fields": {
+      "name": "Marathon Runner",
+      "description": "Play a game lasting over 60 minutes.",
+      "points": 25,
+      "criteria_type": "action",
+      "criteria_expression": "game_duration >= 60",
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/2b9bc8d174faffdb2f95e8dd56c4d48940f3d17ffe20fdd9c615f18e41ba096a.webp"
+    }
+  },
+  {
+    "model": "accounts.achievement",
+    "pk": 35,
+    "fields": {
+      "name": "Speedster",
+      "description": "Win a game in under 5 minutes.",
+      "points": 25,
+      "criteria_type": "action",
+      "criteria_expression": "game_duration <= 5 and game_won == True",
+      "image_url": "https://files.sovbit.host/media/11674b2d321fc24239b02afdf966c32e36594a6282bd7f3d4bcd12438558ab51/cc2469612008022efe15c4259582f505e97caf5743c3da35fc82ded57f4db8c5.webp"
+    }
+  }
+]

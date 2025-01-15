@@ -113,8 +113,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # Keep your original access token lifetime
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),  # Keep your original refresh token lifetime
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  # Keep your original access token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Keep your original refresh token lifetime
     'ROTATE_REFRESH_TOKENS': True,  # Rotate refresh tokens upon use
     'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens after they are used
     'ALGORITHM': 'HS256',
@@ -245,12 +245,12 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console', 'file'],
-        'level': 'DEBUG',
+        'level': 'WARNING',
     },
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': True,
         },
         'game_debug': {

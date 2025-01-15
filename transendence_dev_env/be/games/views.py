@@ -1,6 +1,5 @@
-from rest_framework import viewsets, permissions, status
-from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer,GameStatsSerializer
-from django.db.models.functions import ExtractMonth
+from rest_framework import viewsets, status, serializers
+from .serializers import GameSerializer, GlobalStatsSerializer, UserStatsSerializer, TournamentSerializer, OnlineTournamentSerializer
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -8,19 +7,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import models
-from datetime import timedelta
-from django.db.models import Avg, Max, Min, Count, Sum, Q, F, Case, When, IntegerField, FloatField, OuterRef, Subquery
-import calendar
-from django.contrib.auth.models import User 
-from accounts.serializers import UserProfileSerializer
+from django.db.models import Avg, Count, Sum, Q, F
+from django.contrib.auth.models import User
 from accounts.models import Profile
-from .models import Tournament, Match, Round, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome
+from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby, OnlineTournament
 from django.db.models.functions import Abs
 from django.db.models.functions import Cast
-from .serializers import TournamentSerializer
 import random
 import string
-from django.db import transaction 
+from django.db import transaction
+from .services.tournament_lobby_service import TournamentLobbyService
+from accounts.utils import get_display_name
+
+import logging
+logger = logging.getLogger('game_debug')
+
+def generate_room_id(length=6):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 class GameViewSet(viewsets.ModelViewSet):
     """
@@ -31,7 +34,7 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = GameSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    
+
     def calculate_xp_gain(self, game, player, is_winner=False):
         """
         Calculate the XP gain for a player based on game factors.
@@ -56,9 +59,9 @@ class GameViewSet(viewsets.ModelViewSet):
         performance_multiplier = 1 + min(score_difference / 100, 0.5)  # Up to +50% XP based on score gap
 
         # Game mode multiplier: more challenging modes award more XP
-        if game.game_mode == Game.PVE:
+        if game.game_mode == Game.PVE or game.game_mode == Game.THREE_D_PVE:
             mode_multiplier = 0.7 if not is_winner else 1.0  # PvE easier, give less XP if lost
-        elif game.game_mode == Game.LOCAL_PVP:
+        elif game.game_mode == Game.LOCAL_PVP or game.game_mode == Game.THREE_D_PVP:
             mode_multiplier = 1.0 if not is_winner else 1.1  # Balanced mode, slight bonus for win
         elif game.game_mode == Game.ONLINE_PVP:
             mode_multiplier = 1.1 if not is_winner else 1.3  # Online PvP, higher reward for higher challenge
@@ -81,19 +84,51 @@ class GameViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         return Game.objects.filter(models.Q(player1=user) | models.Q(player2=user))
-    
+
     def perform_create(self, serializer):
-        data = serializer.validated_data
+        data = self.request.data
         game_mode = data.get('game_mode')
 
-        if game_mode == (Game.LOCAL_PVP or Game.CHAOS_PVP) and data.get('player2', {}).get('id') == 0:
-            # Local PvP with placeholder name
-            player2_name_pvp_local = data.get('player2', {}).get('username')
-            serializer.save(player1=self.request.user, player2_name_pvp_local=player2_name_pvp_local)
+        save_kwargs = {'player1': self.request.user}
+
+        # Handle player2
+        player2 = data.get('player2', {})
+        if player2.get('id') == 0:
+            save_kwargs['player2_name_pvp_local'] = player2.get('username', 'Player 2')
         else:
-            # Regular PvP or PvE game
-            serializer.save(player1=self.request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                user2 = User.objects.get(id=player2.get('id'))
+                save_kwargs['player2'] = user2
+            except User.DoesNotExist:
+                raise serializers.ValidationError({"player2": "Invalid user id."})
+
+        # Handle player3 and player4 for arena modes
+        if game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
+            # Handle player3
+            player3 = data.get('player3', {})
+            if player3.get('id') == 0:
+                save_kwargs['player3_name_pvp_local'] = player3.get('username', 'Player 3')
+            elif player3.get('id') is not None:
+                try:
+                    user3 = User.objects.get(id=player3.get('id'))
+                    save_kwargs['player3'] = user3
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({"player3": "Invalid user id."})
+
+            # Handle player4
+            player4 = data.get('player4', {})
+            if player4.get('id') == 0:
+                save_kwargs['player4_name_pvp_local'] = player4.get('username', 'Player 4')
+            elif player4.get('id') is not None:
+                try:
+                    user4 = User.objects.get(id=player4.get('id'))
+                    save_kwargs['player4'] = user4
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({"player4": "Invalid user id."})
+
+        # Save the game instance
+        game = serializer.save(**save_kwargs)
+        return Response(GameSerializer(game).data, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
         instance = self.get_object()
@@ -151,7 +186,7 @@ class GameViewSet(viewsets.ModelViewSet):
 
         else:
             serializer.save()
-            
+
     @action(detail=False, methods=['get'], url_path='all-games')
     def all_games(self, request):
         """
@@ -161,101 +196,14 @@ class GameViewSet(viewsets.ModelViewSet):
         games = Game.objects.all()
         serializer = self.get_serializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-            
-    @action(detail=False, methods=['get'], url_path='user-stats')
-    def user_statistics(self, request):
-        user = request.user
-        games = Game.objects.filter(Q(player1=user) | Q(player2=user))
-        total_games = games.count()
 
-        # PvE and PvP breakdown
-        pve_games = games.filter(game_mode=Game.PVE)
-        pvp_games = games.exclude(game_mode=Game.PVE)
-        total_pve_games = pve_games.count()
-        total_pvp_games = pvp_games.count()
-        
-        # Basic stats
-        wins = games.filter(winner=user).count()
-        win_rate = (wins / total_games) * 100 if total_games > 0 else 0
-        losses = total_games - wins
-        average_duration = games.aggregate(avg_duration=Avg('duration'))['avg_duration']
-        scores = [game.score_player1 if game.player1 == user else game.score_player2 for game in games]
-        avg_score_per_game = sum(scores) / total_games if total_games > 0 else 0
-
-        # Win streaks (current and max)
-        current_streak = 0
-        max_streak = 0
-        for game in games.order_by('-start_time'):
-            if game.winner == user:
-                current_streak += 1
-                max_streak = max(max_streak, current_streak)
-            else:
-                current_streak = 0
-
-        # Monthly performance for the last year
-        start_date = timezone.now() - timedelta(days=365)
-        monthly_performance = {}
-        for month in range(1, 13):
-            month_games = games.filter(start_time__month=month, start_time__gte=start_date)
-            month_wins = month_games.filter(winner=user).count()
-            monthly_performance[calendar.month_name[month]] = {
-                'games': month_games.count(),
-                'win_rate': (month_wins / month_games.count() * 100) if month_games else 0
-            }
-
-        # First-move win rate
-        first_move_games = games.filter(moves_log__0__player=user.username)  # Games where user made the first move
-        first_move_wins = first_move_games.filter(winner=user).count()
-        first_move_win_rate = (first_move_wins / first_move_games.count() * 100) if first_move_games else 0
-
-        # Average moves per game
-        total_moves = sum(len(game.moves_log or []) for game in games)
-        avg_moves_per_game = total_moves / total_games if total_games > 0 else 0
-
-        # Round-wise analysis
-        total_rounds = sum(len(game.rounds or []) for game in games)
-        avg_score_per_round = sum(scores) / total_rounds if total_rounds > 0 else 0
-        max_score_round = max((round['score_player1'] if user == game.player1 else round['score_player2']
-                            for game in games for round in game.rounds or []), default=0)
-
-        # Performance by time of day
-        performance_by_time = {}
-        for hour in range(24):
-            hour_games = games.filter(start_time__hour=hour)
-            hour_wins = hour_games.filter(winner=user).count()
-            performance_by_time[hour] = {
-                'games': hour_games.count(),
-                'win_rate': (hour_wins / hour_games.count() * 100) if hour_games else 0
-            }
-
-        # Construct data dictionary with all statistics
-        data = {
-            'total_games': total_games,
-            'pve_games': total_pve_games,
-            'pvp_games': total_pvp_games,
-            'wins': wins,
-            'losses': losses,
-            'win_rate': win_rate,
-            'average_duration': average_duration,
-            'avg_score_per_game': avg_score_per_game,
-            'max_win_streak': max_streak,
-            'current_win_streak': current_streak,
-            'monthly_performance': monthly_performance,
-            'first_move_win_rate': first_move_win_rate,
-            'avg_moves_per_game': avg_moves_per_game,
-            'avg_score_per_round': avg_score_per_round,
-            'max_score_round': max_score_round,
-            'performance_by_time': performance_by_time,
-        }
-
-        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
     def get_games_by_user(self, request, user_id=None):
         """
-        Custom endpoint to retrieve all games where a specific user (user_id) is either player1 or player2.
+        Custom endpoint to retrieve all games where a specific user (user_id) is a player.
         """
-        games = Game.objects.filter(models.Q(player1_id=user_id) | models.Q(player2_id=user_id))
+        games = Game.objects.filter(models.Q(player1_id=user_id) | models.Q(player2_id=user_id) | models.Q(player3_id=user_id) | models.Q(player4_id=user_id))
         serializer = self.get_serializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -277,14 +225,16 @@ class GameViewSet(viewsets.ModelViewSet):
             "friends": [friend.username for friend in friends_users],
             "game_participants": {
                 "player1": game.player1.username,
-                "player2": game.player2.username if game.player2 else "AI"
+                "player2": game.player2.username if game.player2 else "AI",
+                "player3": game.player3.username if game.player3 else None,
+                "player4": game.player4.username if game.player4 else None
             }
         }
         # Check if the user is a participant or a friend of a participant
         if game.player1 == user or game.player2 == user or \
         game.player1 in friends_users or (game.player2 in friends_users if game.player2 else False):
             serializer = self.get_serializer(game)
-            
+
             # Include debug information in the response
             response_data = serializer.data
             response_data['debug_info'] = debug_info
@@ -306,7 +256,6 @@ class GameViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
-
 class TournamentViewSet(viewsets.ModelViewSet):
     """
     A viewset that provides the standard actions for Tournament model,
@@ -314,7 +263,9 @@ class TournamentViewSet(viewsets.ModelViewSet):
     """
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
-    
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
     def calculate_tournament_xp(self, tournament, player):
         """
         Calculate advanced XP for a player based on their performance, progression, tournament type,
@@ -356,7 +307,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
             total_matches = tournament.rounds.filter(matches__player1=player.username).count() \
                             + tournament.rounds.filter(matches__player2=player.username).count()
             total_wins = tournament.rounds.filter(matches__winner=player.username).count()
-            
+
             win_ratio = total_wins / max(1, total_matches)
             if win_ratio > 0.8:
                 consistency_bonus = 200
@@ -376,7 +327,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         # Opponent type factor: more XP for winning against players than bots
         total_wins = 0
         bot_wins = 0
-        for match in tournament.rounds.filter(matches__winner=player.username):
+        for match in tournament.rounds.filter(matches__winner=player.username): #TODO match var is actually a round object, fix this
             total_wins += 1
             if match.player1_type == 'Bot' or match.player2_type == 'Bot':
                 bot_wins += 1
@@ -452,7 +403,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tournament = serializer.save()
-        
+
         # Serialize the tournament instance to include the ID in the response
         response_serializer = self.get_serializer(tournament)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -463,6 +414,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        logger.warning(serializer.data)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -509,7 +461,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(tournaments, many=True)
             return Response(serializer.data)
         return Response({"error": "Participant parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
     def get_tournaments_by_user(self, request, user_id=None):
         """
@@ -537,15 +489,48 @@ class TournamentViewSet(viewsets.ModelViewSet):
         # Serialize and return the results
         serializer = self.get_serializer(tournaments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
-        
-        
-def generate_room_id(length=6):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+class OnlineTournamentViewSet(viewsets.ModelViewSet):
+    """
+    A viewset that provides standard actions for OnlineTournament, 
+    with additional filtering by participant or user.
+    """
+    queryset = OnlineTournament.objects.all()
+    serializer_class = OnlineTournamentSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    @action(detail=False, methods=['get'], url_path='by-user/(?P<user_id>\d+)')
+    def get_tournaments_by_user(self, request, user_id=None):
+        """
+        Get all tournaments where the user is a participant or the host.
+        """
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Filter tournaments by host or participant
+        tournaments = OnlineTournament.objects.filter(Q(participants=user)).distinct()
+        logger.warning(f'tournaments in tournaments by user: {[tournament.id for tournament in tournaments]}')
+        serializer = self.get_serializer(tournaments, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a specific tournament by ID.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        logger.warning(f'retrieve: {serializer.data}')
+        return Response(serializer.data)
+
 
 class LobbyViewSet(viewsets.ViewSet):
-    
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
     @action(detail=False, methods=['post'])
     def create_room(self, request):
         room_id = generate_room_id()
@@ -720,6 +705,9 @@ class LobbyViewSet(viewsets.ViewSet):
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
 
 class ChaosLobbyViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
     @action(detail=False, methods=['post'])
     def create_room(self, request):
         room_id = generate_room_id()
@@ -898,6 +886,8 @@ class ChaosLobbyViewSet(viewsets.ViewSet):
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
 
 class ArenaLobbyViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     @action(detail=False, methods=['post'])
     def create_room(self, request):
@@ -1098,14 +1088,150 @@ class ArenaLobbyViewSet(viewsets.ViewSet):
         except Lobby.DoesNotExist:
             return Response({"detail": "Room not found or is not active."}, status=status.HTTP_404_NOT_FOUND)
 
+class TournamentLobbyViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['post'])
+    def create_room(self, request):
+        """Creates a new tournament lobby."""
+        room_id = generate_room_id()
+        host = request.user
+
+        #make sure the host is not in any other rooms / hosts any other rooms
+        self.remove_user_from_other_rooms(host)
+        TournamentLobby.objects.filter(host=host, active_lobby=True).delete()
+
+        # Create the tournament lobby
+        lobby = TournamentLobby.objects.create(
+            room_id=room_id,
+            host=host,
+        )
+
+        return Response({"room_id": room_id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    @transaction.atomic
+    def join_room(self, request):
+        """Allows a user to join an active tournament lobby."""
+        room_id = request.data.get("room_id")
+        user = request.user
+
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+
+            if user == lobby.host:
+                return Response({"detail": "You are already the host."}, status=status.HTTP_200_OK)
+
+            if user in lobby.guests.all():
+                return Response({"detail": "You are already a participant."}, status=status.HTTP_200_OK)
+
+            if len(lobby.guests.all()) >= lobby.max_player_count: # at most max players -1 because of host
+                return Response({"detail": "Lobby is full."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Add the user as a guest
+            lobby.guests.add(user)
+            lobby.guest_ready_states[user.id] = False  # Initialize ready state
+            TournamentLobbyService.adjust_max_player_count(lobby)
+            lobby.save()
+
+            return Response({"detail": "Joined lobby successfully."}, status=status.HTTP_200_OK)
+
+        except TournamentLobby.DoesNotExist:
+            return Response({"detail": "Lobby not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    def remove_user_from_other_rooms(self, user):
+        """Removes the user from any rooms they are currently in."""
+        # Remove user from any room where they are a guest.
+        lobbies = TournamentLobby.objects.filter(guests=user)
+        for lobby in lobbies:
+            lobby.guests.remove(user)
+            lobby.guest_ready_states.pop(user.id, None)
+            lobby.save()
+
+    def room_status(self, request, room_id=None):
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id)
+
+            return Response({
+                "room_id": room_id,
+                "active_lobby": lobby.active_lobby,
+                "active_tournament": lobby.active_tournament,
+                "host": get_display_name(lobby.host),
+                "host_id": lobby.host.id,
+                "guests": [{
+                    "username": get_display_name(guest),
+                    "id": guest.id,
+                    "is_ready": lobby.guest_ready_states.get(str(guest.id), False)
+                } for guest in lobby.guests.all()],
+                "player_count": lobby.guests.count()+1,
+                "all_ready": lobby.all_ready(),
+                "is_full": lobby.is_full(),
+                "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
+                "max_player_count": lobby.max_player_count,
+                "tournament_type": lobby.tournament_type,
+            }, status=status.HTTP_200_OK)
+
+        except TournamentLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
+    def list_rooms(self, request):
+        """Returns a list of all active tournament lobbies."""
+        lobbies = TournamentLobby.objects.filter(active_lobby=True)
+        data = [
+            {
+                "room_id": lobby.room_id,
+                "active_lobby": lobby.active_lobby,
+                "active_tournament": lobby.active_tournament,
+                "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
+                "host": get_display_name(lobby.host),
+                "player_count": lobby.guests.count()+1,
+                "tournament_type": lobby.tournament_type,
+                "max_player_count": lobby.max_player_count,
+            }
+            for lobby in lobbies
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'])
+    def set_ready(self, request):
+        room_id = request.data.get("room_id")
+        is_ready = request.data.get("ready", False)
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+            user = request.user
+
+            # Use the lobby's method to set ready status
+            if user in lobby.guests.all():
+                lobby.set_ready_status(user, is_ready)
+                return Response({"detail": "Updated ready status"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Not part of this lobby"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except ArenaLobby.DoesNotExist:
+            return Response({"detail": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<room_id>[^/.]+)')
+    def delete_room(self, request, room_id=None):
+        """Deletes a lobby if the requesting user is the host."""
+        try:
+            lobby = TournamentLobby.objects.get(room_id=room_id, active_lobby=True)
+
+            if request.user != lobby.host:
+                return Response({"detail": "Only the host can delete this room."}, status=status.HTTP_403_FORBIDDEN)
+
+            lobby.delete()
+            return Response({"detail": "Lobby deleted successfully."}, status=status.HTTP_200_OK)
+
+        except TournamentLobby.DoesNotExist:
+            return Response({"detail": "Lobby not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class StatsViewSet(viewsets.ViewSet):
     """
     A viewset for retrieving user-specific and global statistics.
     """
-
-    permission_classes = [permissions.IsAuthenticated]
-
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     @action(detail=True, methods=['get'], url_path='user-stats')
     def user_stats(self, request, pk=None):
@@ -1114,18 +1240,25 @@ class StatsViewSet(viewsets.ViewSet):
         Endpoint: /stats/{user_id}/user-stats/
         """
         user = request.user
-
         # Access control: Only the user themselves or admins can access the stats
         # if not (user.id == int(pk) or user.is_staff):
-        #     return Response({"error": "You do not have permission to view this user's stats."}, status=status.HTTP_403_FORBIDDEN)
-
+        #     return Response(
+        #         {"error": "You do not have permission to view this user's stats."},
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
         try:
             target_user = User.objects.select_related('profile').get(pk=pk)
             profile = target_user.profile
         except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Profile.DoesNotExist:
-            return Response({"error": "Profile not found for the user."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Profile not found for the user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # Aggregations for games
         games_played = Game.objects.filter(Q(player1=target_user) | Q(player2=target_user))
@@ -1133,6 +1266,13 @@ class StatsViewSet(viewsets.ViewSet):
         total_games_pve = games_played.filter(game_mode=Game.PVE).count()
         total_games_pvp_local = games_played.filter(game_mode=Game.LOCAL_PVP).count()
         total_games_pvp_online = games_played.filter(game_mode=Game.ONLINE_PVP).count()
+        # New Game Modes
+        total_games_chaos_pve = games_played.filter(game_mode=Game.CHAOS_PVE).count()
+        total_games_chaos_pvp = games_played.filter(game_mode=Game.CHAOS_PVP).count()
+        total_games_online_chaos_pvp = games_played.filter(game_mode=Game.ONLINE_CHAOS_PVP).count()
+        total_games_arena_pvp = games_played.filter(game_mode=Game.ARENA_PVP).count()
+        total_games_online_arena_pvp = games_played.filter(game_mode=Game.ONLINE_ARENA_PVP).count()
+
         total_games_won = games_played.filter(winner=target_user).count()
         total_games_lost = total_games_played - total_games_won
         average_game_duration = games_played.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
@@ -1155,17 +1295,18 @@ class StatsViewSet(viewsets.ViewSet):
         # Rank by Wins
         rank_by_wins = User.objects.annotate(
             total_wins=Count('games_won')
-        ).filter(total_wins__gte=total_games_won).count()
+        ).filter(total_wins__gt=total_games_won).count() + 1
 
         # Rank by Games Played
-                    # Users who have played more games
-        users_with_game_counts = Profile.objects.all()
-        rank_by_games_played = users_with_game_counts.filter(games_played__gte=total_games_played).count()
+        rank_by_games_played = Profile.objects.filter(games_played__gt=total_games_played).count() + 1
 
         # Rank by Tournament Wins
         rank_by_tournament_wins = User.objects.annotate(
-            tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__final_winner=F('username')))
-        ).filter(tournament_wins__gte=total_tournaments_won).count()
+            tournament_wins=Count(
+                'hosted_tournaments',
+                filter=Q(hosted_tournaments__final_winner=F('username'))
+            )
+        ).filter(tournament_wins__gt=total_tournaments_won).count() + 1
 
         data = {
             "user_id": target_user.id,
@@ -1177,6 +1318,12 @@ class StatsViewSet(viewsets.ViewSet):
             "total_games_pve": total_games_pve,
             "total_games_pvp_local": total_games_pvp_local,
             "total_games_pvp_online": total_games_pvp_online,
+            # New Game Modes
+            "total_games_chaos_pve": total_games_chaos_pve,
+            "total_games_chaos_pvp": total_games_chaos_pvp,
+            "total_games_online_chaos_pvp": total_games_online_chaos_pvp,
+            "total_games_arena_pvp": total_games_arena_pvp,
+            "total_games_online_arena_pvp": total_games_online_arena_pvp,
             "total_games_won": total_games_won,
             "total_games_lost": total_games_lost,
             "average_game_duration": round(average_game_duration, 2),
@@ -1189,17 +1336,27 @@ class StatsViewSet(viewsets.ViewSet):
             "rank_by_games_played": rank_by_games_played,
             "rank_by_tournament_wins": rank_by_tournament_wins,
         }
-
         serializer = UserStatsSerializer(instance=data)  # Use instance instead of data
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='global-stats')
     def global_stats(self, request):
+        """
+        Retrieve global statistics across all users.
+        Endpoint: /stats/global-stats/
+        """
         total_users = User.objects.count()
         total_games = Game.objects.count()
         total_pve_games = Game.objects.filter(game_mode=Game.PVE).count()
         total_pvp_local_games = Game.objects.filter(game_mode=Game.LOCAL_PVP).count()
         total_pvp_online_games = Game.objects.filter(game_mode=Game.ONLINE_PVP).count()
+        # New Game Modes
+        total_chaos_pve_games = Game.objects.filter(game_mode=Game.CHAOS_PVE).count()
+        total_chaos_pvp_games = Game.objects.filter(game_mode=Game.CHAOS_PVP).count()
+        total_online_chaos_pvp_games = Game.objects.filter(game_mode=Game.ONLINE_CHAOS_PVP).count()
+        total_arena_pvp_games = Game.objects.filter(game_mode=Game.ARENA_PVP).count()
+        total_online_arena_pvp_games = Game.objects.filter(game_mode=Game.ONLINE_ARENA_PVP).count()
+
         total_tournaments = Tournament.objects.count()
         completed_tournaments = Tournament.objects.filter(status='completed').count()
 
@@ -1255,7 +1412,6 @@ class StatsViewSet(viewsets.ViewSet):
 
         # Leaderboard by Most Games Played
         leaderboard_most_games_qs = Profile.objects.order_by('-games_played')[:10]
-
         leaderboard_most_games = [
             {
                 "rank": index + 1,
@@ -1268,9 +1424,11 @@ class StatsViewSet(viewsets.ViewSet):
         ]
 
         # Leaderboard by Most Tournament Wins
-        # Corrected the comparison to use 'username' instead of 'id'
         leaderboard_most_tournament_wins_qs = User.objects.annotate(
-            tournament_wins=Count('hosted_tournaments', filter=Q(hosted_tournaments__final_winner=F('username')))
+            tournament_wins=Count(
+                'hosted_tournaments',
+                filter=Q(hosted_tournaments__final_winner=F('username'))
+            )
         ).order_by('-tournament_wins')[:10]
         leaderboard_most_tournament_wins = [
             {
@@ -1289,6 +1447,12 @@ class StatsViewSet(viewsets.ViewSet):
             "total_pve_games": total_pve_games,
             "total_pvp_local_games": total_pvp_local_games,
             "total_pvp_online_games": total_pvp_online_games,
+            # New Game Modes
+            "total_chaos_pve_games": total_chaos_pve_games,
+            "total_chaos_pvp_games": total_chaos_pvp_games,
+            "total_online_chaos_pvp_games": total_online_chaos_pvp_games,
+            "total_arena_pvp_games": total_arena_pvp_games,
+            "total_online_arena_pvp_games": total_online_arena_pvp_games,
             "total_tournaments": total_tournaments,
             "completed_tournaments": completed_tournaments,
             "average_games_per_user": round(average_games_per_user, 2),
@@ -1301,110 +1465,5 @@ class StatsViewSet(viewsets.ViewSet):
             "leaderboard_most_games": leaderboard_most_games,
             "leaderboard_most_tournament_wins": leaderboard_most_tournament_wins,
         }
-        serializer = GlobalStatsSerializer(data)
+        serializer = GlobalStatsSerializer(instance=data)  # Use instance instead of data
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-class GameStatsViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def retrieve(self, request, pk=None):
-        """
-        Retrieve detailed statistics for a specific game by its ID.
-        """
-        try:
-            # Retrieve the specific game
-            game = Game.objects.get(pk=pk)
-        except Game.DoesNotExist:
-            return Response({"error": "Game not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        user = request.user
-
-        # Ensure the user is associated with the game
-        if not (game.player1 == user or game.player2 == user):
-            return Response({"error": "You do not have permission to view these stats."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Chart 1: Game Mode
-        game_mode = self.get_game_mode_label(game.game_mode)
-
-        # Chart 2: Game Duration
-        game_duration = game.duration if game.duration is not None else 0
-
-        # Chart 3: Win/Loss Status
-        win_loss_status = {
-            'Winner': game.winner.username if game.winner else "None",
-            'Status': 'Win' if game.winner == user else 'Loss'
-        }
-
-        # Chart 4: Rounds Information
-        rounds_info = []
-        if game.rounds:
-            for round_info in game.rounds:
-                rounds_info.append({
-                    "round_number": round_info.get("round_number"),
-                    "score_player1": round_info.get("score_player1"),
-                    "score_player2": round_info.get("score_player2"),
-                    "winner": round_info.get("winner"),
-                    "start_time": round_info.get("start_time"),
-                    "end_time": round_info.get("end_time")
-                })
-
-        # Chart 5: Moves Log
-        moves_log = []
-        if game.moves_log:
-            for move in game.moves_log:
-                moves_log.append({
-                    "time": move.get("time"),
-                    "player": move.get("player"),
-                    "action": move.get("action")
-                })
-
-        # Chart 6: Score Distribution
-        score_distribution = {
-            "Player 1": game.score_player1,
-            "Player 2": game.score_player2
-        }
-
-        # Chart 7: Game Status
-        game_status = self.get_game_status_label(game.status)
-
-        # Chart 8: Winner Information
-        winner_info = {
-            "Winner": game.winner.username if game.winner else "AI" if game.is_against_ai() else "None",
-            "is_completed": game.is_completed
-        }
-
-        # Prepare the data
-        stats_data = {
-            'game_mode': game_mode,
-            'game_duration': game_duration,
-            'win_loss_status': win_loss_status,
-            'rounds_info': rounds_info,
-            'moves_log': moves_log,
-            'score_distribution': score_distribution,
-            'game_status': game_status,
-            'winner_info': winner_info,
-        }
-
-        # Serialize and return the response
-        serializer = GameStatsSerializer(data=stats_data)
-        serializer.is_valid(raise_exception=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def get_game_mode_label(self, game_mode_key):
-        game_mode_labels = {
-            Game.PVE: 'PvE',
-            Game.LOCAL_PVP: 'Local PvP',
-            Game.ONLINE_PVP: 'Online PvP'
-        }
-        return game_mode_labels.get(game_mode_key, game_mode_key)
-
-    def get_game_status_label(self, status_key):
-        status_labels = {
-            Game.STARTED: 'Started',
-            Game.RUNNING: 'Running',
-            Game.FINISHED: 'Finished',
-            Game.CANCELED_BY_HOST: 'Canceled by Host',
-            Game.CANCELED_BY_GUEST: 'Canceled by Guest'
-        }
-        return status_labels.get(status_key, status_key)

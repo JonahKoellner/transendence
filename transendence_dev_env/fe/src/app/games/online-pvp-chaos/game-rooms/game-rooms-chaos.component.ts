@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { GameLobbyChaosService } from 'src/app/services/game-lobby-chaos.service';
 
 @Component({
@@ -8,19 +9,26 @@ import { GameLobbyChaosService } from 'src/app/services/game-lobby-chaos.service
 })
 export class GameRoomsChaosComponent {
   rooms: any[] = [];
-
-  constructor(private lobbyService: GameLobbyChaosService) {}
+  pGames: number = 1; // Current page
+  itemsPerPageGames: number = 25; // Items per page
+  constructor(private lobbyService: GameLobbyChaosService, private toastr: ToastrService) {}
 
   ngOnInit() {
     this.fetchRooms();
   }
+
+  
+  onPageChangeGames(page: number) {
+    this.pGames = page;
+  }
+
 
   fetchRooms() {
     this.lobbyService.getAllRooms().subscribe(
       (rooms) => {
         this.rooms = rooms;
       },
-      (error) => console.error('Error fetching rooms:', error)
+      (error) => this.toastr.error('Failed to fetch game rooms.', 'Error')
     );
   }
 }

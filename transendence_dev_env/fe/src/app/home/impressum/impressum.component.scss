@@ -1,0 +1,135 @@
+/* src/app/pages/impressum/impressum.component.scss */
+
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+    color: #e0e0e0;
+  }
+  
+  .auth-card {
+    width: 100%;
+    max-width: 800px; /* Increased width for better readability */
+    background-color: #1e1e1e; // Card background
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: left; /* Left-align text for better readability */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8.5px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    
+    .auth-header {
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      
+      h2 {
+        font-size: 1.8rem;
+        color: #61ba50;
+        margin-left: 0.5rem;
+      }
+    }
+    
+    .auth-body {
+      .form-group {
+        h3 {
+          font-size: 1.5rem;
+          color: #61ba50;
+          margin-top: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        p, ul {
+          font-size: 1rem;
+          line-height: 1.6;
+          color: #e0e0e0;
+        }
+        
+        ul {
+          list-style-type: disc;
+          margin-left: 2rem;
+        }
+        
+        a {
+          color: #61ba50;
+          text-decoration: underline;
+          
+          &:hover {
+            color: #45a049;
+          }
+        }
+      }
+    }
+    
+    .auth-footer {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    
+    .auth-button {
+      background-color: #61ba50;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      min-width: 120px;
+      
+      &:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      &:focus {
+        outline: 2px solid #f1d600;
+      }
+    }
+  }
+  
+  /* Responsive Design Adjustments */
+  @media (max-width: 768px) {
+    .auth-page {
+      padding: 1rem;
+    }
+  
+    .auth-card {
+      padding: 1rem;
+  
+      .auth-header {
+        flex-direction: column;
+      }
+  
+      h2 {
+        font-size: 1.5rem;
+        margin-left: 0;
+        margin-top: 0.5rem;
+      }
+  
+      .auth-body {
+        .form-group {
+          h3 {
+            font-size: 1.3rem;
+          }
+  
+          p, ul {
+            font-size: 0.9rem;
+          }
+  
+          ul {
+            margin-left: 1.5rem;
+          }
+        }
+      }
+    }
+  }
+  

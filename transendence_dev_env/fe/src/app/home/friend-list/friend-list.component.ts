@@ -1,6 +1,8 @@
 import { Component, HostListener } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
+import { environment } from 'src/environment';
 
 @Component({
   selector: 'app-friend-list',
@@ -17,18 +19,47 @@ export class FriendListComponent {
   selectedFriendId: number | null = null;
   selectedFriendUsername: string | null = null;
   currentUser: UserProfile | null = null;
+  userToBlock: string = '';
+  userToRemove: string = '';
+  showRemoveFriendDialog: boolean = false;
+  showBlockUserDialog: boolean = false;
 
+  userToRemoveId: number | null = null;
+  userToBlockId: number | null = null;
   chatWindowPosition = { x: 100, y: 100 };
   isDragging = false;
   dragOffset = { x: 0, y: 0 };
 
+  pFriends: number = 1; // Current page
+  itemsPerPageFriends: number = 25; // Items per page
 
-  constructor(private friendService: FriendService,private profileService: ProfileService) { }
+  pFriendRequests: number = 1; // Current page
+  itemsPerPageFriendRequests: number = 25; // Items per page
+
+  pBlockedUsers: number = 1; // Current page
+  itemsPerPageBlockedUsers: number = 25; // Items per page
+
+  public apiurl = environment.apiUrl;
+
+
+  constructor(private friendService: FriendService,private profileService: ProfileService, private toastr: ToastrService) { }
 
   ngOnInit(): void {
 
     this.initData();
     this.loadCurrentUser();
+  }
+
+  onPageChangeFriends(page: number) {
+    this.pFriends = page;
+  }
+
+  onPageChangeFriendRequests(page: number) {
+    this.pFriendRequests = page;
+  }
+
+  onPageChangeBlockedUsers(page: number) {
+    this.pBlockedUsers = page;
   }
 
   loadCurrentUser(): void {
@@ -37,7 +68,7 @@ export class FriendListComponent {
         this.currentUser = user;
       },
       (error) => {
-        console.error('Failed to load current user profile:', error);
+        this.toastr.error('Failed to load current user profile.', 'Error');
         this.error = 'Failed to load current user profile.';
       }
     );
@@ -61,7 +92,7 @@ export class FriendListComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to load friends.', 'Error');
         this.error = 'Failed to load friends.';
         this.isLoading = false;
       }
@@ -84,7 +115,7 @@ export class FriendListComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to load friend requests.', 'Error');
         this.error = 'Failed to load friend requests.';
         this.isLoading = false;
       }
@@ -99,7 +130,7 @@ export class FriendListComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to load blocked users.', 'Error');
         this.error = 'Failed to load blocked users.';
         this.isLoading = false;
       }
@@ -113,7 +144,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to unblock user.', 'Error');
         this.error = 'Failed to unblock user.';
       }
     );
@@ -126,7 +157,7 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to accept friend request.', 'Error');
         this.error = 'Failed to accept friend request.';
       }
     );
@@ -139,34 +170,8 @@ export class FriendListComponent {
         this.initData();
       },
       (error) => {
-        console.error(error);
+        this.toastr.error('Failed to reject friend request.', 'Error');
         this.error = 'Failed to reject friend request.';
-      }
-    );
-  }
-
-  removeFriend(userId: number): void {
-    this.friendService.removeFriend(userId).subscribe(
-      () => {
-        this.friends = this.friends.filter(friend => friend.id !== userId);
-        this.initData();
-      },
-      (error) => {
-        console.error(error);
-        this.error = 'Failed to remove friend.';
-      }
-    );
-  }
-
-  blockUser(userId: number): void {
-    this.friendService.blockUser(userId).subscribe(
-      () => {
-        this.friends = this.friends.filter(friend => friend.id !== userId);
-        this.initData();
-      },
-      (error) => {
-        console.error(error);
-        this.error = 'Failed to block user.';
       }
     );
   }
@@ -214,5 +219,80 @@ export class FriendListComponent {
   @HostListener('window:mouseup')
   onMouseUp(): void {
     this.isDragging = false;
+  }
+
+
+  onCloseRemoveFriendDialog(result: string): void {
+    if (result === 'accepted' && this.userToRemoveId !== null) {
+      this.executeRemoveFriend(this.userToRemoveId);
+      this.showRemoveFriendDialog = false;
+      this.userToRemoveId = null;
+      this.userToRemove = '';
+    } else {
+      this.showRemoveFriendDialog = false;
+      this.userToRemoveId = null;
+      this.userToRemove = '';
+    }
+  }
+
+  onCloseBlockFriendDialog(result: string): void {
+    if (result === 'accepted' && this.userToBlockId !== null) {
+      this.executeBlockUser(this.userToBlockId);
+      this.showBlockUserDialog = false;
+      this.userToBlockId = null;
+      this.userToBlock = '';
+    } else {
+      this.showBlockUserDialog = false;
+      this.userToBlockId = null;
+      this.userToBlock = '';
+    }
+  }
+
+  removeFriend(userId: number, username: string): void {
+    this.userToRemoveId = userId;
+    this.showRemoveFriendDialog = true;
+    this.userToRemove = username;
+    console.log('removeFriend', userId, username);
+  }
+
+  blockUser(userId: number, username: string): void {
+    this.userToBlockId = userId;
+    this.showBlockUserDialog = true;
+    this.userToBlock = username;
+  }
+
+  // Add methods to perform the actual actions
+  executeRemoveFriend(userId: number): void {
+    this.friendService.removeFriend(userId).subscribe(
+      () => {
+        this.friends = this.friends.filter(friend => friend.id !== userId);
+        this.initData();
+        this.showRemoveFriendDialog = false;
+        this.userToRemoveId = null;
+      },
+      (error) => {
+        this.toastr.error('Failed to remove friend.', 'Error');
+        this.error = 'Failed to remove friend.';
+        this.showRemoveFriendDialog = false;
+        this.userToRemoveId = null;
+      }
+    );
+  }
+
+  executeBlockUser(userId: number): void {
+    this.friendService.blockUser(userId).subscribe(
+      () => {
+        this.friends = this.friends.filter(friend => friend.id !== userId);
+        this.initData();
+        this.showBlockUserDialog = false;
+        this.userToBlockId = null;
+      },
+      (error) => {
+        this.toastr.error('Failed to block user.', 'Error');
+        this.error = 'Failed to block user.';
+        this.showBlockUserDialog = false;
+        this.userToBlockId = null;
+      }
+    );
   }
 }

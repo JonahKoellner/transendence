@@ -6,6 +6,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { GameService } from 'src/app/games/game.service';
 import { firstValueFrom } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
 
 export enum TournamentType {
   SINGLE_ELIMINATION = 'Single Elimination',
@@ -134,7 +135,7 @@ export class StartComponent implements OnInit {
   leavingPlayer1 = false;
   leavingPlayer2 = false;
   private holdTimeout: any;
-  constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver, private profileService: ProfileService, private gameService: GameService ) { }
+  constructor(private modalService: NgbModal, private resolver: ComponentFactoryResolver, private profileService: ProfileService, private gameService: GameService, private toastr: ToastrService) { }
 
   ngOnInit(): void {
     this.profileService.getProfile().subscribe(
@@ -143,7 +144,7 @@ export class StartComponent implements OnInit {
         this.host = profile;
       },
       error => {
-        console.error('Failed to load profile:', error);
+        this.toastr.error('Failed to load user profile.', 'Error');
       }
     );
   }
@@ -351,12 +352,12 @@ export class StartComponent implements OnInit {
     for (const name of playerNames) {
       if (name.length < 2 || name.length > 100) {
         allNamesValid = false;
-        console.error(`Player name "${name}" must be between 2 and 100 characters.`);
+        this.toastr.warning(`Player name "${name}" must be between 2 and 100 characters.`, 'Error');
         break;
       }
       if (uniqueNames.has(name)) {
         allNamesValid = false;
-        console.error(`Player name "${name}" is duplicated.`);
+        this.toastr.warning(`Player name "${name}" is duplicated.`, 'Error');
         break;
       }
       uniqueNames.add(name);
@@ -369,7 +370,7 @@ export class StartComponent implements OnInit {
     } else {
       this.playersSet = false;
       this.gameReady = false;
-      alert("Please ensure all player names are unique and between 2 to 100 characters.");
+      this.toastr.error('Please ensure all player names are unique and between 2 to 100 characters.', 'Error');
     }
   }
   startTournament(): void {
@@ -496,6 +497,7 @@ export class StartComponent implements OnInit {
       }
     } catch (error) {
       console.error("Error during match simulation:", error);
+      this.toastr.error('Error during match simulation.', 'Error');
       match.status = 'failed';
     } finally {
       this.gameRunning = false;
@@ -659,9 +661,10 @@ export class StartComponent implements OnInit {
       // Step 5: Update tournament on the backend with final details
       await this.updateTournamentBackend(tournament);
       
-      console.log("Final Tournament Result:", this.finalTournament);
+      // console.log("Final Tournament Result:", this.finalTournament);
     } catch (error) {
       console.error("Error during tournament simulation:", error);
+      this.toastr.error('Error during tournament simulation.', 'Error');
     }
   }
   
@@ -683,7 +686,6 @@ export class StartComponent implements OnInit {
   
     // Wait for the tournament creation response
     const response = await firstValueFrom(this.gameService.createTournament(tournament));
-    console.log("Tournament created:", response);
     this.createdTournamentFromServer = response;
     return response;
   }
@@ -736,7 +738,7 @@ export class StartComponent implements OnInit {
     await firstValueFrom(
       this.gameService.updateTournament(this.createdTournamentFromServer!.id!, this.finalTournament!)
     );
-    console.log("Tournament updated successfully:", this.finalTournament);
+    // console.log("Tournament updated successfully:", this.finalTournament);
   }
   
 

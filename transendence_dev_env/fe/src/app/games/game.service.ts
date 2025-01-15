@@ -21,6 +21,8 @@ export interface Round {
   end_time?: string;
   score_player1: number;
   score_player2: number;
+  score_player3?: number;
+  score_player4?: number;
   scores?: {
     player1: number;
     player2: number;
@@ -42,6 +44,8 @@ export interface Game {
   duration?: number;
   score_player1: number;
   score_player2: number;
+  score_player3?: number;
+  score_player4?: number;
   winner?: Player | null;
   is_completed: boolean;
   moves_log: MoveLog[];
@@ -75,6 +79,12 @@ export interface UserStats {
   total_games_pve: number;
   total_games_pvp_local: number;
   total_games_pvp_online: number;
+  // New Game Modes
+  total_games_chaos_pve: number;
+  total_games_chaos_pvp: number;
+  total_games_online_chaos_pvp: number;
+  total_games_arena_pvp: number;
+  total_games_online_arena_pvp: number;
   total_games_won: number;
   total_games_lost: number;
   average_game_duration: number;
@@ -95,6 +105,12 @@ export interface GlobalStats {
   total_pve_games: number;
   total_pvp_local_games: number;
   total_pvp_online_games: number;
+  // New Game Modes
+  total_chaos_pve_games: number;
+  total_chaos_pvp_games: number;
+  total_online_chaos_pvp_games: number;
+  total_arena_pvp_games: number;
+  total_online_arena_pvp_games: number;
   total_tournaments: number;
   completed_tournaments: number;
   average_games_per_user: number;
@@ -290,7 +306,7 @@ export class GameService {
         })
       );
     }
-
+    
     getGameStats(gameId: string): Observable<any> {
       const url = `${this.statsApiUrl}detailed-stats/${gameId}/`;
       return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(

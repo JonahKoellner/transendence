@@ -15,27 +15,23 @@ export class FriendRequestDialogComponent {
   constructor(private friendsService: FriendService) { }
 
   onAccept(): void {
-    console.log(this.notification);
     const friendRequestId = this.notification.data.friend_request_id ?? 0;
     this.friendsService.acceptFriendRequest(friendRequestId).subscribe(
       () => {
         this.close.emit('accepted');
       },
       (error) => {
-        console.error(error);
         this.close.emit('error');
       }
     );
   }
   onDecline(): void {
-    console.log(this.notification);
     const friendRequestId = this.notification.data.friend_request_id ?? 0;
     this.friendsService.rejectFriendRequest(friendRequestId).subscribe(
       () => {
         this.close.emit('declined');
       },
       (error) => {
-        console.error(error);
         this.close.emit('error');
       }
     );

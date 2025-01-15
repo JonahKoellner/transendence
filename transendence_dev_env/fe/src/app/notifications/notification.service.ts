@@ -4,7 +4,7 @@ import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { environment } from 'src/environments/environment';
-
+import { ToastrService } from 'ngx-toastr';
 export interface SendGameInvitePayload {
   receiver_id: number;
   room_id: string;
@@ -52,7 +52,8 @@ export class NotificationService {
   constructor(
     private http: HttpClient,
     private websocketService: WebsocketService,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastr: ToastrService
   ) {
     this.retrieveNotifications();  // Fetch initial notifications on service initialization
     this.receiveNotifications();   // Listen for new notifications via WebSocket
@@ -65,7 +66,7 @@ export class NotificationService {
         (notifications) => {
           this.notifications$.next(notifications);  // Populate initial notifications list
         },
-        (error) => console.error('Error fetching notifications:', error)
+        (error) => this.toastr.error('Failed to load notifications. Please try again later.', 'Error')
       );
   }
 
@@ -96,13 +97,26 @@ export class NotificationService {
   // Listen for new notifications from WebSocket
   private receiveNotifications(): void {
     if (!this.authService.isAuthenticated()) return;
+  
     this.websocketService.notifications$.subscribe((notification: Notification) => {
       const currentNotifications = this.notifications$.value;
-      this.notifications$.next([notification, ...currentNotifications]);
+  
+      // Avoid duplicates based on ID
+      if (!currentNotifications.some(existing => existing.id === notification.id)) {
+        this.notifications$.next([notification, ...currentNotifications]);
+      }
     });
   }
 
   sendGameInvite(payload: SendGameInvitePayload): Observable<any> {
     return this.http.post(`${this.apiUrl}send-game-invite/`, payload, { withCredentials: true });
+  }
+
+  sendGameInviteArena(payload: SendGameInvitePayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}send-game-invite-arena/`, payload, { withCredentials: true });
+  }
+
+  sendGameInviteChaos(payload: SendGameInvitePayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}send-game-invite-chaos/`, payload, { withCredentials: true });
   }
 }

@@ -1,0 +1,145 @@
+.tournament-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    max-width: 900px;
+    margin: auto;
+    padding: 2rem;
+    background-color: #0E0F10;
+    border-radius: 8px;
+  
+    .tournament-header {
+      text-align: center;
+  
+      h2 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #61BA50;
+        margin-bottom: 0.5rem;
+      }
+  
+      .status {
+        font-size: 1.1rem;
+        font-weight: bold;
+        &.completed { color: #61BA50; }
+        &.ongoing { color: #ffc107; }
+        &.pending { color: #ff5722; }
+      }
+    }
+  
+    .tournament-info {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 2rem;
+      width: 100%;
+  
+      .info-section,
+      .winner-section {
+        background: #1C1E20;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #61BA50;
+        flex: 1;
+        min-width: 260px;
+  
+        h3 {
+          color: #61BA50;
+          font-weight: bold;
+          font-size: 1.4rem;
+          margin-bottom: 1rem;
+        }
+  
+        p {
+          font-size: 1rem;
+          color: #adb5bd;
+          margin: 0.5rem 0;
+          strong { color: #e0e0e0; }
+        }
+      }
+    }
+  
+    .rounds-section {
+      width: 100%;
+  
+      h3 {
+        text-align: center;
+        color: #61BA50;
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+      }
+  
+      .round-card {
+        background: #0E0F10;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #333;
+  
+        h4 {
+          font-size: 1.3rem;
+          color: #61BA50;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
+        }
+  
+        .match-card {
+          background: #1C1E20;
+          padding: 1rem;
+          border-radius: 5px;
+          border: 1px solid #61BA50;
+          margin: 0.75rem 0;
+  
+          .players {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #e0e0e0;
+            margin-bottom: 0.5rem;
+  
+            .player {
+              display: flex;
+              flex-direction: column;
+              text-align: center;
+  
+              .name {
+                font-weight: bold;
+                color: #61BA50;
+                font-size: 1.1rem;
+              }
+  
+              .score {
+                font-size: 0.9rem;
+                color: #61BA50;
+              }
+            }
+  
+            .vs {
+              font-size: 1.2rem;
+              font-weight: bold;
+              color: #fff;
+              padding: 0 1rem;
+            }
+          }
+  
+          .match-result {
+            font-size: 0.9rem;
+            color: #adb5bd;
+  
+            p {
+              margin: 0.2rem 0;
+              strong { color: #e0e0e0; }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .error {
+    color: #FF5722;
+    font-size: 1.1rem;
+  }
+  

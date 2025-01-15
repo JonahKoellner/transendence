@@ -2,17 +2,17 @@
   <div class="settings-card">
     <h2>User Settings</h2>
     <div *ngIf="error" class="error-alert">{{ error }}</div>
-
     <!-- Display 2FA status -->
-    <div class="settings-section">
+    <div class="settings-section" *ngIf="!isLoading">
       <div *ngIf="is2FAEnabled">
         <p>2FA is enabled.</p>
-        <button class="btn-custom btn-danger" (click)="disable2FA()">Remove 2FA</button>
+        <button class="btn-custom btn-danger" [disabled]="isLoading" (click)="disable2FA()">Remove 2FA</button>
       </div>
       <div *ngIf="!is2FAEnabled">
         <p>2FA is disabled.</p>
-        <button class="btn-custom btn-success" (click)="enable2FA()">Add 2FA</button>
+        <button class="btn-custom btn-success" [disabled]="isLoading" (click)="enable2FA()">Add 2FA</button>
       </div>
     </div>
   </div>
 </div>
+

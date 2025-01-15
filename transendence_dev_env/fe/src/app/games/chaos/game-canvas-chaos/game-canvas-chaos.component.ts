@@ -54,7 +54,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
   backgroundImage: HTMLImageElement | null = null;
 
   powerUpsEnabled: boolean = true; // Enable/disable power-ups
-  // powerUpSpawnInterval: number = 10000; // Spawn every 10 seconds
   activePowerUps: { x: number; y: number; type: string }[] = [];
   powerUpEffects: { [key: string]: (player: "human" | "bot") => void } = {};
   lastHit: "human" | "bot" | null = null;
@@ -77,7 +76,7 @@ export class GameCanvasChaosComponent implements AfterViewInit {
       this.setAIParameters();
       this.resetRound();
       this.startGame();
-    
+
       this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval);
       if (this.powerUpsEnabled) {
         this.initializePowerUps();
@@ -103,7 +102,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load paddleskin image. Falling back to color.');
           resolve(); // Resolve to continue without rejecting
         };
       }));
@@ -119,7 +117,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load ballskin image. Falling back to color.');
           resolve();
         };
       }));
@@ -135,7 +132,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load game background wallpaper. Falling back to color.');
           resolve();
         };
       }));
@@ -195,7 +191,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
         // Teleport the ball to a random position
         this.ballX = Math.random() * this.canvasWidth;
         this.ballY = Math.random() * this.canvasHeight;
-        console.log("Ball teleported!");
       },
       shrinkBall: () => {
         const originalBallRadius = this.ballRadius;
@@ -236,28 +231,28 @@ export class GameCanvasChaosComponent implements AfterViewInit {
       slowBall: { color: 'purple', icon: '🐢' },    // Turtle
       fastBall: { color: 'orange', icon: '🔥' },    // Fire
       teleportBall: { color: 'cyan', icon: '✈️' },  // Airplane
-      shrinkBall: { color: 'brown', icon: '🔽' },  // Downward arrow
-      growBall: { color: 'lime', icon: '🔼' },     // Upward arrow
+      shrinkBall: { color: 'brown', icon: '🔽' },   // Downward arrow
+      growBall: { color: 'lime', icon: '🔼' },      // Upward arrow
     };
 
-  for (const powerUp of this.activePowerUps) {
-    const { color, icon } = powerUpData[powerUp.type] || { color: 'white', icon: '?' };
+    for (const powerUp of this.activePowerUps) {
+      const { color, icon } = powerUpData[powerUp.type] || { color: 'white', icon: '?' };
 
-    // Draw the power-up circle
-    this.context.fillStyle = color;
-    this.context.beginPath();
-    this.context.arc(powerUp.x, powerUp.y, 15, 0, 2 * Math.PI);
-    this.context.closePath();
-    this.context.fill();
+      // Draw the power-up circle
+      this.context.fillStyle = color;
+      this.context.beginPath();
+      this.context.arc(powerUp.x, powerUp.y, 15, 0, 2 * Math.PI);
+      this.context.closePath();
+      this.context.fill();
 
-    // Draw the power-up icon
-    this.context.fillStyle = 'black'; // Icon/Text color
-    this.context.font = 'bold 16px Arial'; // Icon font
-    this.context.textAlign = 'center';
-    this.context.textBaseline = 'middle';
-    this.context.fillText(icon, powerUp.x, powerUp.y);
+      // Draw the power-up icon
+      this.context.fillStyle = 'black'; // Icon/Text color
+      this.context.font = 'bold 16px Arial'; // Icon font
+      this.context.textAlign = 'center';
+      this.context.textBaseline = 'middle';
+      this.context.fillText(icon, powerUp.x, powerUp.y);
+    }
   }
-}
 
 
   checkPowerUpCollection() {
@@ -557,26 +552,73 @@ export class GameCanvasChaosComponent implements AfterViewInit {
     }
   }
 
-  // AI Implementation
+  // AI Implementation with Power-Up Consideration
   updateAI() {
-    // Predict the ball's future Y position when it reaches the AI paddle
-    let predictedY = this.predictBallYAtPaddle(
-      this.ballX,
-      this.ballY,
-      this.ballDirectionX,
-      this.ballDirectionY,
-      this.ballSpeed,
-      this.canvasWidth - this.paddleWidth
-    );
+    let targetY = this.canvasHeight / 2; // Default target
+
+    // Check if there are active power-ups
+    if (this.activePowerUps.length > 0) {
+      // Find the most relevant power-up to target
+      // For simplicity, prioritize the closest power-up
+      let closestPowerUp: { x: number; y: number; type: string } | null = null;
+      let minDistance = Infinity;
+
+      for (const powerUp of this.activePowerUps) {
+        const distance = Math.sqrt(Math.pow(this.ballX - powerUp.x, 2) + Math.pow(this.ballY - powerUp.y, 2));
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPowerUp = powerUp;
+        }
+      }
+
+      if (closestPowerUp) {
+        // Predict if the ball will collide with this power-up
+        const predictedYAtPowerUp = this.predictBallYAtX(
+          this.ballX,
+          this.ballY,
+          this.ballDirectionX,
+          this.ballDirectionY,
+          this.ballSpeed,
+          closestPowerUp.x
+        );
+
+        // Check if the predicted Y is within the power-up's radius
+        const distanceToPowerUp = Math.abs(predictedYAtPowerUp - closestPowerUp.y);
+        if (distanceToPowerUp <= 15 + this.ballRadius) { // Power-up radius is 15
+          // Set targetY to the power-up's Y position to be the last hitter
+          targetY = closestPowerUp.y;
+        } else {
+          // No collision predicted with the closest power-up, proceed normally
+          targetY = this.predictBallYAtPaddle(
+            this.ballX,
+            this.ballY,
+            this.ballDirectionX,
+            this.ballDirectionY,
+            this.ballSpeed,
+            this.canvasWidth - this.paddleWidth
+          );
+        }
+      }
+    } else {
+      // No active power-ups, proceed normally
+      targetY = this.predictBallYAtPaddle(
+        this.ballX,
+        this.ballY,
+        this.ballDirectionX,
+        this.ballDirectionY,
+        this.ballSpeed,
+        this.canvasWidth - this.paddleWidth
+      );
+    }
 
     // Add randomness based on difficulty to simulate human-like behavior
-    predictedY += (Math.random() - 0.5) * this.predictionRandomness; // Random offset
+    targetY += (Math.random() - 0.5) * this.predictionRandomness; // Random offset
 
-    // Clamp predictedY to ensure it stays within the canvas
-    predictedY = Math.max(this.ballRadius, Math.min(this.canvasHeight - this.ballRadius, predictedY));
+    // Clamp targetY to ensure it stays within the canvas
+    targetY = Math.max(this.ballRadius, Math.min(this.canvasHeight - this.ballRadius, targetY));
 
     // Set the AI's target Y position
-    this.aiTargetY = predictedY;
+    this.aiTargetY = targetY;
   }
 
   moveAI() {
@@ -629,6 +671,53 @@ export class GameCanvasChaosComponent implements AfterViewInit {
         if ((dirX > 0 && targetX < this.ballX) || (dirX < 0 && targetX > this.ballX)) {
           return this.canvasHeight / 2;
         }
+        return y;
+      }
+    }
+  }
+
+  /**
+   * Predicts the Y position of the ball when it reaches a specific X position.
+   * This function accounts for wall bounces.
+   * @param ballX Current X position of the ball
+   * @param ballY Current Y position of the ball
+   * @param directionX X direction of the ball (-1 or 1)
+   * @param directionY Y direction of the ball
+   * @param speed Speed of the ball
+   * @param targetX The X position to predict the Y for
+   * @returns Predicted Y position
+   */
+  predictBallYAtX(
+    ballX: number,
+    ballY: number,
+    directionX: number,
+    directionY: number,
+    speed: number,
+    targetX: number
+  ): number {
+    let x = ballX;
+    let y = ballY;
+    let dirX = directionX;
+    let dirY = directionY;
+    const ballRadius = this.ballRadius;
+    const canvasHeight = this.canvasHeight;
+
+    while (true) {
+      // Calculate the next position
+      x += dirX * speed;
+      y += dirY * speed;
+
+      // Check for wall collisions
+      if (y - ballRadius < 0) {
+        y = ballRadius;
+        dirY *= -1;
+      } else if (y + ballRadius > canvasHeight) {
+        y = canvasHeight - ballRadius;
+        dirY *= -1;
+      }
+
+      // Check if the ball has reached or passed the target X
+      if ((dirX > 0 && x >= targetX) || (dirX < 0 && x <= targetX)) {
         return y;
       }
     }

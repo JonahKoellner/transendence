@@ -7,7 +7,7 @@ import { NotificationService, SendGameInvitePayload } from 'src/app/notification
 import { FriendService } from 'src/app/friend.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from 'src/environments/environment';
-
+import { ToastrService } from 'ngx-toastr';
 interface GameSettings {
   paddleskin_color_left?: string;
   paddleskin_image_left?: string;
@@ -64,14 +64,14 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private friendService: FriendService,
-    public modalService: NgbModal
+    public modalService: NgbModal,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
     this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
     this.lobbyService.joinRoom(this.roomId).subscribe({
       next: (data) => {
-        console.log('Joined room:', data);
         this.lobbyService.connect(this.roomId);
         this.loadFriends();
         this.messageSubscription = this.lobbyService.messages$.subscribe(msg => {
@@ -113,7 +113,7 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
           } else if (msg.type === 'alert') {
             // Check if the disconnecting user was the host or guest
             if (msg.user_role === 'host') {
-              alert('The host has left the game. Redirecting you to the lobby.');
+              this.toastr.error('The host has left the game. Redirecting you to the lobby.', 'Host Disconnected');
               this.router.navigate(['/games/online-arena/rooms']);
             } else if (msg.user_role === 'guest') {
               switch (msg.user_slot) {
@@ -134,7 +134,7 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
                 }
               this.allReady = false;
               if (this.gameInProgress) {
-                alert('The guest has left the game. The game will be terminated.');
+                this.toastr.error('The guest has left the game. Redirecting you to the lobby.', 'Guest Disconnected');
                 this.gameInProgress = false;
                 this.router.navigate(['/games/online-arena/rooms']);
               }
@@ -162,14 +162,14 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
                 });
               },
               (error) => {
-                console.error('Error setting ready status:', error);
+                this.toastr.error('An error occurred while setting ready status. Redirecting you to the lobby.', 'Error');
                 this.router.navigate(['/games/online-arena/rooms']);
               }
             );
-            console.log('Game over!');
-            console.log('msg:', msg);
+            // console.log('Game over!');
+            // console.log('msg:', msg);
           } else if (msg.type === 'round_completed') {
-            console.log('Round completed!');
+            this.toastr.info('Round completed!', 'Round Completed');
           }
           if (this.playerOne === "")
           {
@@ -211,13 +211,13 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
                     }
                   },
                   (error) => {
-                    console.error('Error fetching user profile:', error);
+                    this.toastr.error('An error occurred while fetching user profile. Redirecting you to the lobby.', 'Error');
                     this.router.navigate(['/games/online-arena/rooms']);
                   }
                 );
               },
               (error) => {
-                console.error('Error fetching room status:', error);
+                this.toastr.error('An error occurred while fetching room status. Redirecting you to the lobby.', 'Error');
                 this.router.navigate(['/games/online-arena/rooms']);
               }
             );
@@ -226,7 +226,7 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
       );
       },
       error: (error) => {
-        console.error('Error joining room:', error);
+        this.toastr.error('An error occurred while joining the room. Redirecting you to the lobby.', 'Error');
         this.router.navigate(['/games/online-arena/rooms']);
       }
     });
@@ -263,9 +263,9 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
   copyLinkToClipboard(): void {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-      alert('Link copied to clipboard!');
+      this.toastr.success('Link copied to clipboard!', 'Success');
     }).catch(err => {
-      console.error('Failed to copy: ', err);
+      this.toastr.error('Failed to copy link to clipboard!', 'Error');
     });
   }
 
@@ -293,7 +293,7 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
         });
       },
       (error) => {
-        console.error('Error setting ready status:', error);
+        this.toastr.error('An error occurred while setting ready status.', 'Error');
         this.router.navigate(['/games/online-arena/rooms']);
       }
     );
@@ -351,14 +351,13 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
 
     inviteFriend(friend_id: number)
     {
-      console.log('Game invite sent');
       let gameInvitePayload: SendGameInvitePayload = {
         room_id: this.roomId,
         receiver_id: friend_id
       };
-      this.notificationService.sendGameInvite(gameInvitePayload).subscribe(
+      this.notificationService.sendGameInviteArena(gameInvitePayload).subscribe(
         () => {
-          console.log('Game invite sent successfully');
+          this.toastr.success('Game invite sent!', 'Success');
         }
       );
     }
@@ -369,7 +368,7 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
           this.friends = data;
         },
         (error) => {
-          console.error(error);
+          this.toastr.error('An error occurred while fetching friends.', 'Error');
         }
       );
     }

@@ -72,6 +72,25 @@ import { JoinRoomArenaComponent } from './games/online-arena/join-room/join-room
 import { GameRoomsArenaComponent } from './games/online-arena/game-rooms/game-rooms.component';
 import { GameRoomArenaComponent } from './games/online-arena/game-room/game-room.component';
 import { GameDisplayArenaComponent } from './games/online-arena/game-display/game-display.component';
+import { ImpressumComponent } from './home/impressum/impressum.component';
+import { NgxPaginationModule } from 'ngx-pagination';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ToastrModule } from 'ngx-toastr';
+import { OnlineComponent as OnlineTournamentComponent } from './games/tournament/online/online.component';
+import { CreateRoomComponent as OnlineTournamentCreateRoomComponent } from './games/tournament/online/create-room/create-room.component';
+import { JoinRoomComponent as OnlineTournamentJoinRoomComponent } from './games/tournament/online/join-room/join-room.component';
+import { GameRoomsComponent as OnlineTournamentRoomsComponent } from './games/tournament/online/game-rooms/game-rooms.component';
+import { GameRoomComponent as OnlineTournamentGameRoomComponent } from './games/tournament/online/game-room/game-room.component';
+import { TournamentTreeComponent } from './games/tournament/online/tournament-tree/tournament-tree.component';
+import { GameComponent } from './games/tournament/online/game/game.component';
+import { RemoveFriendComponent } from './dialogs/remove-friend/remove-friend.component';
+import { BlockFriendComponent } from './dialogs/block-friend/block-friend.component';
+import { ChartsUserDetailsComponent } from './charts/charts-user-details/charts-user-details.component';
+import { ChartsGlobalDetailsComponent } from './charts/charts-global-details/charts-global-details.component';
+import { OnlineDetailsComponent } from './games/tournament/online-details/online-details.component';
+import { ThreeDComponent } from './games/three-d/three-d.component';
+import { GameCanvasThreeDPveComponent } from './games/three-d/game-canvas-three-d-pve/game-canvas-three-d-pve.component';
+import { GameCanvasThreeDPvpComponent } from './games/three-d/game-canvas-three-d-pvp/game-canvas-three-d-pvp.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -121,6 +140,9 @@ import { GameDisplayArenaComponent } from './games/online-arena/game-display/gam
     GameCanvasChaosComponent,
     GameCanvasChaosPvpComponent,
     GameCanvasComponentArena,
+    ThreeDComponent,
+    GameCanvasThreeDPveComponent,
+    GameCanvasThreeDPvpComponent,
     GamesListComponent,
     DeleteAccountModalComponent,
     FtAuthCallbackComponentComponent,
@@ -136,7 +158,20 @@ import { GameDisplayArenaComponent } from './games/online-arena/game-display/gam
     JoinRoomArenaComponent,
     GameRoomsArenaComponent,
     GameRoomArenaComponent,
-    GameDisplayArenaComponent
+    GameDisplayArenaComponent,
+    ImpressumComponent,
+    OnlineTournamentComponent,
+    OnlineTournamentCreateRoomComponent,
+    OnlineTournamentJoinRoomComponent,
+    OnlineTournamentRoomsComponent,
+    OnlineTournamentGameRoomComponent,
+    TournamentTreeComponent,
+    GameComponent,
+    RemoveFriendComponent,
+    BlockFriendComponent,
+    ChartsUserDetailsComponent,
+    ChartsGlobalDetailsComponent,
+    OnlineDetailsComponent
   ],
   imports: [
     BrowserModule,
@@ -147,7 +182,24 @@ import { GameDisplayArenaComponent } from './games/online-arena/game-display/gam
     CommonModule,
     NgChartsModule,
     RouterModule,
-    NgbModule
+    NgbModule,
+    NgxPaginationModule,
+    BrowserAnimationsModule, // Required for Toastr
+    ToastrModule.forRoot({
+      // Global configuration options
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+      preventDuplicates: true,
+      autoDismiss: true,
+      closeButton: true,
+      // progressBar: true,
+      easing : 'ease-in',
+      tapToDismiss: true,
+      maxOpened: 2,
+      newestOnTop: true,
+      enableHtml: true,
+      // progressAnimation: 'increasing',
+    }),
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

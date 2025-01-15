@@ -1,2 +1,34 @@
 
 @import 'dark-theme';
+@import 'node_modules/ngx-toastr/toastr.css';
+/* Universal Custom Scrollbar Styles (in styles.css or styles.scss) */
+
+/* Works in WebKit browsers (Chrome, Safari, Edge Chromium, etc.) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background-color: #1c1e20;
+    border-radius: 10px;
+    border: 1px solid #333; /* optional border */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: #61ba50;
+    border-radius: 10px;
+    border: 2px solid #1c1e20; /* creates a "gap" around the thumb */
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #74d662; /* slightly lighter green on hover */
+  }
+  
+  /* Firefox-specific scrollbar styling */
+  /* For Firefox, you’ll need to use the scrollbar-width and scrollbar-color properties. */
+  * {
+    scrollbar-width: thin;               /* auto, thin, or none */
+    scrollbar-color: #61ba50 #1c1e20;    /* thumb color | track color */
+  }
+  

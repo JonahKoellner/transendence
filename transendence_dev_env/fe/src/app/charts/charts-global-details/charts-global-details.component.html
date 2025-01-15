@@ -1,0 +1,45 @@
+<!-- src/app/global-stats/charts-global-details/charts-global-details.component.html -->
+
+<div class="charts-container">
+    <!-- 1. Games Played per Mode - Bar Chart -->
+    <div class="chart">
+        <canvas baseChart [data]="gamesPlayedPerModeBarChartData" [options]="gamesPlayedPerModeBarChartOptions"
+            [type]="gamesPlayedPerModeBarChartType">
+        </canvas>
+    </div>
+
+    <!-- 2. Peak Playing Times - Bar Chart -->
+    <div class="chart">
+        <canvas baseChart [data]="peakPlayingTimesBarChartData" [options]="peakPlayingTimesBarChartOptions"
+            [type]="peakPlayingTimesBarChartType">
+        </canvas>
+    </div>
+
+    <!-- 3. Game Modes Popularity - Pie Chart -->
+    <div class="chart">
+        <canvas baseChart [data]="gameModesPopularityPieChartData" [options]="gameModesPopularityPieChartOptions"
+            [type]="gameModesPopularityPieChartType">
+        </canvas>
+    </div>
+
+    <!-- 4. Games Played Globally Over Time - Line Chart -->
+    <div class="chart">
+        <canvas baseChart [data]="gamesPlayedOverTimeLineChartData" [options]="gamesPlayedOverTimeLineChartOptions"
+            [type]="gamesPlayedOverTimeLineChartType">
+        </canvas>
+    </div>
+
+    <!-- 5. Global Win/Loss Ratio - Stacked Bar Chart -->
+    <div class="chart">
+        <canvas baseChart [data]="winLossRatioStackedBarChartData" [options]="winLossRatioStackedBarChartOptions"
+            [type]="winLossRatioStackedBarChartType">
+        </canvas>
+    </div>
+
+    <!-- 6. Average Game Duration per Mode - Bar Chart -->
+    <div class="chart">
+        <canvas baseChart [data]="avgGameDurationPerModeBarChartData" [options]="avgGameDurationPerModeBarChartOptions"
+            [type]="avgGameDurationPerModeBarChartType">
+        </canvas>
+    </div>
+</div>

@@ -14,8 +14,8 @@
     <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
 
     <ul *ngIf="users.length > 0" class="user-list">
-      <li *ngFor="let user of users" class="user-card">
-        <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" class="avatar" />
+      <li *ngFor="let user of users | paginate: { itemsPerPage: itemsPerPageUsers, currentPage: pUsers, id: 'usersPagination'  }" class="user-card">
+        <img [src]="user.avatar || 'assets/default_avatar.png'" alt="{{ user.username }}" class="avatar" loading="lazy"/>
         <div class="user-info">
           <h4>{{ user.display_name || user.username }}</h4>
           <small>Username: {{ user.username }}</small>
@@ -25,6 +25,13 @@
           <a class="btn-profile" [routerLink]="['/profile/user-details/', user.id]">Account Page</a>
         </div>
       </li>
+      <pagination-controls
+      (pageChange)="pUsers = $event"
+      id="usersPagination"
+      class="custom-pagination users-pagination"
+      [directionLinks]="true"
+      [autoHide]="true">
+      </pagination-controls>
     </ul>
 
     <div *ngIf="users.length === 0 && !isLoading && !error" class="no-results">

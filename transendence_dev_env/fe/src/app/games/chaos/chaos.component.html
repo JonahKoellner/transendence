@@ -147,9 +147,6 @@
       <app-game-canvas-chaos-pvp [gameSettings]="settings" (onScore)="updateScorePvp($event)"
         *ngIf="settings.enemyType === 'PvP'"></app-game-canvas-chaos-pvp>
     </div>
-    <div class="fullscreen-controls">
-      <button (click)="toggleFullScreen(gameContainer)">Toggle Fullscreen</button>
-    </div>
     <div class="timers">
       <p><strong>Game Timer:</strong> {{ gameElapsedTime }}</p>
       <p><strong>Round Timer:</strong> {{ roundElapsedTime }}</p>
@@ -182,13 +179,13 @@
         </li>
       </ul>
 
-      <h4>Moves Log</h4>
+      <!-- <h4>Moves Log</h4>
       <ul class="moves-log">
         <li *ngFor="let move of currentGame.moves_log" class="move-item">
           <span class="move-time">{{ move.time | date: 'shortTime' }}</span> -
           {{ move.player }}: {{ move.action }}
         </li>
-      </ul>
+      </ul> -->
 
       <button class="play-again-btn" (click)="startNewGame()">Play Again</button>
     </div>

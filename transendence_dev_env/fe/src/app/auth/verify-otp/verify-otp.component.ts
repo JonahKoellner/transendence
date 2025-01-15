@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/auth.service';
 import * as QRCode from 'qrcode';
 import { NgForm } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-verify-otp',
@@ -16,7 +17,7 @@ export class VerifyOtpComponent {
   isLoading: boolean = false;
   showQRCode: boolean = false;  // Control whether to display QR code
   otp_uri: string = "";
-  constructor(private authService: AuthService, private router: Router, private route: ActivatedRoute) {}
+  constructor(private authService: AuthService, private router: Router, private route: ActivatedRoute, private toastr: ToastrService) {}
 
 
   ngOnInit(): void {
@@ -46,7 +47,7 @@ export class VerifyOtpComponent {
         this.qrCodeImage = url;
         this.isLoading = false;
       } else {
-        console.error('Error generating QR code', error);
+        this.toastr.error('Failed to generate QR code. Please try again.', 'Error');
         this.isLoading = false;
       }
     });
@@ -62,7 +63,7 @@ export class VerifyOtpComponent {
     this.authService.verifyOTP(this.otp_code).subscribe(
       (response: any) => {
         if (response.success) {
-          alert('OTP Verified Successfully');
+          this.toastr.success('OTP verified successfully.', 'Success');
           localStorage.setItem('otp_verified', 'true');
           // localStorage.removeItem('otp_uri'); // Remove otp_uri after successful verification
           this.router.navigate(['/home']); // Navigate to the home page

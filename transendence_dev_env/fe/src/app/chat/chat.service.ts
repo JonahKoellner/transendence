@@ -43,7 +43,6 @@ export class ChatService {
     this.websocketService.waitForConnection().pipe(
         filter(connected => connected),  // Only proceed if connected
         tap(() => {
-            console.log(`Joining room: ${roomName}`);
             this.websocketService.sendMessage({ event: 'join_room', room: roomName });
         }),
         retryWhen(errors => errors.pipe(
@@ -56,7 +55,6 @@ export class ChatService {
 }
 
   sendMessageViaRest(message: string, receiverId: number): Observable<any> {
-    console.log("message ", message, "receiver_id ", receiverId);
     return this.http.post(`${this.apiUrl}send/`, { message, receiver_id: receiverId });
   }
 
@@ -81,7 +79,6 @@ export class ChatService {
   receiveMessages(): Observable<ChatMessage> {
     return this.websocketService.notifications$.pipe(
       map((notification: any) => {
-        console.log('Received notification:', notification);
         return notification;
       })
     );
@@ -93,6 +90,8 @@ export class ChatService {
 
   addMessage(message: ChatMessage): void {
     const currentMessages = this.messages$.value;
+  
+    // Deduplicate by ID
     this.messages$.next([...currentMessages, message]);
-  }
+    }
 }

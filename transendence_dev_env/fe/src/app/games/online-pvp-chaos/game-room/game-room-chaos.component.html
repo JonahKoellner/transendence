@@ -1,6 +1,6 @@
 <div class="game-room">
   <header>
-    <h2>Pong Online</h2>
+    <h2>Online PvP Chaos</h2>
     <div class="header-actions">
       <p (click)="copyLinkToClipboard()">{{ roomId }}</p>
       <!-- Invite Button (Visible only to host) -->
@@ -55,6 +55,10 @@
     <div class="setting-item">
       <h4>Round Score Limit</h4>
       <p>{{ roomData?.round_score_limit }}</p>
+    </div>
+    <div class="setting-item">
+      <h4>Powerup Spawn Rate</h4>
+      <p>{{ roomData?.powerup_spawn_rate }}</p>
     </div>
   </section>
 
@@ -164,6 +168,7 @@
                 [src]="friend.avatar || 'assets/default_avatar.png'"
                 alt="{{ friend.username }}"
                 class="avatar"
+                loading="lazy"
               />
     
               <!-- Friend Information -->

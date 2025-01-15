@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import Game
 from django.contrib.auth.models import User
-from .models import Tournament, Round, Match
+from .models import Tournament, Round, Match, Game, OnlineMatch, OnlineRound, OnlineTournament
 class GameSerializer(serializers.ModelSerializer):
     player1 = serializers.SerializerMethodField()
     player2 = serializers.SerializerMethodField()
@@ -20,76 +19,104 @@ class GameSerializer(serializers.ModelSerializer):
         }
 
     def get_player2(self, obj):
-        # Check for local PvP placeholder name first
-        if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local:
-            return {
-                "id": 0,  # Placeholder ID for non-existent users
-                "username": obj.player2_name_pvp_local
-            }
-        elif obj.is_against_ai():  # AI case for PVE and CHAOS_PVE
+        if obj.game_mode in [Game.ONLINE_PVP, Game.ONLINE_CHAOS_PVP, Game.ONLINE_ARENA_PVP, Game.ARENA_PVP, Game.LOCAL_PVP, Game.CHAOS_PVP, Game.THREE_D_PVP]:
+            if obj.player2_name_pvp_local:
+                return {
+                    "id": 0,
+                    "username": obj.player2_name_pvp_local
+                }
+            elif obj.player2:
+                return {
+                    "id": obj.player2.id,
+                    "username": obj.player2.username
+                }
+        elif obj.is_against_ai():
             return {
                 "id": 0,
                 "username": "AI"
             }
-        elif isinstance(obj.player2, User):  # player2 is a real user
-            return {
-                "id": obj.player2.id,
-                "username": obj.player2.username
-            }
-        return None  # No player2 set and not AI scenario
+        return None
 
     def get_player3(self, obj):
-        # Player3 is only relevant in Arena modes
         if obj.game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
-            if obj.player3 is not None:
+            if obj.player3_name_pvp_local:
+                return {
+                    "id": 0,
+                    "username": obj.player3_name_pvp_local
+                }
+            elif obj.player3:
                 return {
                     "id": obj.player3.id,
                     "username": obj.player3.username
                 }
-            else:
-                # For Arena modes, if there's no player3, it may mean the slot is not filled
-                return None
-        # For non-Arena modes, player3 is irrelevant
         return None
 
     def get_player4(self, obj):
-        # Player4 is only relevant in Arena modes
         if obj.game_mode in [Game.ARENA_PVP, Game.ONLINE_ARENA_PVP]:
-            if obj.player4 is not None:
+            if obj.player4_name_pvp_local:
+                return {
+                    "id": 0,
+                    "username": obj.player4_name_pvp_local
+                }
+            elif obj.player4:
                 return {
                     "id": obj.player4.id,
                     "username": obj.player4.username
                 }
-            else:
-                # For Arena modes, if there's no player4, it may mean the slot is not filled
-                return None
-        # For non-Arena modes, player4 is irrelevant
         return None
 
     def get_winner(self, obj):
-        # If a winner is explicitly set, return that user
         if obj.winner:
             return {
                 "id": obj.winner.id,
                 "username": obj.winner.username
             }
 
-        # If no explicit winner is set, handle AI or local PVP placeholders as before
         if obj.is_against_ai() and obj.score_player1 < obj.score_player2:
-            # AI wins
             return {
                 "id": 0,
                 "username": "AI"
             }
 
-        # For local PVP or Chaos PVP, if player2_name_pvp_local exists and score_player2 is higher
         if obj.game_mode in [Game.LOCAL_PVP, Game.CHAOS_PVP] and obj.player2_name_pvp_local and obj.score_player1 < obj.score_player2:
             return {
                 "id": 0,
                 "username": obj.player2_name_pvp_local
             }
 
-        return None  # No winner determined
+        if obj.game_mode == Game.ARENA_PVP:
+            scores = [obj.score_player1, obj.score_player2, obj.score_player3, obj.score_player4]
+            max_score = max(scores)
+            winners = [i for i, score in enumerate(scores, start=1) if score == max_score]
+            if len(winners) == 1:
+                winner_num = winners[0]
+                if winner_num == 1:
+                    return {
+                        "id": obj.player1.id,
+                        "username": obj.player1.username
+                    }
+                elif winner_num == 2:
+                    return {
+                        "id": 0,
+                        "username": obj.player2_name_pvp_local
+                    }
+                elif winner_num == 3:
+                    return {
+                        "id": 0,
+                        "username": obj.player3_name_pvp_local
+                    }
+                elif winner_num == 4:
+                    return {
+                        "id": 0,
+                        "username": obj.player4_name_pvp_local
+                    }
+            else:
+                return {
+                    "id": -1,
+                    "username": "Tie"
+                }
+
+        return None
 
 
 class MatchSerializer(serializers.ModelSerializer):
@@ -198,6 +225,12 @@ class UserStatsSerializer(serializers.Serializer):
     total_games_pve = serializers.IntegerField()
     total_games_pvp_local = serializers.IntegerField()
     total_games_pvp_online = serializers.IntegerField()
+    # New Game Modes
+    total_games_chaos_pve = serializers.IntegerField()
+    total_games_chaos_pvp = serializers.IntegerField()
+    total_games_online_chaos_pvp = serializers.IntegerField()
+    total_games_arena_pvp = serializers.IntegerField()
+    total_games_online_arena_pvp = serializers.IntegerField()
     total_games_won = serializers.IntegerField()
     total_games_lost = serializers.IntegerField()
     average_game_duration = serializers.FloatField()
@@ -217,6 +250,12 @@ class GlobalStatsSerializer(serializers.Serializer):
     total_pve_games = serializers.IntegerField()
     total_pvp_local_games = serializers.IntegerField()
     total_pvp_online_games = serializers.IntegerField()
+    # New Game Modes
+    total_chaos_pve_games = serializers.IntegerField()
+    total_chaos_pvp_games = serializers.IntegerField()
+    total_online_chaos_pvp_games = serializers.IntegerField()
+    total_arena_pvp_games = serializers.IntegerField()
+    total_online_arena_pvp_games = serializers.IntegerField()
     total_tournaments = serializers.IntegerField()
     completed_tournaments = serializers.IntegerField()
     average_games_per_user = serializers.FloatField()
@@ -229,14 +268,56 @@ class GlobalStatsSerializer(serializers.Serializer):
     leaderboard_most_wins = LeaderboardEntrySerializer(many=True)
     leaderboard_most_games = LeaderboardEntrySerializer(many=True)
     leaderboard_most_tournament_wins = LeaderboardEntrySerializer(many=True)
-    
-    
-class GameStatsSerializer(serializers.Serializer):
-    game_mode = serializers.CharField()
-    game_duration = serializers.FloatField()
-    win_loss_status = serializers.DictField()
-    rounds_info = serializers.ListField(child=serializers.DictField(), required=False)
-    moves_log = serializers.ListField(child=serializers.DictField(), required=False)
-    score_distribution = serializers.DictField()
-    game_status = serializers.CharField()
-    winner_info = serializers.DictField()
+
+class OnlineMatchSerializer(serializers.ModelSerializer):
+    player1 = serializers.CharField(source='player1.username', allow_null=True)
+    player2 = serializers.CharField(source='player2.username', allow_null=True)
+    winner = serializers.CharField(source='winner.username', allow_null=True)
+
+    class Meta:
+        model = OnlineMatch
+        fields = [
+            'match_id', 'room_id', 'player1', 'player2', 'player1_score', 'player2_score',
+            'tie_resolved', 'created_at', 'start_time', 'end_time', 'duration', 'status',
+            'outcome', 'player1_ready', 'player2_ready', 'winner', 'game_manager'
+        ]
+        
+class OnlineRoundSerializer(serializers.ModelSerializer):
+    matches = OnlineMatchSerializer(many=True)
+    winners = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = OnlineRound
+        fields = [
+            'round_number', 'stage', 'matches', 'winners', 'status',
+            'start_time', 'end_time', 'duration', 'room_id'
+        ]
+        
+class OnlineTournamentSerializer(serializers.ModelSerializer):
+    rounds = OnlineRoundSerializer(many=True)
+    participants = serializers.SerializerMethodField()
+    final_winner = serializers.CharField(source='final_winner.username', allow_null=True)
+    current_stage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OnlineTournament
+        fields = [
+            'room_id', 'name', 'type', 'status', 'rounds', 'participants',
+            'round_robin_scores', 'final_winner', 'current_stage', 'id', 'created_at', 'end_time', 'duration'  # Include current_stage here
+        ]
+
+    def get_participants(self, obj):
+        return [
+            {
+                "id": participant.id,
+                "username": participant.username
+            }
+            for participant in obj.participants.all()
+        ]
+
+    def get_current_stage(self, obj):
+        try:
+            current_round = obj.rounds.filter(round_number=obj.current_round).first()
+            return current_round.stage if current_round else None
+        except OnlineRound.DoesNotExist:
+            return None

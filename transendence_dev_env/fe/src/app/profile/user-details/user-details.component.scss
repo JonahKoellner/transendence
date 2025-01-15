@@ -1,9 +1,11 @@
+/* src/app/user-details/user-details.component.scss */
 
 .user-details-container {
   padding: 2rem;
   min-height: 100vh;
   color: #e0e0e0;
-  
+
+  /* Loading Spinner */
   .loading-spinner {
     display: flex;
     flex-direction: column;
@@ -27,6 +29,7 @@
     }
   }
 
+  /* User Details */
   .user-details {
     max-width: 1000px;
     margin: auto;
@@ -41,84 +44,123 @@
       border-radius: 10px;
       text-align: center;
       margin-bottom: 2rem;
-      transition: transform 0.3s, box-shadow 0.3s;
 
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+      /* Online Status */
+      .online-status {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+
+        .badge {
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          font-weight: bold;
+
+          &.badge-success {
+            background-color: #28a745;
+            color: #fff;
+          }
+
+          &.badge-secondary {
+            background-color: #6c757d;
+            color: #fff;
+          }
+        }
       }
 
       /* Avatar Container */
       .avatar-container {
-        position: relative;
         display: inline-block;
         margin-bottom: 1rem;
+
+        /* Avatar */
+        .avatar {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          border: 4px solid; /* border color set by classes (online/offline/unknown) */
+          object-fit: cover;
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .avatar:hover {
+          transform: scale(1.05);
+          box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
+        }
+
+        /* Possible classes for border color, if used */
+        &.online {
+          border-color: #28a745; /* Green */
+        }
+        &.offline {
+          border-color: #dc3545; /* Red */
+        }
+        &.unknown {
+          border-color: #6c757d; /* Gray */
+        }
+
+        .avatar-wrapper {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+        }
+
+        /* Level Badge */
+        .level-badge {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          background-color: #2c2c2c;
+          color: #61ba50;
+          padding: 0.4rem 0.6rem;
+          border-radius: 50%;
+          font-weight: 700;
+          font-size: 1rem;
+          border: 2px solid #61ba50;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
       }
 
-      /* Avatar */
-      .avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        border: 4px solid; /* Border color will be set by classes */
-        object-fit: cover;
-        transition: transform 0.3s, box-shadow 0.3s;
-      }
-
-      .avatar:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
-      }
-
-      /* Online Status Border Colors */
-      .avatar.online {
-        border-color: #28a745; /* Green for online */
-      }
-
-      .avatar.offline {
-        border-color: #dc3545; /* Red for offline */
-      }
-
-      .avatar.unknown {
-        border-color: #6c757d; /* Grey for unknown */
-      }
-
-      /* Level Badge */
-      .level-badge {
-        position: absolute;
-        top: -5px;
-        right: 50px;
-        background-color: #2C2C2C;
-        color: #61BA50;
-        padding: .4rem .6rem;
-        border-radius: 300px;
-        font-weight: 700;
-        font-size: 1rem;
-        border: 2px solid #61BA50;
-        width: 40px;
-        height: 40px;
+      /* Container to hold display name + 42 icon side by side */
+      .display-name-container {
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: center; /* or flex-start if you want them left-aligned */
+        gap: 0.5rem;
+        margin-top: 1rem; /* space above if desired */
       }
 
       /* Display Name */
       .display-name {
         font-size: 1.8rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
         color: #ffffff;
       }
 
-      /* Email */
+      /* 42 Icon */
+      .icon-42 {
+        width: 24px;
+        height: 24px;
+        transition: transform 0.2s;
+
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+
+      /* If you show an email somewhere, style it here */
       .email {
         font-size: 1rem;
         color: #cccccc;
       }
-      .icon-42 {
-        font-size: 42px;
-      }
     }
+
     /* Tab Controls */
     .tab-controls {
       display: flex;
@@ -127,7 +169,7 @@
       margin-bottom: 2rem;
 
       button {
-        background-color: #2C2C2C;
+        background-color: #2c2c2c;
         color: #e0e0e0;
         padding: 0.75rem 1.5rem;
         border: none;
@@ -137,7 +179,7 @@
         transition: background-color 0.3s, transform 0.3s;
 
         &.active-tab {
-          background-color: #61BA50;
+          background-color: #61ba50;
           color: #ffffff;
         }
 
@@ -152,13 +194,13 @@
       }
     }
 
-    /* Tab Content */
+    /* Tab Content Container */
     .tab-content {
-      background-color: #0E0F10;
+      background-color: #0e0f10;
       padding: 2rem;
       border-radius: 10px;
 
-      /* History Tab */
+      /* HISTORY TAB */
       &.history-tab {
         .sub-tab-controls {
           display: flex;
@@ -173,11 +215,11 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
             font-weight: bold;
+            transition: background-color 0.3s, transform 0.3s;
 
             &.active-sub-tab {
-              background-color: #61BA50;
+              background-color: #61ba50;
               color: #ffffff;
             }
 
@@ -192,13 +234,13 @@
           }
         }
 
-        /* History Section */
+        /* History Sections (Games, Tournaments) */
         .history-section {
           margin-bottom: 2rem;
 
           h3 {
             text-align: center;
-            color: #61BA50;
+            color: #61ba50;
             font-size: 1.5rem;
             margin-bottom: 1rem;
           }
@@ -214,7 +256,7 @@
             .filter-input {
               background-color: #333;
               color: #e0e0e0;
-              border: 1px solid #61BA50;
+              border: 1px solid #61ba50;
               border-radius: 8px;
               padding: 0.5rem 1rem;
               font-size: 1rem;
@@ -222,7 +264,7 @@
               transition: border-color 0.3s, box-shadow 0.3s;
 
               &:focus {
-                border-color: #45A049;
+                border-color: #45a049;
                 box-shadow: 0 0 5px rgba(69, 160, 73, 0.5);
                 outline: none;
               }
@@ -245,14 +287,14 @@
                 input[type="date"] {
                   margin-top: 0.3rem;
                   padding: 0.3rem;
-                  border: 1px solid #61BA50;
+                  border: 1px solid #61ba50;
                   border-radius: 4px;
                   background-color: #333;
                   color: #e0e0e0;
                   transition: border-color 0.3s, box-shadow 0.3s;
 
                   &:focus {
-                    border-color: #45A049;
+                    border-color: #45a049;
                     box-shadow: 0 0 5px rgba(69, 160, 73, 0.5);
                     outline: none;
                   }
@@ -263,7 +305,7 @@
             .sort-select {
               background-color: #333;
               color: #e0e0e0;
-              border: 1px solid #61BA50;
+              border: 1px solid #61ba50;
               border-radius: 8px;
               padding: 0.5rem 1rem;
               font-size: 1rem;
@@ -271,22 +313,23 @@
               transition: border-color 0.3s, box-shadow 0.3s;
 
               &:focus {
-                border-color: #45A049;
+                border-color: #45a049;
                 box-shadow: 0 0 5px rgba(69, 160, 73, 0.5);
                 outline: none;
               }
             }
           }
 
-          /* Games List */
-          .games-list, .tournaments-list {
+          .games-list,
+          .tournaments-list {
             display: flex;
             flex-direction: column;
             gap: 1rem;
           }
 
-          .game-item, .tournament-item {
-            background-color: #2C2C2C;
+          .game-item,
+          .tournament-item {
+            background-color: #2c2c2c;
             padding: 1rem 1.5rem;
             border-radius: 8px;
             display: flex;
@@ -298,24 +341,26 @@
               background-color: #1f1f1f;
             }
 
-            .game-link, .tournament-link {
+            .game-link,
+            .tournament-link {
               color: #e0e0e0;
               text-decoration: none;
               font-weight: bold;
               transition: color 0.3s;
 
               &:hover {
-                color: #61BA50;
+                color: #61ba50;
               }
             }
 
-            .game-details, .tournament-details {
+            .game-details,
+            .tournament-details {
               color: #cccccc;
               font-size: 0.9rem;
             }
           }
 
-          /* Alerts */
+          /* Alerts for no games/tournaments */
           .alert-info {
             background-color: #343a40;
             color: #adb5bd;
@@ -327,7 +372,114 @@
         }
       }
 
-      /* Stats Tab */
+      /* ACHIEVEMENTS TAB */
+      &.achievements-tab {
+        .achievements-container {
+          h2 {
+            text-align: center;
+            color: #61ba50;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+          }
+
+          .achievements-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+          }
+
+          .achievement-card {
+            width: 180px;
+            background-color: #2c2c2c;
+            border: 2px solid #61ba50;
+            border-radius: 10px;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+
+            &:hover {
+              transform: translateY(-5px);
+              box-shadow: 0 8px 16px rgba(97, 186, 80, 0.3);
+            }
+
+            &.earned {
+              border-color: #61ba50;
+              background-color: #1b1b1b;
+            }
+
+            &.not-earned {
+              border-color: #555;
+              background-color: #1f1f1f;
+              filter: grayscale(100%);
+            }
+
+            .achievement-image-container {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-bottom: 0.5rem;
+              height: 60px; /* Adjust if needed */
+
+              .achievement-image {
+                max-width: 100%;
+                max-height: 100%;
+                border-radius: 50%;
+                border: 2px solid #61ba50;
+                background-color: #1b1b1b;
+                object-fit: cover;
+              }
+
+              .bi {
+                font-size: 2rem;
+                color: #61ba50;
+              }
+            }
+
+            .achievement-details {
+              color: #e0e0e0;
+
+              h3 {
+                margin-bottom: 0.5rem;
+                font-size: 1.2rem;
+              }
+
+              p {
+                margin: 0.3rem 0;
+                font-size: 0.9rem;
+              }
+
+              .achievement-points {
+                font-weight: bold;
+                color: #61ba50;
+              }
+            }
+
+            /* "Locked" overlay for not-earned achievements */
+            &.not-earned::after {
+              content: 'Locked';
+              color: #fff;
+              background-color: rgba(0, 0, 0, 0.7);
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              padding: 0.5rem 1rem;
+              border-radius: 5px;
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+
+      /* GRAPHS TAB (not styled in snippet, just a placeholder) */
+      &.graphs-tab {
+        /* e.g., just a placeholder or container for <app-charts-user-details> */
+      }
+
+      /* STATS TAB */
       &.stats-tab {
         .user-stats-display {
           padding: 2rem;
@@ -336,10 +488,9 @@
 
           h3 {
             text-align: center;
-            color: #61BA50;
+            color: #61ba50;
             font-size: 1.8rem;
             margin-bottom: 1.5rem;
-            text-transform: uppercase;
             letter-spacing: 1px;
           }
 
@@ -352,15 +503,14 @@
               background-color: #1f1f1f;
               padding: 1rem;
               border-radius: 8px;
-              border: 1px solid #61BA50;
+              border: 1px solid #61ba50;
               text-align: center;
 
               strong {
                 display: block;
-                color: #61BA50;
+                color: #61ba50;
                 font-size: 1rem;
                 margin-bottom: 0.5rem;
-                text-transform: uppercase;
               }
 
               span {
@@ -372,7 +522,6 @@
           }
         }
 
-        /* No Stats Message */
         .no-stats {
           text-align: center;
           color: #cccccc;
@@ -383,54 +532,66 @@
         }
       }
     }
+  }
 
-    /* No Games or Tournaments Templates */
-    .alert-info {
-      background-color: #343a40;
-      color: #adb5bd;
-      text-align: center;
-      border-radius: 8px;
+  /* Spinner Animation */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* RESPONSIVE DESIGN */
+  @media (max-width: 768px) {
+    .user-details-container {
       padding: 1rem;
-      margin-top: 1rem;
-    }
 
-    /* Animations */
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .user-details-container {
+      .user-details {
         padding: 1rem;
 
-        .user-details {
+        .profile-card {
           padding: 1rem;
 
-          .profile-card {
-            padding: 1rem;
-
-            .avatar {
-              width: 80px;
-              height: 80px;
-              border-width: 3px;
-            }
-
-            .level-info {
-              padding: 0.3rem 0.7rem;
-              font-size: 0.9rem;
-            }
-
-            .display-name {
-              font-size: 1.5rem;
-            }
-
-            .email {
-              font-size: 0.9rem;
-            }
+          .avatar {
+            width: 80px;
+            height: 80px;
+            border-width: 3px;
           }
 
-          .tab-controls {
+          .level-badge {
+            padding: 0.3rem 0.7rem;
+            font-size: 0.9rem;
+            width: 35px;
+            height: 35px;
+          }
+
+          /* Slightly reduce gap at smaller viewports */
+          .display-name-container {
+            margin-top: 0.75rem;
+          }
+
+          .display-name {
+            font-size: 1.5rem;
+          }
+
+          .email {
+            font-size: 0.9rem;
+          }
+        }
+
+        .tab-controls {
+          flex-direction: column;
+          gap: 0.5rem;
+
+          button {
+            width: 100%;
+          }
+        }
+
+        .tab-content {
+          padding: 1rem;
+
+          .sub-tab-controls {
             flex-direction: column;
             gap: 0.5rem;
 
@@ -439,159 +600,165 @@
             }
           }
 
-          .tab-content {
-            padding: 1rem;
-
-            .sub-tab-controls {
+          .history-section {
+            .filters {
               flex-direction: column;
+              align-items: center;
               gap: 0.5rem;
 
-              button {
+              .filter-input,
+              .sort-select,
+              input[type='date'] {
                 width: 100%;
+                max-width: 300px;
+              }
+
+              label {
+                width: 100%;
+                max-width: 300px;
               }
             }
 
-            .history-section {
-              .filters {
-                flex-direction: column;
-                align-items: center;
-                gap: 0.5rem;
+            .game-item,
+            .tournament-item {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 0.5rem;
 
-                .filter-input, 
-                .sort-select, 
-                input[type="date"] {
-                  width: 100%;
-                  max-width: 300px;
-                }
-
-                label {
-                  width: 100%;
-                  max-width: 300px;
-                }
+              .game-link,
+              .tournament-link {
+                margin-bottom: 0.5rem;
               }
 
-              .game-item, .tournament-item {
-                flex-direction: column;
-                align-items: flex-start;
-
-                .game-link, .tournament-link {
-                  margin-bottom: 0.5rem;
-                }
-
-                .game-details, .tournament-details {
-                  font-size: 0.8rem;
-                }
+              .game-details,
+              .tournament-details {
+                font-size: 0.8rem;
               }
             }
+          }
 
-            .user-stats-display {
-              padding: 1rem;
+          .user-stats-display {
+            padding: 1rem;
 
-              h3 {
-                font-size: 1.4rem;
-              }
+            h3 {
+              font-size: 1.4rem;
+            }
 
-              .stats-grid {
-                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-                gap: 1rem;
+            .stats-grid {
+              grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+              gap: 1rem;
 
-                .stat-item {
-                  padding: 0.8rem;
+              .stat-item {
+                padding: 0.8rem;
 
-                  strong {
-                    font-size: 0.9rem;
-                  }
-
-                  span {
-                    font-size: 1.1rem;
-                  }
+                strong {
+                  font-size: 0.9rem;
+                }
+                span {
+                  font-size: 1.1rem;
                 }
               }
             }
           }
         }
       }
+
+      /* Achievements Tab Responsive */
+      .tab-content.achievements-tab {
+        .achievements-container {
+          .achievements-grid {
+            gap: 1rem;
+          }
+
+          .achievement-card {
+            width: 140px;
+            padding: 0.8rem;
+
+            .achievement-image-container {
+              height: 50px;
+
+              .achievement-image {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: cover;
+              }
+
+              .bi {
+                font-size: 1.5rem;
+              }
+            }
+
+            .achievement-details {
+              h3 {
+                font-size: 1rem;
+              }
+              p {
+                font-size: 0.8rem;
+              }
+              .achievement-points {
+                font-size: 0.9rem;
+              }
+            }
+
+            &.not-earned::after {
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
     }
-  }
-  .achievements-container {
-    padding: 2rem;
-  }
 
-  .achievements-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
-  }
-
-  .achievement-card {
-    width: 180px;
-    background-color: #2C2C2C;
-    border: 2px solid #61BA50;
-    border-radius: 10px;
-    overflow: hidden;
-    text-align: center;
-    position: relative;
-    padding: 1rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(97, 186, 80, 0.3);
+    /* Additional Responsive Styles for Achievements outside tab content, if any */
+    .achievements-grid {
+      gap: 1rem;
     }
-  }
 
-  .earned {
-    border-color: #61BA50;
-    background-color: #1b1b1b;
-  }
+    .achievement-card {
+      width: 140px;
+      padding: 0.8rem;
 
-  .not-earned {
-    border-color: #555;
-    background-color: #1f1f1f;
-    filter: grayscale(100%);
-  }
+      .achievement-image-container {
+        height: 50px;
 
-  .achievement-icon {
-    font-size: 3rem;
-    color: #61BA50;
-    margin-bottom: 0.5rem;
-  }
+        .achievement-image {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: cover;
+        }
 
-  .not-earned .achievement-icon {
-    color: #777;
-  }
+        .bi {
+          font-size: 1.5rem;
+        }
+      }
 
-  .achievement-details {
-    color: #e0e0e0;
-  }
+      .achievement-details {
+        h3 {
+          font-size: 1rem;
+        }
+        p {
+          font-size: 0.8rem;
+        }
+        .achievement-points {
+          font-size: 0.9rem;
+        }
+      }
 
-  .achievement-details h3 {
-    margin-bottom: 0.5rem;
-    font-size: 1.2rem;
-  }
-
-  .achievement-details p {
-    margin: 0.3rem 0;
-    font-size: 0.9rem;
-  }
-
-  .achievement-points {
-    font-weight: bold;
-    color: #61BA50;
-  }
-
-  .not-earned::after {
-    content: 'Locked';
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.7);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    font-size: 1rem;
+      &.not-earned::after {
+        font-size: 0.9rem;
+      }
+    }
   }
 }
 
+::ng-deep .ngx-pagination .current {
+  background: #61BA50 !important;
+}
+
+::ng-deep .ngx-pagination a, .ngx-pagination button {
+  color:  #848484 !important;
+}
+
+::ng-deep .ngx-pagination a:hover, .ngx-pagination button:hover {
+  color: #61BA50 !important;
+  background-color: none !important;
+}

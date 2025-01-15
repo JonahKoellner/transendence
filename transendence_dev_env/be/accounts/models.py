@@ -22,7 +22,7 @@ class Profile(models.Model):
     last_user_agent = models.TextField(null=True, blank=True)
     has_logged_in = models.BooleanField(default=False)
 
-    display_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    display_name = models.CharField(max_length=25, unique=False, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     
     friends = models.ManyToManyField('self', symmetrical=False, related_name='friends_with', blank=True)
@@ -110,12 +110,12 @@ class Profile(models.Model):
             self.otp_secret = pyotp.random_base32()
             self.save()
         totp = pyotp.TOTP(self.otp_secret)
-        otp_uri = totp.provisioning_uri(name=self.user.username, issuer_name='YourAppName')
+        otp_uri = totp.provisioning_uri(name=self.user.username, issuer_name='PongArena')
         return otp_uri
 
     # Generate the provisioning URI for QR code
     def get_otp_uri(self):
-        return pyotp.TOTP(self.otp_secret).provisioning_uri(self.user.email, issuer_name="YourApp")
+        return pyotp.TOTP(self.otp_secret).provisioning_uri(self.user.email, issuer_name="PongArena")
 
     # Verify the OTP code entered by the user
     def verify_otp(self, otp_code):
@@ -290,6 +290,7 @@ class Notification(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     data = models.JSONField(null=True, blank=True)  # Additional contextual data
+    game_type = models.CharField(max_length=20, blank=True, null=True)
     
     class Meta:
         ordering = ['-timestamp']
@@ -346,6 +347,8 @@ class Achievement(models.Model):
     criteria_key = models.CharField(max_length=50, blank=True, null=True)
     criteria_value = models.IntegerField(null=True, blank=True)
     criteria_expression = models.CharField(max_length=255, blank=True, null=True)  # For complex criteria
+    
+    image_url = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return self.name

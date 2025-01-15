@@ -1,16 +1,24 @@
+<!-- Notifications Icon -->
 <div class="notifications-icon" (click)="toggleNotifications()">
-  <i class="fas fa-bell"></i>
+  <!-- Animate the bell icon if there's unread notifications -->
+  <i class="fas fa-bell" [ngClass]="{ 'pulse-bell': unreadCount > 0 }"></i>
   <span *ngIf="unreadCount > 0" class="badge">{{ unreadCount }}</span>
 </div>
 
 <!-- Notifications Dropdown Panel -->
-<div class="notifications-dropdown" *ngIf="showNotifications">
+<div 
+  class="notifications-dropdown"
+  *ngIf="showNotifications"
+
+>
   <div class="notifications-header">
     <h5>Notifications</h5>
     <div class="filters">
       <select [(ngModel)]="selectedType" (change)="filterNotifications()">
         <option value="">All Types</option>
-        <option *ngFor="let type of notificationTypes" [value]="type">{{ type | titlecase }}</option>
+        <option *ngFor="let type of notificationTypes" [value]="type">
+          {{ type | titlecase }}
+        </option>
       </select>
       <select [(ngModel)]="selectedReadStatus" (change)="filterNotifications()">
         <option value="unread">Unread</option>
@@ -19,6 +27,7 @@
       </select>
     </div>
   </div>
+
   <div class="notifications-body">
     <ul>
       <li
@@ -31,7 +40,9 @@
         </div>
         <div class="notification-content">
           <p>
-            <strong *ngIf="notification.sender?.username">{{ notification.sender.username }}</strong>
+            <strong *ngIf="notification.sender?.username">
+              {{ notification.sender.username }}
+            </strong>
             {{ getNotificationText(notification.notification_type) }}
           </p>
           <small>{{ notification.timestamp | date: 'short' }}</small>
@@ -46,32 +57,36 @@
       </li>
     </ul>
   </div>
+
   <div class="notifications-footer">
     <button (click)="markAllAsRead()">Mark All as Read</button>
     <button (click)="clearAll()">Clear All</button>
   </div>
 </div>
 
+<div>
+  <app-friend-request-dialog
+    *ngIf="showFriendRequestDialog && currentNotification"
+    [notification]="currentNotification"
+    (close)="onCloseFriendRequestDialog($event)"
+  ></app-friend-request-dialog>
+  
+  <!-- Game Invite Dialog -->
+  <app-game-invite-dialog
+    *ngIf="showGameInviteDialog && currentNotification"
+    [notification]="currentNotification"
+    (close)="onCloseGameInviteDialog($event)"
+  ></app-game-invite-dialog>
 
+</div>
 
 <!-- Friend Request Dialog -->
-<app-friend-request-dialog
-  *ngIf="showFriendRequestDialog && currentNotification"
-  [notification]="currentNotification"
-  (close)="onCloseFriendRequestDialog($event)"
-></app-friend-request-dialog>
 
-<!-- Game Invite Dialog -->
-<app-game-invite-dialog
-  *ngIf="showGameInviteDialog && currentNotification"
-  [notification]="currentNotification"
-  (close)="onCloseGameInviteDialog($event)"
-></app-game-invite-dialog>
-
-<!-- Chat Window
+<!-- Chat Window (commented out for now)
 <app-chat-window
   *ngIf="selectedFriendId && selectedFriendUsername"
   [friendId]="selectedFriendId"
   [friendUsername]="selectedFriendUsername"
   (close)="closeChat()"
-></app-chat-window> -->
+></app-chat-window>
+-->
