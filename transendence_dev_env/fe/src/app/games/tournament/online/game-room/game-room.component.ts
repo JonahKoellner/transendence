@@ -11,7 +11,8 @@ import { forkJoin, Subscription } from 'rxjs';
 
 interface LobbyState {
   host: string;
-  guests: Array<{ username: string; ready_state: boolean }>;
+  host_id: number;
+  guests: Array<{ username: string; id: number; ready_state: boolean }>;
   all_ready: boolean;
   is_full: boolean;
   active_lobby: boolean;
@@ -130,7 +131,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     return this.lobbyState?.host || '';
   }
 
-  get guests(): Array<{ username: string; ready_state: boolean }> {
+  get guests(): Array<{ username: string; id: number; ready_state: boolean }> {
     return this.lobbyState?.guests || [];
   }
 
@@ -147,7 +148,7 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   get isHost(): boolean {
-    return this.userProfile?.username === this.host;
+    return this.userProfile?.id === this.lobbyState?.host_id;
   }
 
   get isFull(): boolean {

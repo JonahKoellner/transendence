@@ -1,9 +1,7 @@
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db import transaction
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from django.contrib.auth.models import User
 import logging
 logger = logging.getLogger('utils_debug')
 @transaction.atomic
@@ -20,7 +18,19 @@ def update_profile_with_transaction(user, profile_data):
         profile.save()
         # After saving the profile, check for achievements
         check_achievements(user)
-    
+
+def get_display_name(user: User) -> str:
+    """
+    Return the user.profile.display_name if it's set;
+def get_display_name(user: 'User') -> str:
+    """
+    if not user:
+        return None
+    # Safely handle the case if the user doesn't have a profile or the display_name is None
+    if hasattr(user, 'profile') and user.profile and user.profile.display_name:
+        return user.profile.display_name
+    return user.username
+
 def create_notification(sender, receiver, notification_type, data=None, priority='medium'):
     from .models import Notification
     from .serializers import UserMinimalSerializer

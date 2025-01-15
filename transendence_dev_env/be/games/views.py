@@ -17,6 +17,7 @@ import random
 import string
 from django.db import transaction
 from .services.tournament_lobby_service import TournamentLobbyService
+from accounts.utils import get_display_name
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -1154,9 +1155,11 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
                 "room_id": room_id,
                 "active_lobby": lobby.active_lobby,
                 "active_tournament": lobby.active_tournament,
-                "host": lobby.host.username,
+                "host": get_display_name(lobby.host),
+                "host_id": lobby.host.id,
                 "guests": [{
-                    "username": guest.username,
+                    "username": get_display_name(guest),
+                    "id": guest.id,
                     "is_ready": lobby.guest_ready_states.get(str(guest.id), False)
                 } for guest in lobby.guests.all()],
                 "player_count": lobby.guests.count()+1,
@@ -1180,7 +1183,7 @@ class TournamentLobbyViewSet(viewsets.ViewSet):
                 "active_lobby": lobby.active_lobby,
                 "active_tournament": lobby.active_tournament,
                 "tournament": lobby.tournament.name if lobby.tournament else "No Tournament started!",
-                "host": lobby.host.username,
+                "host": get_display_name(lobby.host),
                 "player_count": lobby.guests.count()+1,
                 "tournament_type": lobby.tournament_type,
                 "max_player_count": lobby.max_player_count,

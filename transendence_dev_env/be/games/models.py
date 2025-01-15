@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 import random
+from accounts.utils import get_display_name
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -143,11 +144,11 @@ class OnlineTournament(BaseTournament):
                 "matches": [
                     {
                         "match_id": match.match_id,
-                        "player1": match.player1.username if match.player1 else None,
-                        "player2": match.player2.username if match.player2 else None,
+                        "player1": get_display_name(match.player1),
+                        "player2": get_display_name(match.player2),
                         "player1_score": match.player1_score if match.player1_score is not None else None,
                         "player2_score": match.player2_score if match.player2_score is not None else None,
-                        "winner": match.winner.username if match.winner else None,
+                        "winner": get_display_name(match.winner),
                         "status": match.status,
                         "outcome": match.outcome,
                         "start_time": match.start_time.isoformat() if match.start_time else None,
@@ -156,7 +157,7 @@ class OnlineTournament(BaseTournament):
                     }
                     for match in round_instance.matches.all()
                 ],
-                "winners": [winner.username for winner in round_instance.winners.all()],
+                "winners": [get_display_name(winner) for winner in round_instance.winners.all()],
                 "status": round_instance.status,
                 "start_time": round_instance.start_time.isoformat() if round_instance.start_time else None,
                 "end_time": round_instance.end_time.isoformat() if round_instance.end_time else None,
@@ -164,7 +165,7 @@ class OnlineTournament(BaseTournament):
 
         participants_data = [
             {
-                "username": participant.username,
+                "username": get_display_name(participant),
                 "id": participant.id,
                 "is_ready": self.participants_ready_states.get(str(participant.id), False)
             }
@@ -185,7 +186,7 @@ class OnlineTournament(BaseTournament):
             "rounds": rounds_data,
             "participants": participants_data,
             "round_robin_scores": self.round_robin_scores,
-            "final_winner": self.final_winner.username if self.final_winner else None,
+            "final_winner": get_display_name(self.final_winner),
             "current_stage": current_stage,
         }
         return tournament_state
@@ -209,13 +210,6 @@ class BaseLobby(models.Model):
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)]) 
     round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
 
-class PlayerCustomization(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customization")
-    paddle_color = models.CharField(max_length=7, default="#FFFFFF")
-    paddle_image = models.ImageField(upload_to='paddle_skins/', null=True, blank=True)
-    def __str__(self):
-        return f"{self.user.username} Customization"
-
 class TournamentLobby(models.Model):
     room_id = models.CharField(max_length=10, unique=True)
     active_lobby = models.BooleanField(default=True)
@@ -236,19 +230,6 @@ class TournamentLobby(models.Model):
 
     guest_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
 
-    host_customization = models.OneToOneField(
-        PlayerCustomization,
-        on_delete=models.CASCADE,
-        related_name="hosted_tournament_lobby",
-        null=True,
-        blank=True
-    )
-    guest_customizations = models.ManyToManyField(
-        PlayerCustomization,
-        related_name="tournament_lobbies",
-        blank=True
-    )
-
     def is_full(self):
         return self.guests.count() >= self.max_player_count
 
@@ -265,37 +246,15 @@ class TournamentLobby(models.Model):
             self.guest_ready_states[str(user.id)] = is_ready
         self.save()
 
-    def set_customization(self, user, paddle_color=None, paddle_image=None):
-        """ Set the paddle customization for the host or the guests. """
-        if user == self.host:
-            if not self.host_customization:
-                self.host_customization = PlayerCustomization(user=user)
-            self.host_customization.paddle_color = paddle_color or self.host_customization.paddle_color
-            self.host_customization.paddle_image = paddle_image or self.host_customization.paddle_image
-            self.host_customization.save()
-        elif user in self.guests.all():
-            customization, created = PlayerCustomization.objects.get_or_create(user=user)
-            customization.paddle_color = paddle_color or customization.paddle_color
-            customization.paddle_image = paddle_image or customization.paddle_image
-            customization.save()
-        else:
-            raise ValueError("User is not the host or a guest in this lobby.")
-
-    def get_customization(self, user):
-        """ Get the paddle customization for the host or the guests. """
-        if user == self.host:
-            return self.host_customization
-        elif user in self.guests.all():
-            return self.guest_customizations.get(user=user)
-        return None
-
     def get_lobby_state(self):
-        """Return the lobby state with serialized customizations."""
+        """Return the lobby state."""
         state = {
-            "host": self.host.username,
+            "host": get_display_name(self.host),
+            "host_id": self.host.id,
             "guests": [
                 {
-                    "username": guest.username,
+                    "username": get_display_name(guest),
+                    "id": guest.id,
                     "ready_state": self.guest_ready_states.get(str(guest.id), False)
                 }
                 for guest in self.guests.all()

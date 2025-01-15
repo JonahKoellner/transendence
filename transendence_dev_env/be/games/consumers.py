@@ -16,6 +16,7 @@ import json
 from asyncio import Lock
 from django.utils import timezone
 from threading import Timer
+from accounts.utils import get_display_name # for tournament, touranment lobby, tournament match consumer
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -2391,7 +2392,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
                 self.room_group_name,
                 {
                     "type": "alert",
-                    "message": f"{self.user.username} has left the lobby.",
+                    "message": f"{await database_sync_to_async(get_display_name)(self.user)} has left the lobby.",
                     "user_role": "guest"
                 }
             )
@@ -2484,6 +2485,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         # Extract the lobby state from the event
         lobby_state = {
             "host": event.get("host"),
+            "host_id": event.get("host_id"),
             "guests": event.get("guests", []),
             "all_ready": event.get("all_ready", False),
             "is_full": event.get("is_full", False),
@@ -2511,7 +2513,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         # Remove the user from the lobby
         logger.info(f"Removing user {self.user.username} from the lobby.")
         try:
-            lobby = TournamentLobby.objects.get(room_id=self.room_id)
+            TournamentLobby.objects.get(room_id=self.room_id)
         except TournamentLobby.DoesNotExist: # lobby already deleted, dont need to remove guest
             return
         if self.user in self.lobby.guests.all():
@@ -2519,8 +2521,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             # Remove the user's ready state
             if str(self.user.id) in self.lobby.guest_ready_states:
                 del self.lobby.guest_ready_states[str(self.user.id)]
-            # Remove the user's customization
-            self.lobby.guest_customizations.filter(user=self.user).delete()
             self.lobby.save()
 
     @database_sync_to_async
@@ -2856,6 +2856,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.match_id = self.scope['url_route']['kwargs']['match_id']
         self.room_group_name = f'tournament_match_{self.room_id}_{self.match_id}'
+        self.user = self.scope['user']
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
@@ -2864,9 +2865,9 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         self.game_manager_channel = await self.get_or_create_game_manager(self.channel_name)
         if self.game_manager_channel == self.channel_name:
-            logger.debug(f"Game manager channel created {self.channel_name} (user: {self.scope['user'].username})")
+            logger.debug(f"Game manager channel created {self.channel_name} (user: {self.user.username})")
         else:
-            logger.debug(f"Game manager channel already exists {self.game_manager_channel} (user: {self.scope['user'].username})")
+            logger.debug(f"Game manager channel already exists {self.game_manager_channel} (user: {self.user.username})")
             await self.channel_layer.send(
                 self.game_manager_channel,
                 {
@@ -2895,7 +2896,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {
                 "type": "player_disconnected",
-                "user": self.scope['user'].username
+                "user": await database_sync_to_async(get_display_name)(self.user)
             }
         )
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -2910,7 +2911,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         try:
             action = content.get("action")
-            logger.debug(f"Received action: {action} from user {self.scope['user'].username}")
+            logger.debug(f"Received action: {action} from user {self.user.username}")
             if action in ["keydown", "keyup"]:
                 await self.handle_key_event(action, content)
 
@@ -2970,7 +2971,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
         try:
             total_time = 5  # Total match time in seconds
             for remaining_time in range(total_time, 0, -1):
-                logger.debug(f"Remaining time until start: {remaining_time}, sent from {self.scope['user'].username}")
+                logger.debug(f"Remaining time until start: {remaining_time}, sent from {self.user.username}")
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -3019,7 +3020,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def player_ready(self, event): # only received by the game manager, so the game manager can start the game
         """game manager listenes to player_ready event, so it can start the game+countdown"""
-        logger.debug(f'player_ready event received by {self.scope["user"].username}')
+        logger.debug(f'player_ready event received by {self.user.username}')
         self.countdown_task = asyncio.create_task(self.start_countdown())
 
     async def match_timer(self):
