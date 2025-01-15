@@ -171,17 +171,24 @@ COPY modsecurity_custom.conf /etc/nginx/modsecurity/modsecurity_custom.conf
 
 
 # Set up ModSecurity
-RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine DetectionOnly/' /etc/nginx/modsecurity/modsecurity.conf
+RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/nginx/modsecurity/modsecurity.conf
 RUN sed -i 's/SecResponseBodyAccess On/SecResponseBodyAccess Off/' /etc/nginx/modsecurity/modsecurity.conf
 # RUN sed -i 's/SecResponseBodyAccess On/SecResponseBodyAccess Off/' /etc/nginx/modsecurity/modsecurity.conf
 RUN echo "Include /etc/nginx/modsecurity/modsecurity_custom.conf" >> /etc/nginx/modsecurity/modsecurity.conf
 
-# RUN echo "SecDebugLog /var/log/modsec_debug.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
-#     echo "SecDebugLogLevel 9" >> /etc/nginx/modsecurity/modsecurity.conf && \
-#     echo "SecAuditEngine On" >> /etc/nginx/modsecurity/modsecurity.conf && \
-#     echo "SecAuditLog /var/log/modsec_audit.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
-#     echo "SecAuditLogFormat JSON" >> /etc/nginx/modsecurity/modsecurity.conf && \
-#     echo "SecAuditLogParts ABIJDEFHZ" >> /etc/nginx/modsecurity/modsecurity.conf
+# Add the specified lines if they do not already exist
+# RUN grep -qxF 'SecStreamInBodyInspection On' /etc/nginx/modsecurity/modsecurity.conf || echo 'SecStreamInBodyInspection On' >> /etc/nginx/modsecurity/modsecurity.conf
+# RUN grep -qxF 'SecRequestBodyLimit 524288' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecRequestBodyLimit 5242880' >> /etc/nginx/modsecurity/modsecurity.conf
+# RUN grep -qxF 'SecRequestBodyNoFilesLimit 13107200' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecRequestBodyNoFilesLimit 13107200' >> /etc/nginx/modsecurity/modsecurity.conf
+# RUN grep -qxF 'SecResponseBodyLimit 2097152' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecResponseBodyLimit 2097152' >> /etc/nginx/modsecurity/modsecurity.conf
+# RUN grep -qxF 'SecResponseBodyAccess Off' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecResponseBodyAccess On' >> /etc/nginx/modsecurity/modsecurity.conf
+
+RUN echo "SecDebugLog /var/log/modsec_debug.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
+    echo "SecDebugLogLevel 9" >> /etc/nginx/modsecurity/modsecurity.conf && \
+    echo "SecAuditEngine On" >> /etc/nginx/modsecurity/modsecurity.conf && \
+    echo "SecAuditLog /var/log/modsec_audit.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
+    echo "SecAuditLogFormat JSON" >> /etc/nginx/modsecurity/modsecurity.conf && \
+    echo "SecAuditLogParts ABIJDEFHZ" >> /etc/nginx/modsecurity/modsecurity.conf
 
 # Download the OWASP ModSecurity Core Rule Set
 WORKDIR /etc/nginx/modsecurity
