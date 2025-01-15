@@ -1,0 +1,45 @@
+.create-room-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh; /* Occupies around 60% of the viewport height */
+  text-align: center;
+  background-color: #161616;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 4rem auto;
+
+  .trophy-icon {
+    margin-bottom: 2rem;
+
+    svg {
+      width: 80px;
+      height: 80px;
+      /* trophy path already filled with #61BA50 in the HTML */
+    }
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #333;   /* background ring color */
+    border-top: 6px solid #61BA50; /* spinner color */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1.5rem;
+  }
+
+  .init-message {
+    font-size: 1.3rem;
+    color: #e0e0e0;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}

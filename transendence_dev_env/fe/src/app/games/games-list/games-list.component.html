@@ -1,67 +1,107 @@
 <div class="game-list">
-    <h2>All Games</h2>
-    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
-  
-    <!-- Filter and Sort Controls -->
-    <div class="controls">
+  <h2>All Games</h2>
+
+  <!-- Display Error If Any -->
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+
+  <!-- Toggle Filters Button -->
+  <button class="toggle-filters-button" (click)="showFilters = !showFilters">
+    <span>Filters &amp; Sorting</span>
+    <!-- Arrow icon rotates based on showFilters state -->
+    <span class="arrow-icon" [class.rotated]="showFilters">▼</span>
+  </button>
+
+  <!-- Filter and Sort Controls (collapsible) -->
+  <div class="controls" *ngIf="showFilters">
+    <input
+      type="text"
+      [(ngModel)]="searchPlayer"
+      (input)="applyFilters()"
+      placeholder="Search by player"
+      class="filter-input"
+    />
+
+    <label>
+      Start Date:
       <input
-        type="text"
-        [(ngModel)]="searchPlayer"
-        (input)="applyFilters()"
-        placeholder="Search by player"
-        class="filter-input"
+        type="date"
+        [(ngModel)]="startDate"
+        (change)="applyFilters()"
       />
-  
-      <label>
-        Start Date:
-        <input type="date" [(ngModel)]="startDate" (change)="applyFilters()" />
-      </label>
-  
-      <label>
-        End Date:
-        <input type="date" [(ngModel)]="endDate" (change)="applyFilters()" />
-      </label>
-  
-      <select [(ngModel)]="sortOrder" (change)="applyFilters()" class="sort-select">
-        <option value="desc">Newest First</option>
-        <option value="asc">Oldest First</option>
-      </select>
+    </label>
+
+    <label>
+      End Date:
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        (change)="applyFilters()"
+      />
+    </label>
+
+    <select
+      [(ngModel)]="sortOrder"
+      (change)="applyFilters()"
+      class="sort-select"
+    >
+      <option value="desc">Newest First</option>
+      <option value="asc">Oldest First</option>
+    </select>
+  </div>
+
+  <!-- Game Cards -->
+  <div class="game-cards">
+    <div
+      *ngFor="
+        let game of filteredGames
+          | paginate:
+              {
+                itemsPerPage: itemsPerPageGames,
+                currentPage: pGames,
+                id: 'gamesPagination'
+              }
+      "
+      class="game-card"
+    >
+      <a [routerLink]="['/games/details', game.id]" class="card-link">
+        <div class="card-header">
+          <h3>{{ game.game_mode | titlecase }}</h3>
+          <span
+            class="status"
+            [class.completed]="game.is_completed"
+            [class.in-progress]="!game.is_completed"
+          >
+            {{ game.is_completed ? 'Completed' : 'Created' }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <p>
+            <strong>Players:</strong>
+            {{ game.player1.username }}
+            <span *ngIf="game.player2"> vs {{ game.player2.username }}</span>
+            <span *ngIf="game.player3"> vs {{ game.player3.username }}</span>
+            <span *ngIf="game.player4"> vs {{ game.player4.username }}</span>
+          </p>
+          <p>
+            <strong>Winner:</strong> {{ game.winner?.username || 'TBD' }}
+          </p>
+          <p>
+            <strong>Start:</strong>
+            {{ game.start_time | date: 'short' }}
+          </p>
+        </div>
+      </a>
     </div>
-  
-    <!-- Game Cards -->
-    <div class="game-cards">
-      <div *ngFor="let game of filteredGames | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }" class="game-card">
-        <a [routerLink]="['/games/details', game.id]" class="card-link">
-          <div class="card-header">
-            <h3>{{ game.game_mode | titlecase }}</h3>
-            <span
-              class="status"
-              [class.completed]="game.is_completed"
-              [class.in-progress]="!game.is_completed"
-            >
-              {{ game.is_completed ? 'Completed' : 'Created' }}
-            </span>
-          </div>
-          <div class="card-body">
-            <p>
-              <strong>Players:</strong>
-              {{ game.player1.username }}
-              <span *ngIf="game.player2"> vs {{ game.player2.username }}</span>
-              <span *ngIf="game.player3"> vs {{ game.player3.username }}</span>
-              <span *ngIf="game.player4"> vs {{ game.player4.username }}</span>
-            </p>
-            <p><strong>Winner:</strong> {{ game.winner?.username || 'TBD' }}</p>
-            <p><strong>Start:</strong> {{ game.start_time | date: 'short' }}</p>
-          </div>
-        </a>
-      </div>
-      <pagination-controls 
-      (pageChange)="pGames = $event" 
+
+    <!-- Pagination Controls -->
+    <pagination-controls
+      (pageChange)="pGames = $event"
       id="gamesPagination"
       class="custom-pagination games-pagination"
       [directionLinks]="true"
-      [autoHide]="true">
-      </pagination-controls>
-    </div>
+      [autoHide]="true"
+    >
+    </pagination-controls>
   </div>
-  
+</div>

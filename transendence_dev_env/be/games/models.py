@@ -3,6 +3,11 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+import random
+from accounts.utils import get_display_name
+
+import logging
+logger = logging.getLogger('game_debug')
 
 class TournamentType(models.TextChoices):
     SINGLE_ELIMINATION = 'Single Elimination'
@@ -25,13 +30,7 @@ class TiebreakerMethod(models.TextChoices):
     MOST_WINS = 'Most Wins'
     RANDOM_SELECTION = 'Random Selection'
 
-class Match(models.Model):
-    player1 = models.CharField(max_length=255)
-    player1_type = models.CharField(max_length=50)
-    player2 = models.CharField(max_length=255)
-    player2_type = models.CharField(max_length=50)
-    winner = models.CharField(max_length=255, blank=True, null=True)
-    winner_type = models.CharField(max_length=50, blank=True, null=True)
+class BaseMatch(models.Model):
     outcome = models.CharField(max_length=50, choices=MatchOutcome.choices, blank=True, null=True)
     player1_score = models.IntegerField(blank=True, null=True)
     player2_score = models.IntegerField(blank=True, null=True)
@@ -43,10 +42,48 @@ class Match(models.Model):
     status = models.CharField(max_length=50, choices=[
         ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed'), ('failed', 'Failed')
     ])
+    class Meta:
+        abstract = True
 
-class Round(models.Model):
+class Match(BaseMatch):
+    player1 = models.CharField(max_length=255)
+    player1_type = models.CharField(max_length=50)
+    player2 = models.CharField(max_length=255)
+    player2_type = models.CharField(max_length=50)
+    winner = models.CharField(max_length=255, blank=True, null=True)
+    winner_type = models.CharField(max_length=50, blank=True, null=True)
+
+class OnlineMatch(BaseMatch):
+    room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
+    match_id = models.CharField(max_length=10, unique=True)
+    player1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player1', blank=True, null=True)
+    player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_as_player2', blank=True, null=True)
+    player1_ready = models.BooleanField(default=False)
+    player2_ready = models.BooleanField(default=False)
+    winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='matches_won', blank=True, null=True)
+    game_manager = models.CharField(max_length=255, blank=True, null=True)
+
+    def record_match_result(self):
+        if self.winner != None:
+            return
+        self.end_time = timezone.now()
+        time_delta = self.end_time - self.start_time
+        self.duration = int(time_delta.total_seconds())
+        if self.player1 is None or self.player2 is None:
+            self.status = 'failed'
+            self.winner = self.player1 if self.player1 is not None else self.player2
+            self.outcome = MatchOutcome.FINISHED
+        else:
+            self.outcome = MatchOutcome.FINISHED if self.player1_score != self.player2_score else MatchOutcome.TIE
+            if self.outcome == MatchOutcome.FINISHED:
+                self.winner = self.player1 if self.player1_score > self.player2_score else self.player2
+            else:
+                self.winner = random.choice([self.player1, self.player2]) # tie
+            self.status = 'completed'
+        self.save()
+
+class BaseRound(models.Model):
     round_number = models.IntegerField()
-    matches = models.ManyToManyField(Match, related_name='rounds')
     stage = models.CharField(max_length=50, choices=Stage.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     start_time = models.DateTimeField()
@@ -55,17 +92,22 @@ class Round(models.Model):
     status = models.CharField(max_length=50, choices=[
         ('pending', 'Pending'), ('ongoing', 'Ongoing'), ('completed', 'Completed')
     ])
+    class Meta:
+        abstract = True
 
-class Tournament(models.Model):
+class Round(BaseRound):
+    matches = models.ManyToManyField(Match, related_name='rounds')
+
+class OnlineRound(BaseRound):
+    room_id = models.CharField(max_length=10) # RoomId from the tournament lobby
+    matches = models.ManyToManyField(OnlineMatch, related_name='online_rounds')
+    winners = models.ManyToManyField(User, related_name='rounds_won', blank=True)
+
+class BaseTournament(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=TournamentType.choices)
     rounds = models.ManyToManyField(Round, related_name='tournaments')
-    final_winner = models.CharField(max_length=255, blank=True, null=True)
-    final_winner_type = models.CharField(max_length=50, blank=True, null=True)
-    all_participants = models.JSONField(blank=True, null=True)
-    players_only = models.JSONField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    start_time = models.DateTimeField()
     end_time = models.DateTimeField(blank=True, null=True)
     duration = models.IntegerField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=[
@@ -74,6 +116,87 @@ class Tournament(models.Model):
     winner_determination_method_message = models.TextField(blank=True, null=True)
     tiebreaker_method = models.CharField(max_length=50, choices=TiebreakerMethod.choices, blank=True, null=True)
     winner_tie_resolved = models.BooleanField(default=False)
+    class Meta:
+        abstract = True
+
+class OnlineTournament(BaseTournament):
+    room_id = models.CharField(max_length=10, unique=True) # RoomId from the tournament lobby
+    participants = models.ManyToManyField(User, related_name='online_tournaments')
+    final_winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='online_tournaments_won', blank=True, null=True)
+    rounds = models.ManyToManyField(OnlineRound, related_name='online_tournaments')
+    current_round = models.IntegerField(default=1)
+    total_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    round_robin_scores = models.JSONField(default=dict) # store user with score
+    participants_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
+    def get_participants(self):
+        return list(self.participants.all())
+
+    def delete(self, *args, **kwargs):
+        logger.error(f"TournamentLobby with room_id {self.room_id} is being deleted.")
+        super().delete(*args, **kwargs)
+
+    def get_tournament_state(self):
+        rounds_data = []
+        for round_instance in self.rounds.all():
+            rounds_data.append({
+                "round_number": round_instance.round_number,
+                "stage": round_instance.stage,
+                "matches": [
+                    {
+                        "match_id": match.match_id,
+                        "player1": get_display_name(match.player1),
+                        "player2": get_display_name(match.player2),
+                        "player1_score": match.player1_score if match.player1_score is not None else None,
+                        "player2_score": match.player2_score if match.player2_score is not None else None,
+                        "winner": get_display_name(match.winner),
+                        "status": match.status,
+                        "outcome": match.outcome,
+                        "start_time": match.start_time.isoformat() if match.start_time else None,
+                        "end_time": match.end_time.isoformat() if match.end_time else None,
+                        "duration": match.duration if match.duration else None
+                    }
+                    for match in round_instance.matches.all()
+                ],
+                "winners": [get_display_name(winner) for winner in round_instance.winners.all()],
+                "status": round_instance.status,
+                "start_time": round_instance.start_time.isoformat() if round_instance.start_time else None,
+                "end_time": round_instance.end_time.isoformat() if round_instance.end_time else None,
+            })
+
+        participants_data = [
+            {
+                "username": get_display_name(participant),
+                "id": participant.id,
+                "is_ready": self.participants_ready_states.get(str(participant.id), False)
+            }
+            for participant in self.participants.all()
+        ]
+        
+        try:
+            current_round = self.rounds.filter(round_number=self.current_round).first()
+            current_stage = current_round.stage
+        except OnlineRound.DoesNotExist:
+            current_stage = None
+
+        tournament_state = {
+            "room_id": self.room_id,
+            "name": self.name,
+            "tournament_type": self.type,
+            "status": self.status,
+            "rounds": rounds_data,
+            "participants": participants_data,
+            "round_robin_scores": self.round_robin_scores,
+            "final_winner": get_display_name(self.final_winner),
+            "current_stage": current_stage,
+        }
+        return tournament_state
+
+class Tournament(BaseTournament):
+    start_time = models.DateTimeField()
+    all_participants = models.JSONField(blank=True, null=True)
+    players_only = models.JSONField(blank=True, null=True)
+    final_winner = models.CharField(max_length=255, blank=True, null=True)
+    final_winner_type = models.CharField(max_length=50, blank=True, null=True)
     host = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -86,6 +209,72 @@ class BaseLobby(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)]) 
     round_score_limit = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+
+class TournamentLobby(models.Model):
+    room_id = models.CharField(max_length=10, unique=True)
+    active_lobby = models.BooleanField(default=True)
+    active_tournament = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    host = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hosted_tournament_lobbies")
+    guests = models.ManyToManyField(User, related_name="joined_tournament_lobbies")
+    max_rounds = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(25)])
+    max_player_count = models.IntegerField(default=4, validators=[MinValueValidator(4), MaxValueValidator(32)])
+    tournament_type = models.CharField(max_length=50, choices=TournamentType.choices, default=TournamentType.SINGLE_ELIMINATION)
+    tournament = models.ForeignKey(
+        OnlineTournament,
+        on_delete=models.SET_NULL, # because tournament is still needed
+        related_name="tournament_lobbies",
+        null=True,
+        blank=True
+    )
+
+    guest_ready_states = models.JSONField(default=dict) # {user_id: is_ready}
+
+    def is_full(self):
+        return self.guests.count() >= self.max_player_count
+
+    def all_ready(self): # host cannot be ready or not, because host decides when the game starts
+        return all(self.guest_ready_states.get(str(guest.id), False) for guest in self.guests.all())
+
+    def set_ready_status(self, user, is_ready):
+        """ Set the ready status for the host or guest based on the user. """
+        # if user == self.host:
+        #     self.is_host_ready = is_ready
+        if user in self.guests.all():
+            if not self.guest_ready_states:
+                self.guest_ready_states = {}
+            self.guest_ready_states[str(user.id)] = is_ready
+        self.save()
+
+    def get_lobby_state(self):
+        """Return the lobby state."""
+        state = {
+            "host": get_display_name(self.host),
+            "host_id": self.host.id,
+            "guests": [
+                {
+                    "username": get_display_name(guest),
+                    "id": guest.id,
+                    "ready_state": self.guest_ready_states.get(str(guest.id), False)
+                }
+                for guest in self.guests.all()
+            ],
+            "all_ready": self.all_ready(),
+            "is_full": self.is_full(),
+            "active_lobby": self.active_lobby,
+            "active_tournament": self.active_tournament,
+            "created_at": self.created_at.isoformat(),
+            "max_player_count": self.max_player_count,
+            "room_id": self.room_id,
+            "tournament_type": self.tournament_type
+        }
+        return state
+
+    def get_participants(self):
+        return [self.host] + list(self.guests.all())
+
+    def get_host_name(self):
+        return self.host.username if self.host else "Waiting for host"
 
 class Lobby(BaseLobby):
     # room_id = models.CharField(max_length=10, unique=True)
@@ -304,6 +493,8 @@ class Game(models.Model):
     ONLINE_CHAOS_PVP = 'online_chaos_pvp'
     ARENA_PVP = 'arena_pvp'
     ONLINE_ARENA_PVP = 'online_arena_pvp'
+    THREE_D_PVE = '3d_pve'
+    THREE_D_PVP = '3d_pvp'
 
     GAME_MODES = [
         (PVE, 'Player vs AI'),
@@ -313,7 +504,9 @@ class Game(models.Model):
         (CHAOS_PVP, 'Chaos Player vs Player'),
         (ONLINE_CHAOS_PVP, 'Online Chaos Player vs Player'),
         (ARENA_PVP, 'Arena Player vs Player'),
-        (ONLINE_ARENA_PVP, 'Online Arena Player vs Player')
+        (ONLINE_ARENA_PVP, 'Online Arena Player vs Player'),
+        (THREE_D_PVE, '3D Player vs AI'),
+        (THREE_D_PVP, '3D Player vs Player')
     ]
 
     # Game States
@@ -388,7 +581,7 @@ class Game(models.Model):
 
     def is_against_ai(self):
         """ Check if the game is a PvE game against an AI. """
-        return self.player2 is None and self.game_mode in [Game.PVE, Game.CHAOS_PVE]
+        return self.player2 is None and self.game_mode in [Game.PVE, Game.CHAOS_PVE, Game.THREE_D_PVE]
 
     def __str__(self):
         return f"{self.player1.username} vs {self.player2_name_pvp_local or self.player2 or 'AI'} - {self.game_mode}"

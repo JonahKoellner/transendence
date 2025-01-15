@@ -10,28 +10,44 @@
         Welcome to <strong>Transcendence</strong> – where the boundaries of gaming, Fullstack, and AI blur into one chaotic, exhilarating experience.
         This passion project isn’t just code; it’s countless late nights, endless caffeine, and a sprinkle of sheer madness.
       </p>
-  
-      <!-- Contributors Section -->
-      <ul class="contributors">
-        <li class="contributor-card" *ngFor="let contributor of contributors">
-          <img [src]="contributor.avatar" [alt]="contributor.name" class="avatar" loading="lazy">
-          <div class="contributor-info">
-            <span class="name">{{ contributor.name }}</span>
-            <span class="info">{{ contributor.role }}</span>
-          </div>
-        </li>
-      </ul>
-  
-      <!-- Video Section -->
-      <div class="video-container">
-        <iframe
-          width="560"
-          height="315"
-          src="https://www.youtube.com/embed/L_WoOkDAqbM"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
+
+      <div class="contributors-carousel">
+        <button class="carousel-button prev-button" 
+        (click)="prevContributor()" 
+        aria-label="Previous contributor">&lt;</button>
+        
+        <div class="carousel-track-container">
+          <ul class="carousel-track">
+            <li class="contributor-slide" *ngFor="let contributor of contributors">
+              <div class="contributor-slide-content"
+                   [ngClass]="{'luke-background': contributor.name === 'Lukas Kreuzer'}">
+              
+                <!-- Conditionally insert background video for Lukas -->
+                <ng-container *ngIf="contributor.name === 'Lukas Kreuzer'">
+                  <iframe 
+                    class="background-video"
+                    src="https://www.youtube.com/embed/L_WoOkDAqbM?autoplay=1&mute=1&loop=1&modestbranding=1&controls=0&showinfo=0&playlist=L_WoOkDAqbM&iv_load_policy=3&cc_load_policy=3&rel=0&disablekb=1"
+                    frameborder="0"
+                    allow="autoplay; fullscreen"
+                    title="Lukas Background Video">
+                  </iframe>
+                </ng-container>
+            
+                <img [src]="contributor.avatar" class="avatar" [alt]="contributor.name">
+                <div class="contributor-info">
+                  <span class="name">{{ contributor.name }}</span>
+                  <span class="info">{{ contributor.role }}</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <button class="carousel-button next-button" 
+        (click)="nextContributor()" 
+        aria-label="Next contributor">&gt;</button>
       </div>
+  
   
       <p>
         Whether you’re here for the next-level gameplay, the cutting-edge tech, or the sheer thrill of it all, we’re glad you’re here.
@@ -42,7 +58,7 @@
     <div class="about-modules">
       <h3>Project Overview</h3>
       <div class="module-summary">
-        <p><strong>Total Points Achieved:</strong> 14 + 2</p>
+        <p><strong>Total Points Achieved:</strong> 15.5 (0.5 in progress)</p>
         <p><strong>Completion Requirements:</strong> A minimum of 7 points is needed to achieve 100% project completion.</p>
         <p><strong>Bonus Eligibility:</strong> To reach the maximum score of 125%, a total of 9.5 points is required.</p>
         <p><strong>Bonus Scoring:</strong></p>
@@ -74,7 +90,7 @@
     </div>
   
     <!-- PDF Viewer Section -->
-    <div class="pdf-viewer">
+    <!-- <div class="pdf-viewer">
       <div class="about-header">
         <h2>Project Subject</h2>
       </div>
@@ -82,10 +98,11 @@
         [src]="sanitizer.bypassSecurityTrustResourceUrl(pdfSrc)"
         width="100%"
         height="600"
-        frameborder="0">
+        frameborder="0"
+        title="Transcendence Project Subject">
       </iframe>
     </div>
-  
+   -->
     <!-- Retro Game Modal -->
     <div class="retro-game-modal" *ngIf="showRetroGameModal">
       <div class="modal-content">

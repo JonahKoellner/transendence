@@ -17,6 +17,7 @@ export class ChatWindowComponent implements OnInit {
   constructor(private chatService: ChatService) { }
 
   ngOnInit(): void {
+    console.log("");
     this.isLoading = true;
     this.joinChatRoom();  // Join WebSocket room for real-time updates
     this.loadChatHistory();  // Load chat history from the backend

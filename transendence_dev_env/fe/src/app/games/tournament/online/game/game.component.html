@@ -1,0 +1,15 @@
+<div class="game">
+	<div *ngIf="gameInProgress" class="game-in-progress">
+	  <p><strong>Remaining Time: {{ remainingTime }}</strong></p>
+	  <p><strong>Score:</strong></p>
+	  <p class="score">
+		<strong>{{ leftScore }}</strong> - <strong>{{ rightScore }}</strong>
+	  </p>
+	  <app-game-display [gameState]="gameState" [gameSettings]="gameSettings"></app-game-display>
+	</div>
+  
+	<div *ngIf="!gameInProgress" class="timer-section">
+	  <p><strong>{{ secsUntilGameStart }} Seconds until the game starts...</strong></p>
+	</div>
+  </div>
+  

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, delay, map, retryWhen, scan, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
 import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
@@ -14,8 +14,8 @@ export class AuthService {
   // private apiUrl = 'http://localhost:8000';  // Your Django backend URL
   private apiUrl = environment.apiUrl;
   public jwtHelper = new JwtHelperService();
-  public refreshInProgress = false;
-
+  private refreshTimeout: any;
+  private refreshInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
   constructor(private http: HttpClient, private router: Router, private websocketService: WebsocketService, private toastr: ToastrService) {}
 
   // Register a new user
@@ -86,9 +86,6 @@ export class AuthService {
     localStorage.setItem('access_token', token);
   }
 
-  // public getRefreshToken(): string | null {  this doesn't work!
-  //   return this.getCookie('refresh_token');
-  // }
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('access_token');
@@ -99,6 +96,9 @@ export class AuthService {
     let revalidate = false;
     if (reason === "2FA revalidation required") {
       revalidate = true;
+    }
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
     }
     const accessToken = localStorage.getItem('access_token');
     if (accessToken) {
@@ -145,6 +145,7 @@ export class AuthService {
   }
 
   clearAll(): void {
+    this.stopPeriodicTokenRefresh();
     localStorage.clear();
     sessionStorage.clear();
     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
@@ -158,61 +159,6 @@ export class AuthService {
       const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
     }
-  }
-
-  refreshTokenIfNeeded(): Observable<string | null> {
-    // console.debug('Refreshing JWT token...');
-    // Prevent multiple refresh calls if a refresh is already in progress
-    if (this.refreshInProgress) {  // could get triggered if we have two call one by Interceptor and one by AuthGuard
-      console.error('Refresh token process already in progress');
-      return throwError('Refresh token process already in progress');
-    }
-
-    this.refreshInProgress = true;
-
-    return this.http.post(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
-      tap((response: any) => {
-        if (response && response.access) {
-          // console.debug('Token refreshed successfully, new token: ', response.access);
-          this.storeTokens(response.access);
-          this.websocketService.connectNotifications(response.access);
-          this.refreshInProgress = false; // idk maybe its useful
-        } else {
-          console.warn('Failed to refresh token, logging out');
-          this.clearAll();
-          this.logout();
-        }
-      }),
-      catchError(error => {
-        console.error('Error refreshing token, logging out:', error);
-        this.clearAll();
-        this.logout();
-        return of(null);
-      }),
-      tap(() => {
-        this.refreshInProgress = false; // Reset the refresh flag
-      })
-    );
-  }
-
-  // Method to retrieve user profile information
-  getProfile(): Observable<any> {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      throw new Error('Access token is missing');
-    }
-
-    return this.http.get(`${this.apiUrl}/accounts/users/`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }).pipe(
-      tap((response: any) => {
-        // console.log('Profile data retrieved:', response);  // Debug log
-      }),
-      catchError(err => {
-        this.toastr.error('Failed to load profile data', 'Error');
-        return of(null);  // Handle the error and return an observable
-      })
-    );
   }
 
   // Method to enable 2FA
@@ -262,15 +208,81 @@ export class AuthService {
     );
   }
   initializeWebSocket(): void {
-    const token = this.getAccessToken();
-    if (token) {
-        this.websocketService.connectNotifications(token);
+    // check if we have a valid token
+    if (!this.isAuthenticated()) {
+      console.warn('User not authenticated, skipping WebSocket connect');
+      return;
     }
+    const token = this.getAccessToken();
+    if (!token) {
+      console.warn('No access token found, skipping WS connect');
+      return;
+    }
+    // Connect once
+    this.websocketService.connectNotifications(token);
   }
+
   private getCookie(name: string): string | null {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
     return null;
   }
+
+  refreshToken(): Observable<string> {
+    return this.http.post<{ access: string }>(`${this.apiUrl}/accounts/token/refresh/`, {}, { withCredentials: true }).pipe(
+      tap(response => {
+        const newAccess = response.access;
+        this.setAccessToken(newAccess);
+      }),
+      map(response => response.access),
+      retryWhen(errors =>
+        errors.pipe(
+          scan((errorCount, err) => {
+            console.error('Token refresh failed, retrying...', err);
+            if (err.status === 401 || err.status === 400) {
+              throw err;
+            }
+            if (errorCount >= 2) {
+              throw err; // 3 attempts total
+            }
+            return errorCount + 1;
+          }, 0),
+          delay(1000)
+        )
+      ),
+      catchError(err => {
+        console.error('Final token refresh failure, logging out', err);
+        setTimeout(() => this.logout('Session expired, please log in again'), 0);
+        return throwError(() => err);
+      })
+    );
+  }
+  startPeriodicTokenRefresh(): void {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout); // Clear any existing timer
+    }
+    this.scheduleNextTokenRefresh(); // Schedule the first refresh
+  }
+
+  stopPeriodicTokenRefresh(): void {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout); // Clear refresh timer
+      this.refreshTimeout = null;
+    }
+  }
+
+  private scheduleNextTokenRefresh(): void {
+    this.refreshTimeout = setTimeout(() => {
+      this.refreshToken().subscribe({
+        next: () => {
+          this.scheduleNextTokenRefresh(); // Schedule the next refresh after success
+        },
+        error: (err) => {
+          this.logout('Session expired in idle, please log in again');
+        }
+      });
+    }, this.refreshInterval);
+  }
+
 }

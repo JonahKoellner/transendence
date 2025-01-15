@@ -1,107 +1,85 @@
+// auth.interceptor.ts
 import { Injectable } from '@angular/core';
 import {
-  HttpEvent,
-  HttpInterceptor,
-  HttpHandler,
-  HttpRequest,
-  HttpErrorResponse
+  HttpEvent, HttpInterceptor, HttpHandler,
+  HttpRequest, HttpErrorResponse
 } from '@angular/common/http';
 import { AuthService } from './auth.service';
-import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
-import {
-  catchError,
-  filter,
-  finalize,
-  switchMap,
-  take
-} from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Clone the request to add the authentication token, if available
-    let authReq = req;
-    const accessToken = this.authService.getAccessToken();
-
-    if (accessToken && !this.authService.jwtHelper.isTokenExpired(accessToken)) {
-      authReq = this.addTokenToRequest(req, false);
+    // 1) Bypass refresh for specific endpoints if needed:
+    if (
+      req.url.includes('api.intra.42.fr') ||
+      req.url.endsWith('/accounts/logout/') ||
+      req.url.endsWith('/accounts/login/') ||
+      req.url.endsWith('/accounts/register/') ||
+      req.url.endsWith('/accounts/token/refresh/')
+    ) {
+      return next.handle(req);
     }
 
-    // Handle the request
+    // 2) Attach the current token
+    const authReq = this.addToken(req, this.authService.getAccessToken());
+    
+    // 3) Pass request along; if 401 arises, handle
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Check if error is due to unauthorized access
-        if (error.status === 401 && error.error.message !== '2FA revalidation required') {
+        if (error.status === 401) {
+          // Possibly expired token => refresh once
           return this.handle401Error(authReq, next);
-        } else if (error.status === 401 && error.error.message === '2FA revalidation required') {
-          this.authService.logout(error.error.message);
-        } else if (error.status === 402 || error.status === 403) {
-          this.authService.logout(error.error.message);
         }
-
         return throwError(() => error);
       })
     );
   }
 
-  private addTokenToRequest(req: HttpRequest<any>, with_creds: boolean): HttpRequest<any> {
-    let token = this.authService.getAccessToken();
-    // console.debug('Adding token to request, token: ', token);
-    return req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      },
-      withCredentials: with_creds,
-    });
-  }
-
-  private handle401Error(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // If refreshTokenSubject has a value, a refresh is already in progress
+  private handle401Error(originalReq: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
-      return this.authService.refreshTokenIfNeeded().pipe(
-        switchMap((newToken: string | null) => {
+      return this.authService.refreshToken().pipe(
+        switchMap((newToken: string) => {
+          // Refresh succeeded
           this.isRefreshing = false;
-
-          if (newToken) {
-            // console.log('Token refreshed successfully');
-            // this.authService.setAccessToken(newToken);
-            this.refreshTokenSubject.next(newToken);
-            // Retry the failed request with the new token
-            return next.handle(this.addTokenToRequest(req, false));
-          } else {
-            console.error('Failed to refresh token');
-            // If we didn't get a new token, logout the user
-            this.authService.logout('Failed to refresh token');
-            return throwError(() => new Error('Failed to refresh token'));
-          }
+          this.refreshTokenSubject.next(newToken);
+          // Retry the original request w/ new token
+          return next.handle(this.addToken(originalReq, newToken));
         }),
-        catchError((err) => {
-          console.error('Error refreshing token:', err);
-          // If there's an error during refresh, logout the user
+        catchError(err => {
+          // Refresh failed => logout (deferred via setTimeout or Promise)
           this.isRefreshing = false;
-          this.authService.logout('Failed to refresh token');
+          setTimeout(() => this.authService.logout('Token refresh failed'), 0);
           return throwError(() => err);
         })
       );
     } else {
-      // If refresh is in progress, queue the requests
-      // console.log('Refresh token in progress, queuing request');
+      // If a refresh is already in progress, wait for it
       return this.refreshTokenSubject.pipe(
-        filter(token => token != null),
+        filter(token => token !== null),
         take(1),
-        switchMap((token) => {
-          // Retry the failed request with the new token
-          return next.handle(this.addTokenToRequest(req, false));
-        })
+        switchMap(token => next.handle(this.addToken(originalReq, token!)))
       );
     }
+  }
+
+  private addToken(req: HttpRequest<any>, token: string | null): HttpRequest<any> {
+    if (token) {
+      return req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+    return req;
   }
 }

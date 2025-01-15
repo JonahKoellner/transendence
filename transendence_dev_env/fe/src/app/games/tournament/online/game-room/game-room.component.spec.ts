@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LocalPvpComponent } from './local-pvp.component';
+import { GameRoomComponent } from './game-room.component';
 
-describe('LocalPvpComponent', () => {
-  let component: LocalPvpComponent;
-  let fixture: ComponentFixture<LocalPvpComponent>;
+describe('GameRoomComponent', () => {
+  let component: GameRoomComponent;
+  let fixture: ComponentFixture<GameRoomComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [LocalPvpComponent]
+      declarations: [GameRoomComponent]
     });
-    fixture = TestBed.createComponent(LocalPvpComponent);
+    fixture = TestBed.createComponent(GameRoomComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -6,8 +6,9 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ImageSelectorModalComponent } from './image-selector-modal/image-selector-modal.component';
 import { DeleteAccountModalComponent } from './delete-account-modal/delete-account-modal.component';
 import { FtAuthService, FtUser } from '../ft-auth.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { AuthService } from '../auth.service';
 interface ImageSelection {
   type: 'preset' | 'upload';
   data: File | string; // File object for uploads, string identifier/path for presets
@@ -58,7 +59,9 @@ export class ProfileComponent implements OnInit {
     private http: HttpClient,
     private ftAuthService: FtAuthService,
     private route: ActivatedRoute,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -562,8 +565,9 @@ export class ProfileComponent implements OnInit {
       this.profileService.deleteAccount(password).subscribe(
         (response) => {
           this.toastr.success('Your account has been successfully deleted.', 'Success');
-          // Optionally, redirect to the homepage or login page
-          window.location.href = '/';
+          this.authService.clearAll();
+          this.router.navigate(['/login']);
+          window.location.reload();
         },
         (error: HttpErrorResponse) => {
           this.toastr.error('An error occurred while deleting your account. Please try again.', 'Error');

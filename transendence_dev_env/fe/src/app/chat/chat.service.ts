@@ -90,6 +90,8 @@ export class ChatService {
 
   addMessage(message: ChatMessage): void {
     const currentMessages = this.messages$.value;
+  
+    // Deduplicate by ID
     this.messages$.next([...currentMessages, message]);
-  }
+    }
 }

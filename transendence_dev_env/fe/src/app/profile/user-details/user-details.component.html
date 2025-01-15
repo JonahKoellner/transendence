@@ -20,24 +20,41 @@
         </span>
       </div>
 
-      <!-- Avatar -->
+      <!-- Avatar Container -->
       <div class="avatar-container">
-        <img *ngIf="user.profile?.avatar || user.avatar" [src]="user.profile?.avatar || user.avatar" alt="User Avatar"
-          class="avatar" loading="lazy" [ngClass]="{
+        <img
+          *ngIf="user.profile?.avatar || user.avatar"
+          [src]="user.profile?.avatar || user.avatar"
+          alt="User Avatar"
+          class="avatar"
+          loading="lazy"
+          [ngClass]="{
             'online': user.is_online === true,
             'offline': user.is_online === false,
             'unknown': user.is_online === null || user.is_online === undefined
-          }" />
+          }"
+        />
+        
         <!-- Level Badge -->
+        <div class="avatar-wrapper">
+          <!-- Display Name and 42 Icon Together -->
+          <div class="display-name-container">
+            <h3 class="display-name">
+              {{ user.profile?.display_name || user.display_name || user.username }}
+            </h3>
+            <img
+              *ngIf="user.is_ft_authenticated"
+              class="icon-42"
+              src="https://api.intra.42.fr/assets/42_logo_api_white.svg"
+              alt="42 logo white"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
         <div class="level-badge">
           {{ user.level }}
         </div>
-
-        <!-- Display Name and Email -->
-        <h3 class="display-name">{{ user.profile?.display_name || user.display_name || user.username }}</h3>
-        <!-- <p class="email"><strong>Email:</strong> {{ user.email }}</p> -->
-        <img *ngIf="user.is_ft_authenticated" class="icon-42" src="https://api.intra.42.fr/assets/42_logo_api_white.svg"
-          alt="42 logo white" loading="lazy">
       </div>
 
       <!-- Tab Controls -->
@@ -57,36 +74,55 @@
       </div>
 
       <!-- Tab Content -->
+      <!-- HISTORY TAB -->
       <div *ngIf="activeTab === 'history'" class="tab-content history-tab">
-
+        
         <!-- Sub-Tab Controls -->
         <div class="sub-tab-controls">
-          <button (click)="activeHistoryTab = 'games'" [ngClass]="{'active-sub-tab': activeHistoryTab === 'games'}">
+          <button
+            (click)="activeHistoryTab = 'games'"
+            [ngClass]="{'active-sub-tab': activeHistoryTab === 'games'}"
+          >
             Games
           </button>
-          <button (click)="activeHistoryTab = 'tournaments'"
-            [ngClass]="{'active-sub-tab': activeHistoryTab === 'tournaments'}">
+          <button
+            (click)="activeHistoryTab = 'tournaments'"
+            [ngClass]="{'active-sub-tab': activeHistoryTab === 'tournaments'}"
+          >
             Tournaments
           </button>
         </div>
 
-        <!-- Games History Section -->
+        <!-- GAMES HISTORY -->
         <div *ngIf="activeHistoryTab === 'games'" class="history-section games-history">
           <h3>Game History</h3>
 
           <!-- Filters -->
           <div class="filters">
-            <input type="text" [(ngModel)]="gameSearchName" (input)="applyGameFilters()"
-              placeholder="Search by player name" class="filter-input" />
+            <input
+              type="text"
+              [(ngModel)]="gameSearchName"
+              (input)="applyGameFilters()"
+              placeholder="Search by player name"
+              class="filter-input"
+            />
 
             <div class="date-filters">
               <label>
                 Start Date:
-                <input type="date" [(ngModel)]="gameStartDate" (change)="applyGameFilters()" />
+                <input
+                  type="date"
+                  [(ngModel)]="gameStartDate"
+                  (change)="applyGameFilters()"
+                />
               </label>
               <label>
                 End Date:
-                <input type="date" [(ngModel)]="gameEndDate" (change)="applyGameFilters()" />
+                <input
+                  type="date"
+                  [(ngModel)]="gameEndDate"
+                  (change)="applyGameFilters()"
+                />
               </label>
             </div>
 
@@ -99,104 +135,188 @@
           <!-- Games List -->
           <div *ngIf="filteredGameHistory.length > 0; else noGamesTemplate" class="games-list">
             <div
-              *ngFor="let game of filteredGameHistory | paginate: { itemsPerPage: itemsPerPageGames, currentPage: pGames, id: 'gamesPagination'  }"
-              class="game-item">
-              <a [routerLink]="['/games/details/', game.id]" class="game-link">
-                <strong>{{ game.player1.username }}</strong> vs <strong>{{ game.player2.username || 'AI' }}</strong>
-                <strong *ngIf="game.player3?.username"> vs <strong>{{ game.player3?.username }}</strong></strong>
-                <strong *ngIf="game.player4?.username"> vs <strong>{{ game.player4?.username }}</strong></strong>
+              *ngFor="
+                let game of filteredGameHistory
+                  | paginate: {
+                      itemsPerPage: itemsPerPageGames,
+                      currentPage: pGames,
+                      id: 'gamesPagination'
+                    }
+              "
+              class="game-item"
+            >
+              <a
+                [routerLink]="['/games/details/', game.id]"
+                class="game-link"
+              >
+                <strong>{{ game.player1.username }}</strong> vs 
+                <strong>{{ game.player2.username || 'AI' }}</strong>
+
+                <strong *ngIf="game.player3?.username">
+                  vs <strong>{{ game.player3?.username }}</strong>
+                </strong>
+
+                <strong *ngIf="game.player4?.username">
+                  vs <strong>{{ game.player4?.username }}</strong>
+                </strong>
               </a>
-              <p class="game-details">{{ game.game_mode }} | {{ game.score_player1 }} : {{ game.score_player2 }}<span
-                  *ngIf="game.game_mode == 'arena_pvp' || game.game_mode == 'online_arena_pvp'"> :
-                  {{game.score_player3}} : {{game.score_player4}}</span></p>
+              <p class="game-details">
+                {{ game.game_mode }} | {{ game.score_player1 }} : {{ game.score_player2 }}
+                <span *ngIf="game.game_mode == 'arena_pvp' || game.game_mode == 'online_arena_pvp'">
+                  : {{ game.score_player3 }} : {{ game.score_player4 }}
+                </span>
+              </p>
             </div>
-            <pagination-controls (pageChange)="pGames = $event" id="gamesPagination"
-              class="custom-pagination games-pagination" [directionLinks]="true" [autoHide]="true">
+
+            <pagination-controls
+              (pageChange)="pGames = $event"
+              id="gamesPagination"
+              class="custom-pagination games-pagination"
+              [directionLinks]="true"
+              [autoHide]="true"
+            >
             </pagination-controls>
           </div>
-
         </div>
 
-        <!-- Tournaments History Section -->
+        <!-- TOURNAMENTS HISTORY -->
         <div *ngIf="activeHistoryTab === 'tournaments'" class="history-section tournaments-history">
           <h3>Tournament History</h3>
 
           <!-- Filters -->
           <div class="filters">
-            <input type="text" [(ngModel)]="tournamentSearchName" (input)="applyTournamentFilters()"
-              placeholder="Search by tournament name" class="filter-input" />
+            <input
+              type="text"
+              [(ngModel)]="tournamentSearchName"
+              (input)="applyTournamentFilters()"
+              placeholder="Search by tournament name"
+              class="filter-input"
+            />
 
             <div class="date-filters">
               <label>
                 Start Date:
-                <input type="date" [(ngModel)]="tournamentStartDate" (change)="applyTournamentFilters()" />
+                <input
+                  type="date"
+                  [(ngModel)]="tournamentStartDate"
+                  (change)="applyTournamentFilters()"
+                />
               </label>
               <label>
                 End Date:
-                <input type="date" [(ngModel)]="tournamentEndDate" (change)="applyTournamentFilters()" />
+                <input
+                  type="date"
+                  [(ngModel)]="tournamentEndDate"
+                  (change)="applyTournamentFilters()"
+                />
               </label>
             </div>
 
-            <select [(ngModel)]="tournamentSortOrder" (change)="applyTournamentFilters()" class="sort-select">
+            <select
+              [(ngModel)]="tournamentSortOrder"
+              (change)="applyTournamentFilters()"
+              class="sort-select"
+            >
               <option value="desc">Newest First</option>
               <option value="asc">Oldest First</option>
             </select>
           </div>
 
           <!-- Tournaments List -->
-          <div *ngIf="filteredTournamentHistory.length > 0; else noTournamentsTemplate" class="tournaments-list">
+          <div
+            *ngIf="filteredTournamentHistory.length > 0; else noTournamentsTemplate"
+            class="tournaments-list"
+          >
             <div
-              *ngFor="let tournament of filteredTournamentHistory | paginate: { itemsPerPage: itemsPerPageTournaments, currentPage: pTournaments, id: 'tournamentPagination'  }"
-              class="tournament-item">
-              <a [routerLink]="['/games/tournament/details', tournament.id]" class="tournament-link">
+              *ngFor="
+                let tournament of filteredTournamentHistory
+                  | paginate: {
+                      itemsPerPage: itemsPerPageTournaments,
+                      currentPage: pTournaments,
+                      id: 'tournamentPagination'
+                    }
+              "
+              class="tournament-item"
+            >
+              <a
+                [routerLink]="
+                  tournament.isOnline
+                    ? ['/games/tournament/online/details', tournament.id]
+                    : ['/games/tournament/details', tournament.id]
+                "
+                class="tournament-link"
+              >
                 <strong>{{ tournament.name }}</strong>
               </a>
-              <p class="tournament-details">{{ tournament.type }} | Status: {{ tournament.status }}</p>
+              <p class="tournament-details">
+                {{ tournament.isOnline ? 'Online' : 'Offline' }} {{ tournament.type }} | Status: {{ tournament.status }}
+              </p>
             </div>
-            <pagination-controls (pageChange)="pTournaments = $event" id="tournamentPagination"
-              class="custom-pagination tournament-pagination" [directionLinks]="true" [autoHide]="true">
+
+            <pagination-controls
+              (pageChange)="pTournaments = $event"
+              id="tournamentPagination"
+              class="custom-pagination tournament-pagination"
+              [directionLinks]="true"
+              [autoHide]="true"
+            >
             </pagination-controls>
           </div>
         </div>
 
       </div>
 
+      <!-- ACHIEVEMENTS TAB -->
       <div *ngIf="activeTab === 'achievements'" class="tab-content achievements-tab">
         <div class="achievements-container">
           <h2>Achievements</h2>
           <div class="achievements-grid">
-            <div *ngFor="let achievement of achievements" [ngClass]="{
-              'achievement-card': true,
-              'earned': userAchievementIds.has(achievement.id),
-              'not-earned': !userAchievementIds.has(achievement.id)
-            }">
+            <div
+              *ngFor="let achievement of achievements"
+              [ngClass]="{
+                'achievement-card': true,
+                'earned': userAchievementIds.has(achievement.id),
+                'not-earned': !userAchievementIds.has(achievement.id)
+              }"
+            >
               <!-- Achievement Image -->
               <div class="achievement-image-container">
-                <img *ngIf="achievement.image_url" [src]="achievement.image_url" [alt]="achievement.name + ' Image'"
-                  loading="lazy" class="achievement-image" />
-                <i *ngIf="!achievement.image_url" class="bi" [ngClass]="getAchievementIconClass(achievement)"
-                  aria-hidden="true"></i>
+                <img
+                  *ngIf="achievement.image_url"
+                  [src]="achievement.image_url"
+                  [alt]="achievement.name + ' Image'"
+                  loading="lazy"
+                  class="achievement-image"
+                />
+                <i
+                  *ngIf="!achievement.image_url"
+                  class="bi"
+                  [ngClass]="getAchievementIconClass(achievement)"
+                  aria-hidden="true"
+                ></i>
               </div>
 
               <div class="achievement-details">
                 <h3>{{ achievement.name }}</h3>
                 <p>{{ achievement.description }}</p>
-                <p class="achievement-points">XP Points: {{ achievement.points }}</p>
+                <p class="achievement-points">
+                  XP Points: {{ achievement.points }}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- GRAPHS TAB -->
       <div *ngIf="activeTab === 'graphs'" class="tab-content graphs-tab">
         <app-charts-user-details [chartData]="chartData!"></app-charts-user-details>
       </div>
 
-
+      <!-- STATS TAB -->
       <div *ngIf="activeTab === 'stats'" class="tab-content stats-tab">
         <div *ngIf="userStats" class="user-stats-display">
           <h3>{{ userStats.display_name || userStats.username }}'s Statistics</h3>
-
           <div class="stats-grid">
             <div class="stat-item">
               <strong>User ID:</strong>
@@ -286,7 +406,7 @@
       <ng-template #noTournamentsTemplate>
         <p class="alert-info">This user has no tournament history.</p>
       </ng-template>
-
     </div>
 
   </div>
+</div>

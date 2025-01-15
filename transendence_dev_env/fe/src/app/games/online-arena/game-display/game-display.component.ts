@@ -89,7 +89,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          this.toastr.warning('Failed to load Left PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -107,7 +106,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          this.toastr.warning('Failed to load Right PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -125,7 +123,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          this.toastr.warning('Failed to load Top PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -143,7 +140,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          this.toastr.warning('Failed to load Bottom PaddleSkin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -161,7 +157,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          this.toastr.warning('Failed to load Ball Skin Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));
@@ -179,7 +174,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           resolve();
         }
         img.onerror = () => {
-          this.toastr.warning('Failed to load Background Image. Falling back to colour.', 'Warning');
           resolve();
         }
       }));

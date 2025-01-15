@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import GameViewSet, TournamentViewSet, LobbyViewSet, ChaosLobbyViewSet, ArenaLobbyViewSet, StatsViewSet
+from .views import GameViewSet, TournamentViewSet, LobbyViewSet, ChaosLobbyViewSet, ArenaLobbyViewSet, StatsViewSet, TournamentLobbyViewSet, OnlineTournamentViewSet
 
 router = DefaultRouter()
 router.register(r'games', GameViewSet, basename='game')
 router.register(r'tournaments', TournamentViewSet, basename='tournament')
-router.register(r'stats', StatsViewSet, basename='stats') 
+router.register(r'stats', StatsViewSet, basename='stats')
+router.register(r'online-tournaments', OnlineTournamentViewSet, basename='online-tournament')
 lobby_create = LobbyViewSet.as_view({'post': 'create_room'})
 lobby_join = LobbyViewSet.as_view({'post': 'join_room'})
 lobby_ready = LobbyViewSet.as_view({'post': 'set_ready'})
@@ -27,6 +28,12 @@ lobby_status_arena = ArenaLobbyViewSet.as_view({'get': 'room_status'})
 lobby_list_rooms_arena = ArenaLobbyViewSet.as_view({'get': 'list_rooms'})
 lobby_delete_arena = ArenaLobbyViewSet.as_view({'delete': 'delete_room'})
 
+tournament_lobby_create = TournamentLobbyViewSet.as_view({'post': 'create_room'})
+tournament_lobby_join = TournamentLobbyViewSet.as_view({'post': 'join_room'})
+tournament_lobby_ready = TournamentLobbyViewSet.as_view({'post': 'set_ready'})
+tournament_lobby_delete = TournamentLobbyViewSet.as_view({'delete': 'delete_room'})
+tournament_lobby_list_rooms = TournamentLobbyViewSet.as_view({'get': 'list_rooms'})
+tournament_lobby_status = TournamentLobbyViewSet.as_view({'get': 'room_status'})
 
 urlpatterns = [
     path('lobby/create/', lobby_create, name="lobby-create"),
@@ -49,5 +56,13 @@ urlpatterns = [
     path('lobby_arena/status/<str:room_id>/', lobby_status_arena, name="lobby-status"),
     path('lobby_arena/rooms/', lobby_list_rooms_arena, name="lobby-list-rooms"),
     path('lobby_arena/delete/<str:room_id>/', lobby_delete_arena, name="lobby-delete"),
+
+    path('tournament_lobby/create/', tournament_lobby_create, name="tournament-lobby-create"),
+    path('tournament_lobby/join/', tournament_lobby_join, name="tournament-lobby-join"),
+    path('tournament_lobby/ready/', tournament_lobby_ready, name="tournament-lobby-set-ready"),
+    path('tournament_lobby/status/<str:room_id>/', tournament_lobby_status, name="tournament-lobby-status"),
+    path('tournament_lobby/rooms/', tournament_lobby_list_rooms, name="tournament-lobby-list-rooms"),
+    path('tournament_lobby/delete/<str:room_id>/', tournament_lobby_delete, name="tournament-lobby-delete"),
+
     path('', include(router.urls)),
 ]

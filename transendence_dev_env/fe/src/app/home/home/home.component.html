@@ -1,6 +1,12 @@
 <div class="home-container">
   <!-- Hero Section -->
   <section class="hero-section">
+    <!-- Video/GIF Background Container -->
+    <div class="hero-background"></div>
+  
+    <!-- The gradient overlay (optional approach using an extra div) -->
+    <div class="hero-overlay"></div>
+  
     <div class="hero-content">
       <h1 class="hero-title flicker"><span><strong>Pong Arena</strong></span></h1>
       <p class="hero-description">
@@ -79,9 +85,20 @@
               <h4>Online Player vs Player (PvP)</h4>
               <p>Compete in real-time 1v1 matches against online players.</p>
             </div>
+            <div class="game-mode-card" (click)="navigateToMode('3d')">
+              <div class="icon">
+                <svg viewBox="0 0 64 64" width="64" height="64">
+                  <polygon fill="#DDDDDD" stroke="#FFFFFF" stroke-width="0.5" points="0,21.3333 42.6667,21.3333 42.6667,64 0,64"/>
+                  <polygon fill="#BBBBBB" stroke="#FFFFFF" stroke-width="0.5" points="0,21.3333 21.3333,0 64,0 42.6667,21.3333"/>
+                  <polygon fill="#AAAAAA" stroke="#FFFFFF" stroke-width="0.5" points="42.6667,21.3333 64,0 64,42.6667 42.6667,64"/>
+                </svg>
+              </div>
+              <h4>3D</h4>
+              <p>Play the normal modes with an additional dimension.</p>
+            </div>
           </div>
         </div>
-  
+
         <!-- Tournament Modes -->
         <div class="game-category">
           <h3>Tournament Modes</h3>
@@ -142,7 +159,9 @@
               <h4>Online Chaos Mode</h4>
               <p>Play online with powerups for a chaotic experience.</p>
             </div>
-  
+
+
+
             <!-- Arena -->
             <div class="game-mode-card" (click)="navigateToMode('arena')">
               <div class="icon">

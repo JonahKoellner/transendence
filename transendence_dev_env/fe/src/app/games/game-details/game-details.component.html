@@ -46,14 +46,4 @@
       <p><strong>Winner:</strong> {{ round.winner }}</p>
     </div>
   </div>
-
-  <div class="moves-log" *ngIf="game.moves_log?.length">
-    <h3>Move Log</h3>
-    <ul>
-      <li *ngFor="let move of game.moves_log">
-        <strong>{{ move.time | date: 'mediumTime' }}</strong>:
-        <span>{{ move.player }} performed "{{ move.action }}"</span>
-      </li>
-    </ul>
-  </div>
 </div>

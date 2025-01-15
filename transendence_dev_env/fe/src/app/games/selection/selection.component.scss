@@ -3,16 +3,98 @@
   max-width: 1000px;
   margin: auto;
   text-align: center;
+  position: relative;
+  overflow: hidden; // in case of fancy background animations
+
+  // /* 1) Subtle Swirling Gradient (replaces the GIF) */
+  // &::before {
+  //   content: '';
+  //   position: absolute;
+  //   top: -50%;
+  //   left: -50%;
+  //   width: 200%;
+  //   height: 200%;
+  //   /* A radial gradient that transitions to black at the edges */
+  //   background: radial-gradient(
+  //     circle at 50% 50%,
+  //     #333 0%,
+  //     #111 50%,
+  //     #000 100%
+  //   );
+  //   opacity: 0.2;
+  //   z-index: -1;
+  //   /* Slow swirl animation */
+  //   animation: swirlBackground 60s linear infinite;
+  // }
+
+  @keyframes swirlBackground {
+    0% {
+      transform: rotate(0deg) translate(0, 0);
+    }
+    50% {
+      transform: rotate(20deg) translate(-5%, -5%);
+    }
+    100% {
+      transform: rotate(0deg) translate(0, 0);
+    }
+  }
+
+  // /* 2) Optional Scanline Overlay for old CRT effect */
+  // &::after {
+  //   content: '';
+  //   position: absolute;
+  //   top: 0;
+  //   left: 0;
+  //   width: 100%;
+  //   height: 100%;
+  //   pointer-events: none; // let clicks pass through
+  //   background: repeating-linear-gradient(
+  //     to bottom,
+  //     rgba(255, 255, 255, 0.03) 0px,
+  //     rgba(255, 255, 255, 0.03) 1px,
+  //     transparent 1px,
+  //     transparent 2px
+  //   );
+  //   z-index: 0;
+  // }
+
+  /* Fade + scale-in container on load */
+  animation: fadeInContainer 0.8s ease forwards;
+  opacity: 0;
+  transform: scale(0.95);
+
+  @keyframes fadeInContainer {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 
   h2 {
     color: #61BA50;
     font-size: 2rem;
     margin-bottom: 1.5rem;
     font-weight: bold;
+    position: relative;
+    z-index: 1; // above the scanlines
+    /* Neon flicker effect */
+    text-shadow: 0 0 8px rgba(97, 186, 80, 0.7);
+    animation: flicker 3s infinite;
+  }
+
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+      opacity: 1;
+    }
+    20%, 24%, 55% {
+      opacity: 0.4;
+    }
   }
 
   .game-category {
     margin-bottom: 2rem;
+    position: relative;
+    z-index: 1; // ensure above scanlines
 
     h3 {
       font-size: 1.5rem;
@@ -22,6 +104,7 @@
       margin: 1rem 0;
       padding-left: 1rem;
       border-left: 4px solid #61BA50;
+      text-shadow: 0 0 6px rgba(97, 186, 80, 0.5);
     }
   }
 
@@ -29,31 +112,106 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
-  }
 
-  .game-mode-card {
-    background-color: #0E0F10;
-    color: #e0e0e0;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    .game-mode-card {
+      position: relative;
+      z-index: 1; // above background
+      background-color: #0E0F10;
+      color: #e0e0e0;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      text-align: center;
+      transition:
+        transform 0.3s,
+        box-shadow 0.3s,
+        background-color 0.3s,
+        opacity 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform-style: preserve-3d; // needed for 3D flips
 
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-      background-color: #2C2C2C;
-    }
+      /* 3) Staggered Entrance (like before) */
+      opacity: 0;
+      transform: translateY(20px);
+      animation: cardEnter 0.6s ease forwards;
 
-    .icon {
-      width: 60px;
-      height: 60px;
-      margin-bottom: 1rem;
+      /* nth-child for staggered delay */
+      &:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      &:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      &:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      &:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      &:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+      &:nth-child(6) {
+        animation-delay: 0.6s;
+      }
+      &:nth-child(7) {
+        animation-delay: 0.7s;
+      }
+      &:nth-child(8) {
+        animation-delay: 0.8s;
+      }
+
+      /* 4) 3D Tilt or Card Flip on hover */
+      &:hover {
+        transform: translateY(-5px) rotateX(5deg) rotateY(-5deg);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        background-color: #2C2C2C;
+
+        .icon {
+          /* Slight rotation or pulse */
+          transform: rotate(8deg) scale(1.1);
+        }
+      }
+
+      /* 5) Add top border glow / pulse for extra emphasis */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 0%;
+        height: 2px;
+        background-color: #61ba50;
+        transform: translateX(-50%);
+        transition: width 0.3s;
+      }
+      &:hover::before {
+        width: 80%;
+      }
+
+      .icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1rem;
+        transition: transform 0.3s;
+      }
+
+      h4 {
+        font-size: 1.2rem;
+        color: #61BA50;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        text-shadow: 0 0 4px rgba(97, 186, 80, 0.6);
+      }
+
+      p {
+        font-size: 0.9rem;
+        color: #adb5bd;
+        margin: 0;
+      }
 
       svg {
         width: 100%;
@@ -68,25 +226,40 @@
         .online-arena-icon { fill: #ff5722; opacity: 0.3; }
       }
     }
+  }
 
-    h4 {
-      font-size: 1.2rem;
-      color: #61BA50;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
+  /* Keyframes for the staggered card entrance */
+  @keyframes cardEnter {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
     }
-
-    p {
-      font-size: 0.9rem;
-      color: #adb5bd;
-      margin: 0;
+    100% {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }
 
+/* If needed, for all .game-mode-card's in the grid, 
+   we apply the nth-child delays (already inlined above):
+.game-mode-grid {
+  .game-mode-card:nth-child(1) { animation-delay: 0.1s; }
+  .game-mode-card:nth-child(2) { animation-delay: 0.2s; }
+  // etc...
+}
+*/
+
+/* Loading Spinner (Bootstrap or custom) */
 .loading-spinner {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  z-index: 10;
+
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+  }
 }

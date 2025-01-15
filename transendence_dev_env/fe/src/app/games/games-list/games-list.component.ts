@@ -10,6 +10,7 @@ export class GamesListComponent implements OnInit {
   games: Game[] = [];
   filteredGames: Game[] = [];
   errorMessage: string = '';
+  showFilters: boolean = false;
 
   // Filters and Sorting Options
   searchPlayer: string = '';

@@ -102,7 +102,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load paddleskin image. Falling back to color.');
           resolve(); // Resolve to continue without rejecting
         };
       }));
@@ -118,7 +117,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load ballskin image. Falling back to color.');
           resolve();
         };
       }));
@@ -134,7 +132,6 @@ export class GameCanvasChaosComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load game background wallpaper. Falling back to color.');
           resolve();
         };
       }));

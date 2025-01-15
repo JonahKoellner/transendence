@@ -1,23 +1,285 @@
-.navbar {
-  position: relative;
-  z-index: 100;
-  padding: 10px 20px;
+body {
+  margin: 0;
+  padding-top: 70px; /* Adjust based on the actual navbar height */
+}
+
+/* ========================================== */
+/* NAVBAR CUSTOM STYLING                      */
+/* ========================================== */
+.navbar-custom {
+  background-color: #0e0f10; /* Dark background */
   border-bottom: 1px solid #343a40;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Slight shadow for depth */
+  z-index: 999; /* Ensure it's on top of other elements */
+
+  /*
+    Subtle slide-down reveal on page load.
+    Adjust duration and easing for a different feel.
+  */
+  animation: navbarSlideDown 0.6s ease forwards;
 
   .navbar-brand {
     font-weight: bold;
-    color: #61BA50 !important;
+    color: #61ba50 !important;
     font-size: 1.5rem;
+    text-shadow: 0 0 5px rgba(97, 186, 80, 0.5);
+
+    /* Idle brand animation (breathing glow) */
+    animation: brandIdle 3s ease-in-out infinite;
+
+    /* Hover effect - optional */
+    &:hover {
+      animation: brandHover 1.5s infinite;
+      transform: scale(1.05);
+    }
   }
 
+  /* Toggler (Hamburger) Customization */
+  .navbar-toggler {
+    border-color: #61ba50;
+    color: #343a40;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+  
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(97, 186, 80, 0.4);
+    }
+
+    .navbar-toggler-icon {
+      /* Override default icon with a green-ish hamburger (data URI) */
+      svg {
+        fill: #ffffff;
+       
+      }
+    }
+
+  }
+
+  .navbar-toggler:hover {
+    background-color: #61ba50;
+  }
+
+  /* Nav Link styling */
   .nav-link {
     color: #f8f9fa !important;
     margin: 0 10px;
     font-weight: 500;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, transform 0.3s ease;
+
+    /*
+      Subtle fade/slide when the navbar appears.
+      We’ll use nth-child to stagger each link’s animation.
+    */
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: navLinkFadeIn 0.4s ease forwards;
 
     &:hover {
-      color: #61BA50 !important;
+      color: #61ba50 !important;
+      transform: translateY(-2px);
     }
+
+    /*
+      Stagger effect for each link (feel free to adjust or remove).
+      If you have 5 links, add nth-child(1), nth-child(2), etc.
+    */
+    &:nth-child(1) {
+      animation-delay: 0.2s;
+    }
+    &:nth-child(2) {
+      animation-delay: 0.3s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    &:nth-child(4) {
+      animation-delay: 0.5s;
+    }
+    &:nth-child(5) {
+      animation-delay: 0.6s;
+    }
+
+    /*
+      Optional underline “grow” effect on hover for more style.
+    */
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      background-color: #61ba50;
+      width: 0;
+      height: 2px;
+      left: 0;
+      bottom: -3px;
+      transition: width 0.3s ease;
+    }
+    &:hover::after {
+      width: 100%;
+    }
+  }
+}
+
+.group {
+  display: flex;
+  flex-direction: row;
+}
+
+/* ========================================== */
+/* MAIN CONTENT AREA                          */
+/* ========================================== */
+.main-content {
+  margin: 0 auto;
+  padding: 5rem;
+}
+
+/* ========== Easter Egg Modal ========== */
+.easter-egg-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; 
+  animation: fadeIn 0.5s forwards;
+
+  .modal-content {
+    position: relative;
+    background: 
+      linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+      url('https://www.rollingstone.com/wp-content/uploads/2018/06/rs-198321-GettyImages-464915916.jpg?w=1600&h=900&crop=1')
+        center center / cover no-repeat;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 
+      0 0 8px #61ba50, 
+      0 0 12px rgba(97, 186, 80, 0.5),
+      inset 0 0 8px rgba(97, 186, 80, 0.5);
+    border: 2px solid #61ba50;
+    animation: scaleUp 0.5s forwards;
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+      transition: color 0.3s;
+      &:hover {
+        color: #61ba50;
+      }
+    }
+
+    .easter-egg-title {
+      color: #61ba50;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      text-shadow: 0px 0px 10px rgba(76, 175, 80, 0.8);
+      animation: flicker 3s infinite;
+    }
+
+    .easter-egg-text {
+      color: #cfcfcf;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+/* ======== KEYFRAMES ======== */
+
+/* Subtle "breathing" glow for idle brand */
+@keyframes brandIdle {
+  0% {
+    text-shadow: 0 0 4px rgba(97, 186, 80, 0.4), 0 0 8px rgba(97, 186, 80, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(97, 186, 80, 0.6), 0 0 16px rgba(97, 186, 80, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 4px rgba(97, 186, 80, 0.4), 0 0 8px rgba(97, 186, 80, 0.2);
+  }
+}
+
+/* Strong flicker/pulse on hover for brand */
+@keyframes brandHover {
+  0%, 100% {
+    text-shadow: 0 0 5px #61BA50, 0 0 15px rgba(97, 186, 80, 0.8);
+    transform: scale(1.05);
+  }
+  50% {
+    text-shadow: 0 0 20px #61BA50, 0 0 50px rgba(97, 186, 80, 0.8);
+    transform: scale(1.1);
+  }
+}
+
+/* Navbar slides down from top */
+@keyframes navbarSlideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+/* Nav links fade and drop in sequentially */
+@keyframes navLinkFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Other helper keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.4; }
+}
+@media (min-width: 992px) {
+  .navbar-toggler {
+    display: none !important;
+  }
+  .notify-one {
+    display: none;
+  }
+
+  .notify-two {
+    display: flex;
+  }
+
+}
+
+@media (max-width: 992px) {
+  
+  .notify-one {
+    display: flex;
+  }
+  .notify-two {
+    display: none;
   }
 }

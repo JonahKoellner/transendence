@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-
+import { catchError, map, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -11,24 +10,18 @@ import { map, catchError } from 'rxjs/operators';
 export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
-  canActivate(): Observable<boolean> | Promise<boolean> | boolean {
-    if (!this.authService.isAuthenticated()) {
-      return this.authService.refreshTokenIfNeeded().pipe(
-        map(token => {
-          if (token) {
-            return true; // Token was refreshed successfully
-          } else {
-            this.router.navigate(['/login']);
-            return false; // Token refresh failed
-          }
-        }),
-        catchError(() => {
-          this.router.navigate(['/login']);
-          return of(false);
-        })
-      );
+  canActivate(): Observable<boolean> {
+    if (this.authService.isAuthenticated()) {
+      return of(true);
     }
-
-    return true; // User is already authenticated
+  
+    return this.authService.refreshToken().pipe(
+      map(() => true),
+      catchError(err => {
+        console.error('Route guard: Token refresh failed', err);
+        this.router.navigate(['/login'], { queryParams: { message: 'Session expired, please log in again' } });
+        return of(false);
+      })
+    );
   }
 }

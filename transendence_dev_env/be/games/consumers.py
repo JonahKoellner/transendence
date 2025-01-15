@@ -1,16 +1,22 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Lobby, ChaosLobby, ArenaLobby, Game
+from .models import Lobby, ChaosLobby, ArenaLobby, Game, TournamentLobby, OnlineTournament, OnlineMatch, TournamentType
+from .services.tournament_lobby_service import TournamentLobbyService
+from .services.tournament_service import TournamentService
+from .services.round_service import RoundService
 from django.contrib.auth.models import User 
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
 import asyncio
 import random
 import math
+import json
 from asyncio import Lock
 from django.utils import timezone
 from threading import Timer
+from accounts.utils import get_display_name # for tournament, touranment lobby, tournament match consumer
 
 import logging
 logger = logging.getLogger('game_debug')
@@ -2336,3 +2342,823 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
             lobby.is_player_four_ready = False
         lobby.save()
         return temp
+
+# consumer to handle tournament lobby settings, ready status and game start
+class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.room_group_name = f"tournament_lobby_{self.room_id}"
+        self.user = self.scope['user']
+
+        # Authenticate user
+        if isinstance(self.user, AnonymousUser):
+            await self.close()
+            return
+
+        # Add the user to the channel group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+        # Load the lobby and broadcast the current state
+        self.lobby = await database_sync_to_async(TournamentLobby.objects.get)(room_id=self.room_id)
+        await self.broadcast_lobby_state()
+
+    async def disconnect(self, close_code):
+        # Remove the user from the channel group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+        if await self.is_user_host():
+            logger.info('Host left the tournament lobby')
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "alert",
+                    "message": "The host has left the lobby. The lobby has been closed.",
+                    "user_role": "host"
+                }
+            )
+            await self.delete_lobby()
+        else:
+            # remove user
+            await self.handle_user_disconnect()
+            await self.broadcast_lobby_state()
+            # send alert to other users
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "alert",
+                    "message": f"{await database_sync_to_async(get_display_name)(self.user)} has left the lobby.",
+                    "user_role": "guest"
+                }
+            )
+            
+
+    async def receive_json(self, content):
+        action = content.get("action")
+
+        try:
+            if action == "set_ready":
+                is_ready = content.get("is_ready", False)
+                logger.debug(f"User {self.user.username} is ready: {is_ready}")
+                await self.update_ready_status(self.user, is_ready)
+            elif action == "update_settings":
+                new_settings = content.get("settings", {})
+                await self.update_lobby_settings(new_settings)
+            elif action == "start_tournament":
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "type": "tournament_start",
+                            "message": "The Tournament has started. This lobby will be deleted.",
+                        }
+                    )
+                    await self.start_tournament_c()
+        except Exception as e:
+            logger.error(f"Error processing action {action}: {e}")
+            await self.send_json({
+                "type": "error",
+                "message": str(e)
+            })
+        if action != "set_ready" or action != "start_tournament":
+            await database_sync_to_async(TournamentLobbyService.adjust_max_player_count)(self.lobby)
+        await self.broadcast_lobby_state()
+
+    async def alert(self, event):
+        await self.send_json({
+            "type": "alert",
+            "message": event["message"],
+            "user_role": event["user_role"]
+        })
+
+    async def tournament_start(self, event):
+        await self.send_json({
+            "type": "tournament_start",
+            "message": event["message"]
+        })
+
+    @database_sync_to_async
+    def start_tournament_c(self):
+        self.lobby.refresh_from_db()
+        TournamentLobbyService.start_tournament(self.lobby, self.user)
+        self.lobby.save()
+
+    @database_sync_to_async
+    def update_ready_status(self, user, is_ready):
+        self.lobby.refresh_from_db()
+        if user in self.lobby.guests.all():
+            self.lobby.guest_ready_states[str(user.id)] = is_ready
+        self.lobby.save()
+
+    @database_sync_to_async
+    def update_lobby_settings(self, new_settings):
+        self.lobby.refresh_from_db()
+        # Update lobby settings based on the provided input
+        if "max_player_count" in new_settings:
+            self.lobby.max_player_count = new_settings["max_player_count"]
+        # if "round_score_limit" in new_settings:
+            # self.lobby.round_score_limit = new_settings["round_score_limit"]
+        if "tournament_type" in new_settings:
+            self.lobby.tournament_type = new_settings["tournament_type"]
+        TournamentLobbyService.adjust_max_player_count(self.lobby)
+        self.lobby.save()
+
+    async def broadcast_lobby_state(self):
+        lobby_state = await database_sync_to_async(self.lobby.get_lobby_state)()
+        # lobby_state = await self.get_lobby_state()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "lobby_state",
+                **lobby_state
+            }
+        )
+
+    async def lobby_state(self, event):
+        """
+        Handle the 'lobby_state' WebSocket message type.
+        """
+        # Extract the lobby state from the event
+        lobby_state = {
+            "host": event.get("host"),
+            "host_id": event.get("host_id"),
+            "guests": event.get("guests", []),
+            "all_ready": event.get("all_ready", False),
+            "is_full": event.get("is_full", False),
+            "active_lobby": event.get("active_lobby", False),
+            "active_tournament": event.get("active_tournament", False),
+            "created_at": event.get("created_at"),
+            "player_count": event.get("player_count"),
+            # "round_score_limit": event.get("round_score_limit"),
+            "room_id": event.get("room_id"),
+            "tournament_type": event.get("tournament_type"),
+            "max_player_count": event.get("max_player_count")
+        }
+
+        # Send the lobby state to the WebSocket client
+        await self.send(
+            text_data=json.dumps({
+                "type": "lobby_state",
+                "lobby_state": lobby_state
+            })
+        )
+        
+
+    @database_sync_to_async
+    def handle_user_disconnect(self):
+        # Remove the user from the lobby
+        logger.info(f"Removing user {self.user.username} from the lobby.")
+        try:
+            TournamentLobby.objects.get(room_id=self.room_id)
+        except TournamentLobby.DoesNotExist: # lobby already deleted, dont need to remove guest
+            return
+        if self.user in self.lobby.guests.all():
+            self.lobby.guests.remove(self.user)
+            # Remove the user's ready state
+            if str(self.user.id) in self.lobby.guest_ready_states:
+                del self.lobby.guest_ready_states[str(self.user.id)]
+            self.lobby.save()
+
+    @database_sync_to_async
+    def delete_lobby(self):
+        """Delete the lobby if the host disconnects."""
+        logger.info(f"Deleting tournamentlobby with room_id {self.room_id}.")
+        TournamentLobby.objects.filter(room_id=self.room_id).delete()
+        
+    @database_sync_to_async
+    def is_user_host(self):
+        """Check if the disconnecting user is the host."""
+        try:
+            lobby = TournamentLobby.objects.get(room_id=self.room_id)
+        except TournamentLobby.DoesNotExist:
+            return False
+        return self.user == lobby.host
+
+#TODO when is the tournament deleted? -> only via rest endpoint, or not at all. we want to keep the tournament for stats and stuff
+
+class TournamentConsumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.room_group_name = f"tournament_{self.room_id}"
+        self.user = self.scope['user']
+        
+        # Authenticate user
+        if isinstance(self.user, AnonymousUser):
+            await self.close()
+            return
+        
+        # Add the user to the channel group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
+        
+        # Load the tournament and broadcast the initial state
+        self.tournament = await database_sync_to_async(OnlineTournament.objects.get)(room_id=self.room_id)
+        logger.debug(f"User {self.user.username} connected to tournament {self.room_id}.")
+        await self.broadcast_tournament()
+
+    async def disconnect(self, close_code):
+        # Remove the user from the channel group
+        logger.debug(f"User {self.user.username} disconnected from tournament {self.room_id}.")
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+
+        await self.handle_user_disconnect()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "alert",
+                "message": f"{self.user.username} has left the tournament.",
+                "user_role": "guest"
+            }
+        )
+        await self.broadcast_tournament()
+        logger.debug(f"User {self.user.username} disconnected from tournament {self.room_id}.")
+
+    async def receive_json(self, content):
+        action = content.get("action")
+        try:
+            if action == "ready":
+                logger.debug(f"User {self.user.username} is ready.")
+                # match_id = await database_sync_to_async(OnlineMatch.objects.filter())
+                if await self.check_round(): # for the case where theres one player in a match and thats the last/only match in the round
+                    await self.finish_round()
+                    await self.next_round()
+                else:
+                    await self.update_ready_status(self.user, True)
+                    id = await self.check_start_game(self.user) # check if we can start a game for that user
+                    if id != None:
+                        await self.start_game(id)
+            elif action == "get_tournament_state":
+                pass # the tournament state is always sent in the end
+            elif action == "game_end":
+                logger.debug(f'game_end received from {self.user.username}')
+                if await self.check_if_out():
+                    await self.send_json({
+                        "type": "you_lost",
+                    })
+                logger.debug('checking round')
+                if await self.check_round():
+                    logger.debug('the round is getting finished and advanced now')
+                    await self.finish_round()
+                    await self.next_round()
+                else:
+                    logger.debug('round cannot be finished')
+
+        except Exception as e:
+            await self.send_json({
+                "type": "error",
+                "message": str(e)
+            })
+        await self.broadcast_tournament()
+
+    @database_sync_to_async
+    def handle_user_disconnect(self):
+        self.tournament.refresh_from_db()
+        if self.tournament.status == 'completed':
+            return
+        if self.user not in self.tournament.participants.all():
+            return
+        self.tournament.participants.remove(self.user)
+        if str(self.user.id) in self.tournament.participants_ready_states:
+            del self.tournament.participants_ready_states[str(self.user.id)]
+        self.tournament.save()
+        # get all matches with the user from this tournament (room_id)
+        matches = OnlineMatch.objects.filter(
+            Q(room_id=self.room_id) & (Q(player1=self.user) | Q(player2=self.user))
+        )
+        # remove player from matches and replace with None
+        for match in matches:
+            if match.status == "pending":
+                logger.debug(f"Trying to remove {self.user.username} from match {match.id}")
+                removed = False
+                if self.user == match.player1:
+                    match.player1 = None
+                    removed = True
+                elif self.user == match.player2:
+                    match.player2 = None
+                    removed = True
+                if removed:
+                    match.winner = match.player1 if match.player1 != None else match.player2
+                    match.status = "failed"
+                    match.save()
+                    logger.debug(f"Removed {self.user.username} from match {match.id}")
+        # check if we can finish the round, because the player left. if so, finish the round
+        if self.check_round():
+            logger.debug(f'check_round returned True, finishing round after user disconnect')
+            self.finish_round()
+            self.next_round()
+
+    async def broadcast_tournament(self):
+        tournament_state = await database_sync_to_async(self.tournament.get_tournament_state)()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "tournament_state",
+                **tournament_state
+            }
+        )
+        
+
+    @database_sync_to_async
+    @transaction.atomic
+    def check_round(self):
+        logger.debug('check_round')
+        self.tournament.refresh_from_db()
+        round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+        flag = RoundService.check_round_finished(round)
+        if flag == True:
+            round.status = "completed" # already setting to completed, so not both consumers end the round
+            round.save()
+        self.tournament.save()
+        logger.debug(f'check_round returns {flag}')
+        return flag
+    
+    @database_sync_to_async
+    def check_if_out(self):
+        """gets last match from client and sends message if client lost"""
+        logger.debug('check_if_out start')
+        if self.tournament.type == TournamentType.ROUND_ROBIN:
+            return False
+        try:
+            current_round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+            match = current_round.matches.get(
+                Q(status="completed") & (Q(player1=self.user) | Q(player2=self.user))
+            )
+            logger.debug(f'check_if_out match.winner: {match.winner}, self.user: {self.user}')
+            return match.winner != self.user
+        except OnlineMatch.DoesNotExist:
+            logger.debug('No completed match found for the user in this room.')
+            return False
+    
+    @database_sync_to_async
+    def finish_round(self):
+        logger.debug(f'tournamentconsumer finish round, current_round: {self.tournament.current_round}')
+        self.tournament.refresh_from_db()
+        round_robin_winner_ids = RoundService.end_round(self.tournament.rounds.get(round_number=self.tournament.current_round))
+        if self.tournament.type == TournamentType.ROUND_ROBIN:
+            logger.debug(f'round_robin_winner_ids: {round_robin_winner_ids}')
+            for id in round_robin_winner_ids:
+                logger.debug(f'round_robin_winner_id: {id}')
+                if str(id) in self.tournament.round_robin_scores:
+                    self.tournament.round_robin_scores[str(id)] += 1
+                else:
+                    self.tournament.round_robin_scores[str(id)] = 1
+        self.tournament.participants_ready_states = {}
+        self.tournament.save()
+
+    @database_sync_to_async
+    def next_round(self):
+        logger.debug(f'tournamentconsumer next round, current_round: {self.tournament.current_round}')
+        self.tournament.refresh_from_db()
+        TournamentService.next_round(self.tournament)
+        self.tournament.save()
+        logger.debug(f'tournamentconsumer after function call current_round: {self.tournament.current_round}')
+
+    async def alert(self, event):
+        """handle the alert WebSocket message type."""
+        await self.send_json({
+            "type": "alert",
+            "message": event["message"],
+            "user_role": event["user_role"]  # Send the user role along with the message
+        })
+
+    async def tournament_state(self, event):
+        """handle the 'tournament_state' WebSocket message type."""
+        tournament_state = {
+            "room_id": event.get("room_id"),
+            "name": event.get("name"),
+            "tournament_type": event.get("tournament_type"),
+            "status": event.get("status"),
+            "rounds": event.get("rounds"),
+            "participants": event.get("participants"),
+            "round_robin_scores": event.get("round_robin_scores"),
+            "final_winner": event.get("final_winner"),
+            "current_stage": event.get("current_stage"),
+        }
+        await self.send(
+            text_data=json.dumps({
+                "type": "tournament_state",
+                "tournament_state": tournament_state
+            })
+        )
+
+    @database_sync_to_async
+    def update_ready_status(self, user, is_ready):
+        self.tournament.refresh_from_db()
+        if user in self.tournament.participants.all():
+            self.tournament.participants_ready_states[str(user.id)] = is_ready
+        self.tournament.save()
+
+    async def start_game(self, match_id):
+        logger.info('Starting game')
+        round = await database_sync_to_async(self.tournament.rounds.get)(round_number=self.tournament.current_round)
+        match = await self.get_match_for_round_and_id(round, match_id)
+        if match == None:
+            raise Exception("Match not found!")
+        p1 = match.player1
+        p2 = match.player2
+        if p1 == None or p2 == None:
+            raise Exception("Both players need to be real players to start a game!")
+        logger.debug(f"Sending message to start game for match {match_id}")
+        logger.debug(f"start_game p1_id: {p1.id}, p2_id: {p2.id}")
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "join_match",
+                "match_id": match_id,
+                "p1_id": p1.id,
+                "p2_id": p2.id
+            }
+)
+
+    @database_sync_to_async
+    def check_start_game(self, user):
+        """check if we can start a game for that user (in the current round)"""
+        #search for a game in the current round with that user and check if both players are ready
+        round = self.tournament.rounds.get(round_number=self.tournament.current_round)
+        match = round.matches.filter(player1=user).first() or round.matches.filter(player2=user).first()
+        if match and match.player1 and match.player2:
+            dict = self.tournament.participants_ready_states
+            id1 = match.player1.id
+            id2 = match.player2.id
+            logger.debug(f"check p1_id: {id1}, p2_id: {id2}")
+            if str(id1) in dict and str(id2) in dict and dict[str(id1)] and dict[str(id2)]:
+                return match.match_id
+
+    @database_sync_to_async
+    def get_match_for_round_and_id(self, round, match_id):
+        match = round.matches.filter(match_id=match_id).select_related('player1', 'player2').first()
+        return match
+    
+    async def join_match(self, event):
+        """
+        Handle the 'join_match' WebSocket message type.
+        This notifies the clients that they should join the game with the given match_id.
+        """
+        match_id = event["match_id"]
+        p1_id = event["p1_id"]
+        p2_id = event["p2_id"]
+
+        # Broadcast the message to the client that initiated the request
+        await self.send_json({
+            "type": "join_match",
+            "match_id": match_id,
+            "players": {
+                "p1_id": p1_id,
+                "p2_id": p2_id
+            }
+        })
+
+      
+class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.game_in_progress = False
+
+        self.left_paddle_y = 250
+        self.right_paddle_y = 250
+        self.left_paddle_speed = 0
+        self.right_paddle_speed = 0
+
+        self.ball_x = 500
+        self.ball_y = 250
+        self.ball_direction_x = 1
+        self.ball_direction_y = 0.5
+        self.ball_speed = 5
+
+        self.left_score = 0 # player1
+        self.right_score = 0 # player2
+
+        self.game_lock = Lock()
+        self.game_loop_task = None
+        self.countdown_task = None
+        self.match_end_task = None
+
+        self.left_player = None
+        self.right_player = None
+        self.match = None
+        self.room_id = None
+        self.match_id = None
+        
+        self.game_manager_channel = None
+
+    async def connect(self):
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.match_id = self.scope['url_route']['kwargs']['match_id']
+        self.room_group_name = f'tournament_match_{self.room_id}_{self.match_id}'
+        self.user = self.scope['user']
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+        
+        await self.initialize_match()
+
+        self.game_manager_channel = await self.get_or_create_game_manager(self.channel_name)
+        if self.game_manager_channel == self.channel_name:
+            logger.debug(f"Game manager channel created {self.channel_name} (user: {self.user.username})")
+        else:
+            logger.debug(f"Game manager channel already exists {self.game_manager_channel} (user: {self.user.username})")
+            await self.channel_layer.send(
+                self.game_manager_channel,
+                {
+                    "type": "player_ready",
+                }
+            )
+        # get the players the styling of the canvas
+        await self.send_game_settings()
+
+    @database_sync_to_async
+    def get_match_from_db(self):
+        return OnlineMatch.objects.select_related('player1', 'player2', 'winner').get(match_id=self.match_id, room_id=self.room_id)
+
+    async def initialize_match(self):
+        try:
+            self.match = await self.get_match_from_db()
+            self.left_player = self.match.player1
+            self.right_player = self.match.player2
+        except OnlineMatch.DoesNotExist as e:
+            await self.close()
+            raise Exception(f"Match not found {e}")
+
+    async def disconnect(self, close_code):
+        logger.info(f'User {self.scope["user"].username} disconnected from match {self.match_id}')
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "player_disconnected",
+                "user": await database_sync_to_async(get_display_name)(self.user)
+            }
+        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        if self.game_loop_task and not self.game_loop_task.done():
+            self.game_loop_task.cancel()
+            self.game_in_progress = False
+        if self.countdown_task and not self.countdown_task.done():
+            self.countdown_task.cancel()
+        if self.match_end_task and not self.match_end_task.done():
+            self.match_end_task.cancel()
+
+    async def receive_json(self, content):
+        try:
+            action = content.get("action")
+            logger.debug(f"Received action: {action} from user {self.user.username}")
+            if action in ["keydown", "keyup"]:
+                await self.handle_key_event(action, content)
+
+        except Exception as e:
+            logger.error(f"Error receiving message: {e}")
+            await self.send_json({"type": "error", "message": str(e)})
+
+    async def is_left_player_id(self, user_id):
+        return user_id == str(self.left_player.id)
+
+    async def handle_key_event(self, action, content):
+        key = content.get("key")
+        user_id = content.get("user_id")
+
+        max_speed = 10
+        if action == "keydown":
+            if key == "KeyW":
+                speed = -max_speed
+            elif key == "KeyS":
+                speed = max_speed
+            else:
+                speed = 0
+        else:
+            speed = 0
+        
+        if self.game_manager_channel:
+            await self.channel_layer.send(
+                self.game_manager_channel,
+                {
+                    "type": "update_paddle_speed",
+                    "speed": speed,
+                    "user_id": user_id
+                }
+            )
+        else:
+            logger.warning("Game manager channel is not set. Cannot send paddle speed update.")
+
+    async def update_paddle_speed(self, event):
+        user_id = event["user_id"]
+        speed = event["speed"]
+        async with self.game_lock:
+            if await self.is_left_player_id(user_id):
+                self.left_paddle_speed = speed
+            else:
+                self.right_paddle_speed = speed
+            logger.debug(f'updated paddle speeds: left: {self.left_paddle_speed} right: {self.right_paddle_speed}')
+
+    async def player_disconnected(self, event):
+        await self.send_json({
+            "type": "player_disconnected",
+            "user": event["user"]
+        })
+        await self.end_match()
+        
+
+    async def start_countdown(self):
+        try:
+            total_time = 5  # Total match time in seconds
+            for remaining_time in range(total_time, 0, -1):
+                logger.debug(f"Remaining time until start: {remaining_time}, sent from {self.user.username}")
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "timer_until_start",
+                        "remaining_time": remaining_time
+                    }
+                )
+                await asyncio.sleep(1)
+            if not self.game_in_progress:
+                await self.start_game()
+        except asyncio.CancelledError:
+            return
+
+    async def start_game(self):
+        if self.game_manager_channel == self.channel_name:
+            logger.debug('Game manager starting game loop')
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "game_started"}
+            )
+        self.game_in_progress = True
+        self.game_loop_task = asyncio.create_task(self.game_loop())
+        self.match_end_task = asyncio.create_task(self.match_timer())
+        
+
+    @database_sync_to_async
+    def set_game_manager(self, game_manager):
+        self.match.refresh_from_db()
+        self.match.game_manager = game_manager
+        self.match.save()
+
+    @database_sync_to_async
+    def get_game_manager(self):
+        self.match.refresh_from_db()
+        return self.match.game_manager
+    
+    @database_sync_to_async
+    def get_or_create_game_manager(self, channel_name):
+        with transaction.atomic():
+            match = OnlineMatch.objects.select_for_update().get(match_id=self.match_id, room_id=self.room_id)
+            if not match.game_manager:
+                match.game_manager = channel_name
+                match.save()
+            return match.game_manager
+
+
+    async def player_ready(self, event): # only received by the game manager, so the game manager can start the game
+        """game manager listenes to player_ready event, so it can start the game+countdown"""
+        logger.debug(f'player_ready event received by {self.user.username}')
+        self.countdown_task = asyncio.create_task(self.start_countdown())
+
+    async def match_timer(self):
+        try:
+            total_time = 5  # Total match time in seconds TODO set back to 30
+            for remaining_time in range(total_time, 0, -1):
+                logger.debug(f"Remaining time: {remaining_time}")
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "match_timer_update",
+                        "remaining_time": remaining_time
+                    }
+                )
+                await asyncio.sleep(1)
+            await self.end_match()
+        except asyncio.CancelledError:
+            return
+
+    async def end_match(self):
+        logger.info('ending match')
+        self.game_in_progress = False
+        if self.game_loop_task and not self.game_loop_task.done():
+            self.game_loop_task.cancel()
+        await self.save_match_results(self.left_score, self.right_score)
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "game_ended",
+            }
+        )
+
+    async def game_loop(self):
+        while self.game_in_progress:
+            await self.game_tick()
+            await asyncio.sleep(1 / 60)
+
+    async def game_tick(self):
+        async with self.game_lock:
+            self.left_paddle_y = max(0, min(self.left_paddle_y + self.left_paddle_speed, 440))
+            self.right_paddle_y = max(0, min(self.right_paddle_y + self.right_paddle_speed, 440))
+            self.ball_x += self.ball_direction_x * self.ball_speed
+            self.ball_y += self.ball_direction_y * self.ball_speed
+
+            if self.ball_y <= 0 or self.ball_y >= 500:
+                self.ball_direction_y *= -1
+
+            if self.ball_x <= 10 and self.left_paddle_y < self.ball_y < self.left_paddle_y + 60:
+                self.ball_direction_x *= -1
+            if self.ball_x >= 990 and self.right_paddle_y < self.ball_y < self.right_paddle_y + 60:
+                self.ball_direction_x *= -1
+
+            if self.ball_x <= 0:
+                self.right_score += 1
+                await self.reset_ball()
+            elif self.ball_x >= 1000:
+                self.left_score += 1
+                await self.reset_ball()
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "game_state",
+                    "leftScore": self.left_score,
+                    "rightScore": self.right_score,
+                    "ball_x": self.ball_x,
+                    "ball_y": self.ball_y,
+                    "left_paddle_y": self.left_paddle_y,
+                    "right_paddle_y": self.right_paddle_y,
+                    "left_speed": self.left_paddle_speed,
+                    "right_speed": self.right_paddle_speed,
+                }
+            )
+
+    async def reset_ball(self):
+        self.ball_x = 500
+        self.ball_y = 250
+        self.ball_direction_x = -1 if random.random() < 0.5 else 1
+        self.ball_direction_y = (random.random() * 2 - 1) * 0.5
+
+    @database_sync_to_async
+    def save_match_results(self, left_score, right_score):
+        self.match.refresh_from_db()
+
+        # Set the final scores
+        self.match.player1_score = left_score
+        self.match.player2_score = right_score
+
+        # record_match_result() handles winner, end_time, outcome, status, etc.
+        self.match.record_match_result()
+        logger.info(f'after save record_match_result: match status {self.match.status}, winner: {self.match.winner.username if self.match.winner else "no winner"}')
+    
+    @database_sync_to_async
+    def get_profile(self, user):
+        return user.profile
+    
+    async def send_game_settings(self):
+        left_profile = await self.get_profile(self.left_player)
+        right_profile = await self.get_profile(self.right_player)
+        game_settings = {
+            "paddleskin_image_left": left_profile.paddleskin_image.url if left_profile and left_profile.paddleskin_image else None,
+            "paddleskin_image_right": right_profile.paddleskin_image.url if right_profile and right_profile.paddleskin_image else None,
+            "paddleskin_color_left": left_profile.paddleskin_color if left_profile and left_profile.paddleskin_color else "#FFFFFF",
+            "paddleskin_color_right": right_profile.paddleskin_color if right_profile and right_profile.paddleskin_color else "#FFFFFF",
+        }
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "game_settings",
+                "settings": game_settings,
+            }
+        )
+    
+    async def game_settings(self, event):
+        await self.send_json({
+            "type": "game_settings",
+            "settings": event["settings"]
+        })
+
+    async def match_timer_update(self, event):
+        await self.send_json({
+            "type": "match_timer_update",
+            "remaining_time": event["remaining_time"]
+        })
+        
+    async def timer_until_start(self, event):
+        await self.send_json({
+            "type": "timer_until_start",
+            "remaining_time": event["remaining_time"]
+        })
+
+    async def game_state(self, event):
+        await self.send_json(event)
+
+    async def game_started(self, event):
+        await self.send_json({"type": "game_started"})
+
+    async def game_ended(self, event):
+        await self.send_json({
+            "type": "game_ended",
+        })

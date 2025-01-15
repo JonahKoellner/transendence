@@ -1,14 +1,14 @@
-import { Component } from '@angular/core';
+
 import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
-
+import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-user-search',
   templateUrl: './user-search.component.html',
   styleUrls: ['./user-search.component.scss']
 })
-export class UserSearchComponent {
+export class UserSearchComponent implements OnInit {
   searchQuery: string = '';
   users: UserProfile[] = [];
   error: string = '';
@@ -19,6 +19,10 @@ export class UserSearchComponent {
   itemsPerPageUsers: number = 50; // Items per page
 
   constructor(private userService: ProfileService, private friendService: FriendService, private toastr: ToastrService) { }
+  
+  ngOnInit(): void {
+    console.log("");
+  }
 
   searchUsers(): void {
     if (this.searchQuery.trim() === '') {

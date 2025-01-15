@@ -1,14 +1,22 @@
 <!-- src/app/leaderboard/leaderboard.component.html -->
-
 <div class="leaderboard-container">
   <h1>Leaderboards & Global Statistics</h1>
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <button [class.active]="activeTab === 'leaderboards'" (click)="activeTab = 'leaderboards'">
+    <!-- Example icons can be from FontAwesome, Material Icons, etc. -->
+    <button
+      [class.active]="activeTab === 'leaderboards'"
+      (click)="activeTab = 'leaderboards'"
+    >
+      <i class="fa fa-trophy tab-icon"></i>
       Leaderboards
     </button>
-    <button [class.active]="activeTab === 'charts'" (click)="activeTab = 'charts'">
+    <button
+      [class.active]="activeTab === 'charts'"
+      (click)="activeTab = 'charts'"
+    >
+      <i class="fa fa-chart-line tab-icon"></i>
       Charts
     </button>
   </div>
@@ -24,82 +32,98 @@
     <p>{{ error }}</p>
   </div>
 
-  <!-- Content -->
+  <!-- Main Content -->
   <div *ngIf="!isLoading && !error" class="content">
 
     <!-- Leaderboards Tab Content -->
-    <div *ngIf="activeTab === 'leaderboards'">
-
+    <div *ngIf="activeTab === 'leaderboards'" class="fade-up">
+      
       <!-- Global Statistics Section -->
       <div *ngIf="globalStats" class="global-stats">
         <h2>Global Statistics</h2>
         <div class="stats-grid">
           <div class="stat-item">
+            <i class="fa fa-users stat-icon"></i>
             <strong>Total Users:</strong>
             <span>{{ globalStats.total_users }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-gamepad stat-icon"></i>
             <strong>Total Games:</strong>
             <span>{{ globalStats.total_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-robot stat-icon"></i>
             <strong>Total PvE Games:</strong>
             <span>{{ globalStats.total_pve_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-user-friends stat-icon"></i>
             <strong>Total Local PvP Games:</strong>
             <span>{{ globalStats.total_pvp_local_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-globe stat-icon"></i>
             <strong>Total Online PvP Games:</strong>
             <span>{{ globalStats.total_pvp_online_games }}</span>
           </div>
 
           <!-- New Game Modes -->
           <div class="stat-item">
+            <i class="fa fa-bomb stat-icon"></i>
             <strong>Total Chaos PvE Games:</strong>
             <span>{{ globalStats.total_chaos_pve_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-skull stat-icon"></i>
             <strong>Total Chaos PvP Games:</strong>
             <span>{{ globalStats.total_chaos_pvp_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-skull-crossbones stat-icon"></i>
             <strong>Total Online Chaos PvP Games:</strong>
             <span>{{ globalStats.total_online_chaos_pvp_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-crosshairs stat-icon"></i>
             <strong>Total Arena PvP Games:</strong>
             <span>{{ globalStats.total_arena_pvp_games }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-network-wired stat-icon"></i>
             <strong>Total Online Arena PvP Games:</strong>
             <span>{{ globalStats.total_online_arena_pvp_games }}</span>
           </div>
 
           <div class="stat-item">
+            <i class="fa fa-trophy stat-icon"></i>
             <strong>Total Tournaments:</strong>
             <span>{{ globalStats.total_tournaments }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-check stat-icon"></i>
             <strong>Completed Tournaments:</strong>
             <span>{{ globalStats.completed_tournaments }}</span>
           </div>
           <div class="stat-item">
-            <strong>Average Games per User:</strong>
+            <i class="fa fa-calculator stat-icon"></i>
+            <strong>Average Games/User:</strong>
             <span>{{ globalStats.average_games_per_user }}</span>
           </div>
           <div class="stat-item">
-            <strong>Average Tournaments per User:</strong>
+            <i class="fa fa-chart-pie stat-icon"></i>
+            <strong>Average Tournaments/User:</strong>
             <span>{{ globalStats.average_tournaments_per_user }}</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-clock stat-icon"></i>
             <strong>Average Game Duration:</strong>
-            <span>{{ globalStats.average_game_duration }} seconds</span>
+            <span>{{ globalStats.average_game_duration }} s</span>
           </div>
           <div class="stat-item">
+            <i class="fa fa-hourglass-half stat-icon"></i>
             <strong>Average Tournament Duration:</strong>
-            <span>{{ globalStats.average_tournament_duration }} seconds</span>
+            <span>{{ globalStats.average_tournament_duration }} s</span>
           </div>
         </div>
       </div>
@@ -108,7 +132,7 @@
       <div class="leaderboards-section">
 
         <!-- Top XP Leaderboard -->
-        <div *ngIf="leaderboardXP.length" class="leaderboard">
+        <div *ngIf="leaderboardXP?.length" class="leaderboard">
           <h2>Top XP</h2>
           <table>
             <thead>
@@ -120,7 +144,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let entry of leaderboardXP">
+              <tr
+                *ngFor="let entry of leaderboardXP; let i = index"
+                [class.top1]="i === 0"
+                [class.top2]="i === 1"
+                [class.top3]="i === 2"
+              >
                 <td>{{ entry.rank }}</td>
                 <td>{{ entry.display_name }}</td>
                 <td>{{ entry.username }}</td>
@@ -131,7 +160,7 @@
         </div>
 
         <!-- Most Wins Leaderboard -->
-        <div *ngIf="leaderboardMostWins.length" class="leaderboard">
+        <div *ngIf="leaderboardMostWins?.length" class="leaderboard">
           <h2>Most Wins</h2>
           <table>
             <thead>
@@ -143,7 +172,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let entry of leaderboardMostWins">
+              <tr
+                *ngFor="let entry of leaderboardMostWins; let i = index"
+                [class.top1]="i === 0"
+                [class.top2]="i === 1"
+                [class.top3]="i === 2"
+              >
                 <td>{{ entry.rank }}</td>
                 <td>{{ entry.display_name }}</td>
                 <td>{{ entry.username }}</td>
@@ -154,7 +188,7 @@
         </div>
 
         <!-- Most Games Played Leaderboard -->
-        <div *ngIf="leaderboardMostGames.length" class="leaderboard">
+        <div *ngIf="leaderboardMostGames?.length" class="leaderboard">
           <h2>Most Games Played</h2>
           <table>
             <thead>
@@ -166,7 +200,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let entry of leaderboardMostGames">
+              <tr
+                *ngFor="let entry of leaderboardMostGames; let i = index"
+                [class.top1]="i === 0"
+                [class.top2]="i === 1"
+                [class.top3]="i === 2"
+              >
                 <td>{{ entry.rank }}</td>
                 <td>{{ entry.display_name }}</td>
                 <td>{{ entry.username }}</td>
@@ -177,7 +216,7 @@
         </div>
 
         <!-- Most Tournament Wins Leaderboard -->
-        <div *ngIf="leaderboardMostTournamentWins.length" class="leaderboard">
+        <div *ngIf="leaderboardMostTournamentWins?.length" class="leaderboard">
           <h2>Most Tournament Wins</h2>
           <table>
             <thead>
@@ -189,7 +228,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let entry of leaderboardMostTournamentWins">
+              <tr
+                *ngFor="let entry of leaderboardMostTournamentWins; let i = index"
+                [class.top1]="i === 0"
+                [class.top2]="i === 1"
+                [class.top3]="i === 2"
+              >
                 <td>{{ entry.rank }}</td>
                 <td>{{ entry.display_name }}</td>
                 <td>{{ entry.username }}</td>
@@ -198,15 +242,14 @@
             </tbody>
           </table>
         </div>
-
       </div>
-
     </div>
 
     <!-- Charts Tab Content -->
-    <div *ngIf="activeTab === 'charts'" class="charts-section">
+    <div *ngIf="activeTab === 'charts'" class="charts-section fade-up">
       <h2>Global Statistics Charts</h2>
       <div class="charts-container">
+        <!-- Example usage of a custom charts component -->
         <app-charts-global-details [chartData]="chartData!"></app-charts-global-details>
       </div>
     </div>

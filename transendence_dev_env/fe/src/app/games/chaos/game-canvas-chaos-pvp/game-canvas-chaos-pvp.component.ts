@@ -84,7 +84,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load left paddle image. Falling back to color.');
           resolve();
         };
       }));
@@ -100,7 +99,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load ball image. Falling back to color.');
           resolve();
         };
       }));
@@ -116,7 +114,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
           resolve();
         };
         img.onerror = () => {
-          console.warn('Failed to load background image. Falling back to color.');
           resolve();
         };
       }));

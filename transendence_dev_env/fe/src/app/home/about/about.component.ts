@@ -39,7 +39,7 @@ export class AboutComponent implements OnInit, OnDestroy {
     'b', 'a'
   ];
   konamiIndex: number = 0;
-
+  currentIndex = 0;
   // Reference to the event handler for removal
   private keyDownHandler!: (e: KeyboardEvent) => void;
 
@@ -57,27 +57,28 @@ export class AboutComponent implements OnInit, OnDestroy {
     {
       name: 'Lukas Kreuzer',
       avatar: 'https://cdn.intra.42.fr/users/384cad88316a2ad0b74b16caa26fff48/lkreuzer.png',
-      role: 'Focused on backend development and server-side logic.'
+      role: `Led the project end-to-end, overseeing both the technical vision and creative direction. 
+             He designed much of the front-end UI/UX, architected large parts of the backend, 
+             and ensured the overall cohesion between all project components.`
     },
     {
       name: 'Jonah Köllner',
       avatar: 'https://cdn.intra.42.fr/users/33446a7c706db8e85a8a1f272e42b014/jkollner.jpg',
-      role: 'Focused on front-end design and user experience.'
+      role: `Owned the DevOps side of the project, setting up automated build pipelines and deployment workflows. 
+             He worked to optimize performance, streamline continuous integration, 
+             and maintain high uptime across the production environment.`
     },
     {
       name: 'Gergely Pásztor',
       avatar: 'https://cdn.intra.42.fr/users/3c1f08193b22c4acd4b8abd1f431a693/gpasztor.jpg',
-      role: 'Focused on database integration and API development.'
+      role: `Developed the core game mechanics, focusing on the logic and real-time rendering of the canvas UI. 
+             He fine-tuned physics, animations, and overall gameplay flow to deliver an engaging player experience.`
     },
     {
       name: 'Niklas Burchhardt',
       avatar: 'https://cdn.intra.42.fr/users/8c087da4532c6d41740814505a57a870/nburchha.jpg',
-      role: 'Coordinated the project and ensured timely delivery.'
-    },
-    {
-      name: 'Felix Böck',
-      avatar: 'https://cdn.intra.42.fr/users/896c969a835505db23a2c1cb9cd5527c/fbock.jpg',
-      role: 'Focused on testing and maintaining code quality.'
+      role: `Implemented the comprehensive online tournament system, enabling players to join and compete in large-scale brackets. 
+             He ensured reliable matchmaking, bracket management, and robust networking for a seamless multiplayer experience.`
     }
   ];
 
@@ -96,8 +97,8 @@ export class AboutComponent implements OnInit, OnDestroy {
         'Decided not to implement due to unclear requirements and limited practical benefits.'
       ],
       subModules: [
-        { description: 'Use a Framework as backend (1 point) - Integrated using Django.', status: 'completed' },
-        { description: 'Use a front-end framework (0.5 points) - Leveraged Angular and Bootstrap for UI development.', status: 'completed' },
+        { description: 'Use a Framework as backend (1 point)', status: 'completed' },
+        { description: 'Use a front-end framework (0.5 points)', status: 'completed' },
         { description: 'Database Integration (0.5 points) - Implemented with PostgreSQL for relational data management.', status: 'completed' },
         { description: 'Blockchain Score Storage (1 point)', status: 'incomplete' }
       ]
@@ -192,12 +193,12 @@ export class AboutComponent implements OnInit, OnDestroy {
       status: 'in_progress',
       description: 'Graphics Module',
       details: 'Developing advanced 3D graphics techniques to enhance visual appeal and user engagement.',
-      totalPoints: 0,
+      totalPoints: 1,
       implementationDetails: [
         'Currently implementing advanced 3D techniques to improve game visuals and user experience.'
       ],
       subModules: [
-        { description: 'Implementing Advanced 3D Techniques (1 point)', status: 'in_progress' }
+        { description: 'Implementing Advanced 3D Techniques (1 point)', status: 'completed' }
       ]
     },
     {
@@ -205,19 +206,19 @@ export class AboutComponent implements OnInit, OnDestroy {
       status: 'in_progress',
       description: 'Accessibility Module',
       details: 'Making the application accessible to all users by supporting multiple devices, languages, and accessibility features.',
-      totalPoints: 0.5,
+      totalPoints: 1.0,
       implementationDetails: [
         'Creating pong on mobile was too tedious due to the complexity of the UI and game mechanics.',
         'Ensured expanding browser compatibility to support all major browsers.',
         'Decided to just use english as the main language due to time constraints and limited practical benefits.',
-        'Adding accessibility features for visually impaired users to enhance inclusivity.',
+        'Used a high contrast theme, clean and clear text with usage of alt texts and specific html elements.',
         'We didnt want to add server-side rendering due to time constraints and limited practical benefits.'
       ],
       subModules: [
         { description: 'Support on all devices (0.5 points)', status: 'incomplete' },
         { description: 'Expanding Browser Compatibility (0.5 points) - Ensured functionality across all major browsers.', status: 'completed' },
         { description: 'Multiple language supports (0.5 points)', status: 'incomplete' },
-        { description: 'Add accessibility for Visually Impaired Users (0.5 points)', status: 'in_progress' },
+        { description: 'Add accessibility for Visually Impaired Users (0.5 points)', status: 'completed' },
         { description: 'Server-Side Rendering (SSR) Integration (0.5 points)', status: 'incomplete' }
       ]
     },
@@ -237,10 +238,10 @@ export class AboutComponent implements OnInit, OnDestroy {
       ]
     }
   ];
-
   constructor(public sanitizer: DomSanitizer) { }
 
   ngOnInit() {
+    window.scrollTo(0, 0);
     this.loadKonamiCode();
     this.computeModuleProgress();
   }
@@ -310,5 +311,27 @@ export class AboutComponent implements OnInit, OnDestroy {
         module.status = 'incomplete';
       }
     });
+  }
+
+  prevContributor() {
+    const track = document.querySelector('.carousel-track') as HTMLElement;
+    const slides = Array.from(track.children) as HTMLElement[];
+    
+    // Decrement index
+    this.currentIndex = (this.currentIndex - 1 + slides.length) % slides.length;
+    
+    // Move track
+    track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+  }
+  
+  nextContributor() {
+    const track = document.querySelector('.carousel-track') as HTMLElement;
+    const slides = Array.from(track.children) as HTMLElement[];
+    
+    // Increment index
+    this.currentIndex = (this.currentIndex + 1) % slides.length;
+    
+    // Move track
+    track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
   }
 }
