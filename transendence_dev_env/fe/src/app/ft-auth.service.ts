@@ -4,8 +4,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { environment } from 'src/environment';
-
+import { environment } from 'src/environments/environment';
 export interface FtUser {
   id: number
   email: string
@@ -220,12 +219,17 @@ export interface CampusUser {
   updated_at: string
 }
 
+export interface FtSecrets {
+  ft_secret: string
+  ft_uid: string
+}
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class FtAuthService {
-  private clientId = environment.ft_uid;
+  private ft_secrets: FtSecrets = { ft_secret: '', ft_uid: '' };
   private redirectUri = `${window.location.origin}/auth/callback`;
   private authUrl = 'https://api.intra.42.fr/oauth/authorize';
   private tokenUrl = 'https://api.intra.42.fr/oauth/token';
@@ -234,18 +238,26 @@ export class FtAuthService {
   private tokenExpiresIn: Number | null = null;
   private refreshToken: string | null = null;
   private secretValidUntil: Number | null = null;
-
+  private base = environment.apiUrl + '/accounts/';
   constructor(private http: HttpClient, private router: Router) { }
+
+  getFtSecrets(): Observable<FtSecrets> {
+    return this.http.get<FtSecrets>(`${this.base}get-vault-secret/`);
+  }
 
   // Initiate the OAuth2 login flow
   login(): void {
-    const params = new HttpParams()
-      .set('client_id', this.clientId)
-      .set('redirect_uri', this.redirectUri)
-      .set('response_type', 'code')
-      .set('scope', 'public'); // Adjust scopes as needed
-
-    window.location.href = `${this.authUrl}?${params.toString()}`;
+    this.redirectUri = `${window.location.origin}/auth/callback`;
+    this.getFtSecrets().subscribe({ next: (secrets) => {
+      this.ft_secrets = secrets;
+      const params = new HttpParams()
+        .set('client_id', this.ft_secrets.ft_uid)
+        .set('redirect_uri', this.redirectUri)
+        .set('response_type', 'code')
+        .set('scope', 'public');
+  
+      window.location.href = `${this.authUrl}?${params.toString()}`;
+    } });
   }
 
   // Handle the OAuth2 callback and exchange code for access token
@@ -256,11 +268,11 @@ export class FtAuthService {
     if (code) {
       // Exchange the authorization code for an access token
       const body = new HttpParams()
-        .set('grant_type', 'authorization_code')
-        .set('client_id', this.clientId)
-        .set('client_secret', environment.ft_secret) // **Do not expose client_secret on frontend**
-        .set('code', code)
-        .set('redirect_uri', this.redirectUri);
+      .set('grant_type', 'authorization_code')
+      .set('client_id', this.ft_secrets.ft_uid)
+      .set('client_secret', this.ft_secrets.ft_secret)
+      .set('code', code)
+      .set('redirect_uri', this.redirectUri);
 
       const headers = new HttpHeaders({
         'Content-Type': 'application/x-www-form-urlencoded'

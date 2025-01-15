@@ -2,34 +2,149 @@ version: '3.8'
 
 services:
 
-  # nginx:
-  #   build:
-  #     context: ./fe
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - django
-  #   networks:
-  #     - webnet
+
+  # Elasticsearch Service
+  elasticsearch:
+    container_name: elasticsearch
+    build:
+      context: ./elk/elasticsearch
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    #   - discovery.type=single-node
+    #   - xpack.security.enabled=true
+    #   - bootstrap.memory_lock=true
+    #   - ELASTIC_PASSWORD=elapwd
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    env_file:
+      - ./elk/.env
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+      # - elasticsearch-service-token:/usr/share/elasticsearch/service_token
+      - ./data/elk-shared:/usr/share/elasticsearch/shared
+    networks:
+      - elk-net
+      - host-bridge
+
+  # Logstash Service
+  logstash:
+    container_name: logstash
+    build:
+      context: ./elk/logstash
+    # network_mode: host
+    ports:
+      # - "5234:5234"  # For Beats input
+      - "5240:5240"  # For GELF input
+      - "5240:5240/udp"
+      - "5431:5431/udp"
+      - "5431:5431"
+      - "5959:5959"
+    env_file:
+      - ./elk/.env
+    volumes:
+      #- ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./data/elk-shared:/usr/share/logstash/shared
+    depends_on:
+      - elasticsearch
+    networks:
+      # - elk-net
+      host-bridge:
+        ipv4_address: 172.25.0.10
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 30s
+      retries: 10
+      start_period: 10s
+      #timeout: 10s
+
+  # Kibana Service
+  kibana:
+    container_name: kibana
+    build:
+      context: ./elk/kibana
+    ports:
+      - "5601:5601"
+    # environment:
+    #   - KIBANA_ENCRYPTION_KEY=${KIBANA_ENCRYPTION_KEY}
+    #   - ELASTICSEARCH_HOSTS=https://localhost:9200
+    #   - ELASTICSEARCH_USERNAME=elastic
+    #   - ELASTICSEARCH_PASSWORD=elapwd
+      # - KIBANA_USER_PASSWORD=kibanapassword
+    env_file:
+      - ./elk/.env
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-net
+      - host-bridge
+    volumes:
+      # - elasticsearch-service-token:/usr/share/kibana/service_token
+      - ./data/elk-shared:/usr/share/kibana/shared
+
+  hashicorpvault:
+    container_name: hashicorpvault
+    build:
+      context: ./keyvault
+      dockerfile: Dockerfile
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./data/vault-data:/usr/local/data
+    depends_on:
+      logstash:
+        condition: service_healthy
+    env_file:
+      - ./keyvault/.env
+    # environment:
+      # VAULT_DEV_ROOT_TOKEN_ID: "root"  # Default root token for testing
+      # VAULT_ADDR: https://0.0.0.0:8200
+      # VAULT_SKIP_VERIFY: "true"
+    networks:
+      - webnet
+      - app-net
+      - elk-net
+      - host-bridge
+    logging:
+      driver: "gelf"
+      options:
+        # gelf-address: "udp://172.25.9.10:5240"
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
 
-  angular:
+  nginx:
+    container_name: nginx
     build:
       context: ./fe
     ports:
-      - "4200:4200"
-    volumes:
-      - ./fe:/app  # Mount the local Angular app to the container
-      - /app/node_modules  # Ensure node_modules is not overwritten
-    environment:
-      - CHOKIDAR_USEPOLLING=true  # Use polling for file changes
-    command: ng serve --host 0.0.0.0 --poll 1000  # Serve with polling enabled
-    depends_on:
-      - django
+      - "80:80"
+      - "443:443"
+    # depends_on:
+    #   - django
     networks:
       - webnet
+      - app-net
+      - elk-net
+      - host-bridge
+    depends_on:
+      django:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    logging:
+      driver: "gelf"
+      options:
+        # gelf-address: "udp://172.25.9.10:5240"
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
   django:
+    container_name: django
     build:
       context: ./be
     command: >
@@ -40,47 +155,115 @@ services:
              daphne -b 0.0.0.0 -p 8000 be.asgi:application"
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_DB=mydb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - DB_HOST=db
-      - DB_PORT=5432
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DJANGO_SETTINGS_MODULE=be.settings
-      - DOMAIN=localhost
+    env_file:
+      - ./be/.env
     depends_on:
-      - db
-      - redis
+      logstash:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - webnet
+      - app-net
+      - elk-net
+      - host-bridge
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
     volumes:
       - ./be:/app  # Bind mount for the Django app code
       - ./static:/app/static  # Static files directory
+      - ./data/vault-data:/home/vault-data
 
   db:
-    image: postgres:17
-    environment:
-      - POSTGRES_DB=mydb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
+    container_name: db
+    # image: postgres:17
+    build: 
+      context: ./db
+    env_file:
+      - ./db/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Named volume for database persistence
     ports:
       - "5432:5432"
+    depends_on:
+      logstash:
+        condition: service_healthy
     networks:
       - webnet
+      - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
   redis:
-    image: redis:6-alpine
+    container_name: redis
+    # image: redis:6-alpine
+    build: 
+      context: ./redis
+      args:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+    env_file:
+      - ./redis/.env
     ports:
       - "6379:6379"
     networks:
       - webnet
+      - app-net
+      - elk-net
+      - host-bridge
+    depends_on:
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:5240"
+        tag: "{{.Name}}"
 
 networks:
   webnet:
+  elk-net:
+    driver: bridge
+  app-net:
+    driver: bridge
+  host-bridge:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
 
 volumes:
-  postgres_data:  # Persistent volume for PostgreSQL data
+  postgres_data:
+    driver: local
+  esdata:
+    driver: local
+  # elasticsearch-service-token:
+  #   driver: local
+  elk-shared:
+    driver: local
+  vault-data:
+    driver: local

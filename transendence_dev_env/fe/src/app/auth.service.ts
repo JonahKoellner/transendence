@@ -5,9 +5,8 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { WebsocketService } from './services/websocket.service';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
-
 @Injectable({
   providedIn: 'root'
 })

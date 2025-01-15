@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 import { Tournament } from './tournament/local/start/start.component';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 export interface Player {
   id: number | null;
@@ -91,7 +91,7 @@ export interface UserStats {
   total_tournaments_participated: number;
   total_tournaments_won: number;
   average_tournament_duration: number;
-  
+
   // Ranking Fields
   rank_by_xp: number;
   rank_by_wins: number;
@@ -117,7 +117,7 @@ export interface GlobalStats {
   average_tournaments_per_user: number;
   average_game_duration: number;
   average_tournament_duration: number;
-  
+
   // Leaderboards
   leaderboard_xp: LeaderboardEntry[];
   leaderboard_most_wins: LeaderboardEntry[];
@@ -242,7 +242,7 @@ export class GameService {
         })
       );
     }
-  
+
     // Get a single tournament by ID
     getTournamentById(tournamentId: number): Observable<Tournament> {
       return this.http.get<Tournament>(`${this.tournamentApiUrl}${tournamentId}/`, { headers: this.getHeaders() }).pipe(
@@ -252,7 +252,7 @@ export class GameService {
         })
       );
     }
-  
+
     // Update a tournament by ID
     updateTournament(tournamentId: number, tournamentData: Partial<Tournament>): Observable<Tournament> {
       return this.http.patch<Tournament>(`${this.tournamentApiUrl}${tournamentId}/`, tournamentData, { headers: this.getHeaders() }).pipe(
@@ -262,7 +262,7 @@ export class GameService {
         })
       );
     }
-  
+
     // Delete a tournament by ID
     deleteTournament(tournamentId: number): Observable<void> {
       return this.http.delete<void>(`${this.tournamentApiUrl}${tournamentId}/`, { headers: this.getHeaders() }).pipe(
@@ -272,7 +272,7 @@ export class GameService {
         })
       );
     }
-  
+
     // Get tournaments by participant
     getTournamentsByParticipant(participantName: string): Observable<Tournament[]> {
       return this.http.get<Tournament[]>(`${this.tournamentApiUrl}by-participant/?participant=${participantName}`, { headers: this.getHeaders() }).pipe(
@@ -292,7 +292,7 @@ export class GameService {
         })
       );
     }
-  
+
     /**
      * Fetch global statistics.
      * @returns Observable of GlobalStats.
@@ -303,6 +303,16 @@ export class GameService {
         catchError((error) => {
           console.error('Error fetching global stats:', error);
           return of({} as GlobalStats);
+        })
+      );
+    }
+    
+    getGameStats(gameId: string): Observable<any> {
+      const url = `${this.statsApiUrl}detailed-stats/${gameId}/`;
+      return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
+        catchError((error) => {
+          console.error('Error fetching global stats:', error);
+          return of({} as any);
         })
       );
     }

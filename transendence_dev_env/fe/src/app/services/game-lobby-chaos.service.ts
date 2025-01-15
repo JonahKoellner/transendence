@@ -5,7 +5,7 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
 import { GameSettings } from '../games/online-pvp-chaos/create-room/create-room-chaos.component';
 import { Router } from '@angular/router';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'

@@ -36,7 +36,7 @@ from django.utils.encoding import force_bytes
 logger = logging.getLogger('accounts')
 from anymail.message import AnymailMessage
 from django.conf import settings
-
+import hvac
 class PasswordResetRequestView(APIView):
     """
     Handle password reset requests by sending an email with a reset link.
@@ -1003,8 +1003,42 @@ class AchievementListView(APIView):
         achievements = Achievement.objects.all()
         serializer = AchievementSerializer(achievements, many=True, context={'request': request})
         return Response(serializer.data)
+
     
-    
+class HashiView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+            # Vault configuration
+        VAULT_ADDR = 'https://hashicorpvault:8200'
+        VAULT_CACERT = '/home/vault-data/vault.crt'
+        try:
+            with open('/home/vault-data/vault_token.tok', 'r') as f:
+                VAULT_TOKEN = f.read().strip()
+        except Exception as e:
+            return Response({'error': f'Error reading Vault token: {str(e)}'}, status=500)
+
+        # Initialize the Vault client
+        client = hvac.Client(
+            url=VAULT_ADDR,
+            token=VAULT_TOKEN,
+            verify=VAULT_CACERT
+        )
+
+        # Path to the secret
+        secret_path = 'ft_secrets'
+
+        try:
+            # Read the secret from Vault
+            secret_response = client.secrets.kv.v2.read_secret_version(path=secret_path)
+            secret_data = secret_response['data']['data']
+            # print(secret_data)
+            logger.info(f'Successfully retrieved secret: {secret_data}')
+            return Response(secret_data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
 class UserStatsView(APIView):
     """
     API view to retrieve user statistics for display on the user detail page.

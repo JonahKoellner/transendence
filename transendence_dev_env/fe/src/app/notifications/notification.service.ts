@@ -3,9 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { WebsocketService } from '../services/websocket.service';
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AuthService } from '../auth.service';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
-
 export interface SendGameInvitePayload {
   receiver_id: number;
   room_id: string;

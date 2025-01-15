@@ -22,7 +22,7 @@ from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls"), name="accounts"),
-    path("games/", include("games.urls"), name="game"),
+    path("api/accounts/", include("accounts.urls"), name="accounts"),
+    path("api/games/", include("games.urls"), name="game"),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
