@@ -36,7 +36,7 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
 
   ngAfterViewInit() {
     const context = this.canvas.nativeElement.getContext('2d');
-    if (context && this.gameState !== null) {
+    if (context) {
       this.context = context;
       this.loadImages().then(() => {
         this.drawGame();
@@ -153,6 +153,10 @@ export class GameDisplayComponent implements AfterViewInit, OnChanges {
    * Draws the entire game state on the canvas.
    */
   drawGame() {
+    //only draw game if we have gamestate
+    if (this.gameState === null) {
+      return;
+    }
     // Draw background
     this.drawBackground();
 
