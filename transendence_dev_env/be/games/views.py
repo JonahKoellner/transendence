@@ -1456,7 +1456,6 @@ class StatsViewSet(viewsets.ViewSet):
                 filter=Q(online_tournaments_won__final_winner=OuterRef('id'))
             )
         ).values('online_wins')
-#TODO check if this works
         leaderboard_most_tournament_wins_qs = User.objects.annotate(
             tournament_wins=Count(
                 'hosted_tournaments',
@@ -1469,7 +1468,7 @@ class StatsViewSet(viewsets.ViewSet):
                 "user_id": user.id,
                 "username": user.username,
                 "display_name": user.profile.display_name,
-                "value": user.hosted_tournaments.filter(final_winner=user.username).count()
+                "value": user.hosted_tournaments.filter(final_winner=user.username).count() + user.online_tournaments_won.count()
             }
             for index, user in enumerate(leaderboard_most_tournament_wins_qs)
         ]
