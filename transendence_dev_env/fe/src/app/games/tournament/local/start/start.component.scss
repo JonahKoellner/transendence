@@ -520,6 +520,10 @@
     }
   }
 
+.current-match-display {
+    text-align: center;
+}
+
   .leave-buttons {
     display: flex;
     gap: 10px;
@@ -547,4 +551,3 @@
     background-color: rgba(0, 0, 0, 0.2);
     transition: width 1.5s linear; /* Controls the fill animation duration */
   }
-  
