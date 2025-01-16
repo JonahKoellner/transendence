@@ -2,7 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { FriendService } from 'src/app/friend.service';
 import { ProfileService, UserProfile } from 'src/app/profile.service';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-friend-list',

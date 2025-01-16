@@ -4,7 +4,7 @@ import { BehaviorSubject, catchError, of, Observable, Subject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 import { OnlineTournament } from '../games/tournament/online/online.component'
 
 @Injectable({

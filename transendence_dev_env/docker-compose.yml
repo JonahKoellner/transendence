@@ -217,10 +217,10 @@ services:
     # image: redis:6-alpine
     build: 
       context: ./redis
-      args:
-        REDIS_PASSWORD: ${REDIS_PASSWORD}
-    env_file:
-      - ./redis/.env
+    #   args:
+    #     REDIS_PASSWORD: ${REDIS_PASSWORD}
+    # env_file:
+    #   - ./redis/.env
     ports:
       - "6379:6379"
     networks:

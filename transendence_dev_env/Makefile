@@ -5,18 +5,33 @@
 generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 32 | tr -d '/+' | head -c 24), $(shell head -c 24 /dev/urandom | base64 | tr -d '/+' | head -c 24)))
 
 generate_passwords:
-	@echo "Generating passwords..."
+	@echo "Generating elk passwords..."
 	@echo "ELASTIC_PASSWORD=$(call generate-password)" > ./elk/.env
 	@echo "KIBANA_ENCRYPTION_KEY=$(call generate-password)" >> ./elk/.env
 	@echo "ELASTIC_ADMIN_PASSWORD=$(call generate-password)" >> ./elk/.env
 	@echo "ELASTIC_LOGSTASH_PASSWORD=$(call generate-password)" >> ./elk/.env
 	@echo "Passwords generated and stored in .env file."
 	
-	@echo "Generating hashicorp keyvaul password..."
+	@echo "Generating hashicorp keyvault password..."
 	@echo "UI_USER=ADMIN" > ./keyvault/.env
 	@echo "UI_PASSWORD=$(call generate-password)" >> ./keyvault/.env
 	@echo "VAULT_ADDR=https://0.0.0.0:8200" >> ./keyvault/.env
 	@echo "Passwords generated and stored in ./keyvault/.env file."
+
+	@echo "Generating db passwords..."
+	$(eval DB_PASS=$(call generate-password))
+	@echo "POSTGRES_DB=mydb" > ./db/.env
+	@echo "POSTGRES_USER=user" >> ./db/.env
+	@echo "POSTGRES_PASSWORD=$(DB_PASS)" >> ./db/.env
+	@echo "Generating be passwords..."
+	@echo "POSTGRES_DB=mydb" > ./be/.env
+	@echo "POSTGRES_USER=user" >> ./be/.env
+	@echo "POSTGRES_PASSWORD=$(DB_PASS)" >> ./be/.env
+	@echo "DB_HOST=db" >> ./be/.env
+	@echo "DB_PORT=5432" >> ./be/.env
+	@echo "REDIS_HOST=redis" >> ./be/.env
+	@echo "REDIS_PORT=6379" >> ./be/.env
+	@echo "DJANGO_SETTINGS_MODULE=be.settings" >> ./be/.env
 
 	@echo "Generting redis password..."
 	$(eval REDIS_PASS=$(call generate-password))

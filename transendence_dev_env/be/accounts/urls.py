@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import RegisterView, LoginView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet, AchievementListView, PasswordResetRequestView, PasswordResetConfirmView, HashiView, UserStatsView
+from .views import RegisterView, LoginView, VerifyOTPView, TokenRefreshView, Enable2FAView, Disable2FAView, LogoutView, UserViewSet, NotificationViewSet, ChatMessageViewSet, AchievementListView, PasswordResetRequestView, PasswordResetConfirmView, HashiView, UserStatsView, GlobalStatsView
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')

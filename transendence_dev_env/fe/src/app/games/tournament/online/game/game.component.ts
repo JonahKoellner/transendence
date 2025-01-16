@@ -4,7 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import { GameDisplayService } from 'src/app/services/game-display.service';
 import { Subscription } from 'rxjs';
 import { UserProfile } from 'src/app/profile.service';
-import { environment } from 'src/environment';
+import { environment } from 'src/environments/environment';
 
 interface GameSettings {
   paddleskin_color_left?: string;
