@@ -44,6 +44,7 @@ addHost:
 	@if ! grep -q '^DOMAIN=' be/.env; then \
         echo "DOMAIN=$$(hostname)" >> be/.env; \
     fi
+	@echo "~~ Your 42 API Authentication Callback URL is: https://$$(hostname)/auth/callback ~~"
 
 ask42APIKey:
 	@read -p "Enter the value for ftUID: " ftUID; \

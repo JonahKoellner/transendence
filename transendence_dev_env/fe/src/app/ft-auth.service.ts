@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { switchMap, catchError, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 export interface FtUser {
   id: number
@@ -232,7 +232,7 @@ export class FtAuthService {
   private ft_secrets: FtSecrets = { ft_secret: '', ft_uid: '' };
   private redirectUri = `${window.location.origin}/auth/callback`;
   private authUrl = 'https://api.intra.42.fr/oauth/authorize';
-  private tokenUrl = 'https://api.intra.42.fr/oauth/token';
+  private tokenUrl = '/ftapi/oauth/token';
   private accessToken: string | null = null;
   private tokenCreatedAt: Number | null = null;
   private tokenExpiresIn: Number | null = null;
@@ -266,39 +266,49 @@ export class FtAuthService {
     const code = params.get('code');
 
     if (code) {
-      // Exchange the authorization code for an access token
-      const body = new HttpParams()
-      .set('grant_type', 'authorization_code')
-      .set('client_id', this.ft_secrets.ft_uid)
-      .set('client_secret', this.ft_secrets.ft_secret)
-      .set('code', code)
-      .set('redirect_uri', this.redirectUri);
-
-      const headers = new HttpHeaders({
-        'Content-Type': 'application/x-www-form-urlencoded'
-      });
-
-      return this.http.post<any>(this.tokenUrl, body.toString(), { headers }).pipe(
-        tap(response => {
-          this.accessToken = response.access_token;
-          this.tokenCreatedAt = response.created_at;
-          this.tokenExpiresIn = response.expires_in;
-          this.refreshToken = response.refresh_token;
-          this.secretValidUntil = response.secret_valid_until;
-          // Ideally, send the token to your backend to create a session
-          // For demonstration, we'll set the flag directly
-          // Replace with your user service logic
-          // Example:
-          // this.userService.setAuthenticated(true);
-          // Here, we'll use localStorage as a simple example
-          // console.log('Access token:', this.accessToken);
-          // console.log('response:', response);
-          localStorage.setItem('ft_access_token', this.accessToken!);
-          localStorage.setItem('ft_refresh_token', this.refreshToken!);
-          localStorage.setItem('ft_secret_valid_until', String(this.secretValidUntil!));
-          localStorage.setItem('ft_token_created_at', String(this.tokenCreatedAt!));
-          localStorage.setItem('ft_token_expires_in', String(this.tokenExpiresIn!));
-          this.router.navigate(['/profile']);
+      return this.getFtSecrets().pipe(
+        switchMap((secrets: FtSecrets) => {
+          this.ft_secrets = secrets;
+          // Exchange the authorization code for an access token
+          // console.log('Sending token request with client_id:', this.ft_secrets.ft_uid); // Debugging line
+  
+          const body = new HttpParams()
+            .set('grant_type', 'authorization_code')
+            .set('client_id', this.ft_secrets.ft_uid)
+            .set('client_secret', this.ft_secrets.ft_secret)
+            .set('code', code)
+            .set('redirect_uri', this.redirectUri);
+  
+          const headers = new HttpHeaders({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
+  
+          // console.log("Body:", body);
+          // console.log("Headers:", headers);
+  
+          return this.http.post<any>(this.tokenUrl, body.toString(), { headers }).pipe(
+            tap(response => {
+              this.accessToken = response.access_token;
+              this.tokenCreatedAt = response.created_at;
+              this.tokenExpiresIn = response.expires_in;
+              this.refreshToken = response.refresh_token;
+              this.secretValidUntil = response.secret_valid_until;
+              // Ideally, send the token to your backend to create a session
+              // For demonstration, we'll set the flag directly
+              // Replace with your user service logic
+              // Example:
+              // this.userService.setAuthenticated(true);
+              // Here, we'll use localStorage as a simple example
+              // console.log('Access token:', this.accessToken);
+              // console.log('response:', response);
+              localStorage.setItem('ft_access_token', this.accessToken!);
+              localStorage.setItem('ft_refresh_token', this.refreshToken!);
+              localStorage.setItem('ft_secret_valid_until', String(this.secretValidUntil!));
+              localStorage.setItem('ft_token_created_at', String(this.tokenCreatedAt!));
+              localStorage.setItem('ft_token_expires_in', String(this.tokenExpiresIn!));
+              this.router.navigate(['/profile']);
+            })
+          );
         })
       );
     } else {
@@ -337,7 +347,9 @@ export class FtAuthService {
       'Authorization': `Bearer ${token}`
     });
 
-    return this.http.get<any>('https://api.intra.42.fr/v2/me', { headers }).pipe(
+    // console.log("Getting 42 user profile with header", headers);
+
+    return this.http.get<any>('/ftapi/v2/me', { headers }).pipe(
       catchError(error => {
         console.error('Error fetching 42 user profile:', error);
         return throwError(error);

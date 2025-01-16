@@ -18,7 +18,7 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // 1) Bypass refresh for specific endpoints if needed:
     if (
-      req.url.includes('api.intra.42.fr') ||
+      req.url.includes('/ftapi') ||
       req.url.endsWith('/accounts/logout/') ||
       req.url.endsWith('/accounts/login/') ||
       req.url.endsWith('/accounts/register/') ||
