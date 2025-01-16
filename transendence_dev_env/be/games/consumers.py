@@ -2538,8 +2538,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             return False
         return self.user == lobby.host
 
-#TODO when is the tournament deleted? -> only via rest endpoint, or not at all. we want to keep the tournament for stats and stuff
-
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']

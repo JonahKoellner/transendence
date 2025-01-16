@@ -1127,7 +1127,7 @@ class UserStatsView(APIView):
                 host=profile.user
             ).count()
             tournaments_won = Tournament.objects.filter(
-                final_winner=profile.user #TODO check if this works
+                final_winner=profile.user
             ).count()
 
             # Online
