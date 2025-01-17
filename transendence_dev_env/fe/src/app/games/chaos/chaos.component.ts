@@ -32,8 +32,9 @@ export class ChaosComponent  implements OnInit, OnDestroy {
   hostProfile: UserProfile | null = null; // Default until profile loads
   private gameIntervalId: any;
   private roundIntervalId: any;
-  player2Name: string = 'Player 2';
+  countdownTimer: number = 0;
 
+  player2Name: string = 'Player 2';
   displayNameHost: string = 'Player 1';
 
   settings: GameSettings = {
@@ -95,11 +96,17 @@ export class ChaosComponent  implements OnInit, OnDestroy {
         this.previousGames.push(...this.logs);
         this.logs = [];
       }
-      this.currentGame = game;
-      this.gameInProgress = true;
-      this.logs.push('New game started in PvE mode');
-      this.startTimers();
-      this.startNewRound();
+      this.countdownTimer = 3;
+      let countdownIntervalID = setInterval(() => {
+      this.countdownTimer--;
+      if (this.countdownTimer <= 0) {
+        clearInterval(countdownIntervalID);
+        this.currentGame = game;
+        this.gameInProgress = true;
+        this.logs.push('New game started in PvE mode');
+        this.startTimers();
+        this.startNewRound();
+      }}, 1000);
     });
   }
 

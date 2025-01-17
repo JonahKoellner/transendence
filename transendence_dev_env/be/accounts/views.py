@@ -26,7 +26,7 @@ from .models import Notification, ChatMessage, FriendRequest, Achievement, UserA
 from django.db import models
 from django.db.models import Count, Q, F, Sum, Avg
 import be.settings as besettings
-from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby
+from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby, OnlineTournament
 from django.utils import timezone
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import logging
@@ -73,7 +73,7 @@ class PasswordResetRequestView(APIView):
                 return Response({"message": "Password reset email sent"}, status=status.HTTP_200_OK)
             except Exception as e:
                 logger.error(f"Error sending password reset email to {email}: {e}")
-                return Response({"error": "Error sending email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"error": "Error sending email"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             logger.warning(f"Invalid password reset request data: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -324,32 +324,54 @@ class VerifyOTPView(APIView):
 
 class TokenRefreshView(SimpleJWTTokenRefreshView):
     def post(self, request, *args, **kwargs):
-        logger.debug("got JWT refresh request")
+        logger.debug("Received JWT refresh request")
         refresh_token = request.COOKIES.get('refresh_token')
+
+        # If no refresh token is found, return a 401 Unauthorized response
         if not refresh_token:
-            logger.debug("no refresh token found in TokenRefreshView")
-            return Response({"message": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        serializer = self.get_serializer(data={'refresh': refresh_token})
-        serializer.is_valid(raise_exception=True)
-        
-        # Set new tokens
-        access_token = serializer.validated_data['access']
+            logger.debug("No refresh token found in TokenRefreshView")
+            return Response(
+                {"message": "Refresh token not found"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            # Attempt to validate the refresh token using the serializer
+            serializer = self.get_serializer(data={'refresh': refresh_token})
+            serializer.is_valid(raise_exception=True)
+        except serializers.ValidationError as ve:
+            # Validation errors (e.g., invalid or expired token) result in a 401 response
+            logger.error("Invalid refresh token", exc_info=ve)
+            return Response(
+                {"message": "Invalid refresh token"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except Exception as e:
+            # Catch-all for any other unexpected errors
+            logger.exception("Unexpected error during token refresh")
+            return Response(
+                {"message": "Unexpected error during token refresh"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # If validation succeeds, proceed to set new tokens
+        access_token = serializer.validated_data.get('access')
         new_refresh_token = serializer.validated_data.get('refresh')
         response_data = {'access': access_token}
         response = Response(response_data)
-        
-        # Update refresh token cookie if rotated
+
+        # Update refresh token cookie if rotation is enabled and a new token is provided
         if api_settings.ROTATE_REFRESH_TOKENS and new_refresh_token:
-            logger.debug("rotating JWT refresh token")
+            logger.debug("Rotating JWT refresh token")
             response.set_cookie(
                 'refresh_token',
                 new_refresh_token,
-                max_age=api_settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                max_age=int(api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()),
                 httponly=True,
                 secure=False,
-                samesite='Lax' if besettings.DEBUG else 'None'
+                samesite='Lax'  # Adjust based on your DEBUG settings if needed
             )
+
         logger.debug(f"Sending new access token: {response_data}")
         return response
 
@@ -507,6 +529,17 @@ class UserViewSet(viewsets.ModelViewSet):
         # Check if the user is blocked
         if receiver_profile in sender_profile.blocked_users.all() or sender_profile in receiver_profile.blocked_users.all():
             return Response({'detail': 'You cannot send a friend request to a blocked user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        #handle already sent friend request
+        existing_request = FriendRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=user_to_add)) | 
+            (Q(sender=user_to_add) & Q(receiver=request.user))
+        ).first()
+        if existing_request:
+            if existing_request.status == FriendRequest.PENDING:
+                return Response({'detail': 'Friend request already sent.'}, status=status.HTTP_400_BAD_REQUEST)
+            elif existing_request.status == FriendRequest.ACCEPTED:
+                return Response({'detail': 'You are already friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if a friend request already exists in either direction
         
@@ -1017,7 +1050,8 @@ class HashiView(APIView):
             with open('/home/vault-data/vault_token.tok', 'r') as f:
                 VAULT_TOKEN = f.read().strip()
         except Exception as e:
-            return Response({'error': f'Error reading Vault token: {str(e)}'}, status=500)
+            return Response({'error': f'Error reading Vault token: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST)
 
         # Initialize the Vault client
         client = hvac.Client(
@@ -1037,7 +1071,10 @@ class HashiView(APIView):
             logger.info(f'Successfully retrieved secret: {secret_data}')
             return Response(secret_data)
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class UserStatsView(APIView):
     """
@@ -1156,6 +1193,7 @@ class UserStatsView(APIView):
                 })
 
             # 5. Tournaments Participated vs. Won
+            # Local
             tournaments_participated = Tournament.objects.filter(
                 host=profile.user
             ).count()
@@ -1163,6 +1201,19 @@ class UserStatsView(APIView):
                 final_winner=profile.user
             ).count()
 
+            # Online
+            participated_tmp = OnlineTournament.objects.filter(
+                participants=profile.user
+            ).count()
+            logger.info(f"online tournaments participated by {profile.user.username}: {participated_tmp}")
+            tournaments_participated += participated_tmp
+            
+            won_tmp = OnlineTournament.objects.filter(
+                final_winner = profile.user
+            ).count()
+            logger.info(f"online tournaments won by {profile.user.username}: {won_tmp}")
+            tournaments_won += won_tmp
+            
             tournaments_stats = {
                 "participated": tournaments_participated,
                 "won": tournaments_won
@@ -1209,7 +1260,7 @@ class UserStatsView(APIView):
             logger.error(f"Error in UserStatsView GET: {e}")
             return Response(
                 {"detail": "An unexpected error occurred."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )
             
 class GlobalStatsView(APIView):
@@ -1327,5 +1378,5 @@ class GlobalStatsView(APIView):
             logger.error(f"Error in GlobalStatsView GET: {e}")
             return Response(
                 {"detail": "An unexpected error occurred."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )

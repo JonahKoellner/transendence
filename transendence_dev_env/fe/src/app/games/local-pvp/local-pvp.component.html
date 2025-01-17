@@ -4,7 +4,7 @@
   </header>
 
   <!-- Game Settings and Player Names -->
-  <section class="settings" *ngIf="!gameInProgress && !currentGame">
+  <section class="settings" *ngIf="!gameInProgress && !currentGame && countdownTimer === 0">
     <div class="setting-item">
       <h4>Max Rounds</h4>
       <input type="number" [(ngModel)]="settings.maxRounds" name="maxRounds" min="1" max="25" step="1"
@@ -64,7 +64,13 @@
   </section>
 
   <!-- Game Progress and Controls -->
-  <section class="game-view" *ngIf="gameInProgress && currentGame">
+  <div class="countdown-wrapper" *ngIf="countdownTimer > 0">
+    <div class="countdown-timer">
+      <p>{{ countdownTimer }}</p>
+    </div>
+  </div>
+
+  <section class="game-view" *ngIf="gameInProgress && currentGame && countdownTimer === 0">
     <p class="score">
       {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
       <strong>{{ player1Name }}:</strong> {{ currentGame.score_player1 }} -

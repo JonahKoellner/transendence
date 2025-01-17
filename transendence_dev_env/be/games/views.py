@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import models
-from django.db.models import Avg, Count, Sum, Q, F
+from django.db.models import Avg, Count, Sum, Q, F, OuterRef, Subquery
 from django.contrib.auth.models import User
 from accounts.models import Profile
 from .models import Tournament, Match, Game, Lobby, ChaosLobby, ArenaLobby, Stage, TournamentType, MatchOutcome, TournamentLobby, OnlineTournament
@@ -1280,10 +1280,18 @@ class StatsViewSet(viewsets.ViewSet):
         # Aggregations for tournaments
         tournaments_participated = Tournament.objects.filter(
             Q(host=target_user) | Q(all_participants__contains=[target_user.username])
+        ).annotate(duration_alias=F('duration'))
+        online_tournaments_participated = OnlineTournament.objects.filter(
+            Q(participants=target_user)
+        ).annotate(duration_alias=F('duration'))
+
+        total_tournaments_participated = tournaments_participated.count() + online_tournaments_participated.count()
+        total_tournaments_won = tournaments_participated.filter(final_winner=target_user.username).count() + online_tournaments_participated.filter(final_winner=target_user).count()
+
+        combined_tournaments = tournaments_participated.values('duration_alias').union(
+            online_tournaments_participated.values('duration_alias')
         )
-        total_tournaments_participated = tournaments_participated.count()
-        total_tournaments_won = tournaments_participated.filter(final_winner=target_user.username).count()
-        average_tournament_duration = tournaments_participated.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
+        average_tournament_duration = combined_tournaments.aggregate(avg_duration=Avg('duration_alias'))['avg_duration'] or 0.0
 
         # Calculate Ranks
         # Enhanced Rank by XP considering both level and XP
@@ -1305,6 +1313,9 @@ class StatsViewSet(viewsets.ViewSet):
             tournament_wins=Count(
                 'hosted_tournaments',
                 filter=Q(hosted_tournaments__final_winner=F('username'))
+            ) + Count(
+                'online_tournaments_won',
+                filter=Q(online_tournaments_won__final_winner__id=OuterRef('id'))
             )
         ).filter(tournament_wins__gt=total_tournaments_won).count() + 1
 
@@ -1357,8 +1368,8 @@ class StatsViewSet(viewsets.ViewSet):
         total_arena_pvp_games = Game.objects.filter(game_mode=Game.ARENA_PVP).count()
         total_online_arena_pvp_games = Game.objects.filter(game_mode=Game.ONLINE_ARENA_PVP).count()
 
-        total_tournaments = Tournament.objects.count()
-        completed_tournaments = Tournament.objects.filter(status='completed').count()
+        total_tournaments = Tournament.objects.count() + OnlineTournament.objects.count()
+        completed_tournaments = Tournament.objects.filter(status='completed').count() + OnlineTournament.objects.filter(status='completed').count()
 
         # Calculate total games played by all users
         games_played_p1 = Game.objects.values('player1').annotate(total=Count('id')).aggregate(total_p1=Sum('total'))['total_p1'] or 0
@@ -1374,6 +1385,13 @@ class StatsViewSet(viewsets.ViewSet):
         for tournament in tournaments:
             if tournament.all_participants:
                 total_tournament_participations += len(tournament.all_participants)
+
+        # Query all OnlineTournament objects and annotate the count of participants
+        online_tournaments = OnlineTournament.objects.annotate(participant_count=Count('participants'))
+        # Sum the participant counts
+        online_tournaments_participants = online_tournaments.aggregate(total_participants=Sum('participant_count'))['total_participants'] or 0
+        logger.info(f'online_tournaments_participants: {online_tournaments_participants}')
+        total_tournament_participations += online_tournaments_participants
         average_tournaments_per_user = total_tournament_participations / total_users if total_users > 0 else 0
 
         # Additional Global Stats
@@ -1381,7 +1399,13 @@ class StatsViewSet(viewsets.ViewSet):
         average_game_duration = Game.objects.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
 
         # Calculate average tournament duration
-        average_tournament_duration = Tournament.objects.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0.0
+        local_tournaments = Tournament.objects.annotate(duration_alias=F('duration'))
+        online_tournaments = OnlineTournament.objects.annotate(duration_alias=F('duration'))
+
+        combined_tournaments = local_tournaments.values('duration_alias').union(
+            online_tournaments.values('duration_alias')
+        )
+        average_tournament_duration = combined_tournaments.aggregate(avg_duration=Avg('duration_alias'))['avg_duration'] or 0.0
 
         # Leaderboards
         # Leaderboard by XP
@@ -1424,11 +1448,19 @@ class StatsViewSet(viewsets.ViewSet):
         ]
 
         # Leaderboard by Most Tournament Wins
+        online_tournament_wins = User.objects.filter(
+            id=OuterRef('id')
+        ).annotate(
+            online_wins=Count(
+                'online_tournaments_won',
+                filter=Q(online_tournaments_won__final_winner=OuterRef('id'))
+            )
+        ).values('online_wins')
         leaderboard_most_tournament_wins_qs = User.objects.annotate(
             tournament_wins=Count(
                 'hosted_tournaments',
                 filter=Q(hosted_tournaments__final_winner=F('username'))
-            )
+            ) + Subquery(online_tournament_wins)
         ).order_by('-tournament_wins')[:10]
         leaderboard_most_tournament_wins = [
             {
@@ -1436,7 +1468,7 @@ class StatsViewSet(viewsets.ViewSet):
                 "user_id": user.id,
                 "username": user.username,
                 "display_name": user.profile.display_name,
-                "value": user.hosted_tournaments.filter(final_winner=user.username).count()
+                "value": user.hosted_tournaments.filter(final_winner=user.username).count() + user.online_tournaments_won.count()
             }
             for index, user in enumerate(leaderboard_most_tournament_wins_qs)
         ]

@@ -22,7 +22,7 @@ export class PvpGameCanvasComponent {
 
   intervalID!: number;
   gameTimerID!: number;
-  timeLeft: number = 1;
+  timeLeft: number = 30;
 
   leftPaddleSpeed: number = 0;
   rightPaddleSpeed: number = 0;

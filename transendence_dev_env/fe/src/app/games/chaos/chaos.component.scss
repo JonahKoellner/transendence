@@ -129,7 +129,75 @@
         }
       }
     }
-  
+
+    .countdown-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50vh;
+    }
+    
+    .countdown-timer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
+      width: 120px; /* Increased size for better visibility */
+      height: 120px;
+      border: 4px solid #61ba50; /* Added green border */
+      border-radius: 50%;
+      
+      font-size: 2.5rem; /* Increased font size */
+      font-weight: bold;
+      color: #61ba50; /* Changed text color to green */
+      text-shadow: 0 0 5px rgba(97, 186, 80, 0.7); /* Added glow to text */
+      
+      animation: pulse 1.5s infinite; /* Slowed down pulse for better effect */
+      box-shadow: 0 0 20px rgba(97, 186, 80, 0.5); /* Added subtle glow */
+      position: relative;
+    }
+    
+    .countdown-timer::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      top: 0;
+      left: 0;
+      box-shadow: 0 0 20px 5px rgba(97, 186, 80, 0.3);
+      animation: rotate 4s linear infinite; /* Adds a rotating glow */
+      z-index: -1;
+    }
+    
+    .countdown-timer p {
+      margin: 0;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(97, 186, 80, 0.5);
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 30px rgba(97, 186, 80, 0.7);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(97, 186, 80, 0.5);
+      }
+    }
+    
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     .game-view {
       margin: 2rem 0;
       text-align: center;

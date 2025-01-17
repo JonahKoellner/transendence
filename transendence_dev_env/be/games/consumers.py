@@ -1217,6 +1217,9 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
+        # Clear power-ups for next round
+        self.active_power_ups = []
+
         # Reset scores for next round
         self.left_score = 0
         self.right_score = 0
@@ -2537,8 +2540,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
         except TournamentLobby.DoesNotExist:
             return False
         return self.user == lobby.host
-
-#TODO when is the tournament deleted? -> only via rest endpoint, or not at all. we want to keep the tournament for stats and stuff
 
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):

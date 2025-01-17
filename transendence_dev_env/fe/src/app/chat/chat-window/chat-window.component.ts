@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, ElementRef, ViewChild } from '@angular/core';
 import { ChatMessage, ChatService } from '../chat.service';
 
 @Component({
@@ -6,77 +6,86 @@ import { ChatMessage, ChatService } from '../chat.service';
   templateUrl: './chat-window.component.html',
   styleUrls: ['./chat-window.component.scss']
 })
-export class ChatWindowComponent implements OnInit {
-  @Input() friendId!: number;  // ID of the friend for chat history
-  @Input() friendUsername!: string;  // Username of the friend for sending messages
+export class ChatWindowComponent implements OnInit, OnChanges {
+  @Input() friendId!: number;
+  @Input() friendUsername!: string;
   messages: ChatMessage[] = [];
-  newMessage: string = '';  // Model for the message input
-  isLoading = false
+  newMessage: string = '';
+  isLoading = false;
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   constructor(private chatService: ChatService) { }
 
   ngOnInit(): void {
-    console.log("");
     this.isLoading = true;
-    this.joinChatRoom();  // Join WebSocket room for real-time updates
-    this.loadChatHistory();  // Load chat history from the backend
-    this.listenForIncomingMessages();  // Listen for incoming messages via WebSocket
+    this.joinChatRoom();
+    this.loadChatHistory();
+    this.listenForIncomingMessages();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    const friendIdChange = changes['friendId'];
+    if (friendIdChange && !friendIdChange.firstChange) {
+      // Reset state for new chat
+      this.messages = [];
+      this.newMessage = '';
+      this.isLoading = true;
 
-  // Load chat history using the friend's ID
+      // Update room and reload history for new friend
+      this.joinChatRoom();
+      this.loadChatHistory();
+    }
+  }
+
   loadChatHistory(): void {
-    this.chatService.getChatHistory(this.friendId).subscribe((messages) => {
-      this.messages = messages;
-      // if (messages.length > 0)
-      // {
-      //   this.scrollToBottom();
-      // }
-      this.isLoading = false;
-      (error: any) => {
+    this.chatService.getChatHistory(this.friendId).subscribe(
+      (messages) => {
+        this.messages = messages;
+        this.isLoading = false;
+      },
+      (error) => {
         console.error(error);
         this.isLoading = false;
       }
-    });
+    );
   }
 
-  // Listen for real-time incoming messages via WebSocket
   listenForIncomingMessages(): void {
     this.chatService.receiveMessages().subscribe((message: ChatMessage) => {
-      // Check if the message is part of the current chat
       if (
         message.sender.username === this.friendUsername ||
         message.receiver.username === this.friendUsername
       ) {
-        if (message.notification_type !== 'new_message') return;  // Ignore other notifications
-        // if (this.messages.length > 0)
-        //   this.scrollToBottom();
-        this.messages.push(message);  // Add the new message to the chat
+        if (message.notification_type !== 'new_message') return;
+        this.messages.push(message);
       }
     });
   }
-  
+
   sendMessage(): void {
     if (this.newMessage.trim()) {
       this.chatService.sendMessageViaRest(this.newMessage, this.friendId).subscribe(
         (response) => {
-          // if (this.messages.length > 0)
-          //   this.scrollToBottom();
-          this.messages.push(response);  // Add the new message to the chat
+          this.messages.push(response);
         },
         (error) => {
           console.error(error);
         }
-      );  // Send via WebSocket
-      this.newMessage = '';  // Clear input after sending
+      );
+      this.newMessage = '';
     }
   }
 
-  // Join the chat room
   joinChatRoom(): void {
-    const roomName = `chat_${this.friendUsername}`;  // Ensure the room name is consistent
+    const roomName = `chat_${this.friendUsername}`;
     this.chatService.joinRoom(roomName);
+  }
+
+  onEnterPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.sendMessage();
+    }
   }
 
   private scrollToBottom(): void {
@@ -84,12 +93,6 @@ export class ChatWindowComponent implements OnInit {
       this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
     } catch (err) {
       console.error("Could not scroll to bottom:", err);
-    }
-  }
-  onEnterPress(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // Prevent newline in textarea
-      this.sendMessage();
     }
   }
 }

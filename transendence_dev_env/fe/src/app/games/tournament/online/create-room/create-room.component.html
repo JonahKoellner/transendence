@@ -1,17 +1,32 @@
-<div class="create-room-loading">
-  <!-- Trophy icon (SVG or image) -->
-  <div class="trophy-icon">
-    <svg viewBox="0 0 24 24">
-      <path
-        fill="#61BA50"
-        d="M18 2h-3V1a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1H6a2 2 0 0 0-2 2v2a3 3 0 0 0 3 3c0 2.61 1.67 4.84 4 5.66V16H8a2 2 0 0 0-2 2v1h12v-1a2 2 0 0 0-2-2h-3v-1.34c2.33-.82 4-3.05 4-5.66a3 3 0 0 0 3-3V4a2 2 0 0 0-2-2Zm0 4a1 1 0 0 1-1 1h-1v1c0 2.21-1.79 4-4 4s-4-1.79-4-4V7H7a1 1 0 0 1-1-1V4h12Z"
-      />
-    </svg>
+<div class="create-room-container">
+  <div class="animated-background"></div>
+  
+  <div class="create-room-header">
+    <h2 class="retro-title">Create a New Tournament</h2>
+    <div class="trophy-icon">
+      <svg viewBox="0 0 24 24">
+        <path
+          fill="#61BA50"
+          d="M18 2h-3V1a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1H6a2 2 0 0 0-2 2v2a3 3 0 0 0 3 3c0 2.61 1.67 4.84 4 5.66V16H8a2 2 0 0 0-2 2v1h12v-1a2 2 0 0 0-2-2h-3v-1.34c2.33-.82 4-3.05 4-5.66a3 3 0 0 0 3-3V4a2 2 0 0 0-2-2Zm0 4a1 1 0 0 1-1 1h-1v1c0 2.21-1.79 4-4 4s-4-1.79-4-4V7H7a1 1 0 0 1-1-1V4h12Z"
+        />
+      </svg>
+    </div>
   </div>
 
-  <!-- Spinner / Loader -->
-  <div class="spinner"></div>
+  <button
+    class="neon-button"
+    [class.holding]="isHolding"
+    (mousedown)="onMouseDown()"
+    (mouseup)="onMouseUp()"
+    (mouseleave)="onMouseLeave()"
+    (touchstart)="onTouchStart()"
+    (touchend)="onTouchEnd()"
+  >
+    <span>Create Tournament</span>
+    <div class="hold-progress" [style.width.%]="holdProgress"></div>
+  </button>
 
-  <!-- Loading text -->
-  <p class="init-message">Initializing Tournament...</p>
+  <!-- <div class="hold-instruction" *ngIf="!isHolding && holdProgress === 0">
+    Hold the button for 0.5 seconds to create a tournament
+  </div> -->
 </div>

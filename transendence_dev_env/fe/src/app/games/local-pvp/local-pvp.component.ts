@@ -36,6 +36,8 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
   private gameIntervalId: any;
   private roundIntervalId: any;
 
+  countdownTimer: number = 0;
+
   settings: GameSettings = {
     maxRounds: 3,
     roundScoreLimit: 3
@@ -89,11 +91,17 @@ export class LocalPvpComponent implements OnInit, OnDestroy {
         this.previousGames.push(...this.logs);
         this.logs = [];
       }
-      this.currentGame = game;
-      this.gameInProgress = true;
-      this.logs.push(`New game started between ${this.player1Name} and ${this.player2Name}`);
-      this.startTimers();
-      this.startNewRound();
+      this.countdownTimer = 3;
+      let countdownIntervalID = setInterval(() => {
+        this.countdownTimer--;
+        if (this.countdownTimer <= 0) {
+          clearInterval(countdownIntervalID);
+          this.currentGame = game;
+          this.gameInProgress = true;
+          this.logs.push(`New game started between ${this.player1Name} and ${this.player2Name}`);
+          this.startTimers();
+          this.startNewRound();
+        }} , 1000);
     });
   }
 

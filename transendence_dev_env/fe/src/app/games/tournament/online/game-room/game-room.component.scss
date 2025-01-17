@@ -5,8 +5,6 @@
   padding: 2rem;
   border-radius: 12px;
   position: relative;
-
-  /* Background & Visuals */
   background: linear-gradient(
     135deg,
     rgba(14, 15, 16, 0.95),
@@ -15,6 +13,7 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
   color: #e0e0e0;
   overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
 
   /* Subtle Animated Glow in the background */
   &::before {
@@ -57,6 +56,7 @@
       margin-bottom: 1rem;
       font-weight: bold;
       text-shadow: 0 0 10px rgba(97, 186, 80, 0.7);
+      transition: color 0.3s;
     }
 
     .header-actions {
@@ -68,6 +68,13 @@
       p {
         font-size: 1.2rem;
         color: #adb5bd;
+        cursor: pointer;
+        text-decoration: underline;
+        transition: color 0.3s;
+        
+        &:hover {
+          color: #fff;
+        }
       }
 
       .copy-link-btn {
@@ -80,7 +87,7 @@
         cursor: pointer;
         transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
 
-        &:hover {
+        &:hover:not(:disabled) {
           background-color: #45a049;
           transform: translateY(-2px);
           box-shadow: 0 4px 10px rgba(69, 160, 73, 0.5);
@@ -116,7 +123,7 @@
         background-color: #222;
         color: #e0e0e0;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 
         &.selected {
           background-color: #61ba50;
@@ -181,7 +188,7 @@
         border-radius: 20px;
         background-color: #222;
         color: #e0e0e0;
-        transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        transition: background-color 0.3s, color 0.3s, box-shadow 0.3s, border-color 0.3s;
 
         &.selected {
           background-color: #61ba50;
@@ -193,12 +200,6 @@
         &:hover:not(:disabled) {
           background-color: #61ba50;
           color: #fff;
-        }
-
-        &:hover:disabled {
-          background-color: #222;
-          color: #e0e0e0;
-          cursor: not-allowed;
         }
 
         &:disabled {
@@ -234,7 +235,7 @@
       border-radius: 8px;
       padding: 1rem;
       width: 300px;
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 
       &:hover {
@@ -249,7 +250,7 @@
 
       &.ready {
         border-color: #61ba50;
-        box-shadow: 0 0 15px rgba(97, 186, 80, 0.7);
+        box-shadow: 0 0 15px rgba(97, 186, 80, 0.5);
       }
 
       &.not-ready {
@@ -279,6 +280,7 @@
           border-radius: 4px;
           font-size: 0.85rem;
           text-transform: uppercase;
+          transition: background-color 0.3s, color 0.3s;
 
           &.ready {
             background-color: #61ba50;
@@ -313,6 +315,15 @@
       transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
       margin: 0.5rem;
       min-width: 150px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        margin-right: 0.5rem;
+        width: 24px;
+        height: 24px;
+      }
 
       &:hover:not(:disabled) {
         background-color: #45a049;
