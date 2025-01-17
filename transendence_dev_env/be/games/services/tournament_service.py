@@ -212,15 +212,14 @@ class TournamentService:
             xp_gain *= size_multiplier
 
             # Convert to integer
-            xp_gain = int(xp_gain)
+            xp_gain = int(xp_gain / 10)
 
             # ----------------------------------------------------------------
             # 8. Update user's XP
             # ----------------------------------------------------------------
             # Example: if you store XP on user.profile
-            user.profile.xp += xp_gain
+            user.profile.add_xp(xp_gain)
             logger.debug(f'User {user} gained {xp_gain} XP in tournament {tournament}')
-            user.profile.save()
 
     @staticmethod
     def get_round_robin_rank(tournament, user):
