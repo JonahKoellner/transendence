@@ -146,22 +146,22 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
   setAIParameters(): void {
     switch (this.gameSettings?.difficulty) {
       case 'Easy':
-        this.aiMoveSpeed = 3;
+        this.aiMoveSpeed = 1;
         this.predictionRandomness = 10;
         this.aiUpdateInterval = 700;
         break;
       case 'Medium':
-        this.aiMoveSpeed = 5;
+        this.aiMoveSpeed = 2;
         this.predictionRandomness = 5;
         this.aiUpdateInterval = 550;
         break;
       case 'Hard':
-        this.aiMoveSpeed = 7;
+        this.aiMoveSpeed = 3;
         this.predictionRandomness = 2.5;
         this.aiUpdateInterval = 400;
         break;
       default:
-        this.aiMoveSpeed = 5;
+        this.aiMoveSpeed = 1;
         this.predictionRandomness = 10;
         this.aiUpdateInterval = 550;
     }
