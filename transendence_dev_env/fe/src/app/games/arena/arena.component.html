@@ -4,7 +4,7 @@
   </header>
 
   <!-- Controls Information -->
-  <section class="controls-info" *ngIf="!gameInProgress && !currentGame">
+  <section class="controls-info" *ngIf="!gameInProgress && !currentGame && countdownTimer === 0">
     <h4>Controls:</h4>
     <ul>
       <li>
@@ -28,7 +28,7 @@
   </section>
 
   <!-- Game Settings and Player Names -->
-  <form class="settings" *ngIf="!gameInProgress && !currentGame" #arenaForm="ngForm" (ngSubmit)="startNewGame()">
+  <form class="settings" *ngIf="!gameInProgress && !currentGame && countdownTimer === 0" #arenaForm="ngForm" (ngSubmit)="startNewGame()">
     <!-- Max Rounds -->
     <div class="setting-item">
       <h4>Max Rounds</h4>
@@ -167,7 +167,13 @@
   </form>
 
   <!-- Game Progress and Controls -->
-  <section class="game-view" *ngIf="gameInProgress && currentGame">
+  <div class="countdown-wrapper" *ngIf="countdownTimer > 0">
+    <div class="countdown-timer">
+      <p>{{ countdownTimer }}</p>
+    </div>
+  </div>
+
+  <section class="game-view" *ngIf="gameInProgress && currentGame && countdownTimer === 0">
     <p class="score">
       {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
     </p>

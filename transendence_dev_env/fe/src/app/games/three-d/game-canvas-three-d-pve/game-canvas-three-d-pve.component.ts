@@ -146,24 +146,24 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
   setAIParameters(): void {
     switch (this.gameSettings?.difficulty) {
       case 'Easy':
-        this.aiMoveSpeed = 3;
-        this.predictionRandomness = 20;
-        this.aiUpdateInterval = 1200;
+        this.aiMoveSpeed = 1;
+        this.predictionRandomness = 10;
+        this.aiUpdateInterval = 700;
         break;
       case 'Medium':
-        this.aiMoveSpeed = 5;
-        this.predictionRandomness = 10;
-        this.aiUpdateInterval = 1000;
+        this.aiMoveSpeed = 2;
+        this.predictionRandomness = 5;
+        this.aiUpdateInterval = 550;
         break;
       case 'Hard':
-        this.aiMoveSpeed = 7;
-        this.predictionRandomness = 5;
-        this.aiUpdateInterval = 800;
+        this.aiMoveSpeed = 3;
+        this.predictionRandomness = 2.5;
+        this.aiUpdateInterval = 400;
         break;
       default:
-        this.aiMoveSpeed = 5;
+        this.aiMoveSpeed = 1;
         this.predictionRandomness = 10;
-        this.aiUpdateInterval = 1000;
+        this.aiUpdateInterval = 550;
     }
   }
 
@@ -315,6 +315,7 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
       Math.abs(ballY - this.leftPaddle.position.y) <= this.paddleHeight / 2
     ) {
       this.ballDirection.x = Math.abs(this.ballDirection.x);
+      this.ball.position.x = this.leftPaddle.position.x + 1;
       if (this.ballSpeed < 1.0) {
         this.ballSpeed += 0.05;
       }
@@ -324,6 +325,7 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
       Math.abs(ballY - this.rightPaddle.position.y) <= this.paddleHeight / 2
     ) {
       this.ballDirection.x = -Math.abs(this.ballDirection.x);
+      this.ball.position.x = this.rightPaddle.position.x - 1;
       if (this.ballSpeed < 1.0) {
         this.ballSpeed += 0.05;
       }

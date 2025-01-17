@@ -31,6 +31,8 @@ export class LocalPveComponent implements OnInit, OnDestroy {
   private gameIntervalId: any;
   private roundIntervalId: any;
 
+  countdownTimer: number = 0;
+
   displayNameHost: string = 'Player 1';
 
   settings: GameSettings = {
@@ -84,11 +86,18 @@ export class LocalPveComponent implements OnInit, OnDestroy {
         this.previousGames.push(...this.logs);
         this.logs = [];
       }
-      this.currentGame = game;
-      this.gameInProgress = true;
-      this.logs.push('New game started in PvE mode');
-      this.startTimers();
-      this.startNewRound();
+      this.countdownTimer = 3;
+      let countdownIntervalID = setInterval(() => {
+        this.countdownTimer--;
+        if (this.countdownTimer <= 0) {
+          clearInterval(countdownIntervalID);
+          this.currentGame = game;
+          this.gameInProgress = true;
+          this.logs.push('New game started in PvE mode');
+          this.startTimers();
+          this.startNewRound();
+        }
+      }, 1000);
     });
   }
 

@@ -99,7 +99,7 @@ export class AboutComponent implements OnInit, OnDestroy {
       subModules: [
         { description: 'Use a Framework as backend (1 point)', status: 'completed' },
         { description: 'Use a front-end framework (0.5 points)', status: 'completed' },
-        { description: 'Database Integration (0.5 points) - Implemented with PostgreSQL for relational data management.', status: 'completed' },
+        { description: 'Database Integration (0.5 points)', status: 'completed' },
         { description: 'Blockchain Score Storage (1 point)', status: 'incomplete' }
       ]
     },
@@ -114,7 +114,7 @@ export class AboutComponent implements OnInit, OnDestroy {
         'Enabled remote authentication to allow users to log in from various devices securely.'
       ],
       subModules: [
-        { description: 'Standard user management and authentication (1 point) - Implemented with JWT Django and Angular tools.', status: 'completed' },
+        { description: 'Standard user management and authentication (1 point)', status: 'completed' },
         { description: 'Remote authentication (1 point)', status: 'completed' }
       ]
     },
@@ -132,10 +132,10 @@ export class AboutComponent implements OnInit, OnDestroy {
         'Integrated live chat using WebSockets for seamless in-game communication.'
       ],
       subModules: [
-        { description: 'Remote players (1 point) - Enabled through WebSockets.', status: 'completed' },
-        { description: 'Multiple players (1 point) - Added an Arena Mode.', status: 'completed' },
+        { description: 'Remote players (1 point)', status: 'completed' },
+        { description: 'Multiple players (1 point)', status: 'completed' },
         { description: 'Add Another Game with User History and Matchmaking (1 point)', status: 'incomplete' },
-        { description: 'Game Customization Options (0.5 points) - Players can set custom colors, skins and round settings.', status: 'completed' },
+        { description: 'Game Customization Options (0.5 points)', status: 'completed' },
         { description: 'Live Chat (1 point) - Implemented with WebSockets for real-time messaging.', status: 'completed' }
       ]
     },
@@ -150,8 +150,8 @@ export class AboutComponent implements OnInit, OnDestroy {
         'Designed user and game stats dashboards using Chart.js for dynamic and interactive data visualization.'
       ],
       subModules: [
-        { description: 'Introduce an AI Opponent (1 point) - Implemented a predictive algorithm to calculate ball trajectory and simulate human-like reactions with difficulty-based randomness and speed adjustments.', status: 'completed' },
-        { description: 'User and Game Stats Dashboards (0.5 points) - Designed with Chart.js for dynamic visuals.', status: 'completed' }
+        { description: 'Introduce an AI Opponent (1 point)', status: 'completed' },
+        { description: 'User and Game Stats Dashboards (0.5 points)', status: 'completed' }
       ]
     },
     {
@@ -168,7 +168,7 @@ export class AboutComponent implements OnInit, OnDestroy {
       subModules: [
         { description: 'Implement WAF/ModSecurity with Hardened Configuration and HashiCorp Vault for Secrets Management (1 point)', status: 'completed' },
         { description: 'GDPR Compliance Options with User Anonymization, Local Data Management, and Account Deletion (0.5 points)', status: 'completed' },
-        { description: 'Implement Two-Factor Authentication (2FA) and JWT (1 point) - Enhanced security through OTP-based 2FA.', status: 'completed' }
+        { description: 'Implement Two-Factor Authentication (2FA) and JWT (1 point)', status: 'completed' }
       ]
     },
     {
@@ -195,7 +195,7 @@ export class AboutComponent implements OnInit, OnDestroy {
       details: 'Developing advanced 3D graphics techniques to enhance visual appeal and user engagement.',
       totalPoints: 1,
       implementationDetails: [
-        'Currently implementing advanced 3D techniques to improve game visuals and user experience.'
+        'Implemented advanced 3D techniques using Three.js for realistic rendering and dynamic animations.',
       ],
       subModules: [
         { description: 'Implementing Advanced 3D Techniques (1 point)', status: 'completed' }
@@ -216,7 +216,7 @@ export class AboutComponent implements OnInit, OnDestroy {
       ],
       subModules: [
         { description: 'Support on all devices (0.5 points)', status: 'incomplete' },
-        { description: 'Expanding Browser Compatibility (0.5 points) - Ensured functionality across all major browsers.', status: 'completed' },
+        { description: 'Expanding Browser Compatibility (0.5 points)', status: 'completed' },
         { description: 'Multiple language supports (0.5 points)', status: 'incomplete' },
         { description: 'Add accessibility for Visually Impaired Users (0.5 points)', status: 'completed' },
         { description: 'Server-Side Rendering (SSR) Integration (0.5 points)', status: 'incomplete' }
@@ -233,7 +233,7 @@ export class AboutComponent implements OnInit, OnDestroy {
         'Pending enabling Pong gameplay via CLI against web users with full API integration.'
       ],
       subModules: [
-        { description: 'Replacing Basic Pong with Server-Side Pong and Implementing an API (1 point) - Enhanced gameplay with server-side logic.', status: 'completed' },
+        { description: 'Replacing Basic Pong with Server-Side Pong and Implementing an API (1 point)', status: 'completed' },
         { description: 'Enabling Pong Gameplay via CLI against Web Users with API Integration (1 point)', status: 'incomplete' }
       ]
     }
@@ -273,7 +273,7 @@ export class AboutComponent implements OnInit, OnDestroy {
 
     // Set the retro game URL (you can choose any embeddable retro game)
     // Example: Classic Snake game
-    this.retroGameUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://codepen.io/GeekyAnts/embed/wvrMRo?default-tab=result');
+    this.retroGameUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://gurbuxani.github.io/Snake-Game/');
 
     // Show the retro game modal
     this.showRetroGameModal = true;

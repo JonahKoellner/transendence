@@ -224,6 +224,7 @@ export class GameCanvasThreeDPvpComponent implements AfterViewInit {
       Math.abs(ballY - this.leftPaddle.position.y) <= this.paddleHeight / 2
     ) {
       this.ballDirection.x = Math.abs(this.ballDirection.x);
+      this.ball.position.x = this.leftPaddle.position.x + 1;
       if (this.ballSpeed < 1.0) {
         this.ballSpeed += 0.05;
       }
@@ -233,6 +234,7 @@ export class GameCanvasThreeDPvpComponent implements AfterViewInit {
       Math.abs(ballY - this.rightPaddle.position.y) <= this.paddleHeight / 2
     ) {
       this.ballDirection.x = -Math.abs(this.ballDirection.x);
+      this.ball.position.x = this.rightPaddle.position.x - 1;
       if (this.ballSpeed < 1.0) {
         this.ballSpeed += 0.05;
       }

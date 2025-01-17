@@ -4,7 +4,7 @@
   </header>
 
   <!-- Game Settings -->
-  <form class="settings" *ngIf="!gameInProgress && !currentGame" #chaosForm="ngForm" (ngSubmit)="startNewGame()">
+  <form class="settings" *ngIf="!gameInProgress && !currentGame && countdownTimer === 0" #chaosForm="ngForm" (ngSubmit)="startNewGame()">
     <!-- Max Rounds -->
     <div class="setting-item">
       <h4>Max Rounds</h4>
@@ -126,7 +126,13 @@
   </form>
 
   <!-- Game Progress and Controls -->
-  <section class="game-view" *ngIf="gameInProgress && currentGame">
+  <div class="countdown-wrapper" *ngIf="countdownTimer > 0">
+    <div class="countdown-timer">
+      <p>{{ countdownTimer }}</p>
+    </div>
+  </div>
+
+  <section class="game-view" *ngIf="gameInProgress && currentGame && countdownTimer === 0">
     <p class="score">
       {{ getCurrentRound().round_number }} of {{ settings.maxRounds }} Rounds
       <strong>{{ displayNameHost }}:</strong> {{ currentGame.score_player1 }} -
