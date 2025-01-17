@@ -87,19 +87,19 @@ help:
 
 # Build and start all services interactively
 up: generate_passwords addHost ask42APIKey
-	docker-compose -f $(COMPOSE_FILE) up --build
+	docker compose -f $(COMPOSE_FILE) up --build
 
 # Build and start all services in detached mode
 start: generate_passwords addHost ask42APIKey
-	docker-compose -f $(COMPOSE_FILE) up --build -d
+	docker compose -f $(COMPOSE_FILE) up --build -d
 
 # Stop all running services
 stop:
-	docker-compose -f $(COMPOSE_FILE) stop
+	docker compose -f $(COMPOSE_FILE) stop
 
 # Stop and remove all containers
 down:
-	docker-compose -f $(COMPOSE_FILE) down -v
+	docker compose -f $(COMPOSE_FILE) down -v
 	rm -rf data/
 
 # Restart all services
@@ -107,7 +107,7 @@ restart: down up
 
 # Show logs for all running services
 logs:
-	docker-compose -f $(COMPOSE_FILE) logs -f
+	docker compose -f $(COMPOSE_FILE) logs -f
 
 # Clear everything and remove the volumes
 clean: down

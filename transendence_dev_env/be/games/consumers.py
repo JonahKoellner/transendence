@@ -2538,8 +2538,6 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             return False
         return self.user == lobby.host
 
-#TODO when is the tournament deleted? -> only via rest endpoint, or not at all. we want to keep the tournament for stats and stuff
-
 class TournamentConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
@@ -3025,7 +3023,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def match_timer(self):
         try:
-            total_time = 5  # Total match time in seconds TODO set back to 30
+            total_time = 30
             for remaining_time in range(total_time, 0, -1):
                 logger.debug(f"Remaining time: {remaining_time}")
                 await self.channel_layer.group_send(
