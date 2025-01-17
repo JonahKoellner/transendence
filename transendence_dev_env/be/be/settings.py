@@ -26,7 +26,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", os.getenv("DOMAIN"), "1-a-6.42heilbronn.de"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", os.getenv("DOMAIN")]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
