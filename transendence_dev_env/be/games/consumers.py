@@ -387,7 +387,6 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         
                 
     async def complete_round(self):
-        print("Round completed")
         # Determine round winner
         if self.left_score > self.right_score:
             round_winner = self.game.player1.username
@@ -662,8 +661,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         except Exception as e:
-            # Improved error logging
-            print(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
+            logger.error(f"Error broadcasting lobby state: {e}")
 
     async def add_guest_if_applicable(self):
         """Add the user as a guest if they are joining an empty guest slot and return True if the guest was added."""
@@ -1178,7 +1176,6 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def complete_round(self):
-        print("Round completed")
         # Determine round winner
         if self.left_score > self.right_score:
             round_winner = self.game.player1.username
@@ -1464,8 +1461,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         except Exception as e:
-            # Improved error logging
-            print(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
+            logger.error(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
 
     async def add_guest_if_applicable(self):
         """Add the user as a guest if they are joining an empty guest slot and return True if the guest was added."""
@@ -1962,7 +1958,6 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def complete_round(self):
-        print("Round completed")
         # Determine round winner
         scores = { self.game.player1.username: self.left_score,
                    self.game.player2.username: self.right_score,
@@ -2265,8 +2260,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         except Exception as e:
-            # Improved error logging
-            print(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
+            logger.error(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
 
     async def add_guest_if_applicable(self):
         """Add the user as a guest if they are joining an empty guest slot and return True if the guest was added."""

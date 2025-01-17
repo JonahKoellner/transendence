@@ -208,10 +208,8 @@ class LoginView(APIView):
                     secure=cookie_settings['secure'],
                     samesite=cookie_settings['samesite']
                 )
-                print("Refresh token cookie set successfully")
             except Exception as e:
-                print("Error setting refresh token cookie:", e)
-
+                logger.error(f"Error setting refresh token cookie: {e}")
             return response
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -226,10 +224,7 @@ class LogoutView(APIView):
     def post(self, request):
         try:
             refresh_token = request.COOKIES.get('refresh_token')
-            print("Received refresh token from cookies during logout:", refresh_token)
-
             if refresh_token is None:
-                print("No refresh token found in cookies.")
                 return Response({"message": "Refresh token not found"}, status=status.HTTP_400_BAD_REQUEST)
             
             token = RefreshToken(refresh_token)
@@ -238,11 +233,9 @@ class LogoutView(APIView):
             # Create the logout response
             response = Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie('refresh_token')
-            print("Refresh token blacklisted and cookie cleared.")
             return response
 
         except Exception as e:
-            print("Error during logout:", e)
             return Response({"message": "Invalid refresh token or error in logout"}, status=status.HTTP_400_BAD_REQUEST)
         
 class Enable2FAView(APIView):
@@ -439,7 +432,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"message": "Your account has been deleted successfully."}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"Error deleting account: {e}")
             return Response({"message": "An error occurred while deleting your account."}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete_related_data(self, user):
