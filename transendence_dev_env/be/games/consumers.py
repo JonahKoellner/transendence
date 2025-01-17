@@ -1217,6 +1217,9 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             await self.end_game()
             return  # Exit the game tick to prevent further processing until the next loop
 
+        # Clear power-ups for next round
+        self.active_power_ups = []
+
         # Reset scores for next round
         self.left_score = 0
         self.right_score = 0

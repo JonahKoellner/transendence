@@ -26,7 +26,7 @@ from .models import Notification, ChatMessage, FriendRequest, Achievement, UserA
 from django.db import models
 from django.db.models import Count, Q, F, Sum, Avg
 import be.settings as besettings
-from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby
+from games.models import Game, Lobby, Tournament, ArenaLobby, ChaosLobby, OnlineTournament
 from django.utils import timezone
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import logging
@@ -1193,6 +1193,7 @@ class UserStatsView(APIView):
                 })
 
             # 5. Tournaments Participated vs. Won
+            # Local
             tournaments_participated = Tournament.objects.filter(
                 host=profile.user
             ).count()
@@ -1200,6 +1201,19 @@ class UserStatsView(APIView):
                 final_winner=profile.user
             ).count()
 
+            # Online
+            participated_tmp = OnlineTournament.objects.filter(
+                participants=profile.user
+            ).count()
+            logger.info(f"online tournaments participated by {profile.user.username}: {participated_tmp}")
+            tournaments_participated += participated_tmp
+            
+            won_tmp = OnlineTournament.objects.filter(
+                final_winner = profile.user
+            ).count()
+            logger.info(f"online tournaments won by {profile.user.username}: {won_tmp}")
+            tournaments_won += won_tmp
+            
             tournaments_stats = {
                 "participated": tournaments_participated,
                 "won": tournaments_won
