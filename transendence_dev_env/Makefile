@@ -5,6 +5,7 @@
 generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 32 | tr -d '/+' | head -c 24), $(shell head -c 24 /dev/urandom | base64 | tr -d '/+' | head -c 24)))
 generate-secret-key=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 64 | tr -d '/+' | head -c 50), $(shell head -c 50 /dev/urandom | base64 | tr -d '/+' | head -c 50)))
 
+all: start
 
 generate_passwords:
 	@echo "Generating elk passwords..."
@@ -103,11 +104,11 @@ start: clean_pycache_migrations generate_passwords addHost ask42APIKey
 
 # Stop all running services
 stop:
-	docker-compose -f $(COMPOSE_FILE) stop
+	docker compose -f $(COMPOSE_FILE) stop
 
 # Stop and remove all containers
 down:
-	docker-compose -f $(COMPOSE_FILE) down -v
+	docker compose -f $(COMPOSE_FILE) down -v
 	rm -rf data/
 
 # Restart all services
@@ -115,7 +116,7 @@ restart: down up
 
 # Show logs for all running services
 logs:
-	docker-compose -f $(COMPOSE_FILE) logs -f
+	docker compose -f $(COMPOSE_FILE) logs -f
 
 # Clear everything and remove the volumes
 clean: clean_pycache_migrations down

@@ -5,10 +5,6 @@ import { ProfileService, UserProfile } from 'src/app/profile.service';
 import { TournamentLobbyService } from 'src/app/services/tournament-lobby.service';
 import { forkJoin, Subscription } from 'rxjs';
 
-//BACKLOG:
-//TODO: friend list / friends in general
-//TODO: invite
-
 interface LobbyState {
   host: string;
   host_id: number;
