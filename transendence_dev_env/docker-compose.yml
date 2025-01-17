@@ -37,9 +37,9 @@ services:
     build:
       context: ./elk/logstash
     # network_mode: host
-    ports:
+    # ports:
       # - "5234:5234"  # For Beats input
-      - "5240:5240"  # For GELF input
+      # - "5240:5240"  # For GELF input
       # - "5240:5240/udp"
       # - "5431:5431/udp"
       # - "5431:5431"
@@ -52,10 +52,11 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - webnet
-      - app-net
-      - elk-net
-      - host-bridge
+      elk-net:
+        ipv4_address: 172.25.0.10
+      # - webnet
+      # - app-net
+      host-bridge:
         # ipv4_address: 172.25.0.10
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9600"]
@@ -114,7 +115,7 @@ services:
     logging:
       driver: "gelf"
       options:
-        gelf-address: "udp://host.docker.internal:5240"
+        gelf-address: "udp://172.25.0.10:5240"
         # max-size: "10m"
         # max-file: "5"
         tag: "{{.Name}}"
@@ -142,8 +143,7 @@ services:
     logging:
       driver: "gelf"
       options:
-        # gelf-address: "udp://172.25.9.10:5240"
-        gelf-address: "udp://host.docker.internal:5240"
+        gelf-address: "udp://172.25.0.10:5240"
         tag: "{{.Name}}"
 
   django:
@@ -180,7 +180,7 @@ services:
     logging:
       driver: "gelf"
       options:
-        gelf-address: "udp://host.docker.internal:5240"
+        gelf-address: "udp://172.25.0.10:5240"
         tag: "{{.Name}}"
     volumes:
       - ./be:/app  # Bind mount for the Django app code
@@ -204,6 +204,8 @@ services:
     networks:
       - webnet
       - app-net
+      - elk-net
+      - host-bridge
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -212,7 +214,7 @@ services:
     logging:
       driver: "gelf"
       options:
-        gelf-address: "udp://host.docker.internal:5240"
+        gelf-address: "udp://172.25.0.10:5240"
         tag: "{{.Name}}"
 
   redis:
@@ -242,22 +244,25 @@ services:
     logging:
       driver: "gelf"
       options:
-        gelf-address: "udp://host.docker.internal:5240"
+        gelf-address: "udp://172.25.0.10:5240"
         tag: "{{.Name}}"
 
 networks:
   webnet:
   elk-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
   app-net:
     driver: bridge
   host-bridge:
     driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.0.0/16
-          gateway: 172.25.0.1
+    # ipam:
+    #   driver: default
+    #   config:
+    #     - subnet: 172.25.0.0/16
+    #       gateway: 172.25.0.1
 
 volumes:
   postgres_data:

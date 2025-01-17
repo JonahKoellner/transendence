@@ -171,8 +171,10 @@ COPY modsecurity_custom.conf /etc/nginx/modsecurity/modsecurity_custom.conf
 
 
 # Set up ModSecurity
-RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/nginx/modsecurity/modsecurity.conf
+RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine DetectionOnly/' /etc/nginx/modsecurity/modsecurity.conf
 RUN sed -i 's/SecResponseBodyAccess On/SecResponseBodyAccess Off/' /etc/nginx/modsecurity/modsecurity.conf
+RUN sed -i 's/SecResponseBodyLimit 524288/SecResponseBodyLimit 0/' /etc/nginx/modsecurity/modsecurity.conf
+RUN sed -i 's/SecResponseBodyLimitAction ProcessPartial/SecResponseBodyLimitAction Reject/' /etc/nginx/modsecurity/modsecurity.conf
 RUN echo "Include /etc/nginx/modsecurity/modsecurity_custom.conf" >> /etc/nginx/modsecurity/modsecurity.conf
 
 # Add the specified lines if they do not already exist
