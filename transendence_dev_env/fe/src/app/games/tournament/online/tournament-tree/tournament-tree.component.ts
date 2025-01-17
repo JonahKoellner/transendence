@@ -74,6 +74,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   gameInProgress: boolean = false;
   matchId: string = '';
   activePlayer: boolean = true;
+  isLoading: boolean = false;
 
   constructor(
     private router: Router,
@@ -84,6 +85,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.isLoading = true;
     // Get the room ID from the route
     this.roomId = this.route.snapshot.params['roomId'] || '';
     if (!this.roomId) {
@@ -162,6 +164,7 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
       default:
         console.warn('Unhandled WebSocket message type:', msg.type);
     }
+    this.isLoading = false;
   }
 
   private joinMatch(msg: any): void {

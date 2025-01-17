@@ -1,184 +1,229 @@
 .tournament-tree {
-  /* Overall container */
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 2rem auto;
-  padding: 1.5rem;
-  background-color: #161616;
-  border: 1px solid #444;
+  padding: 2rem;
+  background-color: #0e0f10;
   border-radius: 8px;
   color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  
+  /* Neon border glow effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border: 2px solid #61ba50;
+    border-radius: 10px;
+    filter: blur(8px);
+    opacity: 0.7;
+    z-index: -1;
+  }
 
   h1 {
-    color: #61ba50;
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
+    color: #61ba50;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 8px rgba(97,186,80,0.7);
+    animation: flicker 3s infinite;
+  }
+  h2 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #61ba50;
     margin-bottom: 1rem;
-    text-align: center;
+    text-shadow: 0 0 8px rgba(97,186,80,0.7);
   }
-
-  /* Completed tournament box */
-  .tournament-completed {
-    text-align: center;
-    background: #1a1a1a;
-    border: 1px solid #61ba50;
-    border-radius: 5px;
-    padding: 1rem;
+  .winner-name{
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #61ba50;
     margin-bottom: 1rem;
+    text-shadow: 0 0 8px rgba(97,186,80,0.7);
+  }
+  .tournament-completed, .ready-section {
+    margin-bottom: 2rem;
+    animation: fadeIn 1s ease-in-out;
+  }
 
-    h2 {
-      color: #61ba50;
-      margin-bottom: 0.5rem;
+  .ready-button {
+    background-color: #61ba50;
+    color: #fff;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    text-transform: uppercase;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(97, 186, 80, 0.5);
+
+    &:hover:not(:disabled) {
+      background-color: #45A049;
+      transform: scale(1.05);
     }
-    p {
-      margin: 0;
-      font-size: 1.1rem;
+    &:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   }
 
-  /* Ready button section */
-  .ready-section {
-    text-align: center;
-    margin-top: 1rem;
-
-    .ready-button {
-      padding: 0.5rem 1.5rem;
-      font-size: 1.1rem;
-      color: #fff;
-      background-color: #61ba50;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-
-      &:hover:not(:disabled) {
-        background-color: #4da743;
-      }
-      &:active:not(:disabled) {
-        background-color: #3b8c36;
-      }
-      &:disabled {
-        background-color: #555;
-        cursor: not-allowed;
-        opacity: 0.7;
-      }
-    }
-  }
-
-  /* Common bracket styling */
+  /* Simplified bracket styling */
   .single-elimination-bracket,
   .round-robin-bracket {
-    margin-top: 1rem;
-    background-color: #1f1f1f;
-    border: 1px solid #444;
-    padding: 1rem;
-    border-radius: 5px;
+    margin-bottom: 2rem;
+    animation: fadeIn 1s ease-in-out;
 
-    /* Each round box */
     .round {
-      background-color: #2a2a2a;
-      border: 1px solid #555;
-      border-radius: 5px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
 
       h4 {
-        color: #61ba50;
-        margin-bottom: 1rem;
+        font-size: 1.3rem;
         font-weight: bold;
-        text-transform: uppercase;
-        font-size: 1rem;
-      }
-
-      /* Each match row */
-      .match {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background-color: #3a3a3a;
-        border: 1px solid #666;
-        border-radius: 4px;
-        padding: 0.5rem;
-        margin-bottom: 0.5rem;
-
-        .player {
-          flex: 1;
-          text-align: center;
-          color: #e0e0e0;
-          font-weight: bold;
-          font-size: 0.9rem;
-        }
-        .vs {
-          color: #adb5bd;
-          font-weight: bold;
-          font-size: 0.9rem;
-          margin: 0 1rem;
-        }
-        .winner {
-          flex-basis: 100%;
-          margin-top: 0.5rem;
-          text-align: center;
-          color: #ff5722;
-          font-weight: bold;
-          font-size: 0.85rem;
-        }
-        .info {
-          flex-basis: 100%;
-          margin-top: 0.5rem;
-          text-align: center;
-          color: #ff5722;
-          font-weight: bold;
-          font-size: 0.85rem;
-        }
-      }
-    }
-
-    /* Round Robin Scores Table */
-    .round-robin-scores {
-      text-align: center;
-      margin-bottom: 1rem;
-
-      h3 {
         color: #61ba50;
         margin-bottom: 0.5rem;
-        font-size: 1.1rem;
       }
 
-      table {
-        margin: 0 auto;
-        border-collapse: collapse;
-        border: 1px solid #444;
-        width: 100%;
-        max-width: 400px;
-        background-color: #1a1a1a;
-        border-radius: 4px;
-        overflow: hidden;
+      .match {
+        background-color: #161616;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: box-shadow 0.3s;
+        text-align: center;
 
-        thead {
-          background-color: #2c2c2c;
-          th {
-            color: #61ba50;
-            font-weight: bold;
-            padding: 0.75rem;
-            border-bottom: 1px solid #444;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-          }
+        &:hover {
+          box-shadow: 0 0 12px rgba(97, 186, 80, 0.5);
         }
-        tbody {
-          tr {
-            border-bottom: 1px solid #444;
-            &:nth-child(even) {
-              background-color: #2a2a2a;
-            }
-            td {
-              padding: 0.75rem;
-              color: #e0e0e0;
-              text-align: center;
-              font-size: 0.9rem;
-            }
-          }
+
+        .player, .vs, .winner, .info {
+          margin: 0.25rem 0;
         }
+        .player { font-weight: bold; }
+        .vs { color: #adb5bd; }
+        .winner, .info { color: #ff5722; font-weight: bold; }
       }
     }
   }
+
+  .round-robin-scores {
+    text-align: center;
+    margin-bottom: 1rem;
+    animation: fadeIn 1s ease-in-out;
+  
+    h3 {
+      font-size: 1.8rem;
+      color: #61ba50;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 8px rgba(97,186,80,0.7);
+    }
+  
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 600px;
+      background-color: #161616;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(97,186,80,0.5);
+  
+      thead {
+        background: linear-gradient(135deg, #1a1a1a, #0e0f10);
+        th {
+          padding: 0.75rem;
+          color: #61ba50;
+          font-weight: bold;
+          text-transform: uppercase;
+          border-bottom: 2px solid #61ba50;
+          position: relative;
+        }
+      }
+  
+      tbody {
+        tr {
+          &:nth-child(even) { background-color: #1b1c1d; }
+          &:nth-child(odd)  { background-color: #161616; }
+          
+          transition: background-color 0.3s;
+          
+          &:hover {
+            background-color: #222;
+          }
+  
+          td {
+            padding: 0.75rem;
+            color: #e0e0e0;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            position: relative;
+  
+            &::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 0;
+              height: 100%;
+              background: rgba(97,186,80,0.2);
+              transition: width 0.3s;
+              z-index: -1;
+            }
+          }
+  
+          &:hover td::before {
+            width: 100%;
+          }
+        }
+      }
+    }
+  } 
+  .loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+  
+    .spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #61ba50;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+  
+    p {
+      font-size: 1.2rem;
+      color: #61ba50;
+    }
+  
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  } 
 }
+
+/* Animations reused */
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.4; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+

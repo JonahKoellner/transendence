@@ -1,5 +1,6 @@
 <div class="tournament-tree">
-  <h1>Tournament {{ tournament?.status }}</h1>
+<div *ngIf="!isLoading">
+  <h1>Tournament {{ gameInProgress && tournament?.status === 'ongoing' ? 'INGAME' : tournament?.status }}</h1>
   <section class="game" *ngIf="gameInProgress">
     <app-game
       (gameEnd)="onGameEnd()"
@@ -14,9 +15,9 @@
       *ngIf="tournament.status === 'completed'"
       class="tournament-completed"
     >
-      <h2>Tournament Completed</h2>
-      <p>
-        Congratulations to the winner: {{ tournament.final_winner || 'TBD' }}
+      <h2>Congratulations</h2>
+      <p class="winner-name">
+        {{ tournament.final_winner || 'TBD' }}
       </p>
     </div>
 
@@ -131,4 +132,11 @@
       </button>
     </div>
   </div>
+</div>
+<div class="loading" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading...</p>
+</div>
+
+
 </div>
