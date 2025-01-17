@@ -18,7 +18,7 @@
         <p><strong>Host:</strong> {{ tournament.host }}</p>
         <p><strong>Start Time:</strong> {{ tournament.start_time | date: 'medium' }}</p>
         <p><strong>End Time:</strong> {{ tournament.end_time | date: 'medium' }}</p>
-        <p><strong>Duration:</strong> {{ tournament.duration | number }} ms</p>
+        <!-- <p><strong>Duration:</strong> {{ tournament.duration | number }} ms</p> -->
       </div>
   
       <div class="winner-section" *ngIf="tournament.final_winner">
@@ -84,7 +84,7 @@
               <strong>Winner:</strong> {{ match.winner }}
               <span *ngIf="match.tie_resolved" class="tie-note">(Tie resolved)</span>
             </p>
-            <p><strong>Duration:</strong> {{ match.duration | number }} ms</p>
+            <!-- <p><strong>Duration:</strong> {{ match.duration | number }} ms</p> -->
           </div>
         </div>
       </div>
