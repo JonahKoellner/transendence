@@ -40,7 +40,6 @@ export class GameLobbyChaosService {
         this.router.navigate(['/games/online-pvp-chaos/rooms'])
       },
       (err) => {
-        console.log(err);
         this.router.navigate(['/games/online-pvp-chaos/rooms'])
       }
     );

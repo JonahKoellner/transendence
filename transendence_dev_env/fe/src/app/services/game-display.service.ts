@@ -41,15 +41,6 @@ export class GameDisplayService {
     // navigate user back to tournament screen
     this.router.navigate(['/games/online-tournament/room/' + matchId]);
     this.disconnect();
-    // this.deleteRoom(matchId).subscribe(
-    //   (res) => {
-    //     this.router.navigate(['/games/online-tournament/room/' + matchId])
-    //   },
-    //   (err) => {
-    //     console.log(err);
-    //     this.router.navigate(['/games/online-tournament/room/' + matchId])
-    //   }
-    // );
   }
 
   ngOnDestroy() {

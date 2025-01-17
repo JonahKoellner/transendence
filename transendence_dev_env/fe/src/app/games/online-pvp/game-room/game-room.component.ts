@@ -126,8 +126,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
                 this.router.navigate(['/games/online-pvp/rooms']);
               }
             );
-            // console.log('Game over!');
-            // console.log('msg:', msg);
           } else if (msg.type === 'round_completed') {
             this.toastr.info('Round completed!', 'Round Completed');
           }
@@ -281,7 +279,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
     inviteFriend(friend_id: number)
     {
-      console.log('Game invite sent');
       let gameInvitePayload: SendGameInvitePayload = {
         room_id: this.roomId,
         receiver_id: friend_id

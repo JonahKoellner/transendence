@@ -20,13 +20,10 @@ def wait_for_db_connection(max_retries=10, delay=2):
             # Check if the default database connection is available
             connection = connections['default']
             connection.cursor()  # This will trigger an error if DB is not ready
-            print("Database connection established successfully.")
             return True
         except OperationalError:
-            print(f"Database is unavailable, retrying in {delay} seconds... [{retries + 1}/{max_retries}]")
             retries += 1
             time.sleep(delay)
-    print("Could not establish a connection to the database. Please check the database status.")
     return False
 
 def main():

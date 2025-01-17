@@ -13,7 +13,7 @@ logger = logging.getLogger('game_debug')
 class TournamentService:
     @staticmethod
     def next_round(tournament: OnlineTournament):
-        logger.info(f"Next round for tournament: {tournament}")
+        logger.debug(f"Next round for tournament: {tournament}")
         round = tournament.rounds.filter(round_number=tournament.current_round).first()
         if not round:
             raise ValueError("No round found for the current round number.")
@@ -75,7 +75,7 @@ class TournamentService:
         Then mark the tournament as completed.
         """
         # refresh tournament object
-        logger.info(f"Calculating XP for tournament: {tournament}")
+        logger.debug(f"Calculating XP for tournament: {tournament}")
 
         # ----------------------------------------------------------------
         # 1. Set up base XP constants

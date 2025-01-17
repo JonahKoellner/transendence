@@ -132,7 +132,7 @@ class OnlineTournament(BaseTournament):
         return list(self.participants.all())
 
     def delete(self, *args, **kwargs):
-        logger.error(f"TournamentLobby with room_id {self.room_id} is being deleted.")
+        logger.debug(f"TournamentLobby with room_id {self.room_id} is being deleted.")
         super().delete(*args, **kwargs)
 
     def get_tournament_state(self):
