@@ -50,6 +50,12 @@ addHost:
     fi
 	@echo "~~ Your 42 API Authentication Callback URL is: https://$$(hostname)/auth/callback ~~"
 
+
+clean_pycache_migrations:
+	@echo "Removing all __pycache__ and migrations directories from ./be..."
+	@find ./be -type d \( -name '__pycache__' -o -name 'migrations' \) -exec rm -rf {} + 2>/dev/null || true
+	@echo "Cleanup complete."
+
 ask42APIKey:
 	@read -p "Enter the value for ftUID: " ftUID; \
     if grep -q '^ftUID=' ./keyvault/.env; then \
@@ -71,7 +77,7 @@ ask42APIKey:
 # Docker Compose file
 COMPOSE_FILE := docker-compose.yml
 
-.PHONY: all help up start stop down restart logs print-password
+.PHONY: all help up start stop down restart logs print-password clean_pycache_migrations
 
 # Show available commands
 help:
@@ -87,13 +93,14 @@ help:
 	@echo "  help              Show this help message"
 	@echo "  clean             Clean everything and remove the volumes"
 
+
 # Build and start all services interactively
-up: generate_passwords addHost ask42APIKey
-	docker compose -f $(COMPOSE_FILE) up --build
+up: clean_pycache_migrations generate_passwords addHost ask42APIKey
+	docker-compose -f $(COMPOSE_FILE) up --build
 
 # Build and start all services in detached mode
-start: generate_passwords addHost ask42APIKey
-	docker compose -f $(COMPOSE_FILE) up --build -d
+start: clean_pycache_migrations generate_passwords addHost ask42APIKey
+	docker-compose -f $(COMPOSE_FILE) up --build -d
 
 # Stop all running services
 stop:
@@ -112,9 +119,11 @@ logs:
 	docker compose -f $(COMPOSE_FILE) logs -f
 
 # Clear everything and remove the volumes
-clean: down
+clean: clean_pycache_migrations down
 	@docker system prune -af
-	@docker volume ls -q | xargs -r docker volume rm
+	@docker volume ls -q | while read vol; do \
+	    [ -z "$$vol" ] || docker volume rm "$$vol"; \
+	done
 
 # Example target that calls the generate-password function
 print-password:

@@ -414,7 +414,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        logger.warning(serializer.data)
+        logger.debug(serializer.data)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -513,7 +513,7 @@ class OnlineTournamentViewSet(viewsets.ModelViewSet):
 
         # Filter tournaments by host or participant
         tournaments = OnlineTournament.objects.filter(Q(participants=user)).distinct()
-        logger.warning(f'tournaments in tournaments by user: {[tournament.id for tournament in tournaments]}')
+        logger.debug(f'tournaments in tournaments by user: {[tournament.id for tournament in tournaments]}')
         serializer = self.get_serializer(tournaments, many=True)
         return Response(serializer.data)
 
@@ -523,7 +523,7 @@ class OnlineTournamentViewSet(viewsets.ModelViewSet):
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        logger.warning(f'retrieve: {serializer.data}')
+        logger.debug(f'retrieve: {serializer.data}')
         return Response(serializer.data)
 
 
@@ -1390,7 +1390,7 @@ class StatsViewSet(viewsets.ViewSet):
         online_tournaments = OnlineTournament.objects.annotate(participant_count=Count('participants'))
         # Sum the participant counts
         online_tournaments_participants = online_tournaments.aggregate(total_participants=Sum('participant_count'))['total_participants'] or 0
-        logger.info(f'online_tournaments_participants: {online_tournaments_participants}')
+        logger.debug(f'online_tournaments_participants: {online_tournaments_participants}')
         total_tournament_participations += online_tournaments_participants
         average_tournaments_per_user = total_tournament_participations / total_users if total_users > 0 else 0
 

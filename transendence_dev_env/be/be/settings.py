@@ -255,7 +255,7 @@ LOGGING = {
         },
         'game_debug': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': False,
         },
     },

@@ -19,7 +19,7 @@ export class UserSearchComponent implements OnInit {
   itemsPerPageUsers: number = 50; // Items per page
 
   constructor(private userService: ProfileService, private friendService: FriendService, private toastr: ToastrService) { }
-  
+
   ngOnInit(): void {
     console.log("");
   }

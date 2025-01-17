@@ -102,8 +102,6 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
         console.error(err);
       },
     })
-    console.log('userProfile:', this.userProfile);
-
 
     // Connect to the WebSocket
     this.tournamentService.connect(this.roomId);
@@ -119,7 +117,6 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    console.log('Destroying tournament tree component.');
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
@@ -136,18 +133,15 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
   }
 
   onGameEnd(): void {
-    console.log('Game ended, resetting state.')
     this.tournamentService.sendMessage({ action: 'game_end' });
     this.gameInProgress = false;
     this.matchId = '';
   }
 
   private handleWebSocketMessage(msg: any): void {
-    console.log('WebSocket message:', msg);
     switch (msg.type) {
       case 'tournament_state':
         this.tournament = msg.tournament_state;
-        console.log('tournament:', this.tournament);
         break;
       case 'join_match':
         if (msg.players.p1_id === this.userProfile?.id || msg.players.p2_id === this.userProfile?.id) {
@@ -171,7 +165,6 @@ export class TournamentTreeComponent implements OnInit, OnDestroy {
     this.matchId = msg.match_id;
     this.gameInProgress = true;
     this.toastr.info(`You have joined match ${msg.match_id}.`, 'Info');
-    console.log('joined match:', msg.match_id);
   }
 
   private updateTournamentState(): void {

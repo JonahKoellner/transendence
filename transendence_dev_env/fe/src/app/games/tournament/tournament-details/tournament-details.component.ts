@@ -27,30 +27,23 @@ export class TournamentDetailsComponent {
   }
 
   checkIfPlayerLeft(players: string[] | undefined, player: string, playertype: string): boolean {
-    // console.log(player, playertype, players);
     if (players === undefined) {
-      // console.log("Undefined players");
       return false;
     }
     if (playertype === 'Bot' && players?.indexOf(player) != -1) {
-      // console.log("Bot player found");
       return true;
     }
     return false;
   }
 
   checkIfPlayerLeftFirstTime(players: string[] | undefined, player: string, playertype: string): boolean {
-    // console.log(player, playertype, players);
     if (players === undefined) {
-      // console.log("Undefined players");
       return false;
     }
     if (playertype === 'Bot' && players?.indexOf(player) != -1 && this.playerLeftMap.indexOf(player) === -1) {
       this.playerLeftMap.push(player);
-      // console.log("Player left first time", this.playerLeftMap);
       return true;
     }
-    // console.log("Player left not first time", player);
     return false;
   }
 

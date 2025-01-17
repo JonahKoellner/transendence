@@ -50,11 +50,7 @@ export class GameCanvasComponentArena implements AfterViewInit, OnInit {
 
   ngOnInit() {
     document.addEventListener('pointerlockchange', () => {
-      if (document.pointerLockElement === this.canvas.nativeElement) {
-        console.log('Pointer locked');
-      } else {
-        console.log('Pointer unlocked');
-      }
+      console.log('')
     });
   }
 

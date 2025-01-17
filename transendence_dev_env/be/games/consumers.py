@@ -309,7 +309,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         else:
-            logger.warning("Game manager channel not set. Cannot send paddle speed update.")
+            logger.info("Game manager channel not set. Cannot send paddle speed update.")
 
     async def update_paddle_speed(self, event):
         user_id = event["user_id"]
@@ -387,7 +387,6 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         
                 
     async def complete_round(self):
-        print("Round completed")
         # Determine round winner
         if self.left_score > self.right_score:
             round_winner = self.game.player1.username
@@ -497,19 +496,18 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         return int(xp_gain)
         
     async def end_game(self):
-        logger.info(f"Game data: {self.game}")
+        logger.debug(f"Game data: {self.game}")
         self.game_in_progress = False
         # Determine game winner based on rounds won
         try:
             logger.debug(f"Player 1: {self.game.player1}, Player 2: {self.game.player2}")
             player1_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player1.username)
             player2_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player2.username)
-            logger.info(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}")
-            logger.info(f"Round data: {self.rounds}")
+            logger.debug(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}")
+            logger.debug(f"Round data: {self.rounds}")
             self.game.score_player1 = player1_round_wins
             self.game.score_player2 = player2_round_wins
         except Exception as e:
-            # ERROR 2024-11-09 17:58:43,417 consumers Error determining game winner: 'NoneType' object has no attribute 'username'
             logger.error(f"Error determining game winner in end_game: {e}")
             player1_round_wins = 0
             player2_round_wins = 0
@@ -663,8 +661,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         except Exception as e:
-            # Improved error logging
-            print(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
+            logger.error(f"Error broadcasting lobby state: {e}")
 
     async def add_guest_if_applicable(self):
         """Add the user as a guest if they are joining an empty guest slot and return True if the guest was added."""
@@ -1007,7 +1004,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         else:
-            logger.warning("Game manager channel not set. Cannot send paddle speed update.")
+            logger.info("Game manager channel not set. Cannot send paddle speed update.")
 
     async def update_paddle_speed(self, event):
         user_id = event["user_id"]
@@ -1179,7 +1176,6 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def complete_round(self):
-        print("Round completed")
         # Determine round winner
         if self.left_score > self.right_score:
             round_winner = self.game.player1.username
@@ -1292,15 +1288,15 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
         return int(xp_gain)
         
     async def end_game(self):
-        logger.info(f"Game data: {self.game}")
+        logger.debug(f"Game data: {self.game}")
         self.game_in_progress = False
         # Determine game winner based on rounds won
         try:
             logger.debug(f"Player 1: {self.game.player1}, Player 2: {self.game.player2}")
             player1_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player1.username)
             player2_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player2.username)
-            logger.info(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}")
-            logger.info(f"Round data: {self.rounds}")
+            logger.debug(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}")
+            logger.debug(f"Round data: {self.rounds}")
             self.game.score_player1 = player1_round_wins
             self.game.score_player2 = player2_round_wins
         except Exception as e:
@@ -1465,8 +1461,7 @@ class ChaosLobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         except Exception as e:
-            # Improved error logging
-            print(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
+            logger.error(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
 
     async def add_guest_if_applicable(self):
         """Add the user as a guest if they are joining an empty guest slot and return True if the guest was added."""
@@ -1963,7 +1958,6 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def complete_round(self):
-        print("Round completed")
         # Determine round winner
         scores = { self.game.player1.username: self.left_score,
                    self.game.player2.username: self.right_score,
@@ -2070,7 +2064,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
         return int(xp_gain)
 
     async def end_game(self):
-        logger.info(f"Game data: {self.game}")
+        logger.debug(f"Game data: {self.game}")
         self.game_in_progress = False
         # Determine game winner based on rounds won
         try:
@@ -2081,9 +2075,9 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
             player3_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player3.username)
             player4_round_wins = sum(1 for r in self.rounds if r['winner'] == self.game.player4.username)
 
-            logger.info(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}, Player 3 round wins: {player3_round_wins}, Player 4 round wins: {player4_round_wins}")
+            logger.debug(f"Player 1 round wins: {player1_round_wins}, Player 2 round wins: {player2_round_wins}, Player 3 round wins: {player3_round_wins}, Player 4 round wins: {player4_round_wins}")
 
-            logger.info(f"Round data: {self.rounds}")
+            logger.debug(f"Round data: {self.rounds}")
             self.game.score_player1 = player1_round_wins
             self.game.score_player2 = player2_round_wins
             self.game.score_player3 = player3_round_wins
@@ -2108,7 +2102,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
 
         losers = [player for player in player_scores if player != winner]
 
-        logger.info(f"Game winner: {winner}")
+        logger.debug(f"Game winner: {winner}")
 
         # Calculate XP gain
         winner_xp = await self.calculate_xp_gain(self.game, winner, is_winner=True) if winner else 0
@@ -2266,8 +2260,7 @@ class ArenaLobbyConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         except Exception as e:
-            # Improved error logging
-            print(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
+            logger.error(f"Error broadcasting lobby state in room {self.room_group_name}: {e}")
 
     async def add_guest_if_applicable(self):
         """Add the user as a guest if they are joining an empty guest slot and return True if the guest was added."""
@@ -2376,7 +2369,7 @@ class TournamentLobbyConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
         if await self.is_user_host():
-            logger.info('Host left the tournament lobby')
+            logger.debug('Host left the tournament lobby')
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -2761,7 +2754,7 @@ class TournamentConsumer(AsyncJsonWebsocketConsumer):
         self.tournament.save()
 
     async def start_game(self, match_id):
-        logger.info('Starting game')
+        logger.debug('Starting game')
         round = await database_sync_to_async(self.tournament.rounds.get)(round_number=self.tournament.current_round)
         match = await self.get_match_for_round_and_id(round, match_id)
         if match == None:
@@ -2892,7 +2885,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             raise Exception(f"Match not found {e}")
 
     async def disconnect(self, close_code):
-        logger.info(f'User {self.scope["user"].username} disconnected from match {self.match_id}')
+        logger.debug(f'User {self.scope["user"].username} disconnected from match {self.match_id}')
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -2948,7 +2941,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         else:
-            logger.warning("Game manager channel is not set. Cannot send paddle speed update.")
+            logger.info("Game manager channel is not set. Cannot send paddle speed update.")
 
     async def update_paddle_speed(self, event):
         user_id = event["user_id"]
@@ -3042,7 +3035,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
             return
 
     async def end_match(self):
-        logger.info('ending match')
+        logger.debug('ending match')
         self.game_in_progress = False
         if self.game_loop_task and not self.game_loop_task.done():
             self.game_loop_task.cancel()
@@ -3112,7 +3105,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
         # record_match_result() handles winner, end_time, outcome, status, etc.
         self.match.record_match_result()
-        logger.info(f'after save record_match_result: match status {self.match.status}, winner: {self.match.winner.username if self.match.winner else "no winner"}')
+        logger.debug(f'after save record_match_result: match status {self.match.status}, winner: {self.match.winner.username if self.match.winner else "no winner"}')
     
     @database_sync_to_async
     def get_profile(self, user):

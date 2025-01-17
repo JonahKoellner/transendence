@@ -166,8 +166,6 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
                 this.router.navigate(['/games/online-arena/rooms']);
               }
             );
-            // console.log('Game over!');
-            // console.log('msg:', msg);
           } else if (msg.type === 'round_completed') {
             this.toastr.info('Round completed!', 'Round Completed');
           }

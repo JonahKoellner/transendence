@@ -252,7 +252,6 @@ export class FriendListComponent {
     this.userToRemoveId = userId;
     this.showRemoveFriendDialog = true;
     this.userToRemove = username;
-    console.log('removeFriend', userId, username);
   }
 
   blockUser(userId: number, username: string): void {

@@ -1,75 +1,3 @@
-## Use Node to build the Angular app
-#FROM node:20 as build
-
-#WORKDIR /app
-
-## Install Angular CLI globally
-#RUN npm install -g @angular/cli@16.2.6
-
-## Copy package.json and package-lock.json before other files to leverage Docker caching
-#COPY package*.json ./
-
-## Step 1: Install all other dependencies, excluding ng2-charts and chart.js
-#RUN npm install --legacy-peer-deps && \
-#    npm uninstall ng2-charts chart.js
-
-## Step 2: Install only ng2-charts and chart.js with --legacy-peer-deps
-#RUN npm install chart.js@^4.4.5 ng2-charts@5.0.0 --legacy-peer-deps
-
-## Copy the rest of the application code
-#COPY . .
-
-## Set environment variable to enable polling (useful in Docker)
-#ENV CHOKIDAR_USEPOLLING=true
-
-## Default command: Run Angular development server
-#CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--configuration", "development", "--poll", "2000", "--watch", "--disable-host-check"]
-
-# Uncomment this section if you want to serve with Nginx instead of ng serve
-# FROM node:20 as build
-
-# WORKDIR /app
-
-# RUN npm install -g @angular/cli@16.2.6
-
-# COPY package.json package-lock.json ./
-# # RUN npm install
-
-# RUN npm install --legacy-peer-deps && \
-#     npm uninstall ng2-charts chart.js
-
-# RUN npm install chart.js@^4.4.5 ng2-charts@5.0.0 --legacy-peer-deps
-
-# COPY . .
-
-# ENV CHOKIDAR_USEPOLLING=true
-
-# # RUN npm run build --configuration=production
-# RUN ng build --configuration production
-
-# # Stage 2: Serve with nginx
-# FROM nginx:alpine
-
-# # Set environment variables for the domain name
-# # ARG DOMAIN=transendence.42.hn
-
-
-# # Set up directories for the SSL certificate
-# RUN mkdir -p /etc/nginx/ssl
-
-# # Generate self-signed SSL certificate
-# RUN apk add --no-cache openssl \
-#     && openssl genpkey -algorithm RSA -out /etc/nginx/ssl/nginx.key \
-#     && openssl req -new -x509 -key /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -days 365 -subj "/C=DE/ST=State/L=City/O=Company/OU=IT/CN=$DOMAIN"
-
-
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-# COPY --from=build /app/dist/fe /usr/share/nginx/html
-
-# EXPOSE 80 443
-
-
-# Stage 1: Build the Angular application
 FROM node:20 as build
 
 WORKDIR /app
@@ -88,7 +16,6 @@ COPY . .
 ENV CHOKIDAR_USEPOLLING=true
 RUN ng build --configuration production
 
-# Stage 2: Build Nginx with ModSecurity
 FROM debian:bullseye-slim
 
 # Install required packages
@@ -157,7 +84,6 @@ RUN make
 RUN make modules
 RUN mkdir -p /usr/local/nginx/modules
 RUN cp objs/ngx_http_modsecurity_module.so /usr/local/nginx/modules/
-# RUN cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules
 
 RUN make install
 
@@ -176,13 +102,6 @@ RUN sed -i 's/SecResponseBodyAccess On/SecResponseBodyAccess Off/' /etc/nginx/mo
 RUN sed -i 's/SecResponseBodyLimit 524288/SecResponseBodyLimit 0/' /etc/nginx/modsecurity/modsecurity.conf
 RUN sed -i 's/SecResponseBodyLimitAction ProcessPartial/SecResponseBodyLimitAction Reject/' /etc/nginx/modsecurity/modsecurity.conf
 RUN echo "Include /etc/nginx/modsecurity/modsecurity_custom.conf" >> /etc/nginx/modsecurity/modsecurity.conf
-
-# Add the specified lines if they do not already exist
-# RUN grep -qxF 'SecStreamInBodyInspection On' /etc/nginx/modsecurity/modsecurity.conf || echo 'SecStreamInBodyInspection On' >> /etc/nginx/modsecurity/modsecurity.conf
-# RUN grep -qxF 'SecRequestBodyLimit 524288' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecRequestBodyLimit 5242880' >> /etc/nginx/modsecurity/modsecurity.conf
-# RUN grep -qxF 'SecRequestBodyNoFilesLimit 13107200' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecRequestBodyNoFilesLimit 13107200' >> /etc/nginx/modsecurity/modsecurity.conf
-# RUN grep -qxF 'SecResponseBodyLimit 2097152' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecResponseBodyLimit 2097152' >> /etc/nginx/modsecurity/modsecurity.conf
-# RUN grep -qxF 'SecResponseBodyAccess Off' /etc/nginx/modsecurity/modsecurity.conf && echo 'SecResponseBodyAccess On' >> /etc/nginx/modsecurity/modsecurity.conf
 
 RUN echo "SecDebugLog /var/log/modsec_debug.log" >> /etc/nginx/modsecurity/modsecurity.conf && \
     echo "SecDebugLogLevel 9" >> /etc/nginx/modsecurity/modsecurity.conf && \
@@ -219,9 +138,6 @@ RUN openssl genpkey -algorithm RSA -out /etc/nginx/ssl/nginx.key && \
 # Ensure the module is copied to the correct location
 RUN mkdir -p /usr/lib/nginx/modules
 RUN cp /usr/src/nginx-$NGINX_VERSION/objs/ngx_http_modsecurity_module.so /usr/lib/nginx/modules/
-
-# Add the load_module directive at the top of the nginx.conf file
-# RUN sed -i '1iload_module modules/ngx_http_modsecurity_module.so;' /etc/nginx/nginx.conf
 
 # Expose ports
 EXPOSE 80 443

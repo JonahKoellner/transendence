@@ -59,36 +59,26 @@ export class GameComponent implements OnInit, OnDestroy {
     // this.updateReadyStatus(); // on init set to ready, so backend knows when both players joined
 
     this.gameDisplayService.messages$.subscribe((msg) => {
-      if (msg.type !== 'game_state') {
-        console.log('Received message:', msg);
-      }
       if (msg.type === 'game_state') {
         this.handleGameState(msg);
       } else if (msg.type === 'game_ended') {
         this.handleGameEnd();
       } else if (msg.type === 'game_started') {
-        console.log('Game started:', msg);
         this.gameInProgress = true;
       } else if (msg.type === 'game_settings') {
-        console.log('Game settings:', msg.settings);
         this.gameSettings.paddleskin_color_left = msg.settings.paddleskin_color_left;
-        // this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_left;
         this.gameSettings.paddleskin_image_left = environment.apiUrl + msg.settings.paddleskin_image_left;
         this.gameSettings.paddleskin_color_right = msg.settings.paddleskin_color_right;
-        // this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_right;
         this.gameSettings.paddleskin_image_right = environment.apiUrl + msg.settings.paddleskin_image_right;
         this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
         this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
         this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;
         this.gameSettings.gamebackground_wallpaper = this.userProfile?.gamebackground_wallpaper;
       } else if (msg.type === 'match_timer_update') {
-        console.log('Remaining time:', msg.remaining_time);
         this.remainingTime = msg.remaining_time;
       } else if (msg.type === 'timer_until_start') {
-        console.log('Timer until start:', msg.remaining_time);
         this.secsUntilGameStart = msg.remaining_time;
       } else if (msg.type === 'player_disconnected') {
-        console.log('Player disconnected:', msg);
         this.toastr.error('Player disconnected', 'Error');
         this.handleGameEnd();
       }

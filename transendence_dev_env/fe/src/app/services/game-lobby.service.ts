@@ -41,7 +41,6 @@ export class GameLobbyService {
         this.router.navigate(['/games/online-pvp/rooms'])
       },
       (err) => {
-        console.log(err);
         this.router.navigate(['/games/online-pvp/rooms'])
       }
     );
