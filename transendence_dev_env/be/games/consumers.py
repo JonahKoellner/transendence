@@ -2963,7 +2963,7 @@ class TournamentMatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def start_countdown(self):
         try:
-            total_time = 5  # Total match time in seconds
+            total_time = 30  # Total match time in seconds
             for remaining_time in range(total_time, 0, -1):
                 logger.debug(f"Remaining time until start: {remaining_time}, sent from {self.user.username}")
                 await self.channel_layer.group_send(
