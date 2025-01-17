@@ -146,22 +146,22 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
   setAIParameters(): void {
     switch (this.gameSettings?.difficulty) {
       case 'Easy':
-        this.aiMoveSpeed = 1;
+        this.aiMoveSpeed = 0.1;
         this.predictionRandomness = 10;
         this.aiUpdateInterval = 700;
         break;
       case 'Medium':
-        this.aiMoveSpeed = 2;
+        this.aiMoveSpeed = 0.15;
         this.predictionRandomness = 5;
         this.aiUpdateInterval = 550;
         break;
       case 'Hard':
-        this.aiMoveSpeed = 3;
+        this.aiMoveSpeed = 0.2;
         this.predictionRandomness = 2.5;
         this.aiUpdateInterval = 400;
         break;
       default:
-        this.aiMoveSpeed = 1;
+        this.aiMoveSpeed = 0.15;
         this.predictionRandomness = 10;
         this.aiUpdateInterval = 550;
     }
@@ -190,13 +190,13 @@ export class GameCanvasThreeDPveComponent implements AfterViewInit {
     const rightY = this.rightPaddle.position.y;
     if (rightY < this.aiTargetY - 0.5) {
       
-      this.rightPaddle.position.y += this.paddleSpeed * (this.aiMoveSpeed / 3);
+      this.rightPaddle.position.y += this.aiMoveSpeed;
       if (this.rightPaddle.position.y > 5.5) {
         this.rightPaddle.position.y = 5.5;
       }
     } else if (rightY > this.aiTargetY + 0.5) {
       
-      this.rightPaddle.position.y -= this.paddleSpeed * (this.aiMoveSpeed / 3);
+      this.rightPaddle.position.y -= this.aiMoveSpeed;
       if (this.rightPaddle.position.y < -5.5) {
         this.rightPaddle.position.y = -5.5;
       }

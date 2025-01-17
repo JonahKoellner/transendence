@@ -934,7 +934,7 @@ export class StartComponent implements OnInit {
       if (this.match) {
         this.match.player1_type = 'Bot';
       }
-      alert(`${this.match?.player1} has left the game ${this.slots[0].name}, ${this.slots[1].name}, ${this.slots[2].name} ${this.match?.player1_type}`);
+      alert(`${this.match?.player1} has left the game`);
 
     } else if (player === 'player2') {
       this.leavingPlayer2 = false;
@@ -942,7 +942,7 @@ export class StartComponent implements OnInit {
       if (this.match) {
         this.match.player2_type = 'Bot';
       }
-      alert(`${this.match?.player2} has left the game ${this.slots} ${this.match?.player2_type}`);
+      alert(`${this.match?.player2} has left the game`);
 
     }
   }
