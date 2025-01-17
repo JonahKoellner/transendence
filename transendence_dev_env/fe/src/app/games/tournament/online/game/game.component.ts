@@ -67,9 +67,9 @@ export class GameComponent implements OnInit, OnDestroy {
         this.gameInProgress = true;
       } else if (msg.type === 'game_settings') {
         this.gameSettings.paddleskin_color_left = msg.settings.paddleskin_color_left;
-        this.gameSettings.paddleskin_image_left = environment.apiUrl + msg.settings.paddleskin_image_left;
+        this.gameSettings.paddleskin_image_left = msg.settings.paddleskin_image_left;
         this.gameSettings.paddleskin_color_right = msg.settings.paddleskin_color_right;
-        this.gameSettings.paddleskin_image_right = environment.apiUrl + msg.settings.paddleskin_image_right;
+        this.gameSettings.paddleskin_image_right = msg.settings.paddleskin_image_right;
         this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
         this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
         this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;

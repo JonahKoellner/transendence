@@ -188,13 +188,13 @@ export class GameRoomArenaComponent implements OnInit, OnDestroy {
                 this.isPlayerFourReady = data.is_player_four_ready;
                 this.allReady = data.all_ready;
                 this.gameSettings.paddleskin_color_left = data.paddleskin_color_left;
-                this.gameSettings.paddleskin_image_left = environment.apiUrl + data.paddleskin_image_left;
+                this.gameSettings.paddleskin_image_left = data.paddleskin_image_left;
                 this.gameSettings.paddleskin_color_right = data.paddleskin_color_right;
-                this.gameSettings.paddleskin_image_right = environment.apiUrl + data.paddleskin_image_right;
+                this.gameSettings.paddleskin_image_right = data.paddleskin_image_right;
                 this.gameSettings.paddleskin_color_top = data.paddleskin_color_top;
-                this.gameSettings.paddleskin_image_top = environment.apiUrl + data.paddleskin_image_top;
+                this.gameSettings.paddleskin_image_top = data.paddleskin_image_top;
                 this.gameSettings.paddleskin_color_bottom = data.paddleskin_color_bottom;
-                this.gameSettings.paddleskin_image_bottom = environment.apiUrl + data.paddleskin_image_bottom;
+                this.gameSettings.paddleskin_image_bottom = data.paddleskin_image_bottom;
                 this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
                 this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
                 this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;

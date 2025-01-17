@@ -145,6 +145,8 @@ services:
       options:
         gelf-address: "udp://172.25.0.10:5240"
         tag: "{{.Name}}"
+    volumes:
+      - ./data/media-data:/usr/share/nginx/media
 
   django:
     container_name: django
@@ -186,11 +188,12 @@ services:
       - ./be:/app  # Bind mount for the Django app code
       - ./static:/app/static  # Static files directory
       - ./data/vault-data:/home/vault-data
+      - ./data/media-data:/app/media
 
   db:
     container_name: db
     # image: postgres:17
-    build: 
+    build:
       context: ./db
     env_file:
       - ./db/.env
@@ -220,7 +223,7 @@ services:
   redis:
     container_name: redis
     # image: redis:6-alpine
-    build: 
+    build:
       context: ./redis
     #   args:
     #     REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -274,4 +277,6 @@ volumes:
   elk-shared:
     driver: local
   vault-data:
+    driver: local
+  media-data:
     driver: local

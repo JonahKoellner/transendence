@@ -145,10 +145,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
                 this.allReady = data.all_ready;
                 this.gameSettings.paddleskin_color_left = data.paddleskin_color_left;
                 // this.gameSettings.paddleskin_image_left = "http://localhost:8000" + data.paddleskin_image_left;
-                this.gameSettings.paddleskin_image_left = environment.apiUrl + data.paddleskin_image_left;
+                this.gameSettings.paddleskin_image_left = data.paddleskin_image_left;
                 this.gameSettings.paddleskin_color_right = data.paddleskin_color_right;
                 // this.gameSettings.paddleskin_image_right = "http://localhost:8000" + data.paddleskin_image_right;
-                this.gameSettings.paddleskin_image_right = environment.apiUrl + data.paddleskin_image_right;
+                this.gameSettings.paddleskin_image_right = data.paddleskin_image_right;
                 this.gameSettings.ballskin_color = this.userProfile?.ballskin_color;
                 this.gameSettings.ballskin_image = this.userProfile?.ballskin_image;
                 this.gameSettings.gamebackground_color = this.userProfile?.gamebackground_color;
