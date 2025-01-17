@@ -273,7 +273,7 @@ export class AboutComponent implements OnInit, OnDestroy {
 
     // Set the retro game URL (you can choose any embeddable retro game)
     // Example: Classic Snake game
-    this.retroGameUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://codepen.io/GeekyAnts/embed/wvrMRo?default-tab=result');
+    this.retroGameUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://gurbuxani.github.io/Snake-Game/');
 
     // Show the retro game modal
     this.showRetroGameModal = true;
