@@ -53,7 +53,7 @@ addHost:
 
 clean_pycache_migrations:
 	@echo "Removing all __pycache__ and migrations directories from ./be..."
-	@find ./be -type d \( -name '__pycache__' -o -name 'migrations' \) -exec rm -rf {} \;
+	@find ./be -type d \( -name '__pycache__' -o -name 'migrations' \) -exec rm -rf {} + 2>/dev/null || true
 	@echo "Cleanup complete."
 
 ask42APIKey:
