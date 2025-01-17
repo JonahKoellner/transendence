@@ -1067,8 +1067,6 @@ class HashiView(APIView):
             # Read the secret from Vault
             secret_response = client.secrets.kv.v2.read_secret_version(path=secret_path)
             secret_data = secret_response['data']['data']
-            # print(secret_data)
-            logger.info(f'Successfully retrieved secret: {secret_data}')
             return Response(secret_data)
         except Exception as e:
             return Response(
@@ -1205,13 +1203,11 @@ class UserStatsView(APIView):
             participated_tmp = OnlineTournament.objects.filter(
                 participants=profile.user
             ).count()
-            logger.info(f"online tournaments participated by {profile.user.username}: {participated_tmp}")
             tournaments_participated += participated_tmp
             
             won_tmp = OnlineTournament.objects.filter(
                 final_winner = profile.user
             ).count()
-            logger.info(f"online tournaments won by {profile.user.username}: {won_tmp}")
             tournaments_won += won_tmp
             
             tournaments_stats = {

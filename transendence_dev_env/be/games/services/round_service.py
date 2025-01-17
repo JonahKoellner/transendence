@@ -162,6 +162,6 @@ class RoundService:
         round_instance.status = 'completed'
         round_instance.save()
         if round_instance.stage == Stage.ROUND_ROBIN_STAGE:
-            logger.info(f'Round {round_instance.round_number} returns winners for round robin')
+            logger.debug(f'Round {round_instance.round_number} returns winners for round robin')
             winner_ids = [str(winner.id) for winner in round_instance.winners.all()]
             return winner_ids
