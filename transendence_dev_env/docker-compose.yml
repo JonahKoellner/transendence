@@ -18,9 +18,9 @@ services:
       memlock:
         soft: -1
         hard: -1
-    ports:
-      - "9200:9200"
-      - "9300:9300"
+    # ports:
+    #   - "9200:9200"
+    #   - "9300:9300"
     env_file:
       - ./elk/.env
     volumes:
@@ -40,10 +40,10 @@ services:
     ports:
       # - "5234:5234"  # For Beats input
       - "5240:5240"  # For GELF input
-      - "5240:5240/udp"
-      - "5431:5431/udp"
-      - "5431:5431"
-      - "5959:5959"
+      # - "5240:5240/udp"
+      # - "5431:5431/udp"
+      # - "5431:5431"
+      # - "5959:5959"
     env_file:
       - ./elk/.env
     volumes:
@@ -52,9 +52,11 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      # - elk-net
-      host-bridge:
-        ipv4_address: 172.25.0.10
+      - webnet
+      - app-net
+      - elk-net
+      - host-bridge
+        # ipv4_address: 172.25.0.10
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9600"]
       interval: 30s
@@ -112,8 +114,9 @@ services:
     logging:
       driver: "gelf"
       options:
-        # gelf-address: "udp://172.25.9.10:5240"
         gelf-address: "udp://host.docker.internal:5240"
+        # max-size: "10m"
+        # max-file: "5"
         tag: "{{.Name}}"
 
 
@@ -153,8 +156,8 @@ services:
              python manage.py migrate &&
              python manage.py loaddata achievements.json &&
              daphne -b 0.0.0.0 -p 8000 be.asgi:application"
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000"
     env_file:
       - ./be/.env
     depends_on:
@@ -193,8 +196,8 @@ services:
       - ./db/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Named volume for database persistence
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     depends_on:
       logstash:
         condition: service_healthy
@@ -221,8 +224,8 @@ services:
     #     REDIS_PASSWORD: ${REDIS_PASSWORD}
     # env_file:
     #   - ./redis/.env
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
     networks:
       - webnet
       - app-net
