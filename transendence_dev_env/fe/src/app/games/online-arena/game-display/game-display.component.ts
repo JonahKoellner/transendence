@@ -47,7 +47,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
       this.loadImages().then(() => {
         this.drawGame();
       }).catch(err => {
-        this.toastr.error('Error loading images', 'Error');
         this.drawGame(); // Fallback to colors if images fail to load
       });
     }
@@ -60,7 +59,7 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
           this.drawGame();
         }
       }).catch(err => {
-        this.toastr.error('Error loading images', 'Error');
+
         if (this.context) {
           this.drawGame(); // Fallback to colors if images fail to load
         }

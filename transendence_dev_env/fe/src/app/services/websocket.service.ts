@@ -66,7 +66,7 @@ connectNotifications(token: string): void {
       // optionally handle auto-reconnect or 401 in a custom way
     },
     complete: () => {
-      console.warn('WebSocket closed');
+      // console.warn('WebSocket closed');
       this.isConnected$.next(false);
     }
   });

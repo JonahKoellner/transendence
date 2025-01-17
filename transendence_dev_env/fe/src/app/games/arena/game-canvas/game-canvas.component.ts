@@ -56,7 +56,7 @@ export class GameCanvasComponentArena implements AfterViewInit, OnInit {
 
   ngAfterViewInit() {
     if (!this.canvas) {
-      console.error('Canvas is not initialized!');
+      // console.error('Canvas is not initialized!');
       return;
     }
     this.context = this.canvas.nativeElement.getContext('2d')!;

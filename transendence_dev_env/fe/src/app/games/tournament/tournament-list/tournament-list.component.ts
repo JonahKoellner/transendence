@@ -72,7 +72,7 @@ export class TournamentListComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load tournaments:', error);
+        // console.error('Failed to load tournaments:', error);
         this.errorMessage = 'Failed to load tournaments.';
         this.isLoading = false;
       }

@@ -302,7 +302,7 @@ export class FtAuthService {
       );
     } else {
       // Handle error or missing code
-      console.error('Authorization code not found');
+      // console.error('Authorization code not found');
       return new Observable();
     }
   }
@@ -338,7 +338,7 @@ export class FtAuthService {
 
     return this.http.get<any>('/ftapi/v2/me', { headers }).pipe(
       catchError(error => {
-        console.error('Error fetching 42 user profile:', error);
+        // console.error('Error fetching 42 user profile:', error);
         return throwError(error);
       })
     );

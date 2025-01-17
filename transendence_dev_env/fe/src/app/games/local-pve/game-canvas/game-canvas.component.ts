@@ -62,7 +62,6 @@ export class GameCanvasComponent implements AfterViewInit {
       this.startGame();
       this.aiIntervalID = window.setInterval(() => this.updateAI(), this.aiUpdateInterval); // AI updates based on interval
     }).catch(error => {
-      console.error('Error loading images:', error);
       // Proceed with default settings if images fail to load
       this.setAIParameters();
       this.resetRound();

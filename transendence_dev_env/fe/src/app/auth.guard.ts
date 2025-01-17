@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
     return this.authService.refreshToken().pipe(
       map(() => true),
       catchError(err => {
-        console.error('Route guard: Token refresh failed', err);
+        // console.error('Route guard: Token refresh failed', err);
         this.router.navigate(['/login'], { queryParams: { message: 'Session expired, please log in again' } });
         return of(false);
       })

@@ -183,7 +183,7 @@ export class StartComponent implements OnInit {
         this.buildRoundRobinMatches();
         break;
       default:
-        console.error('Unknown tournament type');
+        // console.error('Unknown tournament type');
         return false;
     }
     return true;
@@ -496,7 +496,7 @@ export class StartComponent implements OnInit {
         match.status = 'completed';
       }
     } catch (error) {
-      console.error("Error during match simulation:", error);
+      // console.error("Error during match simulation:", error);
       this.toastr.error('Error during match simulation.', 'Error');
       match.status = 'failed';
     } finally {
@@ -661,7 +661,7 @@ export class StartComponent implements OnInit {
       // Step 5: Update tournament on the backend with final details
       await this.updateTournamentBackend(tournament);
     } catch (error) {
-      console.error("Error during tournament simulation:", error);
+      // console.error("Error during tournament simulation:", error);
       this.toastr.error('Error during tournament simulation.', 'Error');
     }
   }
@@ -727,7 +727,7 @@ export class StartComponent implements OnInit {
         this.finalTournament!.winner_tie_resolved = true;
       }
     } else {
-      console.warn("No final round or matches found. Tie resolution check skipped.");
+      //console.warn("No final round or matches found. Tie resolution check skipped.");
     }
   }
   

@@ -44,7 +44,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         this.isLoading = false;
       },
       (error) => {
-        console.error(error);
+        // console.error(error);
         this.isLoading = false;
       }
     );

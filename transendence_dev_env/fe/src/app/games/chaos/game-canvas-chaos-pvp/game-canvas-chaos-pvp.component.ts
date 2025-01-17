@@ -61,7 +61,6 @@ export class GameCanvasChaosPvpComponent implements AfterViewInit {
         this.powerUpIntervalID = window.setInterval(() => this.spawnPowerUp(), this.gameSettings.powerUpSpawnInterval * 1000);
       }
     }).catch(error => {
-      console.error('Error loading images:', error);
       this.resetRound();
       this.startGame();
       if (this.powerUpsEnabled) {

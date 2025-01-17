@@ -32,7 +32,7 @@ export class AuthService {
           if (response.otp_uri) localStorage.setItem('otp_uri', response.otp_uri);
           this.websocketService.connectNotifications(response.access);
         } else {
-          console.error('Login failed: Access or refresh token not received');
+          this.toastr.error('Login failed', 'Error');
         }
       }),
       catchError(error => {
@@ -239,7 +239,7 @@ export class AuthService {
       retryWhen(errors =>
         errors.pipe(
           scan((errorCount, err) => {
-            console.error('Token refresh failed, retrying...', err);
+            // console.error('Token refresh failed, retrying...', err);
             if (err.status === 401 || err.status === 400) {
               throw err;
             }
@@ -252,7 +252,7 @@ export class AuthService {
         )
       ),
       catchError(err => {
-        console.error('Final token refresh failure, logging out', err);
+        // console.error('Final token refresh failure, logging out', err);
         setTimeout(() => this.logout('Session expired, please log in again'), 0);
         return throwError(() => err);
       })

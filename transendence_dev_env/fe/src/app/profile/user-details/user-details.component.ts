@@ -129,7 +129,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   private hexToRgba(hex: any, alpha: number): string {
     if (typeof hex !== 'string') {
-      console.error(`hexToRgba: Expected a string but received ${typeof hex}:`, hex);
+      // console.error(`hexToRgba: Expected a string but received ${typeof hex}:`, hex);
       return `rgba(0, 0, 0, ${alpha})`;
     }
 
@@ -145,7 +145,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       g = parseInt(hex.substring(2, 4), 16);
       b = parseInt(hex.substring(4, 6), 16);
     } else {
-      console.error(`Invalid hex color format: '${hex}'. Expected 3 or 6 characters.`);
+      // console.error(`Invalid hex color format: '${hex}'. Expected 3 or 6 characters.`);
       return `rgba(0, 0, 0, ${alpha})`;
     }
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -218,7 +218,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       (error: any) => {
-        console.warn('Error loading user stats:', error);
+        // console.warn('Error loading user stats:', error);
         this.isLoading = false;
       }
     );

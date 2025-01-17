@@ -53,7 +53,6 @@ export class GameCanvasComponentPVP implements AfterViewInit {
       this.resetRound();
       this.startGame();
     }).catch(error => {
-      this.toastr.error('Error loading images.', 'Error');
       this.resetRound();
       this.startGame();
     });
