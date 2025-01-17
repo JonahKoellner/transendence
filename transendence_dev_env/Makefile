@@ -5,6 +5,8 @@
 generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 32 | tr -d '/+' | head -c 24), $(shell head -c 24 /dev/urandom | base64 | tr -d '/+' | head -c 24)))
 generate-secret-key=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 64 | tr -d '/+' | head -c 50), $(shell head -c 50 /dev/urandom | base64 | tr -d '/+' | head -c 50)))
 
+all: start
+
 generate_passwords:
 	@echo "Generating elk passwords..."
 	@echo "ELASTIC_PASSWORD=$(call generate-password)" > ./elk/.env
