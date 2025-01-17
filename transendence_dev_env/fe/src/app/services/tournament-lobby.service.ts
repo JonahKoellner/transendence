@@ -40,7 +40,6 @@ export class TournamentLobbyService {
         this.router.navigate(['/games/online-tournament/rooms'])
       },
       (err) => {
-        console.log(err);
         this.router.navigate(['/games/online-tournament/rooms'])
       }
     );

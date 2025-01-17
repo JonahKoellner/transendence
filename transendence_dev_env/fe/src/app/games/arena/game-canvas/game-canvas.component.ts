@@ -6,7 +6,7 @@ import { GameSettings } from '../arena.component';
   templateUrl: './game-canvas.component.html',
   styleUrls: ['./game-canvas.component.scss']
 })
-export class GameCanvasComponentArena implements AfterViewInit, OnInit {
+export class GameCanvasComponentArena implements AfterViewInit {
   @ViewChild('GameCanvas', { read: ElementRef, static: false }) canvas!: ElementRef;
   context!: CanvasRenderingContext2D;
 
@@ -47,16 +47,6 @@ export class GameCanvasComponentArena implements AfterViewInit, OnInit {
   };
 
   intervalID!: number;
-
-  ngOnInit() {
-    document.addEventListener('pointerlockchange', () => {
-      if (document.pointerLockElement === this.canvas.nativeElement) {
-        console.log('Pointer locked');
-      } else {
-        console.log('Pointer unlocked');
-      }
-    });
-  }
 
   ngAfterViewInit() {
     if (!this.canvas) {

@@ -193,7 +193,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
    * Draws the entire game state on the canvas.
    */
   drawGame() {
-    // console.log('Drawing game state:', this.gameSettings);
     // Draw background
     this.drawBackground();
 
@@ -264,7 +263,6 @@ export class GameDisplayArenaComponent implements AfterViewInit, OnChanges {
     const paddleWidth = 10;
     const paddleHeight = 60;
 
-    // console.log("Draw Paddle: " + (this.paddleImageLeft != null) + " " + this.imagesLoaded);
     if (side === 'left') {
       if (this.paddleImageLeft) {
         this.context.drawImage(this.paddleImageLeft, x, y, paddleWidth, paddleHeight);

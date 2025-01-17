@@ -71,7 +71,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     this.navigationSubscription = this.router.events.subscribe(event => { // to not delete lobby when going to tournament tree
       if (event instanceof NavigationStart) {
         if (event.url.startsWith('/games/online-tournament/tournament-tree')) {
-          console.log('Going to tournament tree');
           this.goingToTournament = true;
         }
       }
@@ -84,7 +83,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
       next: ({ userProfile, lobbyState }: { userProfile: UserProfile; lobbyState: LobbyState }) => {
         this.userProfile = userProfile;
         this.lobbyState = lobbyState;
-        console.log('Assigned lobby state', this.lobbyState)
       },
       error: (err) => {
         this.toastr.error('Failed to load game room data.', 'Error');
@@ -98,7 +96,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    console.log('Destroying game room component, goingToTournament:', this.goingToTournament);
     if (this.navigationSubscription) {
       this.navigationSubscription.unsubscribe();
     }
@@ -195,13 +192,11 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   private fetchRoomStatus(): void {
-    console.log('Fetching room status')
     this.lobbyService.getRoomStatus(this.roomId).subscribe({
       next: (data: LobbyState) => {
         if (data) {
           this.lobbyState = data;
         }
-        console.log('Assigned lobby state in fetchRoomStatus', this.lobbyState)
         this.userProfileService.getProfile().subscribe(
           (profile) => {
             this.userProfile = profile;
@@ -225,7 +220,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
   private handleWebSocketMessage(msg: any): void {
     switch (msg.type) {
       case 'lobby_state':
-        console.log('assigning new lobbyState', msg)
         this.lobbyState = msg.lobby_state;
         break;
       case 'ready_status':
@@ -235,12 +229,10 @@ export class GameRoomComponent implements OnInit, OnDestroy {
         }
         break;
       case 'tournament_start':
-        console.log('Navigating to tournament tree');
         this.router.navigate(['/games/online-tournament/tournament-tree', this.roomId]);
         this.lobbyService.disconnect();
         break;
       case 'alert':
-        console.log('Alert message', msg);
         this.handleAlert(msg);
         break;
       default:
@@ -249,9 +241,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
     if (this.host === "") {
       this.router.navigate(['/games/online-tournament/rooms']);
     }
-    // if (msg.type !== 'lobby_state') {
-    //   this.fetchRoomStatus();
-    // }
   }
 
   private handleAlert(msg: any): void {
@@ -265,7 +254,6 @@ export class GameRoomComponent implements OnInit, OnDestroy {
 
   toggleReadyStatus(): void {
     this.isReady = !this.isReady;
-    console.log('isReady:', this.isReady);
       this.lobbyService.setReadyStatus(this.roomId, this.isReady).subscribe({
       next: () => {
         this.lobbyService.sendMessage({

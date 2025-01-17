@@ -660,8 +660,6 @@ export class StartComponent implements OnInit {
   
       // Step 5: Update tournament on the backend with final details
       await this.updateTournamentBackend(tournament);
-      
-      // console.log("Final Tournament Result:", this.finalTournament);
     } catch (error) {
       console.error("Error during tournament simulation:", error);
       this.toastr.error('Error during tournament simulation.', 'Error');
@@ -738,7 +736,6 @@ export class StartComponent implements OnInit {
     await firstValueFrom(
       this.gameService.updateTournament(this.createdTournamentFromServer!.id!, this.finalTournament!)
     );
-    // console.log("Tournament updated successfully:", this.finalTournament);
   }
   
 

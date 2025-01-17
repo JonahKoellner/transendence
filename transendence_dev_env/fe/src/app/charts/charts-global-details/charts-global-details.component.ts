@@ -197,7 +197,6 @@ export class ChartsGlobalDetailsComponent implements OnInit, OnChanges {
   constructor() { }
 
   ngOnInit(): void {
-    console.log(this.chartData);
     if (this.chartData) {
       this.initializeCharts();
     }

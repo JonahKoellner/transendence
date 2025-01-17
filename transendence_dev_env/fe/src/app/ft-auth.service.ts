@@ -270,7 +270,6 @@ export class FtAuthService {
         switchMap((secrets: FtSecrets) => {
           this.ft_secrets = secrets;
           // Exchange the authorization code for an access token
-          // console.log('Sending token request with client_id:', this.ft_secrets.ft_uid); // Debugging line
   
           const body = new HttpParams()
             .set('grant_type', 'authorization_code')
@@ -283,8 +282,6 @@ export class FtAuthService {
             'Content-Type': 'application/x-www-form-urlencoded'
           });
   
-          // console.log("Body:", body);
-          // console.log("Headers:", headers);
   
           return this.http.post<any>(this.tokenUrl, body.toString(), { headers }).pipe(
             tap(response => {
@@ -293,14 +290,6 @@ export class FtAuthService {
               this.tokenExpiresIn = response.expires_in;
               this.refreshToken = response.refresh_token;
               this.secretValidUntil = response.secret_valid_until;
-              // Ideally, send the token to your backend to create a session
-              // For demonstration, we'll set the flag directly
-              // Replace with your user service logic
-              // Example:
-              // this.userService.setAuthenticated(true);
-              // Here, we'll use localStorage as a simple example
-              // console.log('Access token:', this.accessToken);
-              // console.log('response:', response);
               localStorage.setItem('ft_access_token', this.accessToken!);
               localStorage.setItem('ft_refresh_token', this.refreshToken!);
               localStorage.setItem('ft_secret_valid_until', String(this.secretValidUntil!));
@@ -346,8 +335,6 @@ export class FtAuthService {
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
-
-    // console.log("Getting 42 user profile with header", headers);
 
     return this.http.get<any>('/ftapi/v2/me', { headers }).pipe(
       catchError(error => {

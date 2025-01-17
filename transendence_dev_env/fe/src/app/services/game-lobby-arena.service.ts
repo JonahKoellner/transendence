@@ -40,7 +40,6 @@ export class GameLobbyArenaService {
         this.router.navigate(['/games/online-arena/rooms'])
       },
       (err) => {
-        console.log(err);
         this.router.navigate(['/games/online-arena/rooms'])
       }
     );
