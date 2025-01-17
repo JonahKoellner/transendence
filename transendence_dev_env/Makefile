@@ -3,6 +3,7 @@
 # generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 12), $(shell head -c 12 /dev/urandom | base64)))
 # Function to generate a password without backslashes and at least 24 characters long
 generate-password=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 32 | tr -d '/+' | head -c 24), $(shell head -c 24 /dev/urandom | base64 | tr -d '/+' | head -c 24)))
+generate-secret-key=$(strip $(if $(shell command -v openssl), $(shell openssl rand -base64 64 | tr -d '/+' | head -c 50), $(shell head -c 50 /dev/urandom | base64 | tr -d '/+' | head -c 50)))
 
 generate_passwords:
 	@echo "Generating elk passwords..."
@@ -32,6 +33,7 @@ generate_passwords:
 	@echo "REDIS_HOST=redis" >> ./be/.env
 	@echo "REDIS_PORT=6379" >> ./be/.env
 	@echo "DJANGO_SETTINGS_MODULE=be.settings" >> ./be/.env
+	@echo "SECRET_KEY=$(call generate-secret-key)" >> ./be/.env
 
 	@echo "Generting redis password..."
 	$(eval REDIS_PASS=$(call generate-password))
